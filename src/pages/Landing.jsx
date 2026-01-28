@@ -1,5 +1,6 @@
 import Navbar from '../components/landing/Navbar';
 import Hero from '../components/landing/Hero';
+import AppShowcase from '../components/landing/AppShowcase';
 import About from '../components/landing/About';
 import Testimonials from '../components/landing/Testimonials';
 import Pricing from '../components/landing/Pricing';
@@ -13,6 +14,7 @@ export default function Landing() {
     <div className="min-h-screen bg-white dark:bg-gray-900">
       <Navbar />
       <Hero />
+      <AppShowcase />
       <About />
       <Testimonials />
       <Pricing />

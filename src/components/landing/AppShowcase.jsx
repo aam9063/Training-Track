@@ -254,13 +254,30 @@ export default function AppShowcase() {
           transition={{ duration: 0.6, delay: 0.3 }}
           className="mt-16 text-center"
         >
-          <p className="text-gray-500 dark:text-gray-400 text-sm mb-6">
+          <p className="text-gray-500 dark:text-gray-400 text-sm mb-8">
             Usado por entrenadores y atletas de élite en toda España
           </p>
-          <div className="flex flex-wrap items-center justify-center gap-8 opacity-60 grayscale hover:grayscale-0 hover:opacity-100 transition-all duration-500">
-            {['RFEA', 'CAR Sant Cugat', 'Playas de Castellón', 'Valencia Terra i Mar', 'CA Gava'].map((name, i) => (
-              <div key={i} className="text-gray-600 dark:text-gray-400 font-semibold text-lg">
-                {name}
+          <div className="flex flex-wrap items-center justify-center gap-10 md:gap-16 cursor-pointer">
+            {[
+              { name: 'RFEA', logo: '/img/rfea.webp' },
+              { name: 'CA Alicante', logo: '/img/LogoAAA.png' },
+              { name: 'CAR Sant Cugat', logo: '/img/CAR.jpg' },
+              { name: 'Playas de Castellón', logo: '/img/playas.webp' },
+            ].map((org, i) => (
+              <div
+                key={i}
+                className="group flex flex-col items-center gap-3 transition-all duration-500"
+              >
+                <div className="w-16 h-16 md:w-20 md:h-20 relative overflow-hidden rounded-lg">
+                  <img
+                    src={org.logo}
+                    alt={org.name}
+                    className="w-full h-full object-contain grayscale opacity-60 group-hover:grayscale-0 group-hover:opacity-100 transition-all duration-500"
+                  />
+                </div>
+                <span className="text-gray-500 dark:text-gray-400 text-xs md:text-sm font-medium group-hover:text-gray-700 dark:group-hover:text-gray-200 transition-colors duration-500">
+                  {org.name}
+                </span>
               </div>
             ))}
           </div>

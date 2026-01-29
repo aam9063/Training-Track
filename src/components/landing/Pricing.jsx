@@ -180,7 +180,7 @@ export default function Pricing() {
               <div className="text-center mb-8">
                 <div className="flex items-end justify-center">
                   <span className={`text-5xl font-bold bg-gradient-to-r ${plan.gradient} bg-clip-text text-transparent`}>
-                    ${billingCycle === 'monthly' ? plan.monthlyPrice : plan.yearlyPrice}
+                    {billingCycle === 'monthly' ? plan.monthlyPrice : plan.yearlyPrice} €
                   </span>
                   <span className="text-gray-600 dark:text-gray-400 ml-2 mb-2">
                     /{billingCycle === 'monthly' ? 'mes' : 'año'}
@@ -239,7 +239,7 @@ export default function Pricing() {
           className="text-center"
         >
           <p className="text-gray-600 dark:text-gray-400 mb-4">
-            Todos los planes incluyen prueba gratuita de 14 días. No se requiere tarjeta de crédito.
+            Todos los planes incluyen prueba gratuita de 30 días. No se requiere tarjeta de crédito.
           </p>
           <div className="flex flex-wrap items-center justify-center gap-6 text-sm text-gray-500 dark:text-gray-500">
             <div className="flex items-center">
@@ -253,6 +253,10 @@ export default function Pricing() {
             <div className="flex items-center">
               <HiCheck className="w-4 h-4 text-green-500 mr-2" />
               Actualizaciones gratuitas
+            </div>
+            <div className="flex items-center">
+              <HiCheck className="w-4 h-4 text-green-500 mr-2" />
+              Soporte técnico 24/7
             </div>
           </div>
         </motion.div>

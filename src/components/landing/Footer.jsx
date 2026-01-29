@@ -1,6 +1,7 @@
 import { motion } from 'framer-motion';
 import { HiMail, HiPhone, HiLocationMarker } from 'react-icons/hi';
-import { FaFacebook, FaTwitter, FaInstagram, FaLinkedin, FaYoutube } from 'react-icons/fa';
+import { FaFacebook, FaInstagram, FaLinkedin, FaYoutube, FaTiktok } from 'react-icons/fa';
+import { FaXTwitter } from "react-icons/fa6";
 
 export default function Footer() {
   const currentYear = new Date().getFullYear();
@@ -34,8 +35,9 @@ export default function Footer() {
 
   const socialLinks = [
     { icon: FaFacebook, href: '#', label: 'Facebook', color: 'hover:text-blue-600' },
-    { icon: FaTwitter, href: '#', label: 'Twitter', color: 'hover:text-blue-400' },
+    { icon: FaXTwitter, href: '#', label: 'Twitter', color: 'hover:text-blue-400' },
     { icon: FaInstagram, href: '#', label: 'Instagram', color: 'hover:text-pink-600' },
+    { icon: FaTiktok, href: '#', label: 'TikTok', color: 'hover:text-black-600' },
     { icon: FaLinkedin, href: '#', label: 'LinkedIn', color: 'hover:text-blue-700' },
     { icon: FaYoutube, href: '#', label: 'YouTube', color: 'hover:text-red-600' },
   ];
@@ -83,7 +85,7 @@ export default function Footer() {
                 </div>
                 <div className="flex items-center space-x-3 text-sm">
                   <HiLocationMarker className="w-5 h-5 text-blue-500" />
-                  <span>Madrid, España</span>
+                  <span>Alicante, España</span>
                 </div>
               </div>
             </motion.div>

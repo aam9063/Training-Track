@@ -11,19 +11,30 @@ import {
   FiUser,
   FiPlus,
   FiCalendar,
+  FiUserCheck,
+  FiUserX,
+  FiClock,
 } from 'react-icons/fi';
-import { getAthletes, removeAthlete } from '../../services/athleteService';
+import {
+  getAthletes,
+  removeAthlete,
+  getPendingAthleteRequests,
+  acceptAthleteRequest,
+  rejectAthleteRequest,
+} from '../../services/athleteService';
 import WeeklyTrainingModal from '../../components/dashboard/WeeklyTrainingModal';
 
 const Athletes = () => {
   const { profile } = useAuth();
   const [athletes, setAthletes] = useState([]);
+  const [pendingRequests, setPendingRequests] = useState([]);
   const [filteredAthletes, setFilteredAthletes] = useState([]);
   const [loading, setLoading] = useState(true);
   const [searchTerm, setSearchTerm] = useState('');
   const [selectedSpecialty, setSelectedSpecialty] = useState('all');
   const [deleteModal, setDeleteModal] = useState({ show: false, athlete: null });
   const [trainingModal, setTrainingModal] = useState({ show: false, athlete: null });
+  const [processingRequest, setProcessingRequest] = useState(null);
 
   // Get unique specialties for filter
   const specialties = ['all', ...new Set(athletes.flatMap(a => a.specialties || []))];
@@ -37,31 +48,64 @@ const Athletes = () => {
   }, [athletes, searchTerm, selectedSpecialty]);
 
   const loadAthletes = async () => {
-    console.log('🚀 loadAthletes START');
-    
     if (!profile?.id) {
-      console.log('⚠️ No profile.id');
       setAthletes([]);
+      setPendingRequests([]);
       setLoading(false);
       return;
     }
 
     setLoading(true);
-    
+
     try {
       const coachId = profile.coach_id || profile.id;
-      console.log('🎯 loadAthletes - Coach ID:', coachId);
-      
-      // Cargar atletas (con retry automático)
-      const result = await getAthletes(coachId);
-      
-      console.log('✅ Atletas cargados:', result.data?.length || 0);
-      setAthletes(result.data || []);
+
+      // Cargar atletas activos y solicitudes pendientes en paralelo
+      const [athletesResult, pendingResult] = await Promise.all([
+        getAthletes(coachId),
+        getPendingAthleteRequests(coachId),
+      ]);
+
+      setAthletes(athletesResult.data || []);
+      setPendingRequests(pendingResult.data || []);
     } catch (error) {
-      console.error('❌ Error cargando atletas:', error.message);
+      console.error('Error cargando atletas:', error.message);
       setAthletes([]);
+      setPendingRequests([]);
     } finally {
       setLoading(false);
+    }
+  };
+
+  const handleAcceptRequest = async (request) => {
+    setProcessingRequest(request.relationshipId);
+    try {
+      const { error } = await acceptAthleteRequest(request.relationshipId);
+      if (error) throw error;
+
+      // Mover de pendientes a activos
+      setPendingRequests(prev => prev.filter(r => r.relationshipId !== request.relationshipId));
+      setAthletes(prev => [...prev, { ...request, status: 'active' }]);
+    } catch (error) {
+      console.error('Error aceptando solicitud:', error);
+      alert('Error al aceptar la solicitud');
+    } finally {
+      setProcessingRequest(null);
+    }
+  };
+
+  const handleRejectRequest = async (request) => {
+    setProcessingRequest(request.relationshipId);
+    try {
+      const { error } = await rejectAthleteRequest(request.relationshipId);
+      if (error) throw error;
+
+      setPendingRequests(prev => prev.filter(r => r.relationshipId !== request.relationshipId));
+    } catch (error) {
+      console.error('Error rechazando solicitud:', error);
+      alert('Error al rechazar la solicitud');
+    } finally {
+      setProcessingRequest(null);
     }
   };
 
@@ -186,6 +230,76 @@ const Athletes = () => {
           </div>
         </div>
       </div>
+
+      {/* Pending Requests Section */}
+      {pendingRequests.length > 0 && (
+        <motion.div
+          initial={{ opacity: 0, y: -10 }}
+          animate={{ opacity: 1, y: 0 }}
+          className="mb-6 bg-gradient-to-r from-amber-50 to-orange-50 dark:from-amber-900/20 dark:to-orange-900/20 rounded-xl border border-amber-200 dark:border-amber-800 overflow-hidden"
+        >
+          <div className="px-6 py-4 border-b border-amber-200 dark:border-amber-800 flex items-center space-x-3">
+            <div className="p-2 bg-amber-100 dark:bg-amber-900/50 rounded-lg">
+              <FiClock className="w-5 h-5 text-amber-600 dark:text-amber-400" />
+            </div>
+            <div>
+              <h3 className="text-lg font-semibold text-amber-800 dark:text-amber-200">
+                Solicitudes Pendientes
+              </h3>
+              <p className="text-sm text-amber-600 dark:text-amber-400">
+                {pendingRequests.length} atleta{pendingRequests.length !== 1 ? 's' : ''} quiere{pendingRequests.length !== 1 ? 'n' : ''} unirse a tu equipo
+              </p>
+            </div>
+          </div>
+          <div className="divide-y divide-amber-200 dark:divide-amber-800">
+            {pendingRequests.map((request) => (
+              <div
+                key={request.relationshipId}
+                className="px-6 py-4 flex items-center justify-between hover:bg-amber-100/50 dark:hover:bg-amber-900/30 transition-colors"
+              >
+                <div className="flex items-center space-x-4">
+                  <img
+                    src={
+                      request.profileImage ||
+                      `https://ui-avatars.com/api/?name=${encodeURIComponent(
+                        request.firstName + ' ' + request.lastName
+                      )}&background=f59e0b&color=fff`
+                    }
+                    alt={`${request.firstName} ${request.lastName}`}
+                    className="w-12 h-12 rounded-full"
+                  />
+                  <div>
+                    <p className="font-medium text-gray-900 dark:text-white">
+                      {request.firstName} {request.lastName}
+                    </p>
+                    <p className="text-sm text-gray-500 dark:text-gray-400">
+                      {request.email}
+                    </p>
+                  </div>
+                </div>
+                <div className="flex items-center space-x-2">
+                  <button
+                    onClick={() => handleAcceptRequest(request)}
+                    disabled={processingRequest === request.relationshipId}
+                    className="flex items-center space-x-2 px-4 py-2 bg-green-600 hover:bg-green-700 text-white rounded-lg transition-colors disabled:opacity-50"
+                  >
+                    <FiUserCheck className="w-4 h-4" />
+                    <span>Aceptar</span>
+                  </button>
+                  <button
+                    onClick={() => handleRejectRequest(request)}
+                    disabled={processingRequest === request.relationshipId}
+                    className="flex items-center space-x-2 px-4 py-2 bg-red-100 hover:bg-red-200 dark:bg-red-900/30 dark:hover:bg-red-900/50 text-red-600 dark:text-red-400 rounded-lg transition-colors disabled:opacity-50"
+                  >
+                    <FiUserX className="w-4 h-4" />
+                    <span>Rechazar</span>
+                  </button>
+                </div>
+              </div>
+            ))}
+          </div>
+        </motion.div>
+      )}
 
       {/* Athletes Table */}
       <div className="bg-white dark:bg-gray-800 rounded-xl shadow-sm border border-gray-200 dark:border-gray-700 overflow-hidden">

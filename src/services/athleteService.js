@@ -5,7 +5,7 @@ import { supabase } from '../lib/supabase';
  * Optimized queries without complex joins
  */
 
-// Get all athletes for the current coach
+// Get all athletes for the current coach (active relationships)
 export const getAthletes = async (coachId) => {
   if (!coachId) {
     console.warn('getAthletes: No coachId provided');
@@ -13,7 +13,7 @@ export const getAthletes = async (coachId) => {
   }
 
   try {
-    // Step 1: Get relationships
+    // Step 1: Get active relationships
     const { data: relationships, error: relError } = await supabase
       .from('coach_athlete_relationship')
       .select('id, athlete_id, status, start_date')
@@ -252,5 +252,108 @@ export const getAthletePaces = async (athleteId) => {
   } catch (error) {
     console.error('Error fetching athlete paces:', error);
     return { data: [], error };
+  }
+};
+
+// Get pending athlete requests for the coach
+export const getPendingAthleteRequests = async (coachId) => {
+  if (!coachId) {
+    console.warn('getPendingAthleteRequests: No coachId provided');
+    return { data: [], error: null };
+  }
+
+  try {
+    // Get pending relationships
+    const { data: relationships, error: relError } = await supabase
+      .from('coach_athlete_relationship')
+      .select('id, athlete_id, status, created_at')
+      .eq('coach_id', coachId)
+      .eq('status', 'pending')
+      .order('created_at', { ascending: false });
+
+    if (relError) {
+      console.error('Error fetching pending relationships:', relError);
+      return { data: [], error: relError };
+    }
+
+    if (!relationships || relationships.length === 0) {
+      return { data: [], error: null };
+    }
+
+    const athleteIds = relationships.map(r => r.athlete_id);
+
+    // Fetch athletes and users in parallel
+    const [athletesRes, usersRes] = await Promise.all([
+      supabase.from('athletes').select('*').in('id', athleteIds),
+      supabase.from('users').select('*').in('id', athleteIds),
+    ]);
+
+    // Combine data
+    const combined = relationships.map(rel => {
+      const athlete = athletesRes.data?.find(a => a.id === rel.athlete_id) || {};
+      const user = usersRes.data?.find(u => u.id === rel.athlete_id) || {};
+
+      return {
+        relationshipId: rel.id,
+        status: rel.status,
+        requestDate: rel.created_at,
+        id: rel.athlete_id,
+        specialties: athlete.specialties || [],
+        firstName: user.first_name || 'Sin nombre',
+        lastName: user.last_name || '',
+        email: user.email || '',
+        profileImage: user.profile_image,
+      };
+    });
+
+    return { data: combined, error: null };
+  } catch (error) {
+    console.error('Error in getPendingAthleteRequests:', error);
+    return { data: [], error };
+  }
+};
+
+// Accept athlete request
+export const acceptAthleteRequest = async (relationshipId) => {
+  if (!relationshipId) {
+    return { error: new Error('No relationshipId provided') };
+  }
+
+  try {
+    const { data, error } = await supabase
+      .from('coach_athlete_relationship')
+      .update({
+        status: 'active',
+        start_date: new Date().toISOString().split('T')[0],
+      })
+      .eq('id', relationshipId)
+      .select()
+      .single();
+
+    if (error) throw error;
+    return { data, error: null };
+  } catch (error) {
+    console.error('Error accepting athlete request:', error);
+    return { data: null, error };
+  }
+};
+
+// Reject athlete request
+export const rejectAthleteRequest = async (relationshipId) => {
+  if (!relationshipId) {
+    return { error: new Error('No relationshipId provided') };
+  }
+
+  try {
+    const { error } = await supabase
+      .from('coach_athlete_relationship')
+      .delete()
+      .eq('id', relationshipId);
+
+    if (error) throw error;
+    return { error: null };
+  } catch (error) {
+    console.error('Error rejecting athlete request:', error);
+    return { error };
   }
 };

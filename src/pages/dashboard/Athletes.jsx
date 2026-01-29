@@ -10,8 +10,10 @@ import {
   FiBarChart2,
   FiUser,
   FiPlus,
+  FiCalendar,
 } from 'react-icons/fi';
 import { getAthletes, removeAthlete } from '../../services/athleteService';
+import WeeklyTrainingModal from '../../components/dashboard/WeeklyTrainingModal';
 
 const Athletes = () => {
   const { profile } = useAuth();
@@ -21,6 +23,7 @@ const Athletes = () => {
   const [searchTerm, setSearchTerm] = useState('');
   const [selectedSpecialty, setSelectedSpecialty] = useState('all');
   const [deleteModal, setDeleteModal] = useState({ show: false, athlete: null });
+  const [trainingModal, setTrainingModal] = useState({ show: false, athlete: null });
 
   // Get unique specialties for filter
   const specialties = ['all', ...new Set(athletes.flatMap(a => a.specialties || []))];
@@ -281,6 +284,13 @@ const Athletes = () => {
                     </td>
                     <td className="px-6 py-4 whitespace-nowrap text-right text-sm font-medium">
                       <div className="flex items-center justify-end space-x-2">
+                        <button
+                          onClick={() => setTrainingModal({ show: true, athlete })}
+                          className="p-2 text-orange-600 hover:bg-orange-50 dark:hover:bg-orange-900/20 rounded-lg transition-colors"
+                          title="Crear Entrenamiento Semanal"
+                        >
+                          <FiCalendar className="w-5 h-5" />
+                        </button>
                         <Link
                           to={`/dashboard/athletes/${athlete.id}/metrics`}
                           className="p-2 text-purple-600 hover:bg-purple-50 dark:hover:bg-purple-900/20 rounded-lg transition-colors"
@@ -357,6 +367,18 @@ const Athletes = () => {
           </div>
         )}
       </AnimatePresence>
+
+      {/* Weekly Training Modal */}
+      <WeeklyTrainingModal
+        isOpen={trainingModal.show}
+        onClose={() => setTrainingModal({ show: false, athlete: null })}
+        athlete={trainingModal.athlete}
+        coachId={profile?.coach_id || profile?.id}
+        onSuccess={() => {
+          // Optionally refresh or show success message
+          console.log('Entrenamiento guardado exitosamente');
+        }}
+      />
     </div>
   );
 };

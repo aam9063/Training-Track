@@ -5,7 +5,7 @@
 
 const STRAVA_CLIENT_ID = import.meta.env.VITE_STRAVA_CLIENT_ID;
 const STRAVA_CLIENT_SECRET = import.meta.env.VITE_STRAVA_CLIENT_SECRET;
-const STRAVA_REDIRECT_URI = `${window.location.origin}/athlete/devices/strava/callback`;
+const STRAVA_REDIRECT_URI = `${window.location.origin}/athlete/devices`;
 
 const STRAVA_AUTH_URL = 'https://www.strava.com/oauth/authorize';
 const STRAVA_TOKEN_URL = 'https://www.strava.com/oauth/token';

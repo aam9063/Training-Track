@@ -1,7 +1,10 @@
 /**
  * Strava API Integration Service
  * Handles OAuth2 flow and activity synchronization
+ * Tokens are stored in Supabase (devices table) for persistence across sessions
  */
+
+import { supabase } from '../lib/supabase';
 
 const STRAVA_CLIENT_ID = import.meta.env.VITE_STRAVA_CLIENT_ID;
 const STRAVA_CLIENT_SECRET = import.meta.env.VITE_STRAVA_CLIENT_SECRET;
@@ -11,7 +14,7 @@ const STRAVA_AUTH_URL = 'https://www.strava.com/oauth/authorize';
 const STRAVA_TOKEN_URL = 'https://www.strava.com/oauth/token';
 const STRAVA_API_URL = 'https://www.strava.com/api/v3';
 
-// Storage keys
+// Local cache keys (for quick access, synced with DB)
 const STRAVA_TOKEN_KEY = 'strava_token';
 const STRAVA_ATHLETE_KEY = 'strava_athlete';
 
@@ -31,9 +34,78 @@ export const getStravaAuthUrl = () => {
 };
 
 /**
- * Exchange authorization code for access token
+ * Save Strava tokens to Supabase devices table
  */
-export const exchangeStravaCode = async (code) => {
+const saveTokensToDatabase = async (athleteId, tokenData, stravaAthlete) => {
+  try {
+    const { error } = await supabase
+      .from('devices')
+      .upsert({
+        athlete_id: athleteId,
+        device_type: 'strava',
+        device_name: stravaAthlete ? `${stravaAthlete.firstname} ${stravaAthlete.lastname}` : 'Strava',
+        access_token: tokenData.access_token,
+        refresh_token: tokenData.refresh_token,
+        token_expires_at: new Date(tokenData.expires_at * 1000).toISOString(),
+        last_sync: new Date().toISOString(),
+        sync_enabled: true,
+      }, {
+        onConflict: 'athlete_id,device_type',
+      });
+
+    if (error) throw error;
+    return { success: true };
+  } catch (error) {
+    console.error('Error saving tokens to database:', error);
+    return { success: false, error };
+  }
+};
+
+/**
+ * Get Strava tokens from Supabase devices table
+ */
+const getTokensFromDatabase = async (athleteId) => {
+  try {
+    const { data, error } = await supabase
+      .from('devices')
+      .select('*')
+      .eq('athlete_id', athleteId)
+      .eq('device_type', 'strava')
+      .single();
+
+    if (error && error.code !== 'PGRST116') throw error; // PGRST116 = no rows
+    return { data, error: null };
+  } catch (error) {
+    console.error('Error getting tokens from database:', error);
+    return { data: null, error };
+  }
+};
+
+/**
+ * Delete Strava connection from database
+ */
+const deleteTokensFromDatabase = async (athleteId) => {
+  try {
+    const { error } = await supabase
+      .from('devices')
+      .delete()
+      .eq('athlete_id', athleteId)
+      .eq('device_type', 'strava');
+
+    if (error) throw error;
+    return { success: true };
+  } catch (error) {
+    console.error('Error deleting tokens from database:', error);
+    return { success: false, error };
+  }
+};
+
+/**
+ * Exchange authorization code for access token
+ * @param {string} code - OAuth authorization code
+ * @param {string} athleteId - TrackPro athlete ID to associate tokens with
+ */
+export const exchangeStravaCode = async (code, athleteId = null) => {
   try {
     const response = await fetch(STRAVA_TOKEN_URL, {
       method: 'POST',
@@ -55,15 +127,20 @@ export const exchangeStravaCode = async (code) => {
 
     const data = await response.json();
 
-    // Store token data
     const tokenData = {
       access_token: data.access_token,
       refresh_token: data.refresh_token,
       expires_at: data.expires_at,
     };
 
+    // Save to localStorage for quick access
     localStorage.setItem(STRAVA_TOKEN_KEY, JSON.stringify(tokenData));
     localStorage.setItem(STRAVA_ATHLETE_KEY, JSON.stringify(data.athlete));
+
+    // Save to database if athleteId provided
+    if (athleteId) {
+      await saveTokensToDatabase(athleteId, tokenData, data.athlete);
+    }
 
     return { data, error: null };
   } catch (error) {
@@ -74,8 +151,9 @@ export const exchangeStravaCode = async (code) => {
 
 /**
  * Refresh the access token using refresh token
+ * @param {string} athleteId - TrackPro athlete ID (optional, for DB update)
  */
-export const refreshStravaToken = async () => {
+export const refreshStravaToken = async (athleteId = null) => {
   const tokenData = getStoredToken();
   if (!tokenData?.refresh_token) {
     return { data: null, error: new Error('No refresh token available') };
@@ -107,19 +185,25 @@ export const refreshStravaToken = async () => {
       expires_at: data.expires_at,
     };
 
+    // Update localStorage
     localStorage.setItem(STRAVA_TOKEN_KEY, JSON.stringify(newTokenData));
+
+    // Update database if athleteId provided
+    if (athleteId) {
+      await saveTokensToDatabase(athleteId, newTokenData, null);
+    }
 
     return { data: newTokenData, error: null };
   } catch (error) {
     console.error('Strava token refresh error:', error);
     // Clear invalid tokens
-    disconnectStrava();
+    disconnectStrava(athleteId);
     return { data: null, error };
   }
 };
 
 /**
- * Get stored token data
+ * Get stored token data from localStorage
  */
 export const getStoredToken = () => {
   try {
@@ -131,7 +215,7 @@ export const getStoredToken = () => {
 };
 
 /**
- * Get stored athlete data
+ * Get stored athlete data from localStorage
  */
 export const getStoredAthlete = () => {
   try {
@@ -140,6 +224,36 @@ export const getStoredAthlete = () => {
   } catch {
     return null;
   }
+};
+
+/**
+ * Load tokens from database and cache in localStorage
+ * Call this on app init or when user logs in
+ */
+export const loadStravaTokens = async (athleteId) => {
+  const { data } = await getTokensFromDatabase(athleteId);
+
+  if (data) {
+    const tokenData = {
+      access_token: data.access_token,
+      refresh_token: data.refresh_token,
+      expires_at: Math.floor(new Date(data.token_expires_at).getTime() / 1000),
+    };
+
+    localStorage.setItem(STRAVA_TOKEN_KEY, JSON.stringify(tokenData));
+
+    // Also fetch and cache athlete data if connected
+    if (tokenData.access_token) {
+      const { data: athleteData } = await getStravaAthlete();
+      if (athleteData) {
+        localStorage.setItem(STRAVA_ATHLETE_KEY, JSON.stringify(athleteData));
+      }
+    }
+
+    return { connected: true, tokenData };
+  }
+
+  return { connected: false, tokenData: null };
 };
 
 /**
@@ -155,9 +269,21 @@ export const isStravaConnected = () => {
 };
 
 /**
- * Get valid access token (refresh if needed)
+ * Check connection status from database
  */
-export const getValidAccessToken = async () => {
+export const checkStravaConnectionFromDB = async (athleteId) => {
+  const { data } = await getTokensFromDatabase(athleteId);
+  if (!data) return false;
+
+  // Token exists and can be refreshed
+  return !!data.refresh_token;
+};
+
+/**
+ * Get valid access token (refresh if needed)
+ * @param {string} athleteId - TrackPro athlete ID (optional, for DB update)
+ */
+export const getValidAccessToken = async (athleteId = null) => {
   const token = getStoredToken();
   if (!token) return null;
 
@@ -165,7 +291,7 @@ export const getValidAccessToken = async () => {
 
   // If token expires in less than 5 minutes, refresh it
   if (token.expires_at <= now + 300) {
-    const { data, error } = await refreshStravaToken();
+    const { data, error } = await refreshStravaToken(athleteId);
     if (error) return null;
     return data.access_token;
   }
@@ -175,17 +301,22 @@ export const getValidAccessToken = async () => {
 
 /**
  * Disconnect Strava (clear stored data)
+ * @param {string} athleteId - TrackPro athlete ID (optional, for DB deletion)
  */
-export const disconnectStrava = () => {
+export const disconnectStrava = async (athleteId = null) => {
   localStorage.removeItem(STRAVA_TOKEN_KEY);
   localStorage.removeItem(STRAVA_ATHLETE_KEY);
+
+  if (athleteId) {
+    await deleteTokensFromDatabase(athleteId);
+  }
 };
 
 /**
  * Make authenticated API request to Strava
  */
-const stravaApiRequest = async (endpoint, options = {}) => {
-  const accessToken = await getValidAccessToken();
+const stravaApiRequest = async (endpoint, options = {}, athleteId = null) => {
+  const accessToken = await getValidAccessToken(athleteId);
 
   if (!accessToken) {
     return { data: null, error: new Error('Not authenticated with Strava') };

@@ -15,6 +15,7 @@ import {
   FiLoader,
   FiX,
 } from 'react-icons/fi';
+import { useAuth } from '../../contexts/AuthContext';
 import {
   getStravaAuthUrl,
   exchangeStravaCode,
@@ -25,9 +26,11 @@ import {
   getStravaAthleteStats,
   formatStravaActivity,
   getActivityTypeLabel,
+  loadStravaTokens,
 } from '../../services/stravaService';
 
 const Devices = () => {
+  const { profile } = useAuth();
   const [searchParams, setSearchParams] = useSearchParams();
   const [stravaConnected, setStravaConnected] = useState(false);
   const [stravaAthlete, setStravaAthlete] = useState(null);
@@ -69,8 +72,15 @@ const Devices = () => {
   }, []);
 
   const checkStravaConnection = useCallback(async () => {
+    if (!profile?.id) return;
+
     setLoading(true);
-    const connected = isStravaConnected();
+
+    // First try to load from database (for persistence across sessions)
+    const { connected: dbConnected } = await loadStravaTokens(profile.id);
+
+    // Then check localStorage
+    const connected = dbConnected || isStravaConnected();
     setStravaConnected(connected);
 
     if (connected) {
@@ -79,7 +89,7 @@ const Devices = () => {
       await loadStravaData();
     }
     setLoading(false);
-  }, [loadStravaData]);
+  }, [loadStravaData, profile?.id]);
 
   // Handle OAuth callback
   useEffect(() => {
@@ -101,7 +111,8 @@ const Devices = () => {
     setLoading(true);
     setError(null);
 
-    const { data, error: callbackError } = await exchangeStravaCode(code);
+    // Pass athleteId to save tokens to database
+    const { data, error: callbackError } = await exchangeStravaCode(code, profile?.id);
 
     if (callbackError) {
       setError('Error al conectar con Strava. Inténtalo de nuevo.');
@@ -119,8 +130,9 @@ const Devices = () => {
     window.location.href = getStravaAuthUrl();
   };
 
-  const handleDisconnectStrava = () => {
-    disconnectStrava();
+  const handleDisconnectStrava = async () => {
+    // Pass athleteId to delete from database
+    await disconnectStrava(profile?.id);
     setStravaConnected(false);
     setStravaAthlete(null);
     setStravaActivities([]);

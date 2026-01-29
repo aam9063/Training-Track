@@ -62,8 +62,8 @@ export default function Navbar() {
             className="flex-shrink-0"
           >
             <a href="#inicio" className="flex items-center space-x-2">
-              <div className="w-10 h-10 bg-gradient-to-br from-blue-600 to-purple-600 rounded-lg flex items-center justify-center">
-                <span className="text-white font-bold text-xl">T</span>
+              <div className="w-10 h-10 bg-gradient-to-br from-blue-600 to-purple-600 rounded-lg flex items-center justify-center overflow-hidden">
+                <img src="/img/logo.png" alt="TrackPro" className="w-16 h-16 object-contain" />
               </div>
               <span className="text-2xl font-bold bg-gradient-to-r from-blue-600 to-purple-600 bg-clip-text text-transparent">
                 TrackPro

@@ -121,8 +121,17 @@ export const exchangeStravaCode = async (code, athleteId = null) => {
     });
 
     if (!response.ok) {
-      const error = await response.json();
-      throw new Error(error.message || 'Failed to exchange code');
+      const errorData = await response.json();
+
+      // Handle athlete limit exceeded error
+      if (response.status === 403) {
+        const limitError = new Error('ATHLETE_LIMIT_EXCEEDED');
+        limitError.userMessage = 'La aplicación ha alcanzado el límite de usuarios de Strava. Por favor, contacta al administrador para solicitar un aumento del límite.';
+        limitError.isLimitError = true;
+        throw limitError;
+      }
+
+      throw new Error(errorData.message || 'Failed to exchange code');
     }
 
     const data = await response.json();

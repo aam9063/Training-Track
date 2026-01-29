@@ -115,7 +115,12 @@ const Devices = () => {
     const { data, error: callbackError } = await exchangeStravaCode(code, profile?.id);
 
     if (callbackError) {
-      setError('Error al conectar con Strava. Inténtalo de nuevo.');
+      // Check if it's the athlete limit error
+      if (callbackError.isLimitError) {
+        setError(callbackError.userMessage);
+      } else {
+        setError('Error al conectar con Strava. Inténtalo de nuevo.');
+      }
       setLoading(false);
       return;
     }

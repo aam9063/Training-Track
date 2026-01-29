@@ -26,11 +26,18 @@ export default function Navbar() {
     { name: 'FAQ', href: '#faq' },
   ];
 
-  const scrollToSection = (href) => {
+  const scrollToSection = (href, fromMobile = false) => {
     const element = document.querySelector(href);
     if (element) {
-      element.scrollIntoView({ behavior: 'smooth' });
-      setIsMobileMenuOpen(false);
+      if (fromMobile) {
+        // Close menu first, then scroll after animation completes
+        setIsMobileMenuOpen(false);
+        setTimeout(() => {
+          element.scrollIntoView({ behavior: 'smooth' });
+        }, 350);
+      } else {
+        element.scrollIntoView({ behavior: 'smooth' });
+      }
     }
   };
 
@@ -168,22 +175,18 @@ export default function Navbar() {
           >
             <div className="px-4 py-6 space-y-4">
               {navLinks.map((link) => (
-                <a
+                <button
                   key={link.name}
-                  href={link.href}
-                  onClick={(e) => {
-                    e.preventDefault();
-                    scrollToSection(link.href);
-                  }}
-                  className="block px-4 py-2 text-gray-700 dark:text-gray-300 hover:bg-gray-100 dark:hover:bg-gray-800 rounded-lg transition-colors duration-200"
+                  onClick={() => scrollToSection(link.href, true)}
+                  className="block w-full text-left px-4 py-2 text-gray-700 dark:text-gray-300 hover:bg-gray-100 dark:hover:bg-gray-800 rounded-lg transition-colors duration-200"
                 >
                   {link.name}
-                </a>
+                </button>
               ))}
 
               <div className="pt-4 space-y-3">
                 <Link to="/login" onClick={() => setIsMobileMenuOpen(false)}>
-                  <button className="w-full px-6 py-3 text-gray-700 dark:text-gray-300 border-2 border-gray-300 dark:border-gray-600 rounded-lg font-medium hover:border-blue-600 dark:hover:border-blue-400 transition-colors duration-200">
+                  <button className="w-full px-6 py-3 mb-4 text-gray-700 dark:text-gray-300 border-2 border-gray-300 dark:border-gray-600 rounded-lg font-medium hover:border-blue-600 dark:hover:border-blue-400 transition-colors duration-200">
                     Iniciar Sesión
                   </button>
                 </Link>

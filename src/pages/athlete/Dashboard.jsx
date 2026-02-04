@@ -488,9 +488,9 @@ const AthleteDashboard = () => {
 
             <Link
               to="/athlete/devices"
-              className="p-4 bg-gradient-to-br from-purple-50 to-pink-50 dark:from-purple-900/20 dark:to-pink-900/20 rounded-xl border border-purple-100 dark:border-purple-800/30 hover:shadow-md transition-all group"
+              className="p-4 bg-gradient-to-br from-orange-50 to-pink-50 dark:from-orange-900/20 dark:to-pink-900/20 rounded-xl border border-orange-100 dark:border-orange-800/30 hover:shadow-md transition-all group"
             >
-              <div className="w-10 h-10 bg-purple-500 rounded-lg flex items-center justify-center mb-3 group-hover:scale-110 transition-transform">
+              <div className="w-10 h-10 bg-orange-500 rounded-lg flex items-center justify-center mb-3 group-hover:scale-110 transition-transform">
                 <FiActivity className="w-5 h-5 text-white" />
               </div>
               <p className="font-semibold text-gray-900 dark:text-white text-sm">Strava</p>

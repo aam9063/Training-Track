@@ -483,3 +483,299 @@ export const getActivityTypeLabel = (type) => {
 
   return types[type] || type;
 };
+
+/**
+ * Calculate aggregated metrics from Strava activities
+ * @param {Array} activities - Array of raw Strava activities
+ * @returns {Object} Aggregated metrics
+ */
+export const calculateStravaMetrics = (activities) => {
+  if (!activities || activities.length === 0) {
+    return {
+      totalActivities: 0,
+      totalDistance: 0,
+      totalTime: 0,
+      totalElevation: 0,
+      avgPace: null,
+      avgHeartrate: null,
+      avgDistance: 0,
+      longestRun: null,
+      fastestPace: null,
+      weeklyStats: [],
+      activityTypes: {},
+    };
+  }
+
+  // Filter only running activities for pace calculations
+  const runningTypes = ['Run', 'TrailRun', 'VirtualRun'];
+  const runningActivities = activities.filter(a => runningTypes.includes(a.type));
+  const allActivities = activities;
+
+  // Basic totals
+  const totalDistance = allActivities.reduce((sum, a) => sum + (a.distance || 0), 0);
+  const totalTime = allActivities.reduce((sum, a) => sum + (a.moving_time || 0), 0);
+  const totalElevation = allActivities.reduce((sum, a) => sum + (a.total_elevation_gain || 0), 0);
+
+  // Running-specific metrics
+  const runningDistance = runningActivities.reduce((sum, a) => sum + (a.distance || 0), 0);
+  const runningTime = runningActivities.reduce((sum, a) => sum + (a.moving_time || 0), 0);
+
+  // Average pace (only for running)
+  const avgPace = runningDistance > 0
+    ? calculatePace(runningTime, runningDistance)
+    : null;
+
+  // Average heartrate (only activities with HR data)
+  const hrActivities = allActivities.filter(a => a.average_heartrate);
+  const avgHeartrate = hrActivities.length > 0
+    ? Math.round(hrActivities.reduce((sum, a) => sum + a.average_heartrate, 0) / hrActivities.length)
+    : null;
+
+  // Longest run
+  const longestRun = runningActivities.length > 0
+    ? runningActivities.reduce((max, a) => a.distance > max.distance ? a : max, runningActivities[0])
+    : null;
+
+  // Fastest pace (min 1km distance to be meaningful)
+  const meaningfulRuns = runningActivities.filter(a => a.distance >= 1000);
+  const fastestPace = meaningfulRuns.length > 0
+    ? meaningfulRuns.reduce((fastest, a) => {
+        const pace = a.moving_time / (a.distance / 1000);
+        const fastestPaceVal = fastest.moving_time / (fastest.distance / 1000);
+        return pace < fastestPaceVal ? a : fastest;
+      }, meaningfulRuns[0])
+    : null;
+
+  // Activity types breakdown
+  const activityTypes = allActivities.reduce((types, a) => {
+    const type = a.type || 'Other';
+    if (!types[type]) {
+      types[type] = { count: 0, distance: 0, time: 0 };
+    }
+    types[type].count++;
+    types[type].distance += a.distance || 0;
+    types[type].time += a.moving_time || 0;
+    return types;
+  }, {});
+
+  // Weekly breakdown (last 4 weeks)
+  const weeklyStats = calculateWeeklyStats(allActivities);
+
+  return {
+    totalActivities: allActivities.length,
+    totalDistance,
+    totalDistanceKm: (totalDistance / 1000).toFixed(1),
+    totalTime,
+    totalTimeFormatted: formatDuration(totalTime),
+    totalElevation: Math.round(totalElevation),
+    avgPace,
+    avgHeartrate,
+    avgDistance: allActivities.length > 0 ? totalDistance / allActivities.length : 0,
+    avgDistanceKm: allActivities.length > 0 ? (totalDistance / allActivities.length / 1000).toFixed(1) : '0',
+    longestRun: longestRun ? {
+      name: longestRun.name,
+      distance: longestRun.distance,
+      distanceKm: (longestRun.distance / 1000).toFixed(2),
+      date: longestRun.start_date_local,
+    } : null,
+    fastestPace: fastestPace ? {
+      name: fastestPace.name,
+      pace: calculatePace(fastestPace.moving_time, fastestPace.distance),
+      distance: fastestPace.distance,
+      date: fastestPace.start_date_local,
+    } : null,
+    weeklyStats,
+    activityTypes,
+    runningActivities: runningActivities.length,
+  };
+};
+
+/**
+ * Calculate weekly statistics from activities
+ * @param {Array} activities - Array of Strava activities
+ * @returns {Array} Weekly stats for last 4 weeks
+ */
+const calculateWeeklyStats = (activities) => {
+  const weeks = [];
+  const now = new Date();
+
+  for (let i = 0; i < 4; i++) {
+    const weekEnd = new Date(now);
+    weekEnd.setDate(weekEnd.getDate() - (i * 7));
+    weekEnd.setHours(23, 59, 59, 999);
+
+    const weekStart = new Date(weekEnd);
+    weekStart.setDate(weekStart.getDate() - 6);
+    weekStart.setHours(0, 0, 0, 0);
+
+    const weekActivities = activities.filter(a => {
+      const activityDate = new Date(a.start_date_local);
+      return activityDate >= weekStart && activityDate <= weekEnd;
+    });
+
+    const distance = weekActivities.reduce((sum, a) => sum + (a.distance || 0), 0);
+    const time = weekActivities.reduce((sum, a) => sum + (a.moving_time || 0), 0);
+    const elevation = weekActivities.reduce((sum, a) => sum + (a.total_elevation_gain || 0), 0);
+
+    weeks.push({
+      weekNumber: i === 0 ? 'Esta semana' : i === 1 ? 'Semana pasada' : `Hace ${i} semanas`,
+      weekStart: weekStart.toISOString(),
+      weekEnd: weekEnd.toISOString(),
+      activities: weekActivities.length,
+      distance,
+      distanceKm: (distance / 1000).toFixed(1),
+      time,
+      timeFormatted: formatDuration(time),
+      elevation: Math.round(elevation),
+    });
+  }
+
+  return weeks;
+};
+
+/**
+ * Calculate period comparison (current vs previous)
+ * @param {Array} currentActivities - Activities from current period
+ * @param {Array} previousActivities - Activities from previous period
+ * @returns {Object} Comparison metrics with percentage changes
+ */
+export const calculatePeriodComparison = (currentActivities, previousActivities) => {
+  const current = {
+    distance: currentActivities.reduce((sum, a) => sum + (a.distance || 0), 0),
+    time: currentActivities.reduce((sum, a) => sum + (a.moving_time || 0), 0),
+    activities: currentActivities.length,
+    elevation: currentActivities.reduce((sum, a) => sum + (a.total_elevation_gain || 0), 0),
+  };
+
+  const previous = {
+    distance: previousActivities.reduce((sum, a) => sum + (a.distance || 0), 0),
+    time: previousActivities.reduce((sum, a) => sum + (a.moving_time || 0), 0),
+    activities: previousActivities.length,
+    elevation: previousActivities.reduce((sum, a) => sum + (a.total_elevation_gain || 0), 0),
+  };
+
+  const calcChange = (curr, prev) => {
+    if (prev === 0) return curr > 0 ? 100 : 0;
+    return Math.round(((curr - prev) / prev) * 100);
+  };
+
+  return {
+    current,
+    previous,
+    changes: {
+      distance: calcChange(current.distance, previous.distance),
+      time: calcChange(current.time, previous.time),
+      activities: calcChange(current.activities, previous.activities),
+      elevation: calcChange(current.elevation, previous.elevation),
+    },
+  };
+};
+
+/**
+ * Extract best efforts/personal bests from Strava activities
+ * Looks for standard distances: 1km, 5km, 10km, Half Marathon, Marathon
+ * @param {Array} activities - Array of raw Strava activities with best_efforts
+ * @returns {Array} Best efforts sorted by distance
+ */
+export const extractBestEfforts = (activities) => {
+  if (!activities || activities.length === 0) return [];
+
+  // Standard distances we want to track (in meters)
+  const targetDistances = [
+    { name: '1 km', meters: 1000, tolerance: 50 },
+    { name: '1 Milla', meters: 1609, tolerance: 50 },
+    { name: '5 km', meters: 5000, tolerance: 100 },
+    { name: '10 km', meters: 10000, tolerance: 200 },
+    { name: 'Media Maratón', meters: 21097, tolerance: 500 },
+    { name: 'Maratón', meters: 42195, tolerance: 1000 },
+  ];
+
+  const bestEfforts = {};
+
+  // First, check if activities have best_efforts from Strava (detailed activity)
+  activities.forEach(activity => {
+    if (activity.best_efforts) {
+      activity.best_efforts.forEach(effort => {
+        const key = effort.name;
+        if (!bestEfforts[key] || effort.moving_time < bestEfforts[key].time) {
+          bestEfforts[key] = {
+            name: effort.name,
+            distance: effort.distance,
+            time: effort.moving_time,
+            timeFormatted: formatDuration(effort.moving_time),
+            date: activity.start_date_local,
+            activityName: activity.name,
+            activityId: activity.id,
+          };
+        }
+      });
+    }
+  });
+
+  // If no best_efforts, calculate from activity distances
+  if (Object.keys(bestEfforts).length === 0) {
+    const runningActivities = activities.filter(a =>
+      ['Run', 'TrailRun', 'VirtualRun'].includes(a.type)
+    );
+
+    targetDistances.forEach(target => {
+      // Find activities that match this distance (within tolerance)
+      const matchingActivities = runningActivities.filter(a => {
+        const diff = Math.abs(a.distance - target.meters);
+        return diff <= target.tolerance;
+      });
+
+      if (matchingActivities.length > 0) {
+        // Get the fastest one
+        const fastest = matchingActivities.reduce((best, a) =>
+          a.moving_time < best.moving_time ? a : best
+        );
+
+        bestEfforts[target.name] = {
+          name: target.name,
+          distance: fastest.distance,
+          time: fastest.moving_time,
+          timeFormatted: formatDuration(fastest.moving_time),
+          pace: calculatePace(fastest.moving_time, fastest.distance),
+          date: fastest.start_date_local,
+          activityName: fastest.name,
+          activityId: fastest.id,
+        };
+      }
+    });
+  }
+
+  // Convert to array and sort by distance
+  return Object.values(bestEfforts).sort((a, b) => a.distance - b.distance);
+};
+
+/**
+ * Get estimated race times based on a reference time
+ * Uses Riegel formula: T2 = T1 * (D2/D1)^1.06
+ * @param {number} referenceDistance - Distance in meters
+ * @param {number} referenceTime - Time in seconds
+ * @returns {Object} Estimated times for various distances
+ */
+export const estimateRaceTimes = (referenceDistance, referenceTime) => {
+  const distances = [
+    { name: '5 km', meters: 5000 },
+    { name: '10 km', meters: 10000 },
+    { name: 'Media Maratón', meters: 21097 },
+    { name: 'Maratón', meters: 42195 },
+  ];
+
+  const estimates = {};
+
+  distances.forEach(d => {
+    if (d.meters !== referenceDistance) {
+      const estimatedTime = referenceTime * Math.pow(d.meters / referenceDistance, 1.06);
+      estimates[d.name] = {
+        time: Math.round(estimatedTime),
+        timeFormatted: formatDuration(Math.round(estimatedTime)),
+        pace: calculatePace(Math.round(estimatedTime), d.meters),
+      };
+    }
+  });
+
+  return estimates;
+};

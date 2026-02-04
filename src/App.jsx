@@ -10,6 +10,7 @@ import Register from './pages/Register';
 import Dashboard from './pages/dashboard/Dashboard';
 import Athletes from './pages/dashboard/Athletes';
 import AthleteProfile from './pages/dashboard/AthleteProfile';
+import AthleteMetricsView from './pages/dashboard/AthleteMetricsView';
 import Metrics from './pages/dashboard/Metrics';
 import Calendar from './pages/dashboard/Calendar';
 import Profile from './pages/dashboard/Profile';
@@ -18,6 +19,7 @@ import AthleteDashboard from './pages/athlete/Dashboard';
 import Training from './pages/athlete/Training';
 import AthleteMetrics from './pages/athlete/Metrics';
 import Devices from './pages/athlete/Devices';
+import AthleteMessages from './pages/athlete/Messages';
 import './index.css';
 
 function App() {
@@ -36,7 +38,7 @@ function App() {
               <Route index element={<Dashboard />} />
               <Route path="athletes" element={<Athletes />} />
               <Route path="athletes/:athleteId" element={<AthleteProfile />} />
-              <Route path="athletes/:athleteId/metrics" element={<AthleteProfile />} />
+              <Route path="athletes/:athleteId/metrics" element={<AthleteMetricsView />} />
               <Route path="metrics" element={<Metrics />} />
               <Route path="calendar" element={<Calendar />} />
               <Route path="profile" element={<Profile />} />
@@ -48,6 +50,7 @@ function App() {
               <Route path="training" element={<Training />} />
               <Route path="metrics" element={<AthleteMetrics />} />
               <Route path="devices" element={<Devices />} />
+              <Route path="messages" element={<AthleteMessages />} />
               <Route path="profile" element={<Profile />} />
             </Route>
 

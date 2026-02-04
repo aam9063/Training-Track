@@ -12,6 +12,7 @@ import {
   FiUser,
   FiMenu,
   FiX,
+  FiMessageSquare,
 } from 'react-icons/fi';
 
 const Sidebar = ({ onCollapse }) => {
@@ -221,6 +222,17 @@ const Sidebar = ({ onCollapse }) => {
                   <FiUser className="w-4 h-4" />
                   <span>Mi Perfil</span>
                 </button>
+                <button
+                  onClick={() => {
+                    navigate('/dashboard/messages');
+                    setShowUserMenu(false);
+                  }}
+                  className="w-full flex items-center space-x-2 px-4 py-2 text-sm text-gray-700 dark:text-gray-300 hover:bg-gray-100 dark:hover:bg-gray-700 transition-colors"
+                >
+                  <FiMessageSquare className="w-4 h-4" />
+                  <span>Mis Mensajes</span>
+                </button>
+                <div className="border-t border-gray-200 dark:border-gray-700 my-1"></div>
                 <button
                   onClick={handleSignOut}
                   className="w-full flex items-center space-x-2 px-4 py-2 text-sm text-red-600 dark:text-red-400 hover:bg-red-50 dark:hover:bg-red-900/20 transition-colors"

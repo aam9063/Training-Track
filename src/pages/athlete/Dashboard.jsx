@@ -9,9 +9,14 @@ import {
   FiArrowRight,
   FiClock,
   FiLoader,
+  FiFlag,
+  FiBarChart2,
+  FiMapPin,
+  FiAward,
 } from 'react-icons/fi';
 import { supabase } from '../../lib/supabase';
 import { getWeekStartDate } from '../../services/weeklyTrainingService';
+import { getAthleteCompetitions } from '../../services/athleteService';
 
 const AthleteDashboard = () => {
   const { user, profile } = useAuth();
@@ -23,6 +28,7 @@ const AthleteDashboard = () => {
     avgPace: '-',
   });
   const [upcomingSessions, setUpcomingSessions] = useState([]);
+  const [upcomingCompetitions, setUpcomingCompetitions] = useState([]);
 
   const displayName = profile?.first_name || user?.user_metadata?.first_name || 'Atleta';
 
@@ -130,6 +136,10 @@ const AthleteDashboard = () => {
       }));
 
       setUpcomingSessions(upcoming.slice(0, 3));
+
+      // Fetch upcoming competitions
+      const { data: competitions } = await getAthleteCompetitions(profile.id);
+      setUpcomingCompetitions((competitions || []).slice(0, 3));
     } catch (error) {
       console.error('Error loading dashboard data:', error);
     } finally {
@@ -340,6 +350,155 @@ const AthleteDashboard = () => {
           </div>
         )}
       </motion.div>
+
+      {/* Two Column Layout: Competitions & Quick Access */}
+      <div className="grid grid-cols-1 lg:grid-cols-2 gap-4 sm:gap-6 mt-6">
+        {/* Upcoming Competitions */}
+        <motion.div
+          initial={{ opacity: 0, y: 20 }}
+          animate={{ opacity: 1, y: 0 }}
+          transition={{ delay: 0.6 }}
+          className="bg-white dark:bg-gray-800 rounded-xl p-4 sm:p-6 shadow-sm border border-gray-200 dark:border-gray-700"
+        >
+          <div className="flex items-center justify-between mb-4">
+            <h2 className="text-lg font-bold text-gray-900 dark:text-white flex items-center">
+              <FiFlag className="w-5 h-5 mr-2 text-red-500" />
+              Próximas Competiciones
+            </h2>
+          </div>
+
+          {upcomingCompetitions.length > 0 ? (
+            <div className="space-y-3">
+              {upcomingCompetitions.map((competition) => {
+                const eventDate = new Date(competition.event_date);
+                const daysUntil = Math.ceil((eventDate - new Date()) / (1000 * 60 * 60 * 24));
+
+                return (
+                  <div
+                    key={competition.id}
+                    className="p-3 sm:p-4 bg-gradient-to-r from-red-50 to-orange-50 dark:from-red-900/20 dark:to-orange-900/20 rounded-lg border border-red-100 dark:border-red-800/30"
+                  >
+                    <div className="flex items-start justify-between">
+                      <div className="flex-1 min-w-0">
+                        <div className="flex items-center space-x-2 mb-1">
+                          <span className={`text-xs font-bold px-2 py-0.5 rounded ${
+                            competition.priority === 'A'
+                              ? 'bg-red-500 text-white'
+                              : competition.priority === 'B'
+                              ? 'bg-orange-500 text-white'
+                              : 'bg-gray-500 text-white'
+                          }`}>
+                            {competition.priority}
+                          </span>
+                          <p className="font-semibold text-gray-900 dark:text-white truncate">
+                            {competition.name}
+                          </p>
+                        </div>
+                        <div className="flex items-center space-x-3 text-sm text-gray-600 dark:text-gray-400">
+                          <span className="flex items-center">
+                            <FiCalendar className="w-3.5 h-3.5 mr-1" />
+                            {eventDate.toLocaleDateString('es-ES', {
+                              day: 'numeric',
+                              month: 'short',
+                            })}
+                          </span>
+                          {competition.location && (
+                            <span className="flex items-center truncate">
+                              <FiMapPin className="w-3.5 h-3.5 mr-1 flex-shrink-0" />
+                              <span className="truncate">{competition.location}</span>
+                            </span>
+                          )}
+                        </div>
+                        {competition.distance_name && (
+                          <p className="text-xs text-gray-500 dark:text-gray-500 mt-1">
+                            {competition.distance_name}
+                            {competition.distance_km && ` (${competition.distance_km} km)`}
+                          </p>
+                        )}
+                      </div>
+                      <div className="text-right ml-3 flex-shrink-0">
+                        <p className="text-2xl font-bold text-red-600 dark:text-red-400">{daysUntil}</p>
+                        <p className="text-xs text-gray-500 dark:text-gray-400">días</p>
+                      </div>
+                    </div>
+                  </div>
+                );
+              })}
+            </div>
+          ) : (
+            <div className="text-center py-8">
+              <FiFlag className="w-10 h-10 text-gray-300 dark:text-gray-600 mx-auto mb-3" />
+              <p className="text-gray-500 dark:text-gray-400 text-sm">
+                No hay competiciones programadas
+              </p>
+              <p className="text-xs text-gray-400 dark:text-gray-500 mt-1">
+                Tu entrenador añadirá tus próximos objetivos
+              </p>
+            </div>
+          )}
+        </motion.div>
+
+        {/* Quick Access to Metrics */}
+        <motion.div
+          initial={{ opacity: 0, y: 20 }}
+          animate={{ opacity: 1, y: 0 }}
+          transition={{ delay: 0.7 }}
+          className="bg-white dark:bg-gray-800 rounded-xl p-4 sm:p-6 shadow-sm border border-gray-200 dark:border-gray-700"
+        >
+          <div className="flex items-center justify-between mb-4">
+            <h2 className="text-lg font-bold text-gray-900 dark:text-white flex items-center">
+              <FiBarChart2 className="w-5 h-5 mr-2 text-blue-500" />
+              Acceso Rápido
+            </h2>
+          </div>
+
+          <div className="grid grid-cols-2 gap-3">
+            <Link
+              to="/athlete/metrics"
+              className="p-4 bg-gradient-to-br from-blue-50 to-indigo-50 dark:from-blue-900/20 dark:to-indigo-900/20 rounded-xl border border-blue-100 dark:border-blue-800/30 hover:shadow-md transition-all group"
+            >
+              <div className="w-10 h-10 bg-blue-500 rounded-lg flex items-center justify-center mb-3 group-hover:scale-110 transition-transform">
+                <FiBarChart2 className="w-5 h-5 text-white" />
+              </div>
+              <p className="font-semibold text-gray-900 dark:text-white text-sm">Mis Métricas</p>
+              <p className="text-xs text-gray-500 dark:text-gray-400 mt-1">VO2max, ritmos, progreso</p>
+            </Link>
+
+            <Link
+              to="/athlete/metrics"
+              className="p-4 bg-gradient-to-br from-green-50 to-emerald-50 dark:from-green-900/20 dark:to-emerald-900/20 rounded-xl border border-green-100 dark:border-green-800/30 hover:shadow-md transition-all group"
+            >
+              <div className="w-10 h-10 bg-green-500 rounded-lg flex items-center justify-center mb-3 group-hover:scale-110 transition-transform">
+                <FiTrendingUp className="w-5 h-5 text-white" />
+              </div>
+              <p className="font-semibold text-gray-900 dark:text-white text-sm">Progresión</p>
+              <p className="text-xs text-gray-500 dark:text-gray-400 mt-1">Evolución semanal</p>
+            </Link>
+
+            <Link
+              to="/athlete/metrics"
+              className="p-4 bg-gradient-to-br from-yellow-50 to-orange-50 dark:from-yellow-900/20 dark:to-orange-900/20 rounded-xl border border-yellow-100 dark:border-yellow-800/30 hover:shadow-md transition-all group"
+            >
+              <div className="w-10 h-10 bg-yellow-500 rounded-lg flex items-center justify-center mb-3 group-hover:scale-110 transition-transform">
+                <FiAward className="w-5 h-5 text-white" />
+              </div>
+              <p className="font-semibold text-gray-900 dark:text-white text-sm">Marcas</p>
+              <p className="text-xs text-gray-500 dark:text-gray-400 mt-1">Récords personales</p>
+            </Link>
+
+            <Link
+              to="/athlete/devices"
+              className="p-4 bg-gradient-to-br from-purple-50 to-pink-50 dark:from-purple-900/20 dark:to-pink-900/20 rounded-xl border border-purple-100 dark:border-purple-800/30 hover:shadow-md transition-all group"
+            >
+              <div className="w-10 h-10 bg-purple-500 rounded-lg flex items-center justify-center mb-3 group-hover:scale-110 transition-transform">
+                <FiActivity className="w-5 h-5 text-white" />
+              </div>
+              <p className="font-semibold text-gray-900 dark:text-white text-sm">Strava</p>
+              <p className="text-xs text-gray-500 dark:text-gray-400 mt-1">Actividades recientes</p>
+            </Link>
+          </div>
+        </motion.div>
+      </div>
     </div>
   );
 };

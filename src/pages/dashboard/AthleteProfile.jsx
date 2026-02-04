@@ -18,6 +18,9 @@ import {
   FiTarget,
   FiZap,
   FiX,
+  FiPlus,
+  FiTrash2,
+  FiAward,
 } from 'react-icons/fi';
 import { Line } from 'react-chartjs-2';
 import {
@@ -50,7 +53,9 @@ import {
   getAthleteStravaConnection,
   getAthleteStravaActivityDetail,
   getAthleteMetrics,
-  getAthleteEvents,
+  getAthleteCompetitions,
+  createAthleteCompetition,
+  deleteAthleteCompetition,
 } from '../../services/athleteService';
 import {
   getAthleteWeeklyTraining,
@@ -62,6 +67,8 @@ import {
   formatDuration,
   calculatePace,
   getActivityTypeLabel,
+  calculateStravaMetrics,
+  extractBestEfforts,
 } from '../../services/stravaService';
 import mapboxgl from 'mapbox-gl';
 import polyline from '@mapbox/polyline';
@@ -84,9 +91,14 @@ const AthleteProfile = () => {
   const [stravaActivities, setStravaActivities] = useState([]);
   const [stravaLoading, setStravaLoading] = useState(true);
   const [stravaConnected, setStravaConnected] = useState(false);
+  const [stravaMetrics, setStravaMetrics] = useState(null);
+  const [stravaBestEfforts, setStravaBestEfforts] = useState([]);
   const [metrics, setMetrics] = useState([]);
   const [events, setEvents] = useState([]);
   const [selectedActivity, setSelectedActivity] = useState(null);
+  const [showEventModal, setShowEventModal] = useState(false);
+  const [newEvent, setNewEvent] = useState({ name: '', date: '', distance: '', location: '', notes: '' });
+  const [savingEvent, setSavingEvent] = useState(false);
   const mapContainerRef = useRef(null);
   const mapRef = useRef(null);
 
@@ -172,14 +184,23 @@ const AthleteProfile = () => {
         setStravaConnected(!!connection);
 
         if (connection) {
-          // Get last 30 days
-          const thirtyDaysAgo = Math.floor((Date.now() - 30 * 24 * 60 * 60 * 1000) / 1000);
+          // Get latest activities (30 for metrics calculation)
           const { data: activities } = await getAthleteStravaActivities(athleteId, {
-            after: thirtyDaysAgo,
-            per_page: 15,
+            per_page: 30,
           });
 
-          setStravaActivities(activities?.map(formatStravaActivity) || []);
+          if (activities?.length > 0) {
+            // Format for display (only show 15 most recent)
+            setStravaActivities(activities.slice(0, 15).map(formatStravaActivity));
+            // Calculate metrics from all 30 activities
+            setStravaMetrics(calculateStravaMetrics(activities));
+            // Extract best efforts/personal bests
+            setStravaBestEfforts(extractBestEfforts(activities));
+          } else {
+            setStravaActivities([]);
+            setStravaMetrics(null);
+            setStravaBestEfforts([]);
+          }
         }
       } catch (error) {
         console.error('Error loading Strava data:', error);
@@ -191,19 +212,31 @@ const AthleteProfile = () => {
     loadStravaData();
   }, [athleteId]);
 
-  // Load metrics and events
+  // Load competitions
+  const loadCompetitions = useCallback(async () => {
+    if (!athleteId) return;
+    try {
+      const { data, error } = await getAthleteCompetitions(athleteId);
+      if (error) throw error;
+      setEvents(data || []);
+    } catch (error) {
+      console.error('Error loading competitions:', error);
+    }
+  }, [athleteId]);
+
+  // Load metrics and competitions
   useEffect(() => {
     const loadAdditionalData = async () => {
       if (!athleteId) return;
 
       try {
-        const [metricsRes, eventsRes] = await Promise.all([
+        const [metricsRes, competitionsRes] = await Promise.all([
           getAthleteMetrics(athleteId),
-          getAthleteEvents(athleteId),
+          getAthleteCompetitions(athleteId),
         ]);
 
         setMetrics(metricsRes.data || []);
-        setEvents(eventsRes.data || []);
+        setEvents(competitionsRes.data || []);
       } catch (error) {
         console.error('Error loading additional data:', error);
       }
@@ -211,6 +244,51 @@ const AthleteProfile = () => {
 
     loadAdditionalData();
   }, [athleteId]);
+
+  // Handle save competition
+  const handleSaveEvent = async () => {
+    if (!newEvent.name || !newEvent.date) return;
+
+    setSavingEvent(true);
+    try {
+      const competitionData = {
+        name: newEvent.name,
+        event_date: newEvent.date,
+        distance_km: newEvent.distance ? parseFloat(newEvent.distance) : null,
+        location: newEvent.location || null,
+        notes: newEvent.notes || null,
+      };
+
+      const { error } = await createAthleteCompetition(profile.id, athleteId, competitionData);
+      if (error) throw error;
+
+      // Reset form and close modal
+      setNewEvent({ name: '', date: '', distance: '', location: '', notes: '' });
+      setShowEventModal(false);
+
+      // Reload competitions
+      await loadCompetitions();
+    } catch (error) {
+      console.error('Error saving competition:', error);
+    } finally {
+      setSavingEvent(false);
+    }
+  };
+
+  // Handle delete competition
+  const handleDeleteEvent = async (competitionId) => {
+    if (!confirm('¿Eliminar esta competición?')) return;
+
+    try {
+      const { error } = await deleteAthleteCompetition(competitionId);
+      if (error) throw error;
+
+      // Reload competitions
+      await loadCompetitions();
+    } catch (error) {
+      console.error('Error deleting competition:', error);
+    }
+  };
 
   // Load activity details when clicked
   const loadActivityDetail = async (activity) => {
@@ -690,72 +768,213 @@ const AthleteProfile = () => {
             </button>
           </div>
 
-          <div className="p-4">
-            {/* Quick Stats */}
-            <div className="grid grid-cols-2 gap-3 mb-4">
-              {athlete.vo2_max && (
-                <div className="p-3 bg-green-50 dark:bg-green-900/20 rounded-xl">
-                  <p className="text-xs text-green-600 dark:text-green-400 mb-1">VO2 Max</p>
-                  <p className="text-2xl font-bold text-green-700 dark:text-green-300">
-                    {athlete.vo2_max}
-                  </p>
+          <div className="p-4 max-h-[400px] overflow-y-auto custom-scrollbar">
+            {stravaMetrics ? (
+              <>
+                {/* Main Strava Stats */}
+                <div className="grid grid-cols-2 gap-3 mb-4">
+                  <div className="p-3 bg-orange-50 dark:bg-orange-900/20 rounded-xl">
+                    <p className="text-xs text-orange-600 dark:text-orange-400 mb-1">Distancia Total</p>
+                    <p className="text-2xl font-bold text-orange-700 dark:text-orange-300">
+                      {stravaMetrics.totalDistanceKm}
+                      <span className="text-sm font-normal ml-1">km</span>
+                    </p>
+                  </div>
+                  <div className="p-3 bg-blue-50 dark:bg-blue-900/20 rounded-xl">
+                    <p className="text-xs text-blue-600 dark:text-blue-400 mb-1">Tiempo Total</p>
+                    <p className="text-lg font-bold text-blue-700 dark:text-blue-300">
+                      {stravaMetrics.totalTimeFormatted}
+                    </p>
+                  </div>
+                  <div className="p-3 bg-green-50 dark:bg-green-900/20 rounded-xl">
+                    <p className="text-xs text-green-600 dark:text-green-400 mb-1">Ritmo Medio</p>
+                    <p className="text-xl font-bold text-green-700 dark:text-green-300">
+                      {stravaMetrics.avgPace || '-'}
+                    </p>
+                  </div>
+                  <div className="p-3 bg-red-50 dark:bg-red-900/20 rounded-xl">
+                    <p className="text-xs text-red-600 dark:text-red-400 mb-1">FC Media</p>
+                    <p className="text-2xl font-bold text-red-700 dark:text-red-300">
+                      {stravaMetrics.avgHeartrate || '-'}
+                      {stravaMetrics.avgHeartrate && <span className="text-sm font-normal ml-1">bpm</span>}
+                    </p>
+                  </div>
                 </div>
-              )}
-              {athlete.resting_heart_rate && (
-                <div className="p-3 bg-red-50 dark:bg-red-900/20 rounded-xl">
-                  <p className="text-xs text-red-600 dark:text-red-400 mb-1">FC Reposo</p>
-                  <p className="text-2xl font-bold text-red-700 dark:text-red-300">
-                    {athlete.resting_heart_rate} <span className="text-sm font-normal">bpm</span>
-                  </p>
-                </div>
-              )}
-              {athlete.max_heart_rate && (
-                <div className="p-3 bg-purple-50 dark:bg-purple-900/20 rounded-xl">
-                  <p className="text-xs text-purple-600 dark:text-purple-400 mb-1">FC Max</p>
-                  <p className="text-2xl font-bold text-purple-700 dark:text-purple-300">
-                    {athlete.max_heart_rate} <span className="text-sm font-normal">bpm</span>
-                  </p>
-                </div>
-              )}
-              <div className="p-3 bg-blue-50 dark:bg-blue-900/20 rounded-xl">
-                <p className="text-xs text-blue-600 dark:text-blue-400 mb-1">Actividades</p>
-                <p className="text-2xl font-bold text-blue-700 dark:text-blue-300">
-                  {stravaActivities.length}
-                  <span className="text-sm font-normal ml-1">este mes</span>
-                </p>
-              </div>
-            </div>
 
-            {/* Mini Chart */}
-            {metrics.length > 0 && (
-              <div className="h-32">
-                <Line
-                  data={{
-                    labels: metrics.slice(-7).map((_, i) => `D${i + 1}`),
-                    datasets: [
-                      {
-                        data: metrics.slice(-7).map((m) => m.distance_meters || 0),
-                        borderColor: '#3B82F6',
-                        backgroundColor: 'rgba(59, 130, 246, 0.1)',
-                        fill: true,
-                        tension: 0.4,
-                        pointRadius: 0,
-                      },
-                    ],
-                  }}
-                  options={{
-                    responsive: true,
-                    maintainAspectRatio: false,
-                    plugins: {
-                      legend: { display: false },
-                    },
-                    scales: {
-                      x: { display: false },
-                      y: { display: false },
-                    },
-                  }}
-                />
-              </div>
+                {/* Additional Stats */}
+                <div className="grid grid-cols-3 gap-2 mb-4">
+                  <div className="p-2 bg-gray-50 dark:bg-gray-700/50 rounded-lg text-center">
+                    <p className="text-lg font-bold text-gray-900 dark:text-white">
+                      {stravaMetrics.totalActivities}
+                    </p>
+                    <p className="text-xs text-gray-500">Actividades</p>
+                  </div>
+                  <div className="p-2 bg-gray-50 dark:bg-gray-700/50 rounded-lg text-center">
+                    <p className="text-lg font-bold text-gray-900 dark:text-white">
+                      {stravaMetrics.totalElevation}m
+                    </p>
+                    <p className="text-xs text-gray-500">Desnivel</p>
+                  </div>
+                  <div className="p-2 bg-gray-50 dark:bg-gray-700/50 rounded-lg text-center">
+                    <p className="text-lg font-bold text-gray-900 dark:text-white">
+                      {stravaMetrics.avgDistanceKm}km
+                    </p>
+                    <p className="text-xs text-gray-500">Media/Activ.</p>
+                  </div>
+                </div>
+
+                {/* Weekly Stats Chart */}
+                {stravaMetrics.weeklyStats?.length > 0 && (
+                  <div className="mb-4">
+                    <p className="text-xs font-medium text-gray-500 dark:text-gray-400 mb-2">
+                      Volumen Semanal (km)
+                    </p>
+                    <div className="h-24">
+                      <Line
+                        data={{
+                          labels: stravaMetrics.weeklyStats.slice().reverse().map(w => w.weekNumber),
+                          datasets: [
+                            {
+                              data: stravaMetrics.weeklyStats.slice().reverse().map(w => parseFloat(w.distanceKm)),
+                              borderColor: '#f97316',
+                              backgroundColor: 'rgba(249, 115, 22, 0.1)',
+                              fill: true,
+                              tension: 0.4,
+                              pointRadius: 4,
+                              pointBackgroundColor: '#f97316',
+                            },
+                          ],
+                        }}
+                        options={{
+                          responsive: true,
+                          maintainAspectRatio: false,
+                          plugins: {
+                            legend: { display: false },
+                          },
+                          scales: {
+                            x: {
+                              display: true,
+                              ticks: { font: { size: 9 } },
+                              grid: { display: false },
+                            },
+                            y: {
+                              display: true,
+                              ticks: { font: { size: 9 } },
+                              grid: { color: 'rgba(0,0,0,0.05)' },
+                            },
+                          },
+                        }}
+                      />
+                    </div>
+                  </div>
+                )}
+
+                {/* Best Performances */}
+                {(stravaMetrics.longestRun || stravaMetrics.fastestPace) && (
+                  <div className="space-y-2">
+                    <p className="text-xs font-medium text-gray-500 dark:text-gray-400">
+                      Mejores Resultados (últimas actividades)
+                    </p>
+                    {stravaMetrics.longestRun && (
+                      <div className="flex items-center justify-between p-2 bg-yellow-50 dark:bg-yellow-900/20 rounded-lg">
+                        <div className="flex items-center">
+                          <FiTarget className="w-4 h-4 text-yellow-600 mr-2" />
+                          <span className="text-xs text-gray-600 dark:text-gray-400">Más larga</span>
+                        </div>
+                        <span className="text-sm font-bold text-yellow-700 dark:text-yellow-300">
+                          {stravaMetrics.longestRun.distanceKm} km
+                        </span>
+                      </div>
+                    )}
+                    {stravaMetrics.fastestPace && (
+                      <div className="flex items-center justify-between p-2 bg-green-50 dark:bg-green-900/20 rounded-lg">
+                        <div className="flex items-center">
+                          <FiZap className="w-4 h-4 text-green-600 mr-2" />
+                          <span className="text-xs text-gray-600 dark:text-gray-400">Más rápida</span>
+                        </div>
+                        <span className="text-sm font-bold text-green-700 dark:text-green-300">
+                          {stravaMetrics.fastestPace.pace}
+                        </span>
+                      </div>
+                    )}
+                  </div>
+                )}
+              </>
+            ) : (
+              <>
+                {/* Fallback to athlete data if no Strava */}
+                <div className="grid grid-cols-2 gap-3 mb-4">
+                  {athlete.vo2_max && (
+                    <div className="p-3 bg-green-50 dark:bg-green-900/20 rounded-xl">
+                      <p className="text-xs text-green-600 dark:text-green-400 mb-1">VO2 Max</p>
+                      <p className="text-2xl font-bold text-green-700 dark:text-green-300">
+                        {athlete.vo2_max}
+                      </p>
+                    </div>
+                  )}
+                  {athlete.resting_heart_rate && (
+                    <div className="p-3 bg-red-50 dark:bg-red-900/20 rounded-xl">
+                      <p className="text-xs text-red-600 dark:text-red-400 mb-1">FC Reposo</p>
+                      <p className="text-2xl font-bold text-red-700 dark:text-red-300">
+                        {athlete.resting_heart_rate} <span className="text-sm font-normal">bpm</span>
+                      </p>
+                    </div>
+                  )}
+                  {athlete.max_heart_rate && (
+                    <div className="p-3 bg-purple-50 dark:bg-purple-900/20 rounded-xl">
+                      <p className="text-xs text-purple-600 dark:text-purple-400 mb-1">FC Max</p>
+                      <p className="text-2xl font-bold text-purple-700 dark:text-purple-300">
+                        {athlete.max_heart_rate} <span className="text-sm font-normal">bpm</span>
+                      </p>
+                    </div>
+                  )}
+                  <div className="p-3 bg-blue-50 dark:bg-blue-900/20 rounded-xl">
+                    <p className="text-xs text-blue-600 dark:text-blue-400 mb-1">Actividades</p>
+                    <p className="text-2xl font-bold text-blue-700 dark:text-blue-300">
+                      {stravaActivities.length}
+                    </p>
+                  </div>
+                </div>
+
+                {/* Mini Chart from metrics */}
+                {metrics.length > 0 && (
+                  <div className="h-32">
+                    <Line
+                      data={{
+                        labels: metrics.slice(-7).map((_, i) => `D${i + 1}`),
+                        datasets: [
+                          {
+                            data: metrics.slice(-7).map((m) => m.distance_meters || 0),
+                            borderColor: '#3B82F6',
+                            backgroundColor: 'rgba(59, 130, 246, 0.1)',
+                            fill: true,
+                            tension: 0.4,
+                            pointRadius: 0,
+                          },
+                        ],
+                      }}
+                      options={{
+                        responsive: true,
+                        maintainAspectRatio: false,
+                        plugins: {
+                          legend: { display: false },
+                        },
+                        scales: {
+                          x: { display: false },
+                          y: { display: false },
+                        },
+                      }}
+                    />
+                  </div>
+                )}
+
+                {!stravaConnected && (
+                  <div className="text-center py-4 text-gray-500 dark:text-gray-400 text-sm">
+                    <FiActivity className="w-8 h-8 mx-auto mb-2 text-gray-300" />
+                    <p>Sin conexión a Strava</p>
+                  </div>
+                )}
+              </>
             )}
           </div>
         </motion.div>
@@ -767,38 +986,68 @@ const AthleteProfile = () => {
           transition={{ delay: 0.3 }}
           className="col-span-12 lg:col-span-4 bg-white dark:bg-gray-800 rounded-2xl shadow-sm border border-gray-200 dark:border-gray-700 overflow-hidden"
         >
-          <div className="p-4 border-b border-gray-200 dark:border-gray-700 bg-gradient-to-r from-red-500 to-pink-500">
+          <div className="p-4 border-b border-gray-200 dark:border-gray-700 bg-gradient-to-r from-red-500 to-pink-500 flex items-center justify-between">
             <h2 className="text-lg font-bold text-white flex items-center">
               <FiFlag className="w-5 h-5 mr-2" />
               Próximos Eventos
             </h2>
+            <button
+              onClick={() => setShowEventModal(true)}
+              className="p-1.5 bg-white/20 hover:bg-white/30 rounded-lg transition-colors"
+              title="Añadir evento"
+            >
+              <FiPlus className="w-4 h-4 text-white" />
+            </button>
           </div>
 
-          <div className="p-4">
+          <div className="p-4 max-h-[250px] overflow-y-auto custom-scrollbar">
             {events.length === 0 ? (
               <div className="text-center py-6">
                 <FiFlag className="w-10 h-10 text-gray-300 dark:text-gray-600 mx-auto mb-2" />
                 <p className="text-sm text-gray-500 dark:text-gray-400">
                   No hay eventos programados
                 </p>
+                <button
+                  onClick={() => setShowEventModal(true)}
+                  className="mt-3 text-sm text-red-500 hover:text-red-600 font-medium"
+                >
+                  + Añadir competición
+                </button>
               </div>
             ) : (
               <div className="space-y-3">
-                {events.map((event) => (
+                {events.map((competition) => (
                   <div
-                    key={event.id}
-                    className="p-3 bg-red-50 dark:bg-red-900/20 rounded-xl border-l-4 border-red-500"
+                    key={competition.id}
+                    className="p-3 bg-red-50 dark:bg-red-900/20 rounded-xl border-l-4 border-red-500 group relative"
                   >
-                    <p className="font-semibold text-gray-900 dark:text-white">
-                      {event.title}
+                    <button
+                      onClick={() => handleDeleteEvent(competition.id)}
+                      className="absolute top-2 right-2 p-1 text-gray-400 hover:text-red-500 opacity-0 group-hover:opacity-100 transition-opacity"
+                      title="Eliminar competición"
+                    >
+                      <FiTrash2 className="w-3.5 h-3.5" />
+                    </button>
+                    <p className="font-semibold text-gray-900 dark:text-white pr-6">
+                      {competition.name}
                     </p>
                     <p className="text-sm text-gray-500 dark:text-gray-400">
-                      {new Date(event.scheduled_date).toLocaleDateString('es-ES', {
+                      {new Date(competition.event_date).toLocaleDateString('es-ES', {
                         weekday: 'long',
                         day: 'numeric',
                         month: 'long',
                       })}
                     </p>
+                    {competition.distance_km && (
+                      <p className="text-xs text-red-600 dark:text-red-400 mt-1 font-medium">
+                        {competition.distance_km} km
+                      </p>
+                    )}
+                    {competition.location && (
+                      <p className="text-xs text-gray-400 dark:text-gray-500 mt-0.5">
+                        📍 {competition.location}
+                      </p>
+                    )}
                   </div>
                 ))}
               </div>
@@ -806,31 +1055,57 @@ const AthleteProfile = () => {
           </div>
         </motion.div>
 
-        {/* Personal Bests */}
+        {/* Personal Bests - From Strava */}
         <motion.div
           initial={{ opacity: 0, y: 20 }}
           animate={{ opacity: 1, y: 0 }}
           transition={{ delay: 0.4 }}
           className="col-span-12 lg:col-span-4 bg-white dark:bg-gray-800 rounded-2xl shadow-sm border border-gray-200 dark:border-gray-700 overflow-hidden"
         >
-          <div className="p-4 border-b border-gray-200 dark:border-gray-700">
-            <h2 className="text-lg font-bold text-gray-900 dark:text-white flex items-center">
-              <FiTarget className="w-5 h-5 mr-2 text-yellow-500" />
+          <div className="p-4 border-b border-gray-200 dark:border-gray-700 bg-gradient-to-r from-yellow-500 to-amber-500">
+            <h2 className="text-lg font-bold text-white flex items-center">
+              <FiAward className="w-5 h-5 mr-2" />
               Mejores Marcas
             </h2>
           </div>
 
-          <div className="p-4">
-            {athlete.personal_bests?.length === 0 ? (
-              <div className="text-center py-6">
-                <FiTarget className="w-10 h-10 text-gray-300 dark:text-gray-600 mx-auto mb-2" />
-                <p className="text-sm text-gray-500 dark:text-gray-400">
-                  Sin marcas registradas
-                </p>
-              </div>
-            ) : (
+          <div className="p-4 max-h-[250px] overflow-y-auto custom-scrollbar">
+            {stravaBestEfforts.length > 0 ? (
               <div className="space-y-2">
-                {athlete.personal_bests?.slice(0, 5).map((pb) => (
+                {stravaBestEfforts.map((effort, index) => (
+                  <div
+                    key={effort.name + index}
+                    className="flex items-center justify-between p-2.5 bg-yellow-50 dark:bg-yellow-900/20 hover:bg-yellow-100 dark:hover:bg-yellow-900/30 rounded-lg transition-colors"
+                  >
+                    <div>
+                      <span className="text-sm font-medium text-gray-900 dark:text-white">
+                        {effort.name}
+                      </span>
+                      {effort.pace && (
+                        <p className="text-xs text-gray-500 dark:text-gray-400">
+                          {effort.pace}
+                        </p>
+                      )}
+                    </div>
+                    <div className="text-right">
+                      <span className="font-mono font-bold text-yellow-700 dark:text-yellow-300">
+                        {effort.timeFormatted}
+                      </span>
+                      {effort.date && (
+                        <p className="text-xs text-gray-400">
+                          {new Date(effort.date).toLocaleDateString('es-ES', {
+                            day: '2-digit',
+                            month: 'short',
+                          })}
+                        </p>
+                      )}
+                    </div>
+                  </div>
+                ))}
+              </div>
+            ) : athlete.personal_bests?.length > 0 ? (
+              <div className="space-y-2">
+                {athlete.personal_bests.slice(0, 5).map((pb) => (
                   <div
                     key={pb.id}
                     className="flex items-center justify-between p-2 hover:bg-gray-50 dark:hover:bg-gray-700/50 rounded-lg"
@@ -843,6 +1118,15 @@ const AthleteProfile = () => {
                     </span>
                   </div>
                 ))}
+              </div>
+            ) : (
+              <div className="text-center py-6">
+                <FiAward className="w-10 h-10 text-gray-300 dark:text-gray-600 mx-auto mb-2" />
+                <p className="text-sm text-gray-500 dark:text-gray-400">
+                  {stravaConnected
+                    ? 'No hay suficientes datos para calcular marcas'
+                    : 'Conecta Strava para ver marcas'}
+                </p>
               </div>
             )}
           </div>
@@ -1184,6 +1468,133 @@ const AthleteProfile = () => {
                   className="w-full px-4 py-2 bg-gray-100 dark:bg-gray-700 text-gray-700 dark:text-gray-300 rounded-lg hover:bg-gray-200 dark:hover:bg-gray-600 transition-colors"
                 >
                   Cerrar
+                </button>
+              </div>
+            </motion.div>
+          </div>
+        )}
+      </AnimatePresence>
+
+      {/* Event Modal */}
+      <AnimatePresence>
+        {showEventModal && (
+          <div className="fixed inset-0 z-50 flex items-center justify-center p-4 bg-black/60">
+            <motion.div
+              initial={{ opacity: 0, scale: 0.95 }}
+              animate={{ opacity: 1, scale: 1 }}
+              exit={{ opacity: 0, scale: 0.95 }}
+              className="bg-white dark:bg-gray-800 rounded-2xl shadow-2xl w-full max-w-md overflow-hidden"
+            >
+              {/* Modal Header */}
+              <div className="p-5 border-b border-gray-200 dark:border-gray-700 bg-gradient-to-r from-red-500 to-pink-500">
+                <div className="flex items-center justify-between">
+                  <h2 className="text-lg font-bold text-white flex items-center">
+                    <FiFlag className="w-5 h-5 mr-2" />
+                    Nueva Competición
+                  </h2>
+                  <button
+                    onClick={() => setShowEventModal(false)}
+                    className="p-2 hover:bg-white/20 rounded-lg transition-colors"
+                  >
+                    <FiX className="w-5 h-5 text-white" />
+                  </button>
+                </div>
+              </div>
+
+              {/* Modal Content */}
+              <div className="p-5 space-y-4">
+                {/* Event Name */}
+                <div>
+                  <label className="block text-sm font-medium text-gray-700 dark:text-gray-300 mb-1">
+                    Nombre del evento *
+                  </label>
+                  <input
+                    type="text"
+                    value={newEvent.name}
+                    onChange={(e) => setNewEvent({ ...newEvent, name: e.target.value })}
+                    placeholder="Ej: Media Maratón Valencia"
+                    className="w-full px-4 py-2.5 border border-gray-300 dark:border-gray-600 rounded-lg bg-white dark:bg-gray-700 text-gray-900 dark:text-white focus:ring-2 focus:ring-red-500 focus:border-transparent"
+                  />
+                </div>
+
+                {/* Event Date */}
+                <div>
+                  <label className="block text-sm font-medium text-gray-700 dark:text-gray-300 mb-1">
+                    Fecha *
+                  </label>
+                  <input
+                    type="date"
+                    value={newEvent.date}
+                    onChange={(e) => setNewEvent({ ...newEvent, date: e.target.value })}
+                    className="w-full px-4 py-2.5 border border-gray-300 dark:border-gray-600 rounded-lg bg-white dark:bg-gray-700 text-gray-900 dark:text-white focus:ring-2 focus:ring-red-500 focus:border-transparent"
+                  />
+                </div>
+
+                {/* Distance and Location in a row */}
+                <div className="grid grid-cols-2 gap-3">
+                  <div>
+                    <label className="block text-sm font-medium text-gray-700 dark:text-gray-300 mb-1">
+                      Distancia (km)
+                    </label>
+                    <input
+                      type="number"
+                      step="0.1"
+                      value={newEvent.distance}
+                      onChange={(e) => setNewEvent({ ...newEvent, distance: e.target.value })}
+                      placeholder="21.1"
+                      className="w-full px-4 py-2.5 border border-gray-300 dark:border-gray-600 rounded-lg bg-white dark:bg-gray-700 text-gray-900 dark:text-white focus:ring-2 focus:ring-red-500 focus:border-transparent"
+                    />
+                  </div>
+                  <div>
+                    <label className="block text-sm font-medium text-gray-700 dark:text-gray-300 mb-1">
+                      Ubicación
+                    </label>
+                    <input
+                      type="text"
+                      value={newEvent.location}
+                      onChange={(e) => setNewEvent({ ...newEvent, location: e.target.value })}
+                      placeholder="Valencia"
+                      className="w-full px-4 py-2.5 border border-gray-300 dark:border-gray-600 rounded-lg bg-white dark:bg-gray-700 text-gray-900 dark:text-white focus:ring-2 focus:ring-red-500 focus:border-transparent"
+                    />
+                  </div>
+                </div>
+
+                {/* Notes */}
+                <div>
+                  <label className="block text-sm font-medium text-gray-700 dark:text-gray-300 mb-1">
+                    Notas
+                  </label>
+                  <textarea
+                    value={newEvent.notes}
+                    onChange={(e) => setNewEvent({ ...newEvent, notes: e.target.value })}
+                    placeholder="Objetivo, tiempo esperado, etc."
+                    rows={2}
+                    className="w-full px-4 py-2.5 border border-gray-300 dark:border-gray-600 rounded-lg bg-white dark:bg-gray-700 text-gray-900 dark:text-white focus:ring-2 focus:ring-red-500 focus:border-transparent resize-none"
+                  />
+                </div>
+              </div>
+
+              {/* Modal Footer */}
+              <div className="p-5 border-t border-gray-200 dark:border-gray-700 flex space-x-3">
+                <button
+                  onClick={() => setShowEventModal(false)}
+                  className="flex-1 px-4 py-2.5 bg-gray-100 dark:bg-gray-700 text-gray-700 dark:text-gray-300 rounded-lg hover:bg-gray-200 dark:hover:bg-gray-600 transition-colors font-medium"
+                >
+                  Cancelar
+                </button>
+                <button
+                  onClick={handleSaveEvent}
+                  disabled={!newEvent.name || !newEvent.date || savingEvent}
+                  className="flex-1 px-4 py-2.5 bg-gradient-to-r from-red-500 to-pink-500 text-white rounded-lg hover:from-red-600 hover:to-pink-600 transition-colors font-medium disabled:opacity-50 disabled:cursor-not-allowed flex items-center justify-center"
+                >
+                  {savingEvent ? (
+                    <>
+                      <FiLoader className="w-4 h-4 animate-spin mr-2" />
+                      Guardando...
+                    </>
+                  ) : (
+                    'Guardar'
+                  )}
                 </button>
               </div>
             </motion.div>

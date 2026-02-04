@@ -1,4 +1,4 @@
-import { useState, useEffect, useCallback } from 'react';
+import { useState, useEffect, useCallback, useRef } from 'react';
 import { useSearchParams } from 'react-router-dom';
 import { motion, AnimatePresence } from 'framer-motion';
 import {
@@ -14,6 +14,7 @@ import {
   FiChevronRight,
   FiLoader,
   FiX,
+  FiFlag,
 } from 'react-icons/fi';
 import { useAuth } from '../../contexts/AuthContext';
 import {
@@ -24,10 +25,19 @@ import {
   disconnectStrava,
   getStravaActivities,
   getStravaAthleteStats,
+  getStravaActivityDetail,
   formatStravaActivity,
+  formatDuration,
+  calculatePace,
   getActivityTypeLabel,
   loadStravaTokens,
 } from '../../services/stravaService';
+import mapboxgl from 'mapbox-gl';
+import polyline from '@mapbox/polyline';
+import 'mapbox-gl/dist/mapbox-gl.css';
+
+// Set Mapbox access token
+mapboxgl.accessToken = import.meta.env.VITE_MAPBOX_ACCESS_TOKEN;
 
 const Devices = () => {
   const { profile } = useAuth();
@@ -40,6 +50,8 @@ const Devices = () => {
   const [syncing, setSyncing] = useState(false);
   const [error, setError] = useState(null);
   const [selectedActivity, setSelectedActivity] = useState(null);
+  const mapContainerRef = useRef(null);
+  const mapRef = useRef(null);
 
   const loadStravaData = useCallback(async () => {
     setSyncing(true);
@@ -53,7 +65,11 @@ const Devices = () => {
       });
 
       if (!activitiesError && activities) {
-        setStravaActivities(activities.map(formatStravaActivity));
+        // Sort by date descending (most recent first) and format
+        const sortedActivities = activities
+          .sort((a, b) => new Date(b.start_date) - new Date(a.start_date))
+          .map(formatStravaActivity);
+        setStravaActivities(sortedActivities);
       }
 
       // Load athlete stats
@@ -147,6 +163,139 @@ const Devices = () => {
   const handleSync = () => {
     loadStravaData();
   };
+
+  // Load activity details when clicked
+  const loadActivityDetail = async (activity) => {
+    setSelectedActivity({ ...activity, loading: true });
+
+    try {
+      const { data, error: detailError } = await getStravaActivityDetail(activity.id);
+      if (detailError) throw detailError;
+
+      setSelectedActivity({
+        ...activity,
+        loading: false,
+        laps: data.laps || [],
+        splits_metric: data.splits_metric || [],
+        segment_efforts: data.segment_efforts || [],
+        description: data.description,
+        calories: data.calories,
+        device_name: data.device_name,
+        polyline: data.map?.polyline || data.map?.summary_polyline,
+      });
+    } catch (err) {
+      console.error('Error loading activity details:', err);
+      setSelectedActivity({ ...activity, loading: false, error: true });
+    }
+  };
+
+  // Initialize map when activity with polyline is selected
+  useEffect(() => {
+    if (!selectedActivity?.polyline || selectedActivity.loading || !mapContainerRef.current) {
+      return;
+    }
+
+    // Clean up previous map
+    if (mapRef.current) {
+      mapRef.current.remove();
+      mapRef.current = null;
+    }
+
+    try {
+      // Decode polyline to coordinates
+      const coordinates = polyline.decode(selectedActivity.polyline).map(([lat, lng]) => [lng, lat]);
+
+      if (coordinates.length === 0) return;
+
+      // Calculate bounds
+      const bounds = coordinates.reduce(
+        (b, coord) => b.extend(coord),
+        new mapboxgl.LngLatBounds(coordinates[0], coordinates[0])
+      );
+
+      // Create map
+      const map = new mapboxgl.Map({
+        container: mapContainerRef.current,
+        style: 'mapbox://styles/mapbox/outdoors-v12',
+        bounds: bounds,
+        fitBoundsOptions: { padding: 40 },
+      });
+
+      mapRef.current = map;
+
+      map.on('load', () => {
+        // Add route line
+        map.addSource('route', {
+          type: 'geojson',
+          data: {
+            type: 'Feature',
+            properties: {},
+            geometry: {
+              type: 'LineString',
+              coordinates: coordinates,
+            },
+          },
+        });
+
+        // Route outline (shadow)
+        map.addLayer({
+          id: 'route-outline',
+          type: 'line',
+          source: 'route',
+          layout: {
+            'line-join': 'round',
+            'line-cap': 'round',
+          },
+          paint: {
+            'line-color': '#000',
+            'line-width': 6,
+            'line-opacity': 0.3,
+          },
+        });
+
+        // Main route line
+        map.addLayer({
+          id: 'route',
+          type: 'line',
+          source: 'route',
+          layout: {
+            'line-join': 'round',
+            'line-cap': 'round',
+          },
+          paint: {
+            'line-color': '#f97316',
+            'line-width': 4,
+          },
+        });
+
+        // Start marker
+        new mapboxgl.Marker({ color: '#22c55e' })
+          .setLngLat(coordinates[0])
+          .setPopup(new mapboxgl.Popup().setHTML('<strong>Inicio</strong>'))
+          .addTo(map);
+
+        // End marker
+        new mapboxgl.Marker({ color: '#ef4444' })
+          .setLngLat(coordinates[coordinates.length - 1])
+          .setPopup(new mapboxgl.Popup().setHTML('<strong>Fin</strong>'))
+          .addTo(map);
+      });
+
+      // Add controls
+      map.addControl(new mapboxgl.NavigationControl(), 'top-right');
+      map.addControl(new mapboxgl.FullscreenControl(), 'top-right');
+
+    } catch (err) {
+      console.error('Error initializing map:', err);
+    }
+
+    return () => {
+      if (mapRef.current) {
+        mapRef.current.remove();
+        mapRef.current = null;
+      }
+    };
+  }, [selectedActivity?.polyline, selectedActivity?.loading]);
 
   // Other devices (not yet implemented)
   const otherDevices = [
@@ -351,71 +500,71 @@ const Devices = () => {
                     </div>
                   ) : (
                     <div className="space-y-3">
-                      {stravaActivities.slice(0, 10).map((activity) => (
+                      {stravaActivities.slice(0, 15).map((activity) => (
                         <motion.div
                           key={activity.id}
                           initial={{ opacity: 0, x: -10 }}
                           animate={{ opacity: 1, x: 0 }}
-                          onClick={() => setSelectedActivity(activity)}
-                          className="flex items-center justify-between p-4 bg-gray-50 dark:bg-gray-700/50 rounded-xl hover:bg-gray-100 dark:hover:bg-gray-700 cursor-pointer transition-colors group"
+                          onClick={() => loadActivityDetail(activity)}
+                          className="p-4 bg-gray-50 dark:bg-gray-700/50 rounded-xl hover:bg-gray-100 dark:hover:bg-gray-700 cursor-pointer transition-colors border-2 border-transparent hover:border-orange-400"
                         >
-                          <div className="flex items-center space-x-4">
-                            <div
-                              className={`w-10 h-10 rounded-lg flex items-center justify-center ${
-                                activity.type === 'Run' || activity.type === 'TrailRun'
-                                  ? 'bg-orange-100 dark:bg-orange-900/30 text-orange-600'
-                                  : activity.type === 'Ride'
-                                  ? 'bg-blue-100 dark:bg-blue-900/30 text-blue-600'
-                                  : activity.type === 'Swim'
-                                  ? 'bg-cyan-100 dark:bg-cyan-900/30 text-cyan-600'
-                                  : 'bg-purple-100 dark:bg-purple-900/30 text-purple-600'
-                              }`}
-                            >
-                              <FiActivity className="w-5 h-5" />
+                          <div className="flex items-start justify-between mb-2">
+                            <div>
+                              <h4 className="font-semibold text-gray-900 dark:text-white">
+                                {activity.name}
+                              </h4>
+                              <p className="text-xs text-gray-500 dark:text-gray-400">
+                                {new Date(activity.date).toLocaleDateString('es-ES', {
+                                  weekday: 'short',
+                                  day: 'numeric',
+                                  month: 'short',
+                                })} • {getActivityTypeLabel(activity.type)}
+                              </p>
+                            </div>
+                            {activity.has_heartrate && (
+                              <span className="flex items-center text-xs text-red-500">
+                                <FiHeart className="w-3 h-3 mr-1" />
+                                {activity.average_heartrate} bpm
+                              </span>
+                            )}
+                          </div>
+
+                          <div className="grid grid-cols-4 gap-3 text-center">
+                            <div>
+                              <p className="text-lg font-bold text-blue-600 dark:text-blue-400">
+                                {activity.distanceKm}
+                              </p>
+                              <p className="text-xs text-gray-500">km</p>
                             </div>
                             <div>
-                              <p className="font-medium text-gray-900 dark:text-white">
-                                {activity.name}
-                              </p>
-                              <div className="flex items-center space-x-3 text-sm text-gray-500 dark:text-gray-400">
-                                <span>{getActivityTypeLabel(activity.type)}</span>
-                                <span>
-                                  {new Date(activity.date).toLocaleDateString('es-ES', {
-                                    day: 'numeric',
-                                    month: 'short',
-                                  })}
-                                </span>
-                              </div>
-                            </div>
-                          </div>
-                          <div className="flex items-center space-x-6">
-                            <div className="text-right hidden sm:block">
-                              <p className="font-semibold text-gray-900 dark:text-white">
-                                {activity.distanceKm} km
-                              </p>
-                              <p className="text-sm text-gray-500 dark:text-gray-400">
-                                {activity.pace}
-                              </p>
-                            </div>
-                            <div className="text-right hidden md:block">
-                              <p className="font-semibold text-gray-900 dark:text-white">
+                              <p className="text-lg font-bold text-purple-600 dark:text-purple-400">
                                 {activity.formattedTime}
                               </p>
-                              {activity.average_heartrate && (
-                                <p className="text-sm text-gray-500 dark:text-gray-400 flex items-center justify-end space-x-1">
-                                  <FiHeart className="w-3 h-3 text-red-500" />
-                                  <span>{Math.round(activity.average_heartrate)} bpm</span>
-                                </p>
-                              )}
+                              <p className="text-xs text-gray-500">tiempo</p>
                             </div>
-                            <FiChevronRight className="w-5 h-5 text-gray-400 group-hover:text-gray-600 dark:group-hover:text-gray-300 transition-colors" />
+                            <div>
+                              <p className="text-lg font-bold text-green-600 dark:text-green-400">
+                                {activity.pace}
+                              </p>
+                              <p className="text-xs text-gray-500">ritmo</p>
+                            </div>
+                            <div>
+                              <p className="text-lg font-bold text-orange-600 dark:text-orange-400">
+                                {activity.total_elevation_gain || 0}
+                              </p>
+                              <p className="text-xs text-gray-500">m+</p>
+                            </div>
+                          </div>
+
+                          <div className="mt-2 text-center">
+                            <span className="text-xs text-orange-500">Click para ver detalles</span>
                           </div>
                         </motion.div>
                       ))}
 
-                      {stravaActivities.length > 10 && (
+                      {stravaActivities.length > 15 && (
                         <p className="text-center text-sm text-gray-500 dark:text-gray-400 py-2">
-                          Mostrando 10 de {stravaActivities.length} actividades
+                          Mostrando 15 de {stravaActivities.length} actividades
                         </p>
                       )}
                     </div>
@@ -495,126 +644,267 @@ const Devices = () => {
       {/* Activity Detail Modal */}
       <AnimatePresence>
         {selectedActivity && (
-          <div className="fixed inset-0 z-50 flex items-center justify-center p-4 bg-black/50">
+          <div className="fixed inset-0 z-50 flex items-center justify-center p-4 bg-black/60 overflow-y-auto">
             <motion.div
               initial={{ opacity: 0, scale: 0.95 }}
               animate={{ opacity: 1, scale: 1 }}
               exit={{ opacity: 0, scale: 0.95 }}
-              className="bg-white dark:bg-gray-800 rounded-2xl shadow-2xl max-w-lg w-full max-h-[90vh] overflow-y-auto"
+              className="bg-white dark:bg-gray-800 rounded-2xl shadow-2xl w-full max-w-4xl max-h-[90vh] overflow-hidden flex flex-col"
             >
               {/* Modal Header */}
-              <div className="bg-gradient-to-r from-[#FC4C02] to-[#E34402] p-6 text-white">
-                <div className="flex items-center justify-between mb-4">
-                  <span className="px-3 py-1 bg-white/20 rounded-full text-sm">
-                    {getActivityTypeLabel(selectedActivity.type)}
-                  </span>
+              <div className="p-6 border-b border-gray-200 dark:border-gray-700 bg-gradient-to-r from-[#FC4C02] to-[#E34402]">
+                <div className="flex items-start justify-between">
+                  <div className="text-white">
+                    <h2 className="text-xl font-bold">{selectedActivity.name}</h2>
+                    <p className="text-orange-100 text-sm mt-1">
+                      {new Date(selectedActivity.date).toLocaleDateString('es-ES', {
+                        weekday: 'long',
+                        day: 'numeric',
+                        month: 'long',
+                        year: 'numeric',
+                      })} • {getActivityTypeLabel(selectedActivity.type)}
+                    </p>
+                  </div>
                   <button
                     onClick={() => setSelectedActivity(null)}
-                    className="p-1 hover:bg-white/20 rounded-lg transition-colors"
+                    className="p-2 hover:bg-white/20 rounded-lg transition-colors"
                   >
-                    <FiX className="w-6 h-6" />
+                    <FiX className="w-6 h-6 text-white" />
                   </button>
                 </div>
-                <h3 className="text-xl font-bold">{selectedActivity.name}</h3>
-                <p className="text-white/80">
-                  {new Date(selectedActivity.date).toLocaleDateString('es-ES', {
-                    weekday: 'long',
-                    day: 'numeric',
-                    month: 'long',
-                    year: 'numeric',
-                  })}
-                </p>
               </div>
 
               {/* Modal Content */}
-              <div className="p-6">
-                <div className="grid grid-cols-2 gap-4 mb-6">
-                  <div className="bg-gray-50 dark:bg-gray-700/50 rounded-xl p-4">
-                    <div className="flex items-center space-x-2 text-gray-500 dark:text-gray-400 mb-1">
-                      <FiMapPin className="w-4 h-4" />
-                      <span className="text-sm">Distancia</span>
-                    </div>
-                    <p className="text-2xl font-bold text-gray-900 dark:text-white">
-                      {selectedActivity.distanceKm} km
-                    </p>
+              <div className="flex-1 overflow-y-auto p-6 custom-scrollbar-orange">
+                {selectedActivity.loading ? (
+                  <div className="flex items-center justify-center py-12">
+                    <FiLoader className="w-8 h-8 animate-spin text-orange-500" />
+                    <span className="ml-3 text-gray-500">Cargando detalles...</span>
                   </div>
-                  <div className="bg-gray-50 dark:bg-gray-700/50 rounded-xl p-4">
-                    <div className="flex items-center space-x-2 text-gray-500 dark:text-gray-400 mb-1">
-                      <FiClock className="w-4 h-4" />
-                      <span className="text-sm">Tiempo</span>
+                ) : (
+                  <div className="space-y-6">
+                    {/* Main Stats */}
+                    <div className="grid grid-cols-2 sm:grid-cols-4 gap-4">
+                      <div className="bg-blue-50 dark:bg-blue-900/20 rounded-xl p-4 text-center">
+                        <p className="text-2xl font-bold text-blue-600 dark:text-blue-400">
+                          {selectedActivity.distanceKm}
+                        </p>
+                        <p className="text-xs text-blue-500">km</p>
+                      </div>
+                      <div className="bg-purple-50 dark:bg-purple-900/20 rounded-xl p-4 text-center">
+                        <p className="text-2xl font-bold text-purple-600 dark:text-purple-400">
+                          {selectedActivity.formattedTime}
+                        </p>
+                        <p className="text-xs text-purple-500">tiempo</p>
+                      </div>
+                      <div className="bg-green-50 dark:bg-green-900/20 rounded-xl p-4 text-center">
+                        <p className="text-2xl font-bold text-green-600 dark:text-green-400">
+                          {selectedActivity.pace}
+                        </p>
+                        <p className="text-xs text-green-500">ritmo medio</p>
+                      </div>
+                      <div className="bg-red-50 dark:bg-red-900/20 rounded-xl p-4 text-center">
+                        <p className="text-2xl font-bold text-red-600 dark:text-red-400">
+                          {selectedActivity.average_heartrate || '-'}
+                        </p>
+                        <p className="text-xs text-red-500">bpm medio</p>
+                      </div>
                     </div>
-                    <p className="text-2xl font-bold text-gray-900 dark:text-white">
-                      {selectedActivity.formattedTime}
-                    </p>
-                  </div>
-                  <div className="bg-gray-50 dark:bg-gray-700/50 rounded-xl p-4">
-                    <div className="flex items-center space-x-2 text-gray-500 dark:text-gray-400 mb-1">
-                      <FiTrendingUp className="w-4 h-4" />
-                      <span className="text-sm">Ritmo</span>
-                    </div>
-                    <p className="text-2xl font-bold text-gray-900 dark:text-white">
-                      {selectedActivity.pace}
-                    </p>
-                  </div>
-                  <div className="bg-gray-50 dark:bg-gray-700/50 rounded-xl p-4">
-                    <div className="flex items-center space-x-2 text-gray-500 dark:text-gray-400 mb-1">
-                      <FiHeart className="w-4 h-4" />
-                      <span className="text-sm">FC Media</span>
-                    </div>
-                    <p className="text-2xl font-bold text-gray-900 dark:text-white">
-                      {selectedActivity.average_heartrate
-                        ? `${Math.round(selectedActivity.average_heartrate)} bpm`
-                        : '-'}
-                    </p>
-                  </div>
-                </div>
 
-                {/* Additional Stats */}
-                <div className="space-y-3">
-                  {selectedActivity.total_elevation_gain > 0 && (
-                    <div className="flex justify-between py-2 border-b border-gray-200 dark:border-gray-700">
-                      <span className="text-gray-600 dark:text-gray-400">Desnivel positivo</span>
-                      <span className="font-semibold text-gray-900 dark:text-white">
-                        {selectedActivity.total_elevation_gain} m
-                      </span>
+                    {/* Additional Stats */}
+                    <div className="grid grid-cols-3 sm:grid-cols-6 gap-3">
+                      <div className="bg-gray-50 dark:bg-gray-700/50 rounded-lg p-3 text-center">
+                        <p className="font-semibold text-gray-900 dark:text-white">
+                          {selectedActivity.total_elevation_gain || 0}m
+                        </p>
+                        <p className="text-xs text-gray-500">desnivel+</p>
+                      </div>
+                      <div className="bg-gray-50 dark:bg-gray-700/50 rounded-lg p-3 text-center">
+                        <p className="font-semibold text-gray-900 dark:text-white">
+                          {selectedActivity.max_heartrate || '-'}
+                        </p>
+                        <p className="text-xs text-gray-500">FC max</p>
+                      </div>
+                      <div className="bg-gray-50 dark:bg-gray-700/50 rounded-lg p-3 text-center">
+                        <p className="font-semibold text-gray-900 dark:text-white">
+                          {selectedActivity.calories || '-'}
+                        </p>
+                        <p className="text-xs text-gray-500">kcal</p>
+                      </div>
+                      <div className="bg-gray-50 dark:bg-gray-700/50 rounded-lg p-3 text-center">
+                        <p className="font-semibold text-gray-900 dark:text-white">
+                          {selectedActivity.suffer_score || '-'}
+                        </p>
+                        <p className="text-xs text-gray-500">esfuerzo</p>
+                      </div>
+                      <div className="bg-gray-50 dark:bg-gray-700/50 rounded-lg p-3 text-center">
+                        <p className="font-semibold text-gray-900 dark:text-white">
+                          {selectedActivity.kudos_count || 0}
+                        </p>
+                        <p className="text-xs text-gray-500">kudos</p>
+                      </div>
+                      <div className="bg-gray-50 dark:bg-gray-700/50 rounded-lg p-3 text-center">
+                        <p className="font-semibold text-gray-900 dark:text-white">
+                          {selectedActivity.achievement_count || 0}
+                        </p>
+                        <p className="text-xs text-gray-500">logros</p>
+                      </div>
                     </div>
-                  )}
-                  {selectedActivity.max_heartrate && (
-                    <div className="flex justify-between py-2 border-b border-gray-200 dark:border-gray-700">
-                      <span className="text-gray-600 dark:text-gray-400">FC Máxima</span>
-                      <span className="font-semibold text-gray-900 dark:text-white">
-                        {Math.round(selectedActivity.max_heartrate)} bpm
-                      </span>
-                    </div>
-                  )}
-                  {selectedActivity.calories > 0 && (
-                    <div className="flex justify-between py-2 border-b border-gray-200 dark:border-gray-700">
-                      <span className="text-gray-600 dark:text-gray-400">Calorías</span>
-                      <span className="font-semibold text-gray-900 dark:text-white">
-                        {selectedActivity.calories} kcal
-                      </span>
-                    </div>
-                  )}
-                  {selectedActivity.kudos_count > 0 && (
-                    <div className="flex justify-between py-2">
-                      <span className="text-gray-600 dark:text-gray-400">Kudos</span>
-                      <span className="font-semibold text-gray-900 dark:text-white">
-                        {selectedActivity.kudos_count}
-                      </span>
-                    </div>
-                  )}
-                </div>
 
-                {/* Strava Link */}
-                <a
-                  href={`https://www.strava.com/activities/${selectedActivity.id}`}
-                  target="_blank"
-                  rel="noopener noreferrer"
-                  className="mt-6 flex items-center justify-center space-x-2 w-full py-3 bg-[#FC4C02] hover:bg-[#E34402] text-white rounded-xl transition-colors"
-                >
-                  <span>Ver en Strava</span>
-                  <FiExternalLink className="w-4 h-4" />
-                </a>
+                    {/* Activity Map */}
+                    {selectedActivity.polyline && (
+                      <div className="bg-gray-100 dark:bg-gray-700 rounded-xl p-4">
+                        <h3 className="font-semibold text-gray-900 dark:text-white mb-3 flex items-center">
+                          <FiMapPin className="w-4 h-4 mr-2 text-orange-500" />
+                          Recorrido
+                        </h3>
+                        <div
+                          ref={mapContainerRef}
+                          className="h-64 rounded-lg overflow-hidden"
+                          style={{ minHeight: '256px' }}
+                        />
+                      </div>
+                    )}
+
+                    {/* Laps / Splits */}
+                    {selectedActivity.laps && selectedActivity.laps.length > 0 && (
+                      <div>
+                        <h3 className="font-semibold text-gray-900 dark:text-white mb-3 flex items-center">
+                          <FiActivity className="w-4 h-4 mr-2 text-blue-500" />
+                          Vueltas ({selectedActivity.laps.length})
+                        </h3>
+                        <div className="overflow-x-auto">
+                          <table className="w-full text-sm">
+                            <thead>
+                              <tr className="bg-gray-50 dark:bg-gray-700">
+                                <th className="px-3 py-2 text-left text-gray-600 dark:text-gray-400">#</th>
+                                <th className="px-3 py-2 text-right text-gray-600 dark:text-gray-400">Distancia</th>
+                                <th className="px-3 py-2 text-right text-gray-600 dark:text-gray-400">Tiempo</th>
+                                <th className="px-3 py-2 text-right text-gray-600 dark:text-gray-400">Ritmo</th>
+                                <th className="px-3 py-2 text-right text-gray-600 dark:text-gray-400">FC</th>
+                                <th className="px-3 py-2 text-right text-gray-600 dark:text-gray-400">Cadencia</th>
+                              </tr>
+                            </thead>
+                            <tbody className="divide-y divide-gray-200 dark:divide-gray-700">
+                              {selectedActivity.laps.map((lap, index) => (
+                                <tr key={lap.id || index} className="hover:bg-gray-50 dark:hover:bg-gray-700/50">
+                                  <td className="px-3 py-2 font-medium text-gray-900 dark:text-white">
+                                    {lap.name || `Vuelta ${index + 1}`}
+                                  </td>
+                                  <td className="px-3 py-2 text-right text-gray-700 dark:text-gray-300">
+                                    {(lap.distance / 1000).toFixed(2)} km
+                                  </td>
+                                  <td className="px-3 py-2 text-right text-gray-700 dark:text-gray-300">
+                                    {formatDuration(lap.moving_time)}
+                                  </td>
+                                  <td className="px-3 py-2 text-right font-mono text-gray-900 dark:text-white">
+                                    {calculatePace(lap.moving_time, lap.distance)}
+                                  </td>
+                                  <td className="px-3 py-2 text-right text-red-600 dark:text-red-400">
+                                    {lap.average_heartrate ? `${Math.round(lap.average_heartrate)}` : '-'}
+                                  </td>
+                                  <td className="px-3 py-2 text-right text-gray-600 dark:text-gray-400">
+                                    {lap.average_cadence ? `${Math.round(lap.average_cadence * 2)}` : '-'}
+                                  </td>
+                                </tr>
+                              ))}
+                            </tbody>
+                          </table>
+                        </div>
+                      </div>
+                    )}
+
+                    {/* Splits per KM */}
+                    {selectedActivity.splits_metric && selectedActivity.splits_metric.length > 0 && (
+                      <div>
+                        <h3 className="font-semibold text-gray-900 dark:text-white mb-3 flex items-center">
+                          <FiTrendingUp className="w-4 h-4 mr-2 text-green-500" />
+                          Parciales por Kilómetro
+                        </h3>
+                        <div className="grid grid-cols-5 sm:grid-cols-10 gap-2">
+                          {selectedActivity.splits_metric.map((split, index) => {
+                            const pace = calculatePace(split.moving_time, split.distance);
+                            const isGoodPace = split.average_heartrate && split.average_heartrate < (selectedActivity.average_heartrate || 150);
+                            return (
+                              <div
+                                key={index}
+                                className={`p-2 rounded-lg text-center ${
+                                  isGoodPace
+                                    ? 'bg-green-50 dark:bg-green-900/20'
+                                    : 'bg-gray-50 dark:bg-gray-700/50'
+                                }`}
+                              >
+                                <p className="text-xs text-gray-500 mb-1">km {index + 1}</p>
+                                <p className="font-mono text-sm font-bold text-gray-900 dark:text-white">
+                                  {pace}
+                                </p>
+                                {split.average_heartrate && (
+                                  <p className="text-xs text-red-500 mt-1">
+                                    {Math.round(split.average_heartrate)}
+                                  </p>
+                                )}
+                              </div>
+                            );
+                          })}
+                        </div>
+                      </div>
+                    )}
+
+                    {/* Segment Efforts */}
+                    {selectedActivity.segment_efforts && selectedActivity.segment_efforts.length > 0 && (
+                      <div>
+                        <h3 className="font-semibold text-gray-900 dark:text-white mb-3 flex items-center">
+                          <FiFlag className="w-4 h-4 mr-2 text-yellow-500" />
+                          Segmentos ({selectedActivity.segment_efforts.length})
+                        </h3>
+                        <div className="space-y-2 max-h-60 overflow-y-auto custom-scrollbar">
+                          {selectedActivity.segment_efforts.slice(0, 10).map((effort) => (
+                            <div
+                              key={effort.id}
+                              className="flex items-center justify-between p-3 bg-gray-50 dark:bg-gray-700/50 rounded-lg hover:bg-gray-100 dark:hover:bg-gray-700 transition-colors"
+                            >
+                              <div className="flex-1 min-w-0 mr-3">
+                                <p className="font-medium text-gray-900 dark:text-white truncate">
+                                  {effort.segment?.name || effort.name}
+                                </p>
+                                <p className="text-xs text-gray-500 dark:text-gray-400">
+                                  {(effort.segment?.distance || effort.distance) / 1000 || 0} km
+                                </p>
+                              </div>
+                              <div className="text-right">
+                                <p className="font-mono font-semibold text-gray-900 dark:text-white">
+                                  {formatDuration(effort.moving_time || effort.elapsed_time)}
+                                </p>
+                                {effort.pr_rank && (
+                                  <span className={`text-xs px-1.5 py-0.5 rounded ${
+                                    effort.pr_rank === 1
+                                      ? 'bg-yellow-100 text-yellow-700 dark:bg-yellow-900/30 dark:text-yellow-400'
+                                      : effort.pr_rank === 2
+                                      ? 'bg-gray-200 text-gray-700 dark:bg-gray-600 dark:text-gray-300'
+                                      : 'bg-orange-100 text-orange-700 dark:bg-orange-900/30 dark:text-orange-400'
+                                  }`}>
+                                    PR #{effort.pr_rank}
+                                  </span>
+                                )}
+                              </div>
+                            </div>
+                          ))}
+                        </div>
+                      </div>
+                    )}
+
+                    {/* Strava Link */}
+                    <a
+                      href={`https://www.strava.com/activities/${selectedActivity.id}`}
+                      target="_blank"
+                      rel="noopener noreferrer"
+                      className="flex items-center justify-center space-x-2 w-full py-3 bg-[#FC4C02] hover:bg-[#E34402] text-white rounded-xl transition-colors"
+                    >
+                      <span>Ver en Strava</span>
+                      <FiExternalLink className="w-4 h-4" />
+                    </a>
+                  </div>
+                )}
               </div>
             </motion.div>
           </div>

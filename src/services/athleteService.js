@@ -540,8 +540,12 @@ export const getAthleteStravaActivityDetail = async (athleteId, activityId) => {
   }
 };
 
-// Get upcoming events/competitions for athlete
-export const getAthleteEvents = async (athleteId) => {
+// =============================================
+// COMPETITIONS (Competiciones del atleta)
+// =============================================
+
+// Get upcoming competitions for athlete
+export const getAthleteCompetitions = async (athleteId) => {
   if (!athleteId) {
     return { data: [], error: new Error('No athleteId provided') };
   }
@@ -550,18 +554,123 @@ export const getAthleteEvents = async (athleteId) => {
     const today = new Date().toISOString().split('T')[0];
 
     const { data, error } = await supabase
-      .from('training_sessions')
+      .from('competitions')
       .select('*')
       .eq('athlete_id', athleteId)
-      .eq('training_type', 'race')
-      .gte('scheduled_date', today)
-      .order('scheduled_date', { ascending: true })
-      .limit(5);
+      .gte('event_date', today)
+      .order('event_date', { ascending: true })
+      .limit(10);
 
     if (error) throw error;
     return { data: data || [], error: null };
   } catch (error) {
-    console.error('Error fetching athlete events:', error);
+    console.error('Error fetching athlete competitions:', error);
     return { data: [], error };
   }
 };
+
+// Get all competitions for athlete (including past)
+export const getAthleteAllCompetitions = async (athleteId) => {
+  if (!athleteId) {
+    return { data: [], error: new Error('No athleteId provided') };
+  }
+
+  try {
+    const { data, error } = await supabase
+      .from('competitions')
+      .select('*')
+      .eq('athlete_id', athleteId)
+      .order('event_date', { ascending: false });
+
+    if (error) throw error;
+    return { data: data || [], error: null };
+  } catch (error) {
+    console.error('Error fetching all athlete competitions:', error);
+    return { data: [], error };
+  }
+};
+
+// Create a new competition for athlete
+export const createAthleteCompetition = async (coachId, athleteId, competitionData) => {
+  if (!coachId || !athleteId) {
+    return { data: null, error: new Error('Missing coachId or athleteId') };
+  }
+
+  try {
+    const { data, error } = await supabase
+      .from('competitions')
+      .insert({
+        coach_id: coachId,
+        athlete_id: athleteId,
+        name: competitionData.name,
+        event_date: competitionData.event_date,
+        location: competitionData.location || null,
+        distance_km: competitionData.distance_km || null,
+        distance_name: competitionData.distance_name || null,
+        event_type: competitionData.event_type || 'race',
+        surface: competitionData.surface || null,
+        target_time_seconds: competitionData.target_time_seconds || null,
+        target_pace_seconds: competitionData.target_pace_seconds || null,
+        priority: competitionData.priority || 'A',
+        notes: competitionData.notes || null,
+        status: 'upcoming',
+      })
+      .select()
+      .single();
+
+    if (error) throw error;
+    return { data, error: null };
+  } catch (error) {
+    console.error('Error creating athlete competition:', error);
+    return { data: null, error };
+  }
+};
+
+// Update a competition
+export const updateAthleteCompetition = async (competitionId, updates) => {
+  if (!competitionId) {
+    return { data: null, error: new Error('No competitionId provided') };
+  }
+
+  try {
+    const { data, error } = await supabase
+      .from('competitions')
+      .update(updates)
+      .eq('id', competitionId)
+      .select()
+      .single();
+
+    if (error) throw error;
+    return { data, error: null };
+  } catch (error) {
+    console.error('Error updating athlete competition:', error);
+    return { data: null, error };
+  }
+};
+
+// Delete a competition
+export const deleteAthleteCompetition = async (competitionId) => {
+  if (!competitionId) {
+    return { error: new Error('No competitionId provided') };
+  }
+
+  try {
+    const { error } = await supabase
+      .from('competitions')
+      .delete()
+      .eq('id', competitionId);
+
+    if (error) throw error;
+    return { error: null };
+  } catch (error) {
+    console.error('Error deleting athlete competition:', error);
+    return { error };
+  }
+};
+
+// =============================================
+// LEGACY ALIASES (para compatibilidad)
+// =============================================
+export const getAthleteEvents = getAthleteCompetitions;
+export const createAthleteEvent = createAthleteCompetition;
+export const deleteAthleteEvent = deleteAthleteCompetition;

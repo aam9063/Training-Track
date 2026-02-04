@@ -1,58 +1,505 @@
+import { useState, useEffect, useCallback } from 'react';
 import { motion } from 'framer-motion';
-import { Line, Bar } from 'react-chartjs-2';
+import { Line, Bar, Doughnut } from 'react-chartjs-2';
+import {
+  Chart as ChartJS,
+  CategoryScale,
+  LinearScale,
+  PointElement,
+  LineElement,
+  BarElement,
+  ArcElement,
+  Title,
+  Tooltip,
+  Legend,
+  Filler,
+} from 'chart.js';
 import {
   FiTrendingUp,
   FiActivity,
   FiAward,
   FiTarget,
+  FiLoader,
+  FiHeart,
+  FiZap,
+  FiMapPin,
+  FiClock,
+  FiChevronLeft,
+  FiChevronRight,
+  FiDownload,
 } from 'react-icons/fi';
+import { useAuth } from '../../contexts/AuthContext';
+import {
+  isStravaConnected,
+  getStravaActivities,
+  getStravaAthleteStats,
+  getStoredAthlete,
+  loadStravaTokens,
+  calculateStravaMetrics,
+  extractBestEfforts,
+} from '../../services/stravaService';
+
+// Register Chart.js components
+ChartJS.register(
+  CategoryScale,
+  LinearScale,
+  PointElement,
+  LineElement,
+  BarElement,
+  ArcElement,
+  Title,
+  Tooltip,
+  Legend,
+  Filler
+);
+
+// Activity Type Distribution Chart
+const ActivityTypeDistribution = ({ activities }) => {
+  // Activity type labels in Spanish
+  const activityTypeLabels = {
+    Run: 'Carrera',
+    TrailRun: 'Trail',
+    VirtualRun: 'Carrera Virtual',
+    Walk: 'Caminata',
+    Hike: 'Senderismo',
+    Ride: 'Ciclismo',
+    VirtualRide: 'Ciclismo Virtual',
+    Swim: 'Natación',
+    WeightTraining: 'Pesas',
+    Workout: 'Entrenamiento',
+    CrossFit: 'CrossFit',
+    Yoga: 'Yoga',
+    Other: 'Otro',
+  };
+
+  // Colors for each activity type
+  const activityColors = {
+    Run: '#3b82f6',
+    TrailRun: '#22c55e',
+    VirtualRun: '#06b6d4',
+    Walk: '#8b5cf6',
+    Hike: '#10b981',
+    Ride: '#f59e0b',
+    VirtualRide: '#eab308',
+    Swim: '#0ea5e9',
+    WeightTraining: '#6366f1',
+    Workout: '#ec4899',
+    CrossFit: '#ef4444',
+    Yoga: '#a855f7',
+    Other: '#6b7280',
+  };
+
+  // Calculate distribution
+  const distribution = {};
+  let totalTime = 0;
+  let totalDistance = 0;
+
+  activities?.forEach(activity => {
+    const type = activity.type || 'Other';
+    if (!distribution[type]) {
+      distribution[type] = { count: 0, time: 0, distance: 0 };
+    }
+    distribution[type].count++;
+    distribution[type].time += activity.moving_time || 0;
+    distribution[type].distance += activity.distance || 0;
+    totalTime += activity.moving_time || 0;
+    totalDistance += activity.distance || 0;
+  });
+
+  // Sort by time and get top activities
+  const sortedTypes = Object.entries(distribution)
+    .sort((a, b) => b[1].time - a[1].time)
+    .slice(0, 5);
+
+  const chartData = {
+    labels: sortedTypes.map(([type]) => activityTypeLabels[type] || type),
+    datasets: [{
+      data: sortedTypes.map(([, data]) => Math.round(data.time / 60)), // Convert to minutes
+      backgroundColor: sortedTypes.map(([type]) => activityColors[type] || '#6b7280'),
+      borderWidth: 0,
+      hoverOffset: 4,
+    }],
+  };
+
+  const formatTime = (seconds) => {
+    const hours = Math.floor(seconds / 3600);
+    const mins = Math.floor((seconds % 3600) / 60);
+    if (hours > 0) {
+      return `${hours}h ${mins}m`;
+    }
+    return `${mins}m`;
+  };
+
+  if (!activities?.length) {
+    return (
+      <div className="flex flex-col items-center justify-center h-full py-8">
+        <FiActivity className="w-12 h-12 text-gray-300 dark:text-gray-600 mb-3" />
+        <p className="text-gray-500 dark:text-gray-400">No hay actividades</p>
+      </div>
+    );
+  }
+
+  return (
+    <div className="flex flex-col h-full">
+      {/* Chart */}
+      <div className="flex-1 flex items-center justify-center" style={{ minHeight: '180px' }}>
+        <div className="w-48 h-48">
+          <Doughnut
+            data={chartData}
+            options={{
+              responsive: true,
+              maintainAspectRatio: true,
+              cutout: '65%',
+              plugins: {
+                legend: { display: false },
+                tooltip: {
+                  callbacks: {
+                    label: (ctx) => `${ctx.label}: ${ctx.parsed} min`,
+                  },
+                },
+              },
+            }}
+          />
+        </div>
+      </div>
+
+      {/* Legend with details */}
+      <div className="mt-4 space-y-2">
+        {sortedTypes.map(([type, data]) => {
+          const percentage = totalTime > 0 ? Math.round((data.time / totalTime) * 100) : 0;
+          return (
+            <div key={type} className="flex items-center justify-between text-sm">
+              <div className="flex items-center space-x-2">
+                <div
+                  className="w-3 h-3 rounded-full"
+                  style={{ backgroundColor: activityColors[type] || '#6b7280' }}
+                />
+                <span className="text-gray-700 dark:text-gray-300">
+                  {activityTypeLabels[type] || type}
+                </span>
+              </div>
+              <div className="flex items-center space-x-3 text-gray-500 dark:text-gray-400">
+                <span>{data.count} act.</span>
+                <span>{formatTime(data.time)}</span>
+                <span className="font-medium text-gray-900 dark:text-white">{percentage}%</span>
+              </div>
+            </div>
+          );
+        })}
+      </div>
+
+      {/* Summary */}
+      <div className="mt-4 pt-4 border-t border-gray-200 dark:border-gray-700 grid grid-cols-2 gap-4 text-center">
+        <div>
+          <p className="text-2xl font-bold text-gray-900 dark:text-white">{activities.length}</p>
+          <p className="text-xs text-gray-500 dark:text-gray-400">Actividades</p>
+        </div>
+        <div>
+          <p className="text-2xl font-bold text-gray-900 dark:text-white">{(totalDistance / 1000).toFixed(1)}</p>
+          <p className="text-xs text-gray-500 dark:text-gray-400">km totales</p>
+        </div>
+      </div>
+    </div>
+  );
+};
+
+// Total Activity Time Chart (Garmin style)
+const TotalActivityTimeChart = ({ activities, selectedPeriod, onPeriodChange }) => {
+  const [dateRange, setDateRange] = useState({ start: new Date(), end: new Date() });
+
+  // Calculate date range based on period
+  useEffect(() => {
+    const end = new Date();
+    const start = new Date();
+
+    switch (selectedPeriod) {
+      case '7days':
+        start.setDate(end.getDate() - 6);
+        break;
+      case '4weeks':
+        start.setDate(end.getDate() - 27);
+        break;
+      case '6months':
+        start.setMonth(end.getMonth() - 6);
+        break;
+      case '1year':
+        start.setFullYear(end.getFullYear() - 1);
+        break;
+      default:
+        start.setDate(end.getDate() - 6);
+    }
+
+    setDateRange({ start, end });
+  }, [selectedPeriod]);
+
+  // Group activities by day/week/month depending on period
+  const chartData = useCallback(() => {
+    if (!activities?.length) return { labels: [], running: [], gym: [] };
+
+    const { start, end } = dateRange;
+    const labels = [];
+    const runningData = [];
+    const gymData = [];
+
+    if (selectedPeriod === '7days') {
+      // Daily data
+      for (let d = new Date(start); d <= end; d.setDate(d.getDate() + 1)) {
+        const dayStr = d.toLocaleDateString('es-ES', { weekday: 'short' });
+        labels.push(dayStr.charAt(0).toUpperCase() + dayStr.slice(1, 3));
+
+        const dayActivities = activities.filter(a => {
+          const actDate = new Date(a.start_date_local);
+          return actDate.toDateString() === d.toDateString();
+        });
+
+        const runningTime = dayActivities
+          .filter(a => ['Run', 'TrailRun', 'VirtualRun'].includes(a.type))
+          .reduce((sum, a) => sum + (a.moving_time || 0), 0) / 60;
+
+        const gymTime = dayActivities
+          .filter(a => ['WeightTraining', 'Workout', 'CrossFit'].includes(a.type))
+          .reduce((sum, a) => sum + (a.moving_time || 0), 0) / 60;
+
+        runningData.push(Math.round(runningTime));
+        gymData.push(Math.round(gymTime));
+      }
+    } else {
+      // Weekly/monthly aggregation simplified
+      const weeks = selectedPeriod === '4weeks' ? 4 : selectedPeriod === '6months' ? 26 : 52;
+      for (let i = weeks - 1; i >= 0; i--) {
+        const weekEnd = new Date();
+        weekEnd.setDate(weekEnd.getDate() - i * 7);
+        const weekStart = new Date(weekEnd);
+        weekStart.setDate(weekStart.getDate() - 6);
+
+        if (selectedPeriod === '4weeks') {
+          labels.push(weekEnd.toLocaleDateString('es-ES', { day: 'numeric', month: 'short' }));
+        } else {
+          labels.push(weekEnd.toLocaleDateString('es-ES', { month: 'short' }));
+        }
+
+        const weekActivities = activities.filter(a => {
+          const actDate = new Date(a.start_date_local);
+          return actDate >= weekStart && actDate <= weekEnd;
+        });
+
+        const runningTime = weekActivities
+          .filter(a => ['Run', 'TrailRun', 'VirtualRun'].includes(a.type))
+          .reduce((sum, a) => sum + (a.moving_time || 0), 0) / 60;
+
+        const gymTime = weekActivities
+          .filter(a => ['WeightTraining', 'Workout', 'CrossFit'].includes(a.type))
+          .reduce((sum, a) => sum + (a.moving_time || 0), 0) / 60;
+
+        runningData.push(Math.round(runningTime));
+        gymData.push(Math.round(gymTime));
+      }
+    }
+
+    return { labels, running: runningData, gym: gymData };
+  }, [activities, dateRange, selectedPeriod]);
+
+  const data = chartData();
+  const formatDateRange = () => {
+    const options = { day: 'numeric', month: 'short' };
+    return `${dateRange.start.toLocaleDateString('es-ES', options)} - ${dateRange.end.toLocaleDateString('es-ES', options)}`;
+  };
+
+  const navigatePeriod = (direction) => {
+    const days = selectedPeriod === '7days' ? 7 : selectedPeriod === '4weeks' ? 28 : selectedPeriod === '6months' ? 180 : 365;
+    const newEnd = new Date(dateRange.end);
+    newEnd.setDate(newEnd.getDate() + (direction * days));
+
+    // Don't go into the future
+    if (newEnd > new Date()) return;
+
+    const newStart = new Date(newEnd);
+    newStart.setDate(newStart.getDate() - days + 1);
+    setDateRange({ start: newStart, end: newEnd });
+  };
+
+  return (
+    <div className="bg-white dark:bg-gray-800 rounded-xl p-4 sm:p-6 shadow-sm border border-gray-200 dark:border-gray-700">
+      <div className="flex flex-col sm:flex-row sm:items-center sm:justify-between mb-4 gap-3">
+        <div className="flex items-center justify-between">
+          <h3 className="text-base sm:text-lg font-bold text-gray-900 dark:text-white">
+            Tiempo total de la actividad
+          </h3>
+          <button className="sm:hidden text-gray-500 hover:text-gray-700 dark:text-gray-400 dark:hover:text-gray-200">
+            <FiDownload className="w-5 h-5" />
+          </button>
+        </div>
+        <button className="hidden sm:block text-gray-500 hover:text-gray-700 dark:text-gray-400 dark:hover:text-gray-200">
+          <FiDownload className="w-5 h-5" />
+        </button>
+      </div>
+
+      {/* Period selector and date navigation */}
+      <div className="flex flex-col sm:flex-row items-start sm:items-center justify-between mb-6 gap-3">
+        <div className="flex items-center space-x-2">
+          <button
+            onClick={() => navigatePeriod(-1)}
+            className="p-1.5 rounded-full hover:bg-gray-100 dark:hover:bg-gray-700 transition-colors"
+          >
+            <FiChevronLeft className="w-5 h-5 text-gray-600 dark:text-gray-400" />
+          </button>
+          <button
+            onClick={() => navigatePeriod(1)}
+            className="p-1.5 rounded-full hover:bg-gray-100 dark:hover:bg-gray-700 transition-colors"
+          >
+            <FiChevronRight className="w-5 h-5 text-gray-600 dark:text-gray-400" />
+          </button>
+          <span className="text-sm text-gray-600 dark:text-gray-400 flex items-center space-x-1">
+            <FiClock className="w-4 h-4" />
+            <span>{formatDateRange()}</span>
+          </span>
+        </div>
+
+        <div className="flex items-center bg-gray-100 dark:bg-gray-700 rounded-lg p-1">
+          {[
+            { value: '7days', label: '7 días' },
+            { value: '4weeks', label: '4 semanas' },
+            { value: '6months', label: '6 meses' },
+            { value: '1year', label: '1 año' },
+          ].map((period) => (
+            <button
+              key={period.value}
+              onClick={() => onPeriodChange(period.value)}
+              className={`px-3 py-1.5 rounded-md text-xs sm:text-sm font-medium transition-all ${
+                selectedPeriod === period.value
+                  ? 'bg-white dark:bg-gray-600 text-gray-900 dark:text-white shadow-sm'
+                  : 'text-gray-600 dark:text-gray-400 hover:text-gray-900 dark:hover:text-white'
+              }`}
+            >
+              {period.label}
+            </button>
+          ))}
+        </div>
+      </div>
+
+      {/* Chart */}
+      <div className="h-64">
+        <Bar
+          data={{
+            labels: data.labels,
+            datasets: [
+              {
+                label: 'Carrera',
+                data: data.running,
+                backgroundColor: 'rgba(59, 130, 246, 0.8)',
+                borderRadius: 4,
+                barPercentage: 0.7,
+              },
+              {
+                label: 'Gimnasio y equipo de fitness',
+                data: data.gym,
+                backgroundColor: 'rgba(17, 24, 39, 0.8)',
+                borderRadius: 4,
+                barPercentage: 0.7,
+              },
+            ],
+          }}
+          options={{
+            responsive: true,
+            maintainAspectRatio: false,
+            plugins: {
+              legend: {
+                display: true,
+                position: 'bottom',
+                labels: {
+                  usePointStyle: true,
+                  pointStyle: 'circle',
+                  padding: 20,
+                },
+              },
+              tooltip: {
+                callbacks: {
+                  label: (ctx) => `${ctx.dataset.label}: ${ctx.parsed.y} min`,
+                },
+              },
+            },
+            scales: {
+              x: {
+                stacked: true,
+                grid: { display: false },
+              },
+              y: {
+                stacked: true,
+                beginAtZero: true,
+                grid: { color: 'rgba(156, 163, 175, 0.1)' },
+                title: {
+                  display: true,
+                  text: 'Minutos',
+                },
+              },
+            },
+          }}
+        />
+      </div>
+    </div>
+  );
+};
 
 const AthleteMetrics = () => {
+  const { profile } = useAuth();
+  const [loading, setLoading] = useState(true);
+  const [stravaConnected, setStravaConnected] = useState(false);
+  const [stravaMetrics, setStravaMetrics] = useState(null);
+  const [bestEfforts, setBestEfforts] = useState([]);
+  const [stravaStats, setStravaStats] = useState(null);
+  const [weekFilter, setWeekFilter] = useState(8); // Default 8 weeks
+  const [activityTimePeriod, setActivityTimePeriod] = useState('7days');
+  const [rawActivities, setRawActivities] = useState([]);
 
-  // Datos de ejemplo - después se cargarán desde Supabase
-  const personalBests = [
-    { distance: '5K', time: '16:45', date: '2026-01-15', pace: '3:21' },
-    { distance: '10K', time: '34:30', date: '2025-12-20', pace: '3:27' },
-    { distance: '21K', time: '1:15:00', date: '2025-11-10', pace: '3:34' },
-    { distance: '42K', time: '2:45:30', date: '2025-10-05', pace: '3:55' },
-  ];
+  const loadStravaMetrics = useCallback(async () => {
+    if (!profile?.id) return;
 
-  const physicalMetrics = {
-    vo2max: 58.5,
-    restingHR: 42,
-    maxHR: 195,
-    weight: 68.5,
-    bodyFat: 8.2,
-  };
+    setLoading(true);
+    try {
+      // Check connection
+      const { connected: dbConnected } = await loadStravaTokens(profile.id);
+      const connected = dbConnected || isStravaConnected();
+      setStravaConnected(connected);
 
-  // Datos para gráfico de progresión (últimos 12 semanas)
-  const progressionData = {
-    labels: ['Sem 1', 'Sem 2', 'Sem 3', 'Sem 4', 'Sem 5', 'Sem 6', 'Sem 7', 'Sem 8', 'Sem 9', 'Sem 10', 'Sem 11', 'Sem 12'],
-    datasets: [
-      {
-        label: 'Kilómetros Semanales',
-        data: [45, 52, 48, 55, 58, 62, 60, 65, 68, 70, 72, 75],
-        borderColor: 'rgb(59, 130, 246)',
-        backgroundColor: 'rgba(59, 130, 246, 0.1)',
-        fill: true,
-        tension: 0.4,
-      },
-    ],
-  };
+      if (connected) {
+        // Get activities for the selected period
+        const weeksAgo = Math.floor(Date.now() / 1000) - weekFilter * 7 * 24 * 60 * 60;
+        const { data: activities } = await getStravaActivities({
+          after: weeksAgo,
+          per_page: 100,
+        });
 
-  // Datos para gráfico de ritmos
-  const paceData = {
-    labels: ['5K', '10K', '15K', '21K', '25K', '30K', '35K', '42K'],
-    datasets: [
-      {
-        label: 'Ritmo (min/km)',
-        data: [3.35, 3.45, 3.50, 3.57, 4.05, 4.15, 4.25, 3.92],
-        backgroundColor: 'rgba(16, 185, 129, 0.8)',
-        borderColor: 'rgb(16, 185, 129)',
-        borderWidth: 2,
-      },
-    ],
-  };
+        if (activities?.length > 0) {
+          setRawActivities(activities);
+
+          // Calculate metrics
+          const metrics = calculateStravaMetrics(activities);
+          setStravaMetrics(metrics);
+
+          // Extract best efforts
+          const efforts = extractBestEfforts(activities);
+          setBestEfforts(efforts);
+        }
+
+        // Get athlete stats
+        const athlete = getStoredAthlete();
+        if (athlete?.id) {
+          const { data: stats } = await getStravaAthleteStats(athlete.id);
+          if (stats) {
+            setStravaStats(stats);
+          }
+        }
+      }
+    } catch (error) {
+      console.error('Error loading Strava metrics:', error);
+    } finally {
+      setLoading(false);
+    }
+  }, [profile?.id, weekFilter]);
+
+  useEffect(() => {
+    loadStravaMetrics();
+  }, [loadStravaMetrics]);
 
   const chartOptions = {
     responsive: true,
@@ -77,87 +524,317 @@ const AthleteMetrics = () => {
     },
   };
 
+  // Prepare weekly progression chart data
+  const getWeeklyChartData = () => {
+    if (!stravaMetrics?.weeklyStats?.length) {
+      return {
+        labels: [],
+        datasets: [{
+          data: [],
+          borderColor: 'rgb(249, 115, 22)',
+          backgroundColor: 'rgba(249, 115, 22, 0.1)',
+          fill: true,
+          tension: 0.4,
+        }],
+      };
+    }
+
+    const reversed = [...stravaMetrics.weeklyStats].reverse();
+    return {
+      labels: reversed.map(w => w.weekNumber),
+      datasets: [{
+        label: 'Kilómetros',
+        data: reversed.map(w => parseFloat(w.distanceKm)),
+        borderColor: 'rgb(249, 115, 22)',
+        backgroundColor: 'rgba(249, 115, 22, 0.1)',
+        fill: true,
+        tension: 0.4,
+        pointRadius: 4,
+        pointBackgroundColor: 'rgb(249, 115, 22)',
+      }],
+    };
+  };
+
+  // Prepare average speed chart data (Garmin style - individual points per activity)
+  const getAverageSpeedData = () => {
+    if (!rawActivities?.length) {
+      return {
+        labels: [],
+        datasets: [],
+        avgSpeed: 0,
+      };
+    }
+
+    // Filter running activities and sort by date
+    const runningActivities = rawActivities
+      .filter(a => ['Run', 'TrailRun', 'VirtualRun'].includes(a.type))
+      .filter(a => a.average_speed > 0)
+      .sort((a, b) => new Date(a.start_date_local) - new Date(b.start_date_local));
+
+    if (runningActivities.length === 0) {
+      return { labels: [], datasets: [], avgSpeed: 0 };
+    }
+
+    // Calculate average speed in km/h for each activity
+    const speedsKmh = runningActivities.map(a => (a.average_speed * 3.6).toFixed(1));
+    const avgSpeed = (speedsKmh.reduce((sum, s) => sum + parseFloat(s), 0) / speedsKmh.length).toFixed(1);
+
+    // Labels as dates
+    const labels = runningActivities.map(a => {
+      const date = new Date(a.start_date_local);
+      return date.toLocaleDateString('es-ES', { day: 'numeric', month: 'short' });
+    });
+
+    return {
+      labels,
+      datasets: [{
+        label: 'Velocidad (km/h)',
+        data: speedsKmh.map(s => parseFloat(s)),
+        borderColor: 'transparent',
+        backgroundColor: 'rgba(59, 130, 246, 0.8)',
+        pointRadius: 6,
+        pointHoverRadius: 8,
+        showLine: false,
+        type: 'scatter',
+      }],
+      avgSpeed: parseFloat(avgSpeed),
+    };
+  };
+
+  if (loading) {
+    return (
+      <div className="flex items-center justify-center min-h-[60vh]">
+        <div className="text-center">
+          <FiLoader className="w-8 h-8 animate-spin text-orange-600 mx-auto mb-4" />
+          <p className="text-gray-600 dark:text-gray-400">Cargando métricas...</p>
+        </div>
+      </div>
+    );
+  }
+
+  if (!stravaConnected) {
+    return (
+      <div className="p-4 sm:p-6 lg:p-8">
+        <div className="mb-6 sm:mb-8">
+          <h1 className="text-2xl sm:text-3xl font-bold text-gray-900 dark:text-white mb-2">
+            Mis Métricas
+          </h1>
+          <p className="text-sm sm:text-base text-gray-600 dark:text-gray-400">
+            Análisis de rendimiento y progresión
+          </p>
+        </div>
+
+        <div className="bg-white dark:bg-gray-800 rounded-2xl p-8 sm:p-12 text-center shadow-sm border border-gray-200 dark:border-gray-700">
+          <div className="w-20 h-20 bg-orange-100 dark:bg-orange-900/30 rounded-full flex items-center justify-center mx-auto mb-6">
+            <FiActivity className="w-10 h-10 text-orange-500" />
+          </div>
+          <h2 className="text-xl font-bold text-gray-900 dark:text-white mb-3">
+            Conecta Strava para ver tus métricas
+          </h2>
+          <p className="text-gray-500 dark:text-gray-400 mb-6 max-w-md mx-auto">
+            Sincroniza tu cuenta de Strava en la sección de Dispositivos para ver estadísticas detalladas de tus entrenamientos.
+          </p>
+          <a
+            href="/athlete/devices"
+            className="inline-flex items-center space-x-2 px-6 py-3 bg-orange-500 hover:bg-orange-600 text-white rounded-xl font-semibold transition-all"
+          >
+            <span>Ir a Dispositivos</span>
+            <FiActivity className="w-5 h-5" />
+          </a>
+        </div>
+      </div>
+    );
+  }
+
   return (
     <div className="p-4 sm:p-6 lg:p-8">
       {/* Header */}
-      <div className="mb-6 sm:mb-8">
-        <h1 className="text-2xl sm:text-3xl font-bold text-gray-900 dark:text-white mb-2">
-          Mis Métricas
-        </h1>
-        <p className="text-sm sm:text-base text-gray-600 dark:text-gray-400">
-          Análisis de rendimiento y progresión
-        </p>
+      <div className="flex flex-col sm:flex-row sm:items-center sm:justify-between mb-6 sm:mb-8 gap-4">
+        <div>
+          <h1 className="text-2xl sm:text-3xl font-bold text-gray-900 dark:text-white mb-2">
+            Mis Métricas
+          </h1>
+          <p className="text-sm sm:text-base text-gray-600 dark:text-gray-400">
+            Análisis de rendimiento basado en Strava
+          </p>
+        </div>
+
+        {/* Week Filter */}
+        <div className="flex items-center space-x-2 bg-gray-100 dark:bg-gray-700 rounded-lg p-1">
+          {[4, 8, 12].map((weeks) => (
+            <button
+              key={weeks}
+              onClick={() => setWeekFilter(weeks)}
+              className={`px-4 py-2 rounded-lg text-sm font-medium transition-all ${
+                weekFilter === weeks
+                  ? 'bg-orange-500 text-white shadow-sm'
+                  : 'text-gray-600 dark:text-gray-400 hover:bg-gray-200 dark:hover:bg-gray-600'
+              }`}
+            >
+              {weeks} sem
+            </button>
+          ))}
+        </div>
       </div>
 
-      {/* Physical Metrics Cards */}
-      <div className="grid grid-cols-2 sm:grid-cols-3 lg:grid-cols-5 gap-3 sm:gap-4 mb-6 sm:mb-8">
-        <motion.div
-          initial={{ opacity: 0, y: 20 }}
-          animate={{ opacity: 1, y: 0 }}
-          className="bg-gradient-to-br from-blue-500 to-blue-600 rounded-xl p-4 sm:p-6 text-white shadow-lg"
-        >
-          <div className="flex items-center justify-between mb-2">
-            <span className="text-xs sm:text-sm font-medium opacity-90">VO₂ Max</span>
-            <FiActivity className="w-4 h-4 sm:w-5 sm:h-5 opacity-75" />
-          </div>
-          <p className="text-2xl sm:text-3xl font-bold mb-1">{physicalMetrics.vo2max}</p>
-          <p className="text-xs opacity-75">ml/kg/min</p>
-        </motion.div>
+      {/* Main Stats Cards */}
+      {stravaMetrics && (
+        <div className="grid grid-cols-2 sm:grid-cols-3 lg:grid-cols-6 gap-3 sm:gap-4 mb-6 sm:mb-8">
+          <motion.div
+            initial={{ opacity: 0, y: 20 }}
+            animate={{ opacity: 1, y: 0 }}
+            className="bg-gradient-to-br from-orange-500 to-orange-600 rounded-xl p-4 sm:p-5 text-white shadow-lg"
+          >
+            <div className="flex items-center justify-between mb-2">
+              <span className="text-xs sm:text-sm font-medium opacity-90">Distancia</span>
+              <FiMapPin className="w-4 h-4 opacity-75" />
+            </div>
+            <p className="text-2xl sm:text-3xl font-bold mb-1">{stravaMetrics.totalDistanceKm}</p>
+            <p className="text-xs opacity-75">km totales</p>
+          </motion.div>
 
-        <motion.div
-          initial={{ opacity: 0, y: 20 }}
-          animate={{ opacity: 1, y: 0 }}
-          transition={{ delay: 0.1 }}
-          className="bg-gradient-to-br from-red-500 to-red-600 rounded-xl p-4 sm:p-6 text-white shadow-lg"
-        >
-          <div className="flex items-center justify-between mb-2">
-            <span className="text-xs sm:text-sm font-medium opacity-90">FC Reposo</span>
-            <FiActivity className="w-4 h-4 sm:w-5 sm:h-5 opacity-75" />
-          </div>
-          <p className="text-2xl sm:text-3xl font-bold mb-1">{physicalMetrics.restingHR}</p>
-          <p className="text-xs opacity-75">bpm</p>
-        </motion.div>
+          <motion.div
+            initial={{ opacity: 0, y: 20 }}
+            animate={{ opacity: 1, y: 0 }}
+            transition={{ delay: 0.1 }}
+            className="bg-gradient-to-br from-blue-500 to-blue-600 rounded-xl p-4 sm:p-5 text-white shadow-lg"
+          >
+            <div className="flex items-center justify-between mb-2">
+              <span className="text-xs sm:text-sm font-medium opacity-90">Tiempo</span>
+              <FiClock className="w-4 h-4 opacity-75" />
+            </div>
+            <p className="text-xl sm:text-2xl font-bold mb-1">{stravaMetrics.totalTimeFormatted}</p>
+            <p className="text-xs opacity-75">total</p>
+          </motion.div>
 
-        <motion.div
-          initial={{ opacity: 0, y: 20 }}
-          animate={{ opacity: 1, y: 0 }}
-          transition={{ delay: 0.2 }}
-          className="bg-gradient-to-br from-purple-500 to-purple-600 rounded-xl p-4 sm:p-6 text-white shadow-lg"
-        >
-          <div className="flex items-center justify-between mb-2">
-            <span className="text-xs sm:text-sm font-medium opacity-90">FC Máxima</span>
-            <FiTarget className="w-4 h-4 sm:w-5 sm:h-5 opacity-75" />
-          </div>
-          <p className="text-2xl sm:text-3xl font-bold mb-1">{physicalMetrics.maxHR}</p>
-          <p className="text-xs opacity-75">bpm</p>
-        </motion.div>
+          <motion.div
+            initial={{ opacity: 0, y: 20 }}
+            animate={{ opacity: 1, y: 0 }}
+            transition={{ delay: 0.2 }}
+            className="bg-gradient-to-br from-green-500 to-green-600 rounded-xl p-4 sm:p-5 text-white shadow-lg"
+          >
+            <div className="flex items-center justify-between mb-2">
+              <span className="text-xs sm:text-sm font-medium opacity-90">Ritmo</span>
+              <FiTrendingUp className="w-4 h-4 opacity-75" />
+            </div>
+            <p className="text-2xl sm:text-3xl font-bold mb-1">{stravaMetrics.avgPace || '-'}</p>
+            <p className="text-xs opacity-75">min/km medio</p>
+          </motion.div>
 
+          <motion.div
+            initial={{ opacity: 0, y: 20 }}
+            animate={{ opacity: 1, y: 0 }}
+            transition={{ delay: 0.3 }}
+            className="bg-gradient-to-br from-red-500 to-red-600 rounded-xl p-4 sm:p-5 text-white shadow-lg"
+          >
+            <div className="flex items-center justify-between mb-2">
+              <span className="text-xs sm:text-sm font-medium opacity-90">FC Media</span>
+              <FiHeart className="w-4 h-4 opacity-75" />
+            </div>
+            <p className="text-2xl sm:text-3xl font-bold mb-1">
+              {stravaMetrics.avgHeartrate || '-'}
+            </p>
+            <p className="text-xs opacity-75">bpm</p>
+          </motion.div>
+
+          <motion.div
+            initial={{ opacity: 0, y: 20 }}
+            animate={{ opacity: 1, y: 0 }}
+            transition={{ delay: 0.4 }}
+            className="bg-gradient-to-br from-purple-500 to-purple-600 rounded-xl p-4 sm:p-5 text-white shadow-lg"
+          >
+            <div className="flex items-center justify-between mb-2">
+              <span className="text-xs sm:text-sm font-medium opacity-90">Actividades</span>
+              <FiActivity className="w-4 h-4 opacity-75" />
+            </div>
+            <p className="text-2xl sm:text-3xl font-bold mb-1">{stravaMetrics.totalActivities}</p>
+            <p className="text-xs opacity-75">entrenamientos</p>
+          </motion.div>
+
+          <motion.div
+            initial={{ opacity: 0, y: 20 }}
+            animate={{ opacity: 1, y: 0 }}
+            transition={{ delay: 0.5 }}
+            className="bg-gradient-to-br from-yellow-500 to-amber-600 rounded-xl p-4 sm:p-5 text-white shadow-lg"
+          >
+            <div className="flex items-center justify-between mb-2">
+              <span className="text-xs sm:text-sm font-medium opacity-90">Desnivel</span>
+              <FiZap className="w-4 h-4 opacity-75" />
+            </div>
+            <p className="text-2xl sm:text-3xl font-bold mb-1">{stravaMetrics.totalElevation}</p>
+            <p className="text-xs opacity-75">metros</p>
+          </motion.div>
+        </div>
+      )}
+
+      {/* Athlete All-Time Stats */}
+      {stravaStats && (
         <motion.div
           initial={{ opacity: 0, y: 20 }}
           animate={{ opacity: 1, y: 0 }}
           transition={{ delay: 0.3 }}
-          className="bg-gradient-to-br from-green-500 to-green-600 rounded-xl p-4 sm:p-6 text-white shadow-lg"
+          className="bg-white dark:bg-gray-800 rounded-xl p-4 sm:p-6 shadow-sm border border-gray-200 dark:border-gray-700 mb-6 sm:mb-8"
         >
-          <div className="flex items-center justify-between mb-2">
-            <span className="text-xs sm:text-sm font-medium opacity-90">Peso</span>
-            <FiTrendingUp className="w-4 h-4 sm:w-5 sm:h-5 opacity-75" />
+          <h3 className="text-base sm:text-lg font-bold text-gray-900 dark:text-white mb-4 flex items-center">
+            <FiActivity className="w-5 h-5 mr-2 text-orange-500" />
+            Estadísticas Totales (Strava)
+          </h3>
+          <div className="grid grid-cols-2 sm:grid-cols-4 gap-4">
+            <div className="text-center p-4 bg-gray-50 dark:bg-gray-700/50 rounded-xl">
+              <p className="text-2xl sm:text-3xl font-bold text-gray-900 dark:text-white">
+                {stravaStats.all_run_totals?.count || 0}
+              </p>
+              <p className="text-xs sm:text-sm text-gray-500 dark:text-gray-400">Carreras totales</p>
+            </div>
+            <div className="text-center p-4 bg-gray-50 dark:bg-gray-700/50 rounded-xl">
+              <p className="text-2xl sm:text-3xl font-bold text-gray-900 dark:text-white">
+                {((stravaStats.all_run_totals?.distance || 0) / 1000).toFixed(0)} km
+              </p>
+              <p className="text-xs sm:text-sm text-gray-500 dark:text-gray-400">Distancia total</p>
+            </div>
+            <div className="text-center p-4 bg-gray-50 dark:bg-gray-700/50 rounded-xl">
+              <p className="text-2xl sm:text-3xl font-bold text-gray-900 dark:text-white">
+                {Math.round((stravaStats.all_run_totals?.elapsed_time || 0) / 3600)}h
+              </p>
+              <p className="text-xs sm:text-sm text-gray-500 dark:text-gray-400">Tiempo total</p>
+            </div>
+            <div className="text-center p-4 bg-gray-50 dark:bg-gray-700/50 rounded-xl">
+              <p className="text-2xl sm:text-3xl font-bold text-gray-900 dark:text-white">
+                {((stravaStats.all_run_totals?.elevation_gain || 0) / 1000).toFixed(1)}k
+              </p>
+              <p className="text-xs sm:text-sm text-gray-500 dark:text-gray-400">Desnivel (m)</p>
+            </div>
           </div>
-          <p className="text-2xl sm:text-3xl font-bold mb-1">{physicalMetrics.weight}</p>
-          <p className="text-xs opacity-75">kg</p>
         </motion.div>
+      )}
 
+      {/* Activity Distribution and Total Activity Time Section */}
+      <div className="grid grid-cols-1 lg:grid-cols-2 gap-4 sm:gap-6 mb-6 sm:mb-8">
+        {/* Activity Type Distribution */}
         <motion.div
           initial={{ opacity: 0, y: 20 }}
           animate={{ opacity: 1, y: 0 }}
           transition={{ delay: 0.4 }}
-          className="bg-gradient-to-br from-orange-500 to-orange-600 rounded-xl p-4 sm:p-6 text-white shadow-lg"
+          className="bg-white dark:bg-gray-800 rounded-xl p-4 sm:p-6 shadow-sm border border-gray-200 dark:border-gray-700"
         >
-          <div className="flex items-center justify-between mb-2">
-            <span className="text-xs sm:text-sm font-medium opacity-90">Grasa</span>
-            <FiAward className="w-4 h-4 sm:w-5 sm:h-5 opacity-75" />
-          </div>
-          <p className="text-2xl sm:text-3xl font-bold mb-1">{physicalMetrics.bodyFat}%</p>
-          <p className="text-xs opacity-75">corporal</p>
+          <h3 className="text-base sm:text-lg font-bold text-gray-900 dark:text-white mb-4 flex items-center">
+            <FiActivity className="w-5 h-5 mr-2 text-blue-500" />
+            Distribución de Actividades
+          </h3>
+          <ActivityTypeDistribution activities={rawActivities} />
+        </motion.div>
+
+        {/* Total Activity Time Chart */}
+        <motion.div
+          initial={{ opacity: 0, y: 20 }}
+          animate={{ opacity: 1, y: 0 }}
+          transition={{ delay: 0.5 }}
+        >
+          <TotalActivityTimeChart
+            activities={rawActivities}
+            selectedPeriod={activityTimePeriod}
+            onPeriodChange={setActivityTimePeriod}
+          />
         </motion.div>
       </div>
 
@@ -167,34 +844,166 @@ const AthleteMetrics = () => {
         <motion.div
           initial={{ opacity: 0, y: 20 }}
           animate={{ opacity: 1, y: 0 }}
-          transition={{ delay: 0.5 }}
+          transition={{ delay: 0.6 }}
           className="bg-white dark:bg-gray-800 rounded-xl p-4 sm:p-6 shadow-sm border border-gray-200 dark:border-gray-700"
         >
-          <h3 className="text-base sm:text-lg font-bold text-gray-900 dark:text-white mb-4">
+          <h3 className="text-base sm:text-lg font-bold text-gray-900 dark:text-white mb-4 flex items-center">
+            <FiTrendingUp className="w-5 h-5 mr-2 text-orange-500" />
             Progresión Semanal (km)
           </h3>
           <div className="h-48 sm:h-64">
-            <Line data={progressionData} options={chartOptions} />
+            {stravaMetrics?.weeklyStats?.length > 0 ? (
+              <Line data={getWeeklyChartData()} options={chartOptions} />
+            ) : (
+              <div className="h-full flex items-center justify-center text-gray-400">
+                No hay datos suficientes
+              </div>
+            )}
           </div>
         </motion.div>
 
-        {/* Pace Distribution */}
+        {/* Average Speed Chart (Garmin style) */}
+        <motion.div
+          initial={{ opacity: 0, y: 20 }}
+          animate={{ opacity: 1, y: 0 }}
+          transition={{ delay: 0.7 }}
+          className="bg-white dark:bg-gray-800 rounded-xl p-4 sm:p-6 shadow-sm border border-gray-200 dark:border-gray-700"
+        >
+          <h3 className="text-base sm:text-lg font-bold text-gray-900 dark:text-white mb-4 flex items-center">
+            <FiZap className="w-5 h-5 mr-2 text-blue-500" />
+            Velocidad Media
+          </h3>
+          {(() => {
+            const speedData = getAverageSpeedData();
+            if (speedData.labels.length === 0) {
+              return (
+                <div className="h-48 sm:h-64 flex items-center justify-center text-gray-400">
+                  No hay datos suficientes
+                </div>
+              );
+            }
+            return (
+              <>
+                {/* Average line indicator */}
+                <div className="flex items-center justify-end mb-2 text-sm text-gray-500 dark:text-gray-400">
+                  <div className="flex items-center">
+                    <div className="w-8 h-0.5 bg-gray-400 dark:bg-gray-500 mr-2"></div>
+                    <span>Media = {speedData.avgSpeed} km/h</span>
+                  </div>
+                </div>
+                <div className="h-48 sm:h-64">
+                  <Line
+                    data={{
+                      labels: speedData.labels,
+                      datasets: [
+                        // Average line
+                        {
+                          label: 'Media',
+                          data: speedData.labels.map(() => speedData.avgSpeed),
+                          borderColor: 'rgba(156, 163, 175, 0.6)',
+                          borderDash: [5, 5],
+                          borderWidth: 1,
+                          pointRadius: 0,
+                          fill: false,
+                        },
+                        // Individual points
+                        {
+                          label: 'Velocidad (km/h)',
+                          data: speedData.datasets[0]?.data || [],
+                          borderColor: 'transparent',
+                          backgroundColor: 'rgba(59, 130, 246, 0.8)',
+                          pointRadius: 7,
+                          pointHoverRadius: 9,
+                          showLine: false,
+                        },
+                      ],
+                    }}
+                    options={{
+                      responsive: true,
+                      maintainAspectRatio: false,
+                      plugins: {
+                        legend: { display: false },
+                        tooltip: {
+                          callbacks: {
+                            label: (ctx) => {
+                              if (ctx.dataset.label === 'Media') return null;
+                              return `Velocidad: ${ctx.parsed.y} km/h`;
+                            },
+                          },
+                          filter: (tooltipItem) => tooltipItem.dataset.label !== 'Media',
+                        },
+                      },
+                      scales: {
+                        x: {
+                          grid: { display: false },
+                          ticks: {
+                            maxRotation: 0,
+                            autoSkip: true,
+                            maxTicksLimit: 8,
+                          },
+                        },
+                        y: {
+                          beginAtZero: true,
+                          grid: { color: 'rgba(156, 163, 175, 0.1)' },
+                          title: {
+                            display: true,
+                            text: 'Kilómetros por hora',
+                          },
+                        },
+                      },
+                    }}
+                  />
+                </div>
+              </>
+            );
+          })()}
+        </motion.div>
+      </div>
+
+      {/* Best Performances Summary */}
+      {stravaMetrics && (stravaMetrics.longestRun || stravaMetrics.fastestPace) && (
         <motion.div
           initial={{ opacity: 0, y: 20 }}
           animate={{ opacity: 1, y: 0 }}
           transition={{ delay: 0.6 }}
-          className="bg-white dark:bg-gray-800 rounded-xl p-4 sm:p-6 shadow-sm border border-gray-200 dark:border-gray-700"
+          className="grid grid-cols-1 sm:grid-cols-2 gap-4 mb-6 sm:mb-8"
         >
-          <h3 className="text-base sm:text-lg font-bold text-gray-900 dark:text-white mb-4">
-            Ritmos por Distancia
-          </h3>
-          <div className="h-48 sm:h-64">
-            <Bar data={paceData} options={chartOptions} />
-          </div>
+          {stravaMetrics.longestRun && (
+            <div className="bg-gradient-to-r from-yellow-50 to-orange-50 dark:from-yellow-900/20 dark:to-orange-900/20 rounded-xl p-6 border-2 border-yellow-200 dark:border-yellow-800">
+              <div className="flex items-center justify-between mb-3">
+                <span className="text-sm font-medium text-yellow-700 dark:text-yellow-400">
+                  Carrera más larga
+                </span>
+                <FiTarget className="w-5 h-5 text-yellow-600" />
+              </div>
+              <p className="text-3xl font-bold text-yellow-700 dark:text-yellow-300 mb-1">
+                {stravaMetrics.longestRun.distanceKm} km
+              </p>
+              <p className="text-sm text-gray-600 dark:text-gray-400">
+                {stravaMetrics.longestRun.name}
+              </p>
+            </div>
+          )}
+          {stravaMetrics.fastestPace && (
+            <div className="bg-gradient-to-r from-green-50 to-emerald-50 dark:from-green-900/20 dark:to-emerald-900/20 rounded-xl p-6 border-2 border-green-200 dark:border-green-800">
+              <div className="flex items-center justify-between mb-3">
+                <span className="text-sm font-medium text-green-700 dark:text-green-400">
+                  Ritmo más rápido
+                </span>
+                <FiZap className="w-5 h-5 text-green-600" />
+              </div>
+              <p className="text-3xl font-bold text-green-700 dark:text-green-300 mb-1">
+                {stravaMetrics.fastestPace.pace}
+              </p>
+              <p className="text-sm text-gray-600 dark:text-gray-400">
+                {stravaMetrics.fastestPace.name} ({stravaMetrics.fastestPace.distanceKm} km)
+              </p>
+            </div>
+          )}
         </motion.div>
-      </div>
+      )}
 
-      {/* Personal Bests */}
+      {/* Personal Bests / Best Efforts */}
       <motion.div
         initial={{ opacity: 0, y: 20 }}
         animate={{ opacity: 1, y: 0 }}
@@ -208,30 +1017,55 @@ const AthleteMetrics = () => {
           </h3>
         </div>
 
-        <div className="grid grid-cols-2 lg:grid-cols-4 gap-3 sm:gap-4">
-          {personalBests.map((best, index) => (
-            <div
-              key={index}
-              className="bg-gradient-to-br from-yellow-50 to-orange-50 dark:from-yellow-900/20 dark:to-orange-900/20 rounded-lg p-4 border-2 border-yellow-200 dark:border-yellow-800"
-            >
-              <div className="flex items-center justify-between mb-2">
-                <span className="text-2xl font-bold text-gray-900 dark:text-white">
-                  {best.distance}
-                </span>
-                <span className="text-xl">🏆</span>
-              </div>
-              <p className="text-3xl font-bold text-yellow-600 dark:text-yellow-400 mb-2">
-                {best.time}
-              </p>
-              <p className="text-sm text-gray-600 dark:text-gray-400 mb-1">
-                {best.pace} min/km
-              </p>
-              <p className="text-xs text-gray-500 dark:text-gray-500">
-                {new Date(best.date).toLocaleDateString('es-ES')}
-              </p>
-            </div>
-          ))}
-        </div>
+        {bestEfforts.length > 0 ? (
+          <div className="grid grid-cols-2 lg:grid-cols-4 gap-3 sm:gap-4">
+            {bestEfforts.map((effort, index) => (
+              <motion.div
+                key={effort.name + index}
+                initial={{ opacity: 0, scale: 0.9 }}
+                animate={{ opacity: 1, scale: 1 }}
+                transition={{ delay: 0.1 * index }}
+                className="bg-gradient-to-br from-yellow-50 to-orange-50 dark:from-yellow-900/20 dark:to-orange-900/20 rounded-lg p-4 border-2 border-yellow-200 dark:border-yellow-800 hover:shadow-md transition-shadow"
+              >
+                <div className="flex items-center justify-between mb-2">
+                  <span className="text-lg sm:text-xl font-bold text-gray-900 dark:text-white">
+                    {effort.name}
+                  </span>
+                  <span className="text-xl">
+                    {index === 0 ? '🥇' : index === 1 ? '🥈' : index === 2 ? '🥉' : '🏅'}
+                  </span>
+                </div>
+                <p className="text-2xl sm:text-3xl font-bold text-yellow-600 dark:text-yellow-400 mb-2">
+                  {effort.timeFormatted}
+                </p>
+                {effort.pace && (
+                  <p className="text-sm text-gray-600 dark:text-gray-400 mb-1">
+                    {effort.pace} min/km
+                  </p>
+                )}
+                {effort.date && (
+                  <p className="text-xs text-gray-500 dark:text-gray-500">
+                    {new Date(effort.date).toLocaleDateString('es-ES', {
+                      day: 'numeric',
+                      month: 'short',
+                      year: 'numeric',
+                    })}
+                  </p>
+                )}
+              </motion.div>
+            ))}
+          </div>
+        ) : (
+          <div className="text-center py-8">
+            <FiAward className="w-12 h-12 text-gray-300 dark:text-gray-600 mx-auto mb-3" />
+            <p className="text-gray-500 dark:text-gray-400">
+              No hay suficientes datos para calcular marcas personales
+            </p>
+            <p className="text-sm text-gray-400 dark:text-gray-500 mt-1">
+              Continúa entrenando y registrando actividades en Strava
+            </p>
+          </div>
+        )}
       </motion.div>
     </div>
   );

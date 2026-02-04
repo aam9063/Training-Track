@@ -6,7 +6,7 @@ import {
   FiActivity,
   FiTarget,
   FiAward,
-  FiUser,
+  FiZap,
 } from 'react-icons/fi';
 import { Line, Bar, Doughnut } from 'react-chartjs-2';
 import {
@@ -159,6 +159,13 @@ const Metrics = () => {
         borderWidth: 0,
       },
     ],
+  };
+
+  // Sample data for average speed (Garmin style)
+  const averageSpeedData = {
+    labels: ['12 Ene', '15 Ene', '18 Ene', '20 Ene', '23 Ene', '25 Ene', '28 Ene', '30 Ene', '2 Feb'],
+    speeds: [4.2, 4.8, 8.5, 4.5, 12.8, 6.8, 5.5, 7.2, 5.8],
+    avgSpeed: 6.5,
   };
 
   if (loading) {
@@ -342,38 +349,118 @@ const Metrics = () => {
           </div>
         </div>
 
-        {/* Top Performers */}
+        {/* Average Speed Chart (Garmin style) */}
         <div className="bg-white dark:bg-gray-800 rounded-xl shadow-sm border border-gray-200 dark:border-gray-700 p-6">
-          <h3 className="text-lg font-bold text-gray-900 dark:text-white mb-4">
-            Mejores Rendimientos
+          <h3 className="text-lg font-bold text-gray-900 dark:text-white mb-4 flex items-center">
+            <FiZap className="w-5 h-5 mr-2 text-blue-500" />
+            Velocidad Media
           </h3>
-          <div className="space-y-4">
-            {[1, 2, 3, 4, 5].map((rank) => (
-              <div
-                key={rank}
-                className="flex items-center justify-between p-3 bg-gray-50 dark:bg-gray-700/50 rounded-lg"
-              >
-                <div className="flex items-center space-x-3">
-                  <div className="w-8 h-8 bg-gradient-to-br from-blue-500 to-purple-600 rounded-full flex items-center justify-center text-white font-bold text-sm">
-                    {rank}
-                  </div>
-                  <div>
-                    <p className="font-medium text-gray-900 dark:text-white">
-                      Atleta {rank}
-                    </p>
-                    <p className="text-sm text-gray-500 dark:text-gray-400">
-                      {(4.0 + rank * 0.1).toFixed(1)} min/km promedio
-                    </p>
-                  </div>
+          {/* Average line indicator */}
+          <div className="flex items-center justify-end mb-2 text-sm text-gray-500 dark:text-gray-400">
+            <div className="flex items-center">
+              <div className="w-8 h-0.5 bg-gray-400 dark:bg-gray-500 mr-2"></div>
+              <span>Media = {averageSpeedData.avgSpeed} km/h</span>
+            </div>
+          </div>
+          <div className="h-72">
+            <Line
+              data={{
+                labels: averageSpeedData.labels,
+                datasets: [
+                  // Average line
+                  {
+                    label: 'Media',
+                    data: averageSpeedData.labels.map(() => averageSpeedData.avgSpeed),
+                    borderColor: 'rgba(156, 163, 175, 0.6)',
+                    borderDash: [5, 5],
+                    borderWidth: 1,
+                    pointRadius: 0,
+                    fill: false,
+                  },
+                  // Individual points
+                  {
+                    label: 'Velocidad (km/h)',
+                    data: averageSpeedData.speeds,
+                    borderColor: 'transparent',
+                    backgroundColor: 'rgba(59, 130, 246, 0.8)',
+                    pointRadius: 7,
+                    pointHoverRadius: 9,
+                    showLine: false,
+                  },
+                ],
+              }}
+              options={{
+                responsive: true,
+                maintainAspectRatio: false,
+                plugins: {
+                  legend: { display: false },
+                  tooltip: {
+                    callbacks: {
+                      label: (ctx) => {
+                        if (ctx.dataset.label === 'Media') return null;
+                        return `Velocidad: ${ctx.parsed.y} km/h`;
+                      },
+                    },
+                    filter: (tooltipItem) => tooltipItem.dataset.label !== 'Media',
+                  },
+                },
+                scales: {
+                  x: {
+                    grid: { display: false },
+                    ticks: {
+                      maxRotation: 0,
+                      autoSkip: true,
+                      maxTicksLimit: 8,
+                    },
+                  },
+                  y: {
+                    beginAtZero: true,
+                    max: 16,
+                    grid: { color: 'rgba(156, 163, 175, 0.1)' },
+                    title: {
+                      display: true,
+                      text: 'Kilómetros por hora',
+                    },
+                  },
+                },
+              }}
+            />
+          </div>
+        </div>
+
+      </div>
+
+      {/* Top Performers - Full Width */}
+      <div className="mt-6 bg-white dark:bg-gray-800 rounded-xl shadow-sm border border-gray-200 dark:border-gray-700 p-6">
+        <h3 className="text-lg font-bold text-gray-900 dark:text-white mb-4">
+          Mejores Rendimientos
+        </h3>
+        <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-5 gap-4">
+          {[1, 2, 3, 4, 5].map((rank) => (
+            <div
+              key={rank}
+              className="flex items-center justify-between p-3 bg-gray-50 dark:bg-gray-700/50 rounded-lg"
+            >
+              <div className="flex items-center space-x-3">
+                <div className="w-8 h-8 bg-gradient-to-br from-blue-500 to-purple-600 rounded-full flex items-center justify-center text-white font-bold text-sm">
+                  {rank}
                 </div>
-                <div className="text-right">
-                  <p className="text-sm font-medium text-green-600 dark:text-green-400">
-                    ↑ {(5 + rank * 2)}%
+                <div>
+                  <p className="font-medium text-gray-900 dark:text-white">
+                    Atleta {rank}
+                  </p>
+                  <p className="text-sm text-gray-500 dark:text-gray-400">
+                    {(4.0 + rank * 0.1).toFixed(1)} min/km
                   </p>
                 </div>
               </div>
-            ))}
-          </div>
+              <div className="text-right">
+                <p className="text-sm font-medium text-green-600 dark:text-green-400">
+                  ↑ {(5 + rank * 2)}%
+                </p>
+              </div>
+            </div>
+          ))}
         </div>
       </div>
     </div>

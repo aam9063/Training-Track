@@ -359,9 +359,12 @@ const Athletes = () => {
                           className="w-10 h-10 rounded-full mr-3"
                         />
                         <div>
-                          <div className="text-sm font-medium text-gray-900 dark:text-white">
+                          <Link
+                            to={`/dashboard/athletes/${athlete.id}`}
+                            className="text-sm font-medium text-gray-900 dark:text-white hover:text-blue-600 dark:hover:text-blue-400 transition-colors"
+                          >
                             {athlete.firstName} {athlete.lastName}
-                          </div>
+                          </Link>
                           <div className="text-sm text-gray-500 dark:text-gray-400">
                             {athlete.gender || 'N/A'}
                           </div>

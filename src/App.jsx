@@ -9,6 +9,7 @@ import Register from './pages/Register';
 // Coach pages
 import Dashboard from './pages/dashboard/Dashboard';
 import Athletes from './pages/dashboard/Athletes';
+import AthleteProfile from './pages/dashboard/AthleteProfile';
 import Metrics from './pages/dashboard/Metrics';
 import Calendar from './pages/dashboard/Calendar';
 import Profile from './pages/dashboard/Profile';
@@ -34,6 +35,8 @@ function App() {
             <Route path="/dashboard" element={<DashboardLayout />}>
               <Route index element={<Dashboard />} />
               <Route path="athletes" element={<Athletes />} />
+              <Route path="athletes/:athleteId" element={<AthleteProfile />} />
+              <Route path="athletes/:athleteId/metrics" element={<AthleteProfile />} />
               <Route path="metrics" element={<Metrics />} />
               <Route path="calendar" element={<Calendar />} />
               <Route path="profile" element={<Profile />} />

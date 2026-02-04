@@ -357,3 +357,211 @@ export const rejectAthleteRequest = async (relationshipId) => {
     return { error };
   }
 };
+
+// Get athlete's Strava connection info (for coach to view activities)
+export const getAthleteStravaConnection = async (athleteId) => {
+  if (!athleteId) {
+    return { data: null, error: new Error('No athleteId provided') };
+  }
+
+  try {
+    const { data, error } = await supabase
+      .from('devices')
+      .select('*')
+      .eq('athlete_id', athleteId)
+      .eq('device_type', 'strava')
+      .single();
+
+    if (error && error.code !== 'PGRST116') throw error;
+    return { data, error: null };
+  } catch (error) {
+    console.error('Error fetching athlete Strava connection:', error);
+    return { data: null, error };
+  }
+};
+
+// Get athlete's Strava activities (using their stored tokens)
+export const getAthleteStravaActivities = async (athleteId, params = {}) => {
+  if (!athleteId) {
+    return { data: [], error: new Error('No athleteId provided') };
+  }
+
+  try {
+    // Get athlete's Strava tokens from database
+    const { data: device, error: deviceError } = await supabase
+      .from('devices')
+      .select('*')
+      .eq('athlete_id', athleteId)
+      .eq('device_type', 'strava')
+      .single();
+
+    if (deviceError || !device) {
+      return { data: [], error: null, notConnected: true };
+    }
+
+    // Check if token is expired and needs refresh
+    const tokenExpiresAt = new Date(device.token_expires_at).getTime();
+    const now = Date.now();
+    let accessToken = device.access_token;
+
+    if (tokenExpiresAt <= now + 300000) { // 5 min buffer
+      // Refresh the token
+      const STRAVA_CLIENT_ID = import.meta.env.VITE_STRAVA_CLIENT_ID;
+      const STRAVA_CLIENT_SECRET = import.meta.env.VITE_STRAVA_CLIENT_SECRET;
+
+      const refreshResponse = await fetch('https://www.strava.com/oauth/token', {
+        method: 'POST',
+        headers: { 'Content-Type': 'application/json' },
+        body: JSON.stringify({
+          client_id: STRAVA_CLIENT_ID,
+          client_secret: STRAVA_CLIENT_SECRET,
+          refresh_token: device.refresh_token,
+          grant_type: 'refresh_token',
+        }),
+      });
+
+      if (!refreshResponse.ok) {
+        return { data: [], error: new Error('Failed to refresh token'), notConnected: true };
+      }
+
+      const refreshData = await refreshResponse.json();
+      accessToken = refreshData.access_token;
+
+      // Update tokens in database
+      await supabase
+        .from('devices')
+        .update({
+          access_token: refreshData.access_token,
+          refresh_token: refreshData.refresh_token,
+          token_expires_at: new Date(refreshData.expires_at * 1000).toISOString(),
+        })
+        .eq('id', device.id);
+    }
+
+    // Fetch activities from Strava
+    const queryParams = new URLSearchParams();
+    if (params.before) queryParams.append('before', params.before);
+    if (params.after) queryParams.append('after', params.after);
+    queryParams.append('page', params.page || 1);
+    queryParams.append('per_page', params.per_page || 10);
+
+    const activitiesResponse = await fetch(
+      `https://www.strava.com/api/v3/athlete/activities?${queryParams.toString()}`,
+      {
+        headers: { Authorization: `Bearer ${accessToken}` },
+      }
+    );
+
+    if (!activitiesResponse.ok) {
+      throw new Error('Failed to fetch activities');
+    }
+
+    const activities = await activitiesResponse.json();
+    return { data: activities, error: null };
+  } catch (error) {
+    console.error('Error fetching athlete Strava activities:', error);
+    return { data: [], error };
+  }
+};
+
+// Get detailed Strava activity (with laps, splits, segments)
+export const getAthleteStravaActivityDetail = async (athleteId, activityId) => {
+  if (!athleteId || !activityId) {
+    return { data: null, error: new Error('Missing athleteId or activityId') };
+  }
+
+  try {
+    // Get athlete's Strava tokens from database
+    const { data: device, error: deviceError } = await supabase
+      .from('devices')
+      .select('*')
+      .eq('athlete_id', athleteId)
+      .eq('device_type', 'strava')
+      .single();
+
+    if (deviceError || !device) {
+      return { data: null, error: new Error('Athlete not connected to Strava') };
+    }
+
+    // Check if token is expired and needs refresh
+    const tokenExpiresAt = new Date(device.token_expires_at).getTime();
+    const now = Date.now();
+    let accessToken = device.access_token;
+
+    if (tokenExpiresAt <= now + 300000) {
+      const STRAVA_CLIENT_ID = import.meta.env.VITE_STRAVA_CLIENT_ID;
+      const STRAVA_CLIENT_SECRET = import.meta.env.VITE_STRAVA_CLIENT_SECRET;
+
+      const refreshResponse = await fetch('https://www.strava.com/oauth/token', {
+        method: 'POST',
+        headers: { 'Content-Type': 'application/json' },
+        body: JSON.stringify({
+          client_id: STRAVA_CLIENT_ID,
+          client_secret: STRAVA_CLIENT_SECRET,
+          refresh_token: device.refresh_token,
+          grant_type: 'refresh_token',
+        }),
+      });
+
+      if (!refreshResponse.ok) {
+        return { data: null, error: new Error('Failed to refresh token') };
+      }
+
+      const refreshData = await refreshResponse.json();
+      accessToken = refreshData.access_token;
+
+      await supabase
+        .from('devices')
+        .update({
+          access_token: refreshData.access_token,
+          refresh_token: refreshData.refresh_token,
+          token_expires_at: new Date(refreshData.expires_at * 1000).toISOString(),
+        })
+        .eq('id', device.id);
+    }
+
+    // Fetch detailed activity from Strava
+    const response = await fetch(
+      `https://www.strava.com/api/v3/activities/${activityId}?include_all_efforts=true`,
+      {
+        headers: { Authorization: `Bearer ${accessToken}` },
+      }
+    );
+
+    if (!response.ok) {
+      throw new Error('Failed to fetch activity details');
+    }
+
+    const activity = await response.json();
+    return { data: activity, error: null };
+  } catch (error) {
+    console.error('Error fetching activity details:', error);
+    return { data: null, error };
+  }
+};
+
+// Get upcoming events/competitions for athlete
+export const getAthleteEvents = async (athleteId) => {
+  if (!athleteId) {
+    return { data: [], error: new Error('No athleteId provided') };
+  }
+
+  try {
+    const today = new Date().toISOString().split('T')[0];
+
+    const { data, error } = await supabase
+      .from('training_sessions')
+      .select('*')
+      .eq('athlete_id', athleteId)
+      .eq('training_type', 'race')
+      .gte('scheduled_date', today)
+      .order('scheduled_date', { ascending: true })
+      .limit(5);
+
+    if (error) throw error;
+    return { data: data || [], error: null };
+  } catch (error) {
+    console.error('Error fetching athlete events:', error);
+    return { data: [], error };
+  }
+};

@@ -1,4 +1,5 @@
 import { supabase } from '../lib/supabase';
+import { toLocalDateStr } from '../lib/dateUtils';
 
 /**
  * Service for dashboard data and statistics
@@ -36,7 +37,7 @@ export const getCoachStats = async (coachId) => {
       .from('training_sessions')
       .select('*', { count: 'exact', head: true })
       .eq('coach_id', coachId)
-      .gte('scheduled_date', startOfWeek.toISOString().split('T')[0]);
+      .gte('scheduled_date', toLocalDateStr(startOfWeek));
 
     if (sessionsError) {
       console.error('Error fetching week sessions:', sessionsError);
@@ -48,7 +49,7 @@ export const getCoachStats = async (coachId) => {
       .select('*', { count: 'exact', head: true })
       .eq('coach_id', coachId)
       .eq('status', 'completed')
-      .gte('scheduled_date', startOfWeek.toISOString().split('T')[0]);
+      .gte('scheduled_date', toLocalDateStr(startOfWeek));
 
     if (completedError) {
       console.error('Error fetching completed sessions:', completedError);
@@ -84,7 +85,7 @@ export const getTodaySessions = async (coachId) => {
   }
 
   try {
-    const today = new Date().toISOString().split('T')[0];
+    const today = toLocalDateStr(new Date());
 
     // First get sessions
     const { data: sessions, error: sessionsError } = await supabase
@@ -213,6 +214,65 @@ export const getRecentAthletes = async (coachId, limit = 5) => {
   }
 };
 
+// Get week sessions for coach (for weekly calendar view)
+export const getCoachWeekSessions = async (coachId, weekStartDate) => {
+  if (!coachId) {
+    return { data: [], error: null };
+  }
+
+  try {
+    const startDateStr = toLocalDateStr(weekStartDate);
+    const endDate = new Date(weekStartDate);
+    endDate.setDate(endDate.getDate() + 6);
+    const endDateStr = toLocalDateStr(endDate);
+
+    const { data: sessions, error: sessionsError } = await supabase
+      .from('training_sessions')
+      .select('*')
+      .eq('coach_id', coachId)
+      .gte('scheduled_date', startDateStr)
+      .lte('scheduled_date', endDateStr)
+      .order('scheduled_date', { ascending: true })
+      .order('scheduled_time', { ascending: true, nullsFirst: false });
+
+    if (sessionsError) {
+      console.error('Error fetching week sessions:', sessionsError);
+      return { data: [], error: sessionsError };
+    }
+
+    if (!sessions || sessions.length === 0) {
+      return { data: [], error: null };
+    }
+
+    const athleteIds = [...new Set(sessions.map(s => s.athlete_id))];
+
+    const { data: users, error: usersError } = await supabase
+      .from('users')
+      .select('id, first_name, last_name, profile_image')
+      .in('id', athleteIds);
+
+    if (usersError) {
+      console.error('Error fetching users:', usersError);
+    }
+
+    const sessionsWithAthletes = sessions.map(session => {
+      const user = users?.find(u => u.id === session.athlete_id) || {};
+      return {
+        ...session,
+        athleteName: user.first_name && user.last_name
+          ? `${user.first_name} ${user.last_name}`
+          : 'Atleta',
+        athleteImage: user.profile_image || null,
+      };
+    });
+
+    return { data: sessionsWithAthletes, error: null };
+  } catch (error) {
+    console.error('Error fetching coach week sessions:', error);
+    return { data: [], error };
+  }
+};
+
 // Get weekly training summary for all athletes
 export const getWeeklySummary = async (coachId) => {
   if (!coachId) {
@@ -230,8 +290,8 @@ export const getWeeklySummary = async (coachId) => {
       .from('training_sessions')
       .select('scheduled_date, status')
       .eq('coach_id', coachId)
-      .gte('scheduled_date', startDate.toISOString().split('T')[0])
-      .lte('scheduled_date', endDate.toISOString().split('T')[0]);
+      .gte('scheduled_date', toLocalDateStr(startDate))
+      .lte('scheduled_date', toLocalDateStr(endDate));
 
     if (error) {
       console.error('Error fetching weekly summary:', error);

@@ -1,5 +1,6 @@
 import { createContext, useContext, useState, useEffect, useCallback, useMemo } from 'react';
 import { supabase } from '../lib/supabase';
+import { toLocalDateStr } from '../lib/dateUtils';
 
 const AuthContext = createContext(undefined);
 
@@ -432,7 +433,7 @@ export function AuthProvider({ children }) {
         .from('coach_athlete_relationship')
         .update({
           status,
-          ...(status === 'active' ? { start_date: new Date().toISOString().split('T')[0] } : {}),
+          ...(status === 'active' ? { start_date: toLocalDateStr(new Date()) } : {}),
         })
         .eq('id', relationshipId)
         .select()

@@ -1,4 +1,5 @@
 import { supabase } from '../lib/supabase';
+import { toLocalDateStr } from '../lib/dateUtils';
 
 /**
  * Service for managing calendar events and sessions
@@ -13,8 +14,8 @@ export const getMonthSessions = async (coachId, year, month) => {
   }
 
   try {
-    const startDate = new Date(year, month - 1, 1).toISOString().split('T')[0];
-    const endDate = new Date(year, month, 0).toISOString().split('T')[0];
+    const startDate = toLocalDateStr(new Date(year, month - 1, 1));
+    const endDate = toLocalDateStr(new Date(year, month, 0));
 
     // Step 1: Get sessions
     const { data: sessions, error: sessionsError } = await supabase

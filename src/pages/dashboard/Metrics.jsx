@@ -24,6 +24,7 @@ import {
 } from 'chart.js';
 import { getAthletes } from '../../services/athleteService';
 import { getAllAthletesPerformance } from '../../services/metricsService';
+import { toLocalDateStr } from '../../lib/dateUtils';
 
 // Register ChartJS components
 ChartJS.register(
@@ -72,8 +73,8 @@ const Metrics = () => {
 
       const { data: metricsData } = await getAllAthletesPerformance(
         profile.id,
-        startDate.toISOString().split('T')[0],
-        endDate.toISOString().split('T')[0]
+        toLocalDateStr(startDate),
+        toLocalDateStr(endDate)
       );
 
       setPerformanceData(metricsData || []);

@@ -6,6 +6,8 @@ import AthleteDashboardLayout from './layouts/AthleteDashboardLayout';
 import Landing from './pages/Landing';
 import Login from './pages/Login';
 import Register from './pages/Register';
+import ForgotPassword from './pages/ForgotPassword';
+import ResetPassword from './pages/ResetPassword';
 // Coach pages
 import Dashboard from './pages/dashboard/Dashboard';
 import Athletes from './pages/dashboard/Athletes';
@@ -14,6 +16,7 @@ import AthleteMetricsView from './pages/dashboard/AthleteMetricsView';
 import Metrics from './pages/dashboard/Metrics';
 import Calendar from './pages/dashboard/Calendar';
 import Profile from './pages/dashboard/Profile';
+import CoachMessages from './pages/dashboard/Messages';
 // Athlete pages
 import AthleteDashboard from './pages/athlete/Dashboard';
 import Training from './pages/athlete/Training';
@@ -32,6 +35,8 @@ function App() {
             <Route path="/" element={<Landing />} />
             <Route path="/login" element={<Login />} />
             <Route path="/register" element={<Register />} />
+            <Route path="/forgot-password" element={<ForgotPassword />} />
+            <Route path="/reset-password" element={<ResetPassword />} />
 
             {/* Protected Coach Dashboard Routes */}
             <Route path="/dashboard" element={<DashboardLayout />}>
@@ -42,6 +47,7 @@ function App() {
               <Route path="metrics" element={<Metrics />} />
               <Route path="calendar" element={<Calendar />} />
               <Route path="profile" element={<Profile />} />
+              <Route path="messages" element={<CoachMessages />} />
             </Route>
 
             {/* Protected Athlete Dashboard Routes */}

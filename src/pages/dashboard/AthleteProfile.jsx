@@ -21,6 +21,8 @@ import {
   FiPlus,
   FiTrash2,
   FiAward,
+  FiSend,
+  FiUser,
 } from 'react-icons/fi';
 import { Line } from 'react-chartjs-2';
 import {
@@ -73,6 +75,8 @@ import {
 import mapboxgl from 'mapbox-gl';
 import polyline from '@mapbox/polyline';
 import 'mapbox-gl/dist/mapbox-gl.css';
+import { supabase } from '../../lib/supabase';
+import { getActivitiesRPE, getRPEEmoji, getRPELabel } from '../../services/rpeService';
 
 // Set Mapbox access token
 mapboxgl.accessToken = import.meta.env.VITE_MAPBOX_ACCESS_TOKEN;
@@ -93,6 +97,8 @@ const AthleteProfile = () => {
   const [stravaConnected, setStravaConnected] = useState(false);
   const [stravaMetrics, setStravaMetrics] = useState(null);
   const [stravaBestEfforts, setStravaBestEfforts] = useState([]);
+  const [activitiesRPE, setActivitiesRPE] = useState({});
+  const [rpeDetailActivity, setRpeDetailActivity] = useState(null);
   const [metrics, setMetrics] = useState([]);
   const [events, setEvents] = useState([]);
   const [selectedActivity, setSelectedActivity] = useState(null);
@@ -101,6 +107,10 @@ const AthleteProfile = () => {
   const [savingEvent, setSavingEvent] = useState(false);
   const mapContainerRef = useRef(null);
   const mapRef = useRef(null);
+  // Message modal states
+  const [showMessageModal, setShowMessageModal] = useState(false);
+  const [messageData, setMessageData] = useState({ subject: '', content: '' });
+  const [sendingMessage, setSendingMessage] = useState(false);
 
   // Load athlete data
   useEffect(() => {
@@ -190,12 +200,17 @@ const AthleteProfile = () => {
           });
 
           if (activities?.length > 0) {
-            // Format for display (only show 15 most recent)
-            setStravaActivities(activities.slice(0, 15).map(formatStravaActivity));
+            const formatted = activities.slice(0, 15).map(formatStravaActivity);
+            setStravaActivities(formatted);
             // Calculate metrics from all 30 activities
             setStravaMetrics(calculateStravaMetrics(activities));
             // Extract best efforts/personal bests
             setStravaBestEfforts(extractBestEfforts(activities));
+
+            // Fetch RPE for displayed activities
+            const ids = formatted.map((a) => String(a.id));
+            const { data: rpeMap } = await getActivitiesRPE(athleteId, ids);
+            setActivitiesRPE(rpeMap || {});
           } else {
             setStravaActivities([]);
             setStravaMetrics(null);
@@ -287,6 +302,32 @@ const AthleteProfile = () => {
       await loadCompetitions();
     } catch (error) {
       console.error('Error deleting competition:', error);
+    }
+  };
+
+  // Handle send message to athlete
+  const handleSendMessage = async () => {
+    if (!messageData.subject || !messageData.content) return;
+
+    setSendingMessage(true);
+    try {
+      const { error } = await supabase.from('coach_messages').insert({
+        coach_id: profile.id,
+        athlete_id: athleteId,
+        subject: messageData.subject,
+        content: messageData.content,
+        read: false,
+      });
+
+      if (error) throw error;
+
+      // Reset form and close modal
+      setMessageData({ subject: '', content: '' });
+      setShowMessageModal(false);
+    } catch (error) {
+      console.error('Error sending message:', error);
+    } finally {
+      setSendingMessage(false);
     }
   };
 
@@ -531,9 +572,19 @@ const AthleteProfile = () => {
               <h1 className="text-2xl font-bold text-gray-900 dark:text-white">
                 {athleteName}
               </h1>
-              <p className="text-gray-500 dark:text-gray-400">
-                {athlete.specialties?.join(' - ') || 'Sin especialidades'}
-              </p>
+              {athlete.race_distances?.length > 0 ? (
+                <div className="flex flex-wrap gap-1.5 mt-1">
+                  {athlete.race_distances.map((dist) => (
+                    <span key={dist} className="px-2 py-0.5 bg-blue-100 dark:bg-blue-900/30 text-blue-700 dark:text-blue-300 rounded-full text-xs font-medium">
+                      {dist}
+                    </span>
+                  ))}
+                </div>
+              ) : (
+                <p className="text-gray-500 dark:text-gray-400 text-sm">
+                  Sin distancias configuradas
+                </p>
+              )}
             </div>
           </div>
         </div>
@@ -548,7 +599,7 @@ const AthleteProfile = () => {
             <FiSearch className="w-5 h-5 text-gray-600 dark:text-gray-400 group-hover:text-blue-600" />
           </button>
           <button
-            onClick={() => {/* TODO: Messages */}}
+            onClick={() => setShowMessageModal(true)}
             className="p-3 bg-white dark:bg-gray-800 rounded-xl shadow-sm hover:shadow-md transition-all border border-gray-200 dark:border-gray-700 group"
             title="Enviar mensaje"
           >
@@ -691,17 +742,28 @@ const AthleteProfile = () => {
                     className="p-4 bg-gray-50 dark:bg-gray-700/50 rounded-xl hover:bg-gray-100 dark:hover:bg-gray-700 transition-colors cursor-pointer border-2 border-transparent hover:border-orange-400"
                   >
                     <div className="flex items-start justify-between mb-2">
-                      <div>
-                        <h4 className="font-semibold text-gray-900 dark:text-white">
-                          {activity.name}
-                        </h4>
-                        <p className="text-xs text-gray-500 dark:text-gray-400">
-                          {new Date(activity.date).toLocaleDateString('es-ES', {
-                            weekday: 'short',
-                            day: 'numeric',
-                            month: 'short',
-                          })} • {getActivityTypeLabel(activity.type)}
-                        </p>
+                      <div className="flex items-center gap-2">
+                        <div>
+                          <h4 className="font-semibold text-gray-900 dark:text-white">
+                            {activity.name}
+                          </h4>
+                          <p className="text-xs text-gray-500 dark:text-gray-400">
+                            {new Date(activity.date).toLocaleDateString('es-ES', {
+                              weekday: 'short',
+                              day: 'numeric',
+                              month: 'short',
+                            })} • {getActivityTypeLabel(activity.type)}
+                          </p>
+                        </div>
+                        {activitiesRPE[String(activity.id)]?.score && (
+                          <button
+                            onClick={(e) => { e.stopPropagation(); setRpeDetailActivity(activity); }}
+                            className="text-2xl hover:scale-110 transition-transform"
+                            title={`Esfuerzo: ${getRPELabel(activitiesRPE[String(activity.id)].score)} - Click para ver detalles`}
+                          >
+                            {getRPEEmoji(activitiesRPE[String(activity.id)].score)}
+                          </button>
+                        )}
                       </div>
                       {activity.has_heartrate && (
                         <span className="flex items-center text-xs text-red-500">
@@ -748,13 +810,50 @@ const AthleteProfile = () => {
           </div>
         </motion.div>
 
-        {/* Metrics Section */}
+        {/* Personal Data + Metrics Section */}
         <motion.div
           initial={{ opacity: 0, y: 20 }}
           animate={{ opacity: 1, y: 0 }}
           transition={{ delay: 0.2 }}
           className="col-span-12 lg:col-span-5 bg-white dark:bg-gray-800 rounded-2xl shadow-sm border border-gray-200 dark:border-gray-700 overflow-hidden"
         >
+          {/* Personal Data */}
+          {(athlete.date_of_birth || athlete.weight || athlete.height) && (
+            <div className="p-4 border-b border-gray-200 dark:border-gray-700">
+              <h2 className="text-sm font-semibold text-gray-500 dark:text-gray-400 uppercase tracking-wider mb-3 flex items-center">
+                <FiUser className="w-4 h-4 mr-1.5" />
+                Datos Personales
+              </h2>
+              <div className="grid grid-cols-3 gap-3">
+                {athlete.date_of_birth && (
+                  <div className="text-center p-2 bg-gray-50 dark:bg-gray-700/50 rounded-lg">
+                    <p className="text-xs text-gray-500 dark:text-gray-400 mb-0.5">Edad</p>
+                    <p className="text-lg font-bold text-gray-900 dark:text-white">
+                      {Math.floor((new Date() - new Date(athlete.date_of_birth)) / (365.25 * 24 * 60 * 60 * 1000))}
+                    </p>
+                    <p className="text-[10px] text-gray-400">{new Date(athlete.date_of_birth).toLocaleDateString('es-ES')}</p>
+                  </div>
+                )}
+                {athlete.weight && (
+                  <div className="text-center p-2 bg-gray-50 dark:bg-gray-700/50 rounded-lg">
+                    <p className="text-xs text-gray-500 dark:text-gray-400 mb-0.5">Peso</p>
+                    <p className="text-lg font-bold text-gray-900 dark:text-white">
+                      {athlete.weight} <span className="text-xs font-normal">kg</span>
+                    </p>
+                  </div>
+                )}
+                {athlete.height && (
+                  <div className="text-center p-2 bg-gray-50 dark:bg-gray-700/50 rounded-lg">
+                    <p className="text-xs text-gray-500 dark:text-gray-400 mb-0.5">Estatura</p>
+                    <p className="text-lg font-bold text-gray-900 dark:text-white">
+                      {athlete.height} <span className="text-xs font-normal">cm</span>
+                    </p>
+                  </div>
+                )}
+              </div>
+            </div>
+          )}
+
           <div className="p-4 border-b border-gray-200 dark:border-gray-700 flex items-center justify-between">
             <h2 className="text-lg font-bold text-gray-900 dark:text-white flex items-center">
               <FiTrendingUp className="w-5 h-5 mr-2 text-green-600" />
@@ -1595,6 +1694,148 @@ const AthleteProfile = () => {
                   ) : (
                     'Guardar'
                   )}
+                </button>
+              </div>
+            </motion.div>
+          </div>
+        )}
+      </AnimatePresence>
+
+      {/* Message Modal */}
+      <AnimatePresence>
+        {showMessageModal && (
+          <div className="fixed inset-0 bg-black bg-opacity-50 flex items-center justify-center z-50 p-4">
+            <motion.div
+              initial={{ opacity: 0, scale: 0.95 }}
+              animate={{ opacity: 1, scale: 1 }}
+              exit={{ opacity: 0, scale: 0.95 }}
+              className="bg-white dark:bg-gray-800 rounded-xl shadow-xl w-full max-w-lg"
+            >
+              <div className="flex items-center justify-between p-4 border-b border-gray-200 dark:border-gray-700">
+                <h2 className="text-lg font-bold text-gray-900 dark:text-white">
+                  Enviar Mensaje
+                </h2>
+                <button
+                  onClick={() => setShowMessageModal(false)}
+                  className="p-2 hover:bg-gray-100 dark:hover:bg-gray-700 rounded-lg transition-colors"
+                >
+                  <FiX className="w-5 h-5 text-gray-500" />
+                </button>
+              </div>
+
+              <div className="p-4 space-y-4">
+                {/* Recipient info */}
+                <div className="flex items-center space-x-3 p-3 bg-gray-50 dark:bg-gray-700/50 rounded-lg">
+                  <div className="w-10 h-10 rounded-full bg-gradient-to-br from-blue-500 to-purple-600 flex items-center justify-center flex-shrink-0">
+                    <span className="text-white font-semibold text-sm">
+                      {athlete?.user?.first_name?.[0] || 'A'}{athlete?.user?.last_name?.[0] || ''}
+                    </span>
+                  </div>
+                  <div>
+                    <p className="font-medium text-gray-900 dark:text-white">
+                      Para: {athlete?.user?.first_name} {athlete?.user?.last_name}
+                    </p>
+                    <p className="text-sm text-gray-500 dark:text-gray-400">Atleta</p>
+                  </div>
+                </div>
+
+                {/* Subject */}
+                <div>
+                  <label className="block text-sm font-medium text-gray-700 dark:text-gray-300 mb-1">
+                    Asunto
+                  </label>
+                  <input
+                    type="text"
+                    value={messageData.subject}
+                    onChange={(e) => setMessageData({ ...messageData, subject: e.target.value })}
+                    placeholder="Asunto del mensaje"
+                    className="w-full px-4 py-2 border border-gray-300 dark:border-gray-600 rounded-lg bg-white dark:bg-gray-700 text-gray-900 dark:text-white focus:ring-2 focus:ring-blue-500 focus:border-transparent"
+                  />
+                </div>
+
+                {/* Content */}
+                <div>
+                  <label className="block text-sm font-medium text-gray-700 dark:text-gray-300 mb-1">
+                    Mensaje
+                  </label>
+                  <textarea
+                    value={messageData.content}
+                    onChange={(e) => setMessageData({ ...messageData, content: e.target.value })}
+                    placeholder="Escribe tu mensaje..."
+                    rows={5}
+                    className="w-full px-4 py-2 border border-gray-300 dark:border-gray-600 rounded-lg bg-white dark:bg-gray-700 text-gray-900 dark:text-white focus:ring-2 focus:ring-blue-500 focus:border-transparent resize-none"
+                  />
+                </div>
+              </div>
+
+              <div className="flex items-center justify-end space-x-3 p-4 border-t border-gray-200 dark:border-gray-700">
+                <button
+                  onClick={() => setShowMessageModal(false)}
+                  className="px-4 py-2 text-gray-700 dark:text-gray-300 hover:bg-gray-100 dark:hover:bg-gray-700 rounded-lg transition-colors"
+                >
+                  Cancelar
+                </button>
+                <button
+                  onClick={handleSendMessage}
+                  disabled={sendingMessage || !messageData.subject || !messageData.content}
+                  className="flex items-center space-x-2 px-4 py-2 bg-blue-600 hover:bg-blue-700 disabled:bg-blue-400 text-white rounded-lg font-medium transition-colors"
+                >
+                  {sendingMessage ? (
+                    <FiLoader className="w-5 h-5 animate-spin" />
+                  ) : (
+                    <FiSend className="w-5 h-5" />
+                  )}
+                  <span>Enviar</span>
+                </button>
+              </div>
+            </motion.div>
+          </div>
+        )}
+      </AnimatePresence>
+
+      {/* RPE Detail Modal (Coach read-only) */}
+      <AnimatePresence>
+        {rpeDetailActivity && activitiesRPE[String(rpeDetailActivity.id)] && (
+          <div className="fixed inset-0 z-50 flex items-center justify-center p-4 bg-black/50">
+            <motion.div
+              initial={{ opacity: 0, scale: 0.9 }}
+              animate={{ opacity: 1, scale: 1 }}
+              exit={{ opacity: 0, scale: 0.9 }}
+              className="bg-white dark:bg-gray-800 rounded-2xl shadow-2xl w-full max-w-sm overflow-hidden"
+            >
+              <div className="bg-gradient-to-r from-[#FC4C02] to-[#E34402] p-4 text-white relative">
+                <button
+                  onClick={() => setRpeDetailActivity(null)}
+                  className="absolute top-3 right-3 p-1 hover:bg-white/20 rounded-lg transition-colors"
+                >
+                  <FiX className="w-5 h-5" />
+                </button>
+                <p className="font-bold">Percepción de Esfuerzo</p>
+                <p className="text-white/80 text-sm mt-1">{rpeDetailActivity.name}</p>
+              </div>
+              <div className="p-5 text-center">
+                <span className="text-5xl">
+                  {getRPEEmoji(activitiesRPE[String(rpeDetailActivity.id)].score)}
+                </span>
+                <p className="mt-2 font-semibold text-gray-900 dark:text-white">
+                  {getRPELabel(activitiesRPE[String(rpeDetailActivity.id)].score)}
+                </p>
+                <p className="text-sm text-gray-500 dark:text-gray-400">
+                  {activitiesRPE[String(rpeDetailActivity.id)].score}/5
+                </p>
+                {activitiesRPE[String(rpeDetailActivity.id)].notes && (
+                  <div className="mt-4 p-3 bg-gray-50 dark:bg-gray-700/50 rounded-xl text-left">
+                    <p className="text-xs font-medium text-gray-500 dark:text-gray-400 mb-1">Sensaciones del atleta:</p>
+                    <p className="text-sm text-gray-800 dark:text-gray-200">
+                      {activitiesRPE[String(rpeDetailActivity.id)].notes}
+                    </p>
+                  </div>
+                )}
+                <button
+                  onClick={() => setRpeDetailActivity(null)}
+                  className="mt-4 px-6 py-2 bg-gray-100 dark:bg-gray-700 text-gray-700 dark:text-gray-300 rounded-lg hover:bg-gray-200 dark:hover:bg-gray-600 transition-colors text-sm"
+                >
+                  Cerrar
                 </button>
               </div>
             </motion.div>

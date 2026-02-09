@@ -1,4 +1,4 @@
-import { useState, useEffect } from 'react';
+import { useState, useEffect, useRef } from 'react';
 import { Link, useLocation, useNavigate } from 'react-router-dom';
 import { useAuth } from '../../contexts/AuthContext';
 import {
@@ -19,6 +19,8 @@ const AthleteSidebar = ({ onCollapse }) => {
   const [collapsed, setCollapsed] = useState(false);
   const [mobileOpen, setMobileOpen] = useState(false);
   const [showUserMenu, setShowUserMenu] = useState(false);
+  const [menuPos, setMenuPos] = useState({ bottom: 0, left: 0 });
+  const userBtnRef = useRef(null);
   const location = useLocation();
   const navigate = useNavigate();
   const { user, profile, signOut } = useAuth();
@@ -103,39 +105,36 @@ const AthleteSidebar = ({ onCollapse }) => {
           z-40
           ${mobileOpen ? 'translate-x-0' : '-translate-x-full lg:translate-x-0'}
         `}
+        style={{ overflowX: 'clip' }}
       >
         {/* Logo & Toggle */}
-        <div className="h-16 flex items-center justify-between px-4 border-b border-gray-200 dark:border-gray-700">
-          {!collapsed && (
-            <Link to="/athlete/dashboard" className="flex items-center space-x-2">
-              <div className="w-8 h-8 bg-gradient-to-br from-green-500 to-green-600 rounded-lg flex items-center justify-center">
-                <span className="text-white font-bold text-lg">T</span>
-              </div>
+        <div className={`h-16 flex items-center border-b border-gray-200 dark:border-gray-700 ${collapsed ? 'justify-center px-2' : 'justify-between px-4'}`}>
+          <Link to="/athlete/dashboard" className={`flex items-center ${collapsed ? '' : 'space-x-2'}`}>
+            <img src="/img/logo.png" alt="TrackPro" className="w-8 h-8 object-contain flex-shrink-0" />
+            {!collapsed && (
               <span className="text-xl font-bold text-gray-900 dark:text-white">
                 Track<span className="text-green-600">Pro</span>
               </span>
-            </Link>
+            )}
+          </Link>
+          {!collapsed && (
+            <button
+              onClick={() => setCollapsed(!collapsed)}
+              className="hidden lg:block p-1.5 rounded-lg hover:bg-gray-100 dark:hover:bg-gray-700 text-gray-500 dark:text-gray-400 transition-colors"
+              aria-label="Colapsar sidebar"
+            >
+              <FiChevronLeft className="w-5 h-5" />
+            </button>
           )}
           {collapsed && (
-            <div className="w-8 h-8 bg-gradient-to-br from-green-500 to-green-600 rounded-lg flex items-center justify-center mx-auto">
-              <span className="text-white font-bold text-lg">T</span>
-            </div>
+            <button
+              onClick={() => setCollapsed(!collapsed)}
+              className="hidden lg:block absolute top-16 left-1/2 -translate-x-1/2 -translate-y-1/2 p-1 rounded-full bg-white dark:bg-gray-800 border border-gray-200 dark:border-gray-700 shadow-sm hover:bg-gray-100 dark:hover:bg-gray-700 text-gray-500 dark:text-gray-400 transition-colors z-10"
+              aria-label="Expandir sidebar"
+            >
+              <FiChevronRight className="w-4 h-4" />
+            </button>
           )}
-          <button
-            onClick={() => setCollapsed(!collapsed)}
-            className={`
-              ${collapsed ? 'ml-0 mx-auto mt-2' : ''}
-              hidden lg:block
-              p-1.5 rounded-lg hover:bg-gray-100 dark:hover:bg-gray-700 
-              text-gray-500 dark:text-gray-400 transition-colors
-            `}
-          >
-            {collapsed ? (
-              <FiChevronRight className="w-5 h-5" />
-            ) : (
-              <FiChevronLeft className="w-5 h-5" />
-            )}
-          </button>
         </div>
 
         {/* Navigation Menu */}
@@ -168,81 +167,89 @@ const AthleteSidebar = ({ onCollapse }) => {
 
         {/* User Profile Section */}
         <div className="border-t border-gray-200 dark:border-gray-700 p-3">
-        <div className="relative">
           <button
-            onClick={() => setShowUserMenu(!showUserMenu)}
-              className={`
-                w-full flex items-center space-x-3 px-3 py-2.5 rounded-lg
-                hover:bg-gray-100 dark:hover:bg-gray-700
-                transition-colors
-                ${collapsed ? 'lg:justify-center' : ''}
-              `}
+            ref={userBtnRef}
+            onClick={() => {
+              if (!showUserMenu && userBtnRef.current) {
+                const rect = userBtnRef.current.getBoundingClientRect();
+                setMenuPos({ bottom: window.innerHeight - rect.top + 8, left: rect.left });
+              }
+              setShowUserMenu(!showUserMenu);
+            }}
+            className={`
+              w-full flex items-center space-x-3 px-3 py-2.5 rounded-lg
+              hover:bg-gray-100 dark:hover:bg-gray-700
+              transition-colors
+              ${collapsed ? 'lg:justify-center' : ''}
+            `}
           >
-            <div className="w-8 h-8 rounded-full bg-gradient-to-br from-green-500 to-blue-600 flex items-center justify-center flex-shrink-0">
-              <span className="text-white font-semibold text-sm">
-                {displayName[0]}{displayLastName[0] || 'A'}
-              </span>
-            </div>
+            {profile?.profile_image ? (
+              <img
+                src={profile.profile_image}
+                alt={`${displayName} ${displayLastName}`}
+                className="w-8 h-8 rounded-full object-cover flex-shrink-0"
+              />
+            ) : (
+              <div className="w-8 h-8 rounded-full bg-gradient-to-br from-green-500 to-blue-600 flex items-center justify-center flex-shrink-0">
+                <span className="text-white font-semibold text-sm">
+                  {displayName[0]}{displayLastName[0] || 'A'}
+                </span>
+              </div>
+            )}
             <div className={`flex-1 text-left min-w-0 ${collapsed ? 'lg:hidden' : ''}`}>
-                <p className="text-sm font-medium text-gray-900 dark:text-white truncate">
-                  {displayName} {displayLastName}
-                </p>
-                <p className="text-xs text-gray-500 dark:text-gray-400">
-                  Atleta
-                </p>
+              <p className="text-sm font-medium text-gray-900 dark:text-white truncate">
+                {displayName} {displayLastName}
+              </p>
+              <p className="text-xs text-gray-500 dark:text-gray-400">
+                Atleta
+              </p>
             </div>
           </button>
-
-          {/* User Dropdown Menu */}
-          {showUserMenu && (
-            <>
-              <div
-                className="fixed inset-0 z-10"
-                onClick={() => setShowUserMenu(false)}
-              />
-              <div
-                className={`
-                  absolute bottom-full mb-2 
-                  ${collapsed ? 'lg:left-full lg:ml-2' : 'left-0'}
-                  w-48 bg-white dark:bg-gray-800 
-                  rounded-lg shadow-lg border border-gray-200 dark:border-gray-700
-                  py-1 z-20
-                `}
-              >
-                <button
-                  onClick={() => {
-                    navigate('/athlete/profile');
-                    setShowUserMenu(false);
-                  }}
-                  className="w-full flex items-center space-x-2 px-4 py-2 text-sm text-gray-700 dark:text-gray-300 hover:bg-gray-100 dark:hover:bg-gray-700 transition-colors"
-                >
-                  <FiUser className="w-4 h-4" />
-                  <span>Mi Perfil</span>
-                </button>
-                <button
-                  onClick={() => {
-                    navigate('/athlete/messages');
-                    setShowUserMenu(false);
-                  }}
-                  className="w-full flex items-center space-x-2 px-4 py-2 text-sm text-gray-700 dark:text-gray-300 hover:bg-gray-100 dark:hover:bg-gray-700 transition-colors"
-                >
-                  <FiMessageSquare className="w-4 h-4" />
-                  <span>Mis Mensajes</span>
-                </button>
-                <div className="border-t border-gray-200 dark:border-gray-700 my-1"></div>
-                <button
-                  onClick={handleSignOut}
-                  className="w-full flex items-center space-x-2 px-4 py-2 text-sm text-red-600 dark:text-red-400 hover:bg-red-50 dark:hover:bg-red-900/20 transition-colors"
-                >
-                  <FiLogOut className="w-4 h-4" />
-                  <span>Cerrar Sesión</span>
-                </button>
-              </div>
-            </>
-          )}
-        </div>
         </div>
       </div>
+
+      {/* User Dropdown Menu - rendered outside sidebar to avoid overflow clip */}
+      {showUserMenu && (
+        <>
+          <div
+            className="fixed inset-0 z-50"
+            onClick={() => setShowUserMenu(false)}
+          />
+          <div
+            className="fixed w-48 bg-white dark:bg-gray-800 rounded-lg shadow-lg border border-gray-200 dark:border-gray-700 py-1 z-50"
+            style={{ bottom: menuPos.bottom, left: menuPos.left }}
+          >
+            <button
+              onClick={() => {
+                navigate('/athlete/profile');
+                setShowUserMenu(false);
+              }}
+              className="w-full flex items-center space-x-2 px-4 py-2 text-sm text-gray-700 dark:text-gray-300 hover:bg-gray-100 dark:hover:bg-gray-700 transition-colors"
+            >
+              <FiUser className="w-4 h-4" />
+              <span>Mi Perfil</span>
+            </button>
+            <button
+              onClick={() => {
+                navigate('/athlete/messages');
+                setShowUserMenu(false);
+              }}
+              className="w-full flex items-center space-x-2 px-4 py-2 text-sm text-gray-700 dark:text-gray-300 hover:bg-gray-100 dark:hover:bg-gray-700 transition-colors"
+            >
+              <FiMessageSquare className="w-4 h-4" />
+              <span>Mis Mensajes</span>
+            </button>
+            <div className="border-t border-gray-200 dark:border-gray-700 my-1"></div>
+            <button
+              onClick={handleSignOut}
+              className="w-full flex items-center space-x-2 px-4 py-2 text-sm text-red-600 dark:text-red-400 hover:bg-red-50 dark:hover:bg-red-900/20 transition-colors"
+            >
+              <FiLogOut className="w-4 h-4" />
+              <span>Cerrar Sesión</span>
+            </button>
+          </div>
+        </>
+      )}
     </>
   );
 };

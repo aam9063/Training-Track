@@ -1,4 +1,5 @@
 import { supabase } from '../lib/supabase';
+import { toLocalDateStr } from '../lib/dateUtils';
 
 /**
  * Obtiene los ejercicios de carrera del banco de ejercicios
@@ -83,7 +84,7 @@ export const createWeeklyTraining = async (weeklyPlan) => {
       const sessionData = {
         coach_id: coachId,
         athlete_id: athleteId,
-        scheduled_date: sessionDate.toISOString().split('T')[0],
+        scheduled_date: toLocalDateStr(sessionDate),
         training_type: day.type || 'running',
         status: 'planned',
         title: day.title || '',
@@ -117,7 +118,7 @@ export const createWeeklyTraining = async (weeklyPlan) => {
       // Encontrar la sesión correspondiente
       const sessionDate = new Date(weekStartDate);
       sessionDate.setDate(sessionDate.getDate() + i);
-      const dateStr = sessionDate.toISOString().split('T')[0];
+      const dateStr = toLocalDateStr(sessionDate);
 
       const session = createdSessions.find(s => s.scheduled_date === dateStr);
       if (!session) continue;
@@ -173,8 +174,8 @@ export const getWeeklyTraining = async (athleteId, weekStartDate) => {
       .from('training_sessions')
       .select('*')
       .eq('athlete_id', athleteId)
-      .gte('scheduled_date', startDate.toISOString().split('T')[0])
-      .lte('scheduled_date', endDate.toISOString().split('T')[0])
+      .gte('scheduled_date', toLocalDateStr(startDate))
+      .lte('scheduled_date', toLocalDateStr(endDate))
       .order('scheduled_date', { ascending: true });
 
     if (sessionsError) throw sessionsError;
@@ -228,8 +229,8 @@ export const getAthleteWeeklyTraining = async (coachId, athleteId, weekStartDate
       .select('*')
       .eq('coach_id', coachId)
       .eq('athlete_id', athleteId)
-      .gte('scheduled_date', startDate.toISOString().split('T')[0])
-      .lte('scheduled_date', endDate.toISOString().split('T')[0])
+      .gte('scheduled_date', toLocalDateStr(startDate))
+      .lte('scheduled_date', toLocalDateStr(endDate))
       .order('scheduled_date', { ascending: true });
 
     if (sessionsError) throw sessionsError;
@@ -327,8 +328,8 @@ export const deleteWeeklyTraining = async (coachId, athleteId, weekStartDate) =>
       .select('id')
       .eq('coach_id', coachId)
       .eq('athlete_id', athleteId)
-      .gte('scheduled_date', startDate.toISOString().split('T')[0])
-      .lte('scheduled_date', endDate.toISOString().split('T')[0]);
+      .gte('scheduled_date', toLocalDateStr(startDate))
+      .lte('scheduled_date', toLocalDateStr(endDate));
 
     if (fetchError) throw fetchError;
 

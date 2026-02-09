@@ -36,8 +36,8 @@ const Athletes = () => {
   const [trainingModal, setTrainingModal] = useState({ show: false, athlete: null });
   const [processingRequest, setProcessingRequest] = useState(null);
 
-  // Get unique specialties for filter
-  const specialties = ['all', ...new Set(athletes.flatMap(a => a.specialties || []))];
+  // Get unique race distances for filter
+  const raceDistances = ['all', ...new Set(athletes.flatMap(a => a.raceDistances || []))];
 
   useEffect(() => {
     loadAthletes();
@@ -123,10 +123,10 @@ const Athletes = () => {
       );
     }
 
-    // Specialty filter
+    // Race distance filter
     if (selectedSpecialty !== 'all') {
       filtered = filtered.filter((athlete) =>
-        athlete.specialties?.includes(selectedSpecialty)
+        athlete.raceDistances?.includes(selectedSpecialty)
       );
     }
 
@@ -146,21 +146,6 @@ const Athletes = () => {
       console.error('Error deleting athlete:', error);
       alert('Error al eliminar el atleta');
     }
-  };
-
-  const getSpecialtyLabel = (specialty) => {
-    const labels = {
-      '800m': '800m',
-      '1500m': '1500m',
-      '3000m': '3000m',
-      '5k': '5K',
-      '10k': '10K',
-      'half-marathon': 'Media Maratón',
-      'marathon': 'Maratón',
-      'middle-distance': 'Medio Fondo',
-      'long-distance': 'Fondo',
-    };
-    return labels[specialty] || specialty;
   };
 
   if (loading) {
@@ -219,10 +204,10 @@ const Athletes = () => {
                 onChange={(e) => setSelectedSpecialty(e.target.value)}
                 className="w-full pl-10 pr-4 py-2 border border-gray-300 dark:border-gray-600 rounded-lg bg-white dark:bg-gray-700 text-gray-900 dark:text-white focus:ring-2 focus:ring-blue-500 focus:border-transparent appearance-none cursor-pointer"
               >
-                <option value="all">Todas las modalidades</option>
-                {specialties.filter(s => s !== 'all').map((specialty) => (
-                  <option key={specialty} value={specialty}>
-                    {getSpecialtyLabel(specialty)}
+                <option value="all">Todas las distancias</option>
+                {raceDistances.filter(d => d !== 'all').map((distance) => (
+                  <option key={distance} value={distance}>
+                    {distance}
                   </option>
                 ))}
               </select>
@@ -327,7 +312,7 @@ const Athletes = () => {
                     Email
                   </th>
                   <th className="px-6 py-3 text-left text-xs font-medium text-gray-500 dark:text-gray-400 uppercase tracking-wider">
-                    Especialidad
+                    Distancias
                   </th>
                   <th className="px-6 py-3 text-left text-xs font-medium text-gray-500 dark:text-gray-400 uppercase tracking-wider">
                     VO2 Max
@@ -378,18 +363,18 @@ const Athletes = () => {
                     </td>
                     <td className="px-6 py-4 whitespace-nowrap">
                       <div className="flex flex-wrap gap-1">
-                        {athlete.specialties?.length > 0 ? (
-                          athlete.specialties.map((specialty, idx) => (
+                        {athlete.raceDistances?.length > 0 ? (
+                          athlete.raceDistances.map((distance, idx) => (
                             <span
                               key={idx}
                               className="inline-flex px-2 py-1 text-xs font-medium rounded-full bg-blue-100 text-blue-700 dark:bg-blue-900/30 dark:text-blue-400"
                             >
-                              {getSpecialtyLabel(specialty)}
+                              {distance}
                             </span>
                           ))
                         ) : (
                           <span className="text-sm text-gray-500 dark:text-gray-400">
-                            Sin especialidad
+                            Sin distancias
                           </span>
                         )}
                       </div>

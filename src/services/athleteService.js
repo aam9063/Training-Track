@@ -1,4 +1,5 @@
 import { supabase } from '../lib/supabase';
+import { toLocalDateStr } from '../lib/dateUtils';
 
 /**
  * Service for managing athletes
@@ -57,6 +58,7 @@ export const getAthletes = async (coachId) => {
         dateOfBirth: athlete.date_of_birth,
         gender: athlete.gender,
         specialties: athlete.specialties || [],
+        raceDistances: athlete.race_distances || [],
         vo2Max: athlete.vo2_max,
         restingHeartRate: athlete.resting_heart_rate,
         maxHeartRate: athlete.max_heart_rate,
@@ -324,7 +326,7 @@ export const acceptAthleteRequest = async (relationshipId) => {
       .from('coach_athlete_relationship')
       .update({
         status: 'active',
-        start_date: new Date().toISOString().split('T')[0],
+        start_date: toLocalDateStr(new Date()),
       })
       .eq('id', relationshipId)
       .select()
@@ -551,7 +553,7 @@ export const getAthleteCompetitions = async (athleteId) => {
   }
 
   try {
-    const today = new Date().toISOString().split('T')[0];
+    const today = toLocalDateStr(new Date());
 
     const { data, error } = await supabase
       .from('competitions')

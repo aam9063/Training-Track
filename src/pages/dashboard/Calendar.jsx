@@ -4,15 +4,18 @@ import { motion, AnimatePresence } from 'framer-motion';
 import {
   FiChevronLeft,
   FiChevronRight,
-  FiPlus,
   FiX,
-  FiEdit2,
-  FiTrash2,
-  FiCheck,
   FiCalendar,
+  FiClock,
+  FiUser,
+  FiMapPin,
+  FiActivity,
+  FiFlag,
 } from 'react-icons/fi';
-import { getMonthSessions, createSession, updateSession, deleteSession } from '../../services/calendarService';
+import { getMonthSessions } from '../../services/calendarService';
 import { getAthletes } from '../../services/athleteService';
+import { supabase } from '../../lib/supabase';
+import { toLocalDateStr } from '../../lib/dateUtils';
 
 const DAYS_OF_WEEK = ['Dom', 'Lun', 'Mar', 'Mié', 'Jue', 'Vie', 'Sáb'];
 const MONTHS = [
@@ -24,26 +27,14 @@ const Calendar = () => {
   const { profile } = useAuth();
   const [currentDate, setCurrentDate] = useState(new Date());
   const [sessions, setSessions] = useState([]);
-  const [athletes, setAthletes] = useState([]);
+  const [competitions, setCompetitions] = useState([]);
   const [loading, setLoading] = useState(true);
 
   // Modal states
-  const [showCreateModal, setShowCreateModal] = useState(false);
   const [showEventModal, setShowEventModal] = useState(false);
+  const [showDayModal, setShowDayModal] = useState(false);
   const [selectedDate, setSelectedDate] = useState(null);
   const [selectedEvent, setSelectedEvent] = useState(null);
-  const [isEditing, setIsEditing] = useState(false);
-  const [showDeleteConfirm, setShowDeleteConfirm] = useState(false);
-
-  // Form state
-  const [formData, setFormData] = useState({
-    title: '',
-    athleteId: '',
-    time: '',
-    type: 'running',
-    description: '',
-    status: 'planned',
-  });
 
   // Extract dependencies for useEffect
   const currentMonth = currentDate.getMonth();
@@ -53,7 +44,7 @@ const Calendar = () => {
   const loadData = useCallback(async () => {
     if (!coachId) {
       setSessions([]);
-      setAthletes([]);
+      setCompetitions([]);
       setLoading(false);
       return;
     }
@@ -63,23 +54,53 @@ const Calendar = () => {
       const year = currentYear;
       const month = currentMonth + 1;
 
+      const startDate = toLocalDateStr(new Date(year, month - 1, 1));
+      const endDate = toLocalDateStr(new Date(year, month, 0));
+
       const [sessionsRes, athletesRes] = await Promise.all([
         getMonthSessions(coachId, year, month),
         getAthletes(coachId),
       ]);
 
       if (sessionsRes.data) setSessions(sessionsRes.data);
-      if (athletesRes.data) setAthletes(athletesRes.data);
+
+      // Fetch competitions for all athletes this month
+      if (athletesRes.data && athletesRes.data.length > 0) {
+        const athleteIds = athletesRes.data.map(a => a.id);
+
+        const { data: comps, error: compsError } = await supabase
+          .from('athlete_competitions')
+          .select('*')
+          .in('athlete_id', athleteIds)
+          .gte('event_date', startDate)
+          .lte('event_date', endDate)
+          .order('event_date', { ascending: true });
+
+        if (!compsError && comps) {
+          // Enrich with athlete names
+          const enrichedComps = comps.map(comp => {
+            const athlete = athletesRes.data.find(a => a.id === comp.athlete_id);
+            return {
+              ...comp,
+              athleteName: athlete
+                ? `${athlete.firstName || athlete.first_name || ''} ${athlete.lastName || athlete.last_name || ''}`.trim()
+                : 'Atleta',
+              athleteImage: athlete?.profile_image || athlete?.profileImage || null,
+              isCompetition: true,
+            };
+          });
+          setCompetitions(enrichedComps);
+        }
+      }
     } catch (error) {
       console.error('Error loading calendar data:', error);
       setSessions([]);
-      setAthletes([]);
+      setCompetitions([]);
     } finally {
       setLoading(false);
     }
   }, [coachId, currentMonth, currentYear]);
 
-  // Load data when profile or month changes
   useEffect(() => {
     loadData();
   }, [loadData]);
@@ -114,10 +135,19 @@ const Calendar = () => {
     setCurrentDate(new Date());
   };
 
-  const getSessionsForDate = (date) => {
+  const getEventsForDate = (date) => {
     if (!date) return [];
-    const dateStr = date.toISOString().split('T')[0];
-    return sessions.filter((session) => session.date === dateStr);
+    const dateStr = toLocalDateStr(date);
+
+    const daySessions = sessions
+      .filter((session) => session.date === dateStr)
+      .map(s => ({ ...s, isCompetition: false }));
+
+    const dayComps = competitions
+      .filter((comp) => comp.event_date === dateStr)
+      .map(c => ({ ...c, isCompetition: true }));
+
+    return [...daySessions, ...dayComps];
   };
 
   const isToday = (date) => {
@@ -130,129 +160,24 @@ const Calendar = () => {
     );
   };
 
-  // Click on a date cell (empty area) - opens create modal
+  // Click on a date cell - show day events list
   const handleDateClick = (date, e) => {
     if (!date) return;
-    // Only open create modal if NOT clicking on an event pill
     if (e.target.closest('.event-pill')) return;
 
-    setSelectedDate(date);
-    setFormData({
-      title: '',
-      athleteId: '',
-      time: '',
-      type: 'running',
-      description: '',
-      status: 'planned',
-    });
-    setShowCreateModal(true);
+    const dayEvents = getEventsForDate(date);
+    if (dayEvents.length > 0) {
+      setSelectedDate(date);
+      setShowDayModal(true);
+    }
   };
 
   // Click on an event pill - opens event details modal
   const handleEventClick = (event, e) => {
-    e.stopPropagation();
+    if (e) e.stopPropagation();
     setSelectedEvent(event);
-    setIsEditing(false);
+    setShowDayModal(false);
     setShowEventModal(true);
-  };
-
-  // Start editing event
-  const handleEditClick = () => {
-    setFormData({
-      title: selectedEvent.title || '',
-      athleteId: selectedEvent.athleteId || '',
-      time: selectedEvent.time || '',
-      type: selectedEvent.type || 'running',
-      description: selectedEvent.description || '',
-      status: selectedEvent.status || 'planned',
-    });
-    setIsEditing(true);
-  };
-
-  // Save edited event
-  const handleSaveEdit = async () => {
-    if (!selectedEvent?.id || !formData.title || !formData.athleteId) {
-      alert('Por favor completa todos los campos requeridos');
-      return;
-    }
-
-    try {
-      const updates = {
-        title: formData.title,
-        athlete_id: formData.athleteId,
-        scheduled_time: formData.time || null,
-        training_type: formData.type,
-        description: formData.description || null,
-        status: formData.status,
-      };
-
-      const { error } = await updateSession(selectedEvent.id, updates);
-      if (error) throw error;
-
-      await loadData();
-      setShowEventModal(false);
-      setIsEditing(false);
-      setSelectedEvent(null);
-    } catch (error) {
-      console.error('Error updating event:', error);
-      alert('Error al actualizar el evento');
-    }
-  };
-
-  // Delete event
-  const handleDeleteEvent = async () => {
-    if (!selectedEvent?.id) return;
-
-    try {
-      const { error } = await deleteSession(selectedEvent.id);
-      if (error) throw error;
-
-      await loadData();
-      setShowEventModal(false);
-      setShowDeleteConfirm(false);
-      setSelectedEvent(null);
-    } catch (error) {
-      console.error('Error deleting event:', error);
-      alert('Error al eliminar el evento');
-    }
-  };
-
-  // Create new event
-  const handleCreateEvent = async () => {
-    if (!selectedDate || !formData.title || !formData.athleteId) {
-      alert('Por favor completa todos los campos requeridos');
-      return;
-    }
-
-    try {
-      const sessionData = {
-        coach_id: profile.id,
-        athlete_id: formData.athleteId,
-        scheduled_date: selectedDate.toISOString().split('T')[0],
-        scheduled_time: formData.time || null,
-        training_type: formData.type,
-        status: 'planned',
-        title: formData.title,
-        description: formData.description || null,
-      };
-
-      const { error } = await createSession(sessionData);
-      if (error) throw error;
-
-      await loadData();
-      setFormData({
-        title: '',
-        athleteId: '',
-        time: '',
-        type: 'running',
-        description: '',
-        status: 'planned',
-      });
-      setShowCreateModal(false);
-    } catch (error) {
-      console.error('Error creating event:', error);
-      alert('Error al crear el evento');
-    }
   };
 
   const getTypeColor = (type) => {
@@ -315,19 +240,8 @@ const Calendar = () => {
         <div className="flex flex-col sm:flex-row sm:items-center sm:justify-between gap-4">
           <div>
             <h1 className="text-3xl font-bold text-gray-900 dark:text-white mb-2">Calendario</h1>
-            <p className="text-gray-600 dark:text-gray-400">Gestiona los entrenamientos y eventos</p>
+            <p className="text-gray-600 dark:text-gray-400">Entrenamientos y competiciones de tus atletas</p>
           </div>
-          <button
-            onClick={() => {
-              setSelectedDate(new Date());
-              setFormData({ title: '', athleteId: '', time: '', type: 'running', description: '', status: 'planned' });
-              setShowCreateModal(true);
-            }}
-            className="flex items-center space-x-2 px-4 py-2 bg-blue-600 hover:bg-blue-700 text-white rounded-lg transition-colors"
-          >
-            <FiPlus className="w-5 h-5" />
-            <span>Crear Evento</span>
-          </button>
         </div>
       </div>
 
@@ -373,8 +287,9 @@ const Calendar = () => {
 
           <div className="grid grid-cols-7 gap-2">
             {days.map((date, index) => {
-              const daySessions = date ? getSessionsForDate(date) : [];
+              const dayEvents = date ? getEventsForDate(date) : [];
               const today = isToday(date);
+              const hasEvents = dayEvents.length > 0;
 
               return (
                 <motion.div
@@ -384,9 +299,9 @@ const Calendar = () => {
                   transition={{ delay: index * 0.01 }}
                   onClick={(e) => handleDateClick(date, e)}
                   className={`
-                    min-h-[100px] p-2 rounded-lg border transition-all cursor-pointer
+                    min-h-[100px] p-2 rounded-lg border transition-all
                     ${date
-                      ? 'bg-white dark:bg-gray-700 border-gray-200 dark:border-gray-600 hover:border-blue-500 dark:hover:border-blue-500 hover:shadow-md'
+                      ? `bg-white dark:bg-gray-700 border-gray-200 dark:border-gray-600 ${hasEvents ? 'hover:border-blue-500 dark:hover:border-blue-500 hover:shadow-md cursor-pointer' : 'cursor-default'}`
                       : 'bg-gray-50 dark:bg-gray-800/50 border-transparent cursor-default'}
                     ${today ? 'ring-2 ring-blue-500 ring-offset-2 dark:ring-offset-gray-900' : ''}
                   `}
@@ -398,20 +313,36 @@ const Calendar = () => {
                       </div>
 
                       <div className="space-y-1">
-                        {daySessions.slice(0, 2).map((session) => (
+                        {dayEvents.slice(0, 2).map((event, i) => (
                           <div
-                            key={session.id}
-                            onClick={(e) => handleEventClick(session, e)}
-                            className={`event-pill text-xs px-2 py-1 rounded truncate cursor-pointer hover:opacity-80 transition-opacity ${getTypeColor(session.type)} text-white`}
-                            title={`${session.title} - ${session.athleteName}`}
+                            key={event.id || i}
+                            onClick={(e) => handleEventClick(event, e)}
+                            className={`event-pill text-xs px-2 py-1 rounded truncate cursor-pointer hover:opacity-80 transition-opacity ${
+                              event.isCompetition
+                                ? 'bg-red-500 text-white'
+                                : `${getTypeColor(event.type)} text-white`
+                            }`}
+                            title={event.isCompetition
+                              ? `${event.name} - ${event.athleteName}`
+                              : `${event.title} - ${event.athleteName}`
+                            }
                           >
-                            {session.time && <span className="mr-1">{session.time.slice(0, 5)}</span>}
-                            {session.title}
+                            {event.isCompetition ? (
+                              <>
+                                <FiFlag className="inline w-3 h-3 mr-1" />
+                                {event.name}
+                              </>
+                            ) : (
+                              <>
+                                {event.time && <span className="mr-1">{event.time.slice(0, 5)}</span>}
+                                {event.title}
+                              </>
+                            )}
                           </div>
                         ))}
-                        {daySessions.length > 2 && (
+                        {dayEvents.length > 2 && (
                           <div className="text-xs text-gray-500 dark:text-gray-400 px-2">
-                            +{daySessions.length - 2} más
+                            +{dayEvents.length - 2} más
                           </div>
                         )}
                       </div>
@@ -426,7 +357,7 @@ const Calendar = () => {
 
       {/* Legend */}
       <div className="bg-white dark:bg-gray-800 rounded-xl shadow-sm border border-gray-200 dark:border-gray-700 p-4">
-        <h3 className="text-sm font-semibold text-gray-900 dark:text-white mb-3">Tipos de Entrenamiento</h3>
+        <h3 className="text-sm font-semibold text-gray-900 dark:text-white mb-3">Leyenda</h3>
         <div className="flex flex-wrap gap-4">
           {['running', 'gym', 'rest', 'cross_training'].map((type) => (
             <div key={type} className="flex items-center space-x-2">
@@ -434,51 +365,102 @@ const Calendar = () => {
               <span className="text-sm text-gray-600 dark:text-gray-400">{getTypeLabel(type)}</span>
             </div>
           ))}
+          <div className="flex items-center space-x-2">
+            <div className="w-3 h-3 rounded-full bg-red-500" />
+            <span className="text-sm text-gray-600 dark:text-gray-400">Competición</span>
+          </div>
         </div>
       </div>
 
-      {/* Create Event Modal */}
+      {/* Day Events List Modal */}
       <AnimatePresence>
-        {showCreateModal && (
+        {showDayModal && selectedDate && (
           <div className="fixed inset-0 z-50 flex items-center justify-center p-4 bg-black/50">
             <motion.div
               initial={{ opacity: 0, scale: 0.95 }}
               animate={{ opacity: 1, scale: 1 }}
               exit={{ opacity: 0, scale: 0.95 }}
-              className="bg-white dark:bg-gray-800 rounded-xl shadow-xl max-w-md w-full max-h-[90vh] overflow-y-auto"
+              className="bg-white dark:bg-gray-800 rounded-xl shadow-xl max-w-md w-full max-h-[80vh] overflow-y-auto"
             >
               <div className="p-6">
-                <div className="flex items-center justify-between mb-6">
-                  <h3 className="text-xl font-bold text-gray-900 dark:text-white">Crear Evento</h3>
+                <div className="flex items-center justify-between mb-5">
+                  <div>
+                    <h3 className="text-lg font-bold text-gray-900 dark:text-white">
+                      {selectedDate.toLocaleDateString('es-ES', {
+                        weekday: 'long',
+                        day: 'numeric',
+                        month: 'long',
+                      })}
+                    </h3>
+                    <p className="text-sm text-gray-500 dark:text-gray-400 mt-1">
+                      {getEventsForDate(selectedDate).length} evento{getEventsForDate(selectedDate).length !== 1 ? 's' : ''}
+                    </p>
+                  </div>
                   <button
-                    onClick={() => setShowCreateModal(false)}
+                    onClick={() => setShowDayModal(false)}
                     className="p-2 hover:bg-gray-100 dark:hover:bg-gray-700 rounded-lg transition-colors"
                   >
                     <FiX className="w-5 h-5 text-gray-500" />
                   </button>
                 </div>
 
-                <EventForm
-                  formData={formData}
-                  setFormData={setFormData}
-                  athletes={athletes}
-                  selectedDate={selectedDate}
-                  isEditing={false}
-                />
+                <div className="space-y-3">
+                  {getEventsForDate(selectedDate).map((event, i) => (
+                    <button
+                      key={event.id || i}
+                      onClick={() => handleEventClick(event)}
+                      className="w-full text-left p-4 rounded-lg border border-gray-200 dark:border-gray-600 hover:border-blue-500 dark:hover:border-blue-500 hover:shadow-sm transition-all"
+                    >
+                      <div className="flex items-start space-x-3">
+                        {/* Type indicator */}
+                        <div className={`w-3 h-3 rounded-full mt-1.5 flex-shrink-0 ${
+                          event.isCompetition ? 'bg-red-500' : getTypeColor(event.type)
+                        }`} />
 
-                <div className="flex justify-end space-x-3 mt-6 pt-6 border-t border-gray-200 dark:border-gray-700">
-                  <button
-                    onClick={() => setShowCreateModal(false)}
-                    className="px-4 py-2 text-gray-700 dark:text-gray-300 hover:bg-gray-100 dark:hover:bg-gray-700 rounded-lg transition-colors"
-                  >
-                    Cancelar
-                  </button>
-                  <button
-                    onClick={handleCreateEvent}
-                    className="px-4 py-2 bg-blue-600 hover:bg-blue-700 text-white rounded-lg transition-colors"
-                  >
-                    Crear Evento
-                  </button>
+                        <div className="flex-1 min-w-0">
+                          <div className="flex items-center justify-between mb-1">
+                            <p className="font-medium text-gray-900 dark:text-white truncate">
+                              {event.isCompetition ? event.name : event.title}
+                            </p>
+                            {!event.isCompetition && event.time && (
+                              <span className="text-xs text-gray-500 dark:text-gray-400 ml-2 flex-shrink-0">
+                                {event.time.slice(0, 5)}
+                              </span>
+                            )}
+                          </div>
+
+                          <div className="flex items-center space-x-2 text-sm text-gray-500 dark:text-gray-400">
+                            <FiUser className="w-3 h-3" />
+                            <span className="truncate">{event.athleteName}</span>
+                          </div>
+
+                          {!event.isCompetition && (
+                            <div className="flex items-center space-x-2 mt-2">
+                              <span className={`px-2 py-0.5 rounded-full text-xs text-white ${getTypeColor(event.type)}`}>
+                                {getTypeLabel(event.type)}
+                              </span>
+                              <span className={`px-2 py-0.5 rounded-full text-xs ${getStatusColor(event.status)}`}>
+                                {getStatusLabel(event.status)}
+                              </span>
+                            </div>
+                          )}
+
+                          {event.isCompetition && (
+                            <div className="flex items-center space-x-2 mt-2">
+                              <span className="px-2 py-0.5 rounded-full text-xs bg-red-100 text-red-700 dark:bg-red-900/30 dark:text-red-400">
+                                Competición
+                              </span>
+                              {event.distance_km && (
+                                <span className="text-xs text-gray-500 dark:text-gray-400">
+                                  {event.distance_km} km
+                                </span>
+                              )}
+                            </div>
+                          )}
+                        </div>
+                      </div>
+                    </button>
+                  ))}
                 </div>
               </div>
             </motion.div>
@@ -486,7 +468,7 @@ const Calendar = () => {
         )}
       </AnimatePresence>
 
-      {/* View/Edit Event Modal */}
+      {/* Event Detail Modal (Read-Only) */}
       <AnimatePresence>
         {showEventModal && selectedEvent && (
           <div className="fixed inset-0 z-50 flex items-center justify-center p-4 bg-black/50">
@@ -499,12 +481,11 @@ const Calendar = () => {
               <div className="p-6">
                 <div className="flex items-center justify-between mb-6">
                   <h3 className="text-xl font-bold text-gray-900 dark:text-white">
-                    {isEditing ? 'Editar Evento' : 'Detalles del Evento'}
+                    {selectedEvent.isCompetition ? 'Detalles de Competición' : 'Detalles del Entrenamiento'}
                   </h3>
                   <button
                     onClick={() => {
                       setShowEventModal(false);
-                      setIsEditing(false);
                       setSelectedEvent(null);
                     }}
                     className="p-2 hover:bg-gray-100 dark:hover:bg-gray-700 rounded-lg transition-colors"
@@ -513,269 +494,138 @@ const Calendar = () => {
                   </button>
                 </div>
 
-                {isEditing ? (
-                  <>
-                    <EventForm
-                      formData={formData}
-                      setFormData={setFormData}
-                      athletes={athletes}
-                      selectedDate={new Date(selectedEvent.date)}
-                      isEditing={true}
-                    />
-
-                    <div className="flex justify-end space-x-3 mt-6 pt-6 border-t border-gray-200 dark:border-gray-700">
-                      <button
-                        onClick={() => setIsEditing(false)}
-                        className="px-4 py-2 text-gray-700 dark:text-gray-300 hover:bg-gray-100 dark:hover:bg-gray-700 rounded-lg transition-colors"
-                      >
-                        Cancelar
-                      </button>
-                      <button
-                        onClick={handleSaveEdit}
-                        className="px-4 py-2 bg-blue-600 hover:bg-blue-700 text-white rounded-lg transition-colors flex items-center space-x-2"
-                      >
-                        <FiCheck className="w-4 h-4" />
-                        <span>Guardar</span>
-                      </button>
-                    </div>
-                  </>
-                ) : (
-                  <>
-                    {/* Event Details View */}
-                    <div className="space-y-4">
-                      {/* Date & Time */}
-                      <div className="p-3 bg-blue-50 dark:bg-blue-900/20 rounded-lg flex items-center space-x-3">
-                        <FiCalendar className="w-5 h-5 text-blue-600 dark:text-blue-400" />
-                        <div>
-                          <p className="text-sm font-medium text-blue-700 dark:text-blue-300">
-                            {new Date(selectedEvent.date).toLocaleDateString('es-ES', {
-                              weekday: 'long',
-                              year: 'numeric',
-                              month: 'long',
-                              day: 'numeric',
-                            })}
-                          </p>
-                          {selectedEvent.time && (
-                            <p className="text-sm text-blue-600 dark:text-blue-400">
-                              {selectedEvent.time.slice(0, 5)}
-                            </p>
-                          )}
-                        </div>
-                      </div>
-
-                      {/* Title */}
-                      <div>
-                        <h4 className="text-lg font-semibold text-gray-900 dark:text-white">
-                          {selectedEvent.title}
-                        </h4>
-                      </div>
-
-                      {/* Type & Status */}
-                      <div className="flex flex-wrap gap-2">
-                        <span className={`px-3 py-1 rounded-full text-sm text-white ${getTypeColor(selectedEvent.type)}`}>
-                          {getTypeLabel(selectedEvent.type)}
-                        </span>
-                        <span className={`px-3 py-1 rounded-full text-sm ${getStatusColor(selectedEvent.status)}`}>
-                          {getStatusLabel(selectedEvent.status)}
-                        </span>
-                      </div>
-
-                      {/* Athlete */}
-                      <div className="flex items-center space-x-3 p-3 bg-gray-50 dark:bg-gray-700/50 rounded-lg">
-                        <img
-                          src={selectedEvent.athleteImage || `https://ui-avatars.com/api/?name=${encodeURIComponent(selectedEvent.athleteName || 'A')}&background=random`}
-                          alt={selectedEvent.athleteName}
-                          className="w-10 h-10 rounded-full"
-                        />
-                        <div>
-                          <p className="text-sm text-gray-500 dark:text-gray-400">Atleta</p>
-                          <p className="font-medium text-gray-900 dark:text-white">{selectedEvent.athleteName}</p>
-                        </div>
-                      </div>
-
-                      {/* Description */}
-                      {selectedEvent.description && (
-                        <div>
-                          <p className="text-sm text-gray-500 dark:text-gray-400 mb-1">Descripción</p>
-                          <p className="text-gray-900 dark:text-white">{selectedEvent.description}</p>
-                        </div>
+                <div className="space-y-4">
+                  {/* Date & Time */}
+                  <div className="p-3 bg-blue-50 dark:bg-blue-900/20 rounded-lg flex items-center space-x-3">
+                    <FiCalendar className="w-5 h-5 text-blue-600 dark:text-blue-400 flex-shrink-0" />
+                    <div>
+                      <p className="text-sm font-medium text-blue-700 dark:text-blue-300">
+                        {new Date(selectedEvent.isCompetition ? selectedEvent.event_date : selectedEvent.date).toLocaleDateString('es-ES', {
+                          weekday: 'long',
+                          year: 'numeric',
+                          month: 'long',
+                          day: 'numeric',
+                        })}
+                      </p>
+                      {!selectedEvent.isCompetition && selectedEvent.time && (
+                        <p className="text-sm text-blue-600 dark:text-blue-400 flex items-center mt-1">
+                          <FiClock className="w-3 h-3 mr-1" />
+                          {selectedEvent.time.slice(0, 5)}
+                        </p>
                       )}
                     </div>
+                  </div>
 
-                    {/* Action Buttons */}
-                    <div className="flex justify-between mt-6 pt-6 border-t border-gray-200 dark:border-gray-700">
-                      <button
-                        onClick={() => setShowDeleteConfirm(true)}
-                        className="px-4 py-2 text-red-600 hover:bg-red-50 dark:hover:bg-red-900/20 rounded-lg transition-colors flex items-center space-x-2"
-                      >
-                        <FiTrash2 className="w-4 h-4" />
-                        <span>Eliminar</span>
-                      </button>
-                      <button
-                        onClick={handleEditClick}
-                        className="px-4 py-2 bg-blue-600 hover:bg-blue-700 text-white rounded-lg transition-colors flex items-center space-x-2"
-                      >
-                        <FiEdit2 className="w-4 h-4" />
-                        <span>Editar</span>
-                      </button>
+                  {/* Title */}
+                  <div>
+                    <h4 className="text-lg font-semibold text-gray-900 dark:text-white">
+                      {selectedEvent.isCompetition ? selectedEvent.name : selectedEvent.title}
+                    </h4>
+                  </div>
+
+                  {/* Type & Status (training only) */}
+                  {!selectedEvent.isCompetition && (
+                    <div className="flex flex-wrap gap-2">
+                      <span className={`px-3 py-1 rounded-full text-sm text-white ${getTypeColor(selectedEvent.type)}`}>
+                        {getTypeLabel(selectedEvent.type)}
+                      </span>
+                      <span className={`px-3 py-1 rounded-full text-sm ${getStatusColor(selectedEvent.status)}`}>
+                        {getStatusLabel(selectedEvent.status)}
+                      </span>
                     </div>
-                  </>
-                )}
+                  )}
+
+                  {/* Competition badge */}
+                  {selectedEvent.isCompetition && (
+                    <div className="flex flex-wrap gap-2">
+                      <span className="px-3 py-1 rounded-full text-sm bg-red-500 text-white flex items-center space-x-1">
+                        <FiFlag className="w-3 h-3" />
+                        <span>Competición</span>
+                      </span>
+                    </div>
+                  )}
+
+                  {/* Athlete */}
+                  <div className="flex items-center space-x-3 p-3 bg-gray-50 dark:bg-gray-700/50 rounded-lg">
+                    <img
+                      src={selectedEvent.athleteImage || `https://ui-avatars.com/api/?name=${encodeURIComponent(selectedEvent.athleteName || 'A')}&background=random`}
+                      alt={selectedEvent.athleteName}
+                      className="w-10 h-10 rounded-full"
+                    />
+                    <div>
+                      <p className="text-sm text-gray-500 dark:text-gray-400">Atleta</p>
+                      <p className="font-medium text-gray-900 dark:text-white">{selectedEvent.athleteName}</p>
+                    </div>
+                  </div>
+
+                  {/* Competition-specific fields */}
+                  {selectedEvent.isCompetition && (
+                    <>
+                      {selectedEvent.distance_km && (
+                        <div className="flex items-center space-x-3 p-3 bg-gray-50 dark:bg-gray-700/50 rounded-lg">
+                          <FiActivity className="w-5 h-5 text-gray-500 flex-shrink-0" />
+                          <div>
+                            <p className="text-sm text-gray-500 dark:text-gray-400">Distancia</p>
+                            <p className="font-medium text-gray-900 dark:text-white">{selectedEvent.distance_km} km</p>
+                          </div>
+                        </div>
+                      )}
+                      {selectedEvent.location && (
+                        <div className="flex items-center space-x-3 p-3 bg-gray-50 dark:bg-gray-700/50 rounded-lg">
+                          <FiMapPin className="w-5 h-5 text-gray-500 flex-shrink-0" />
+                          <div>
+                            <p className="text-sm text-gray-500 dark:text-gray-400">Ubicación</p>
+                            <p className="font-medium text-gray-900 dark:text-white">{selectedEvent.location}</p>
+                          </div>
+                        </div>
+                      )}
+                    </>
+                  )}
+
+                  {/* Duration (training only) */}
+                  {!selectedEvent.isCompetition && selectedEvent.estimated_duration_minutes && (
+                    <div className="flex items-center space-x-3 p-3 bg-gray-50 dark:bg-gray-700/50 rounded-lg">
+                      <FiClock className="w-5 h-5 text-gray-500 flex-shrink-0" />
+                      <div>
+                        <p className="text-sm text-gray-500 dark:text-gray-400">Duración estimada</p>
+                        <p className="font-medium text-gray-900 dark:text-white">{selectedEvent.estimated_duration_minutes} min</p>
+                      </div>
+                    </div>
+                  )}
+
+                  {/* Description / Notes */}
+                  {(selectedEvent.description || selectedEvent.notes) && (
+                    <div>
+                      <p className="text-sm text-gray-500 dark:text-gray-400 mb-1">
+                        {selectedEvent.isCompetition ? 'Notas' : 'Descripción'}
+                      </p>
+                      <p className="text-gray-900 dark:text-white whitespace-pre-wrap">
+                        {selectedEvent.description || selectedEvent.notes}
+                      </p>
+                    </div>
+                  )}
+
+                  {/* Coach notes (training only) */}
+                  {!selectedEvent.isCompetition && selectedEvent.notes_coach && (
+                    <div>
+                      <p className="text-sm text-gray-500 dark:text-gray-400 mb-1">Notas del entrenador</p>
+                      <p className="text-gray-900 dark:text-white whitespace-pre-wrap">{selectedEvent.notes_coach}</p>
+                    </div>
+                  )}
+
+                  {/* Athlete notes (training only) */}
+                  {!selectedEvent.isCompetition && selectedEvent.notes_athlete && (
+                    <div>
+                      <p className="text-sm text-gray-500 dark:text-gray-400 mb-1">Notas del atleta</p>
+                      <p className="text-gray-900 dark:text-white whitespace-pre-wrap">{selectedEvent.notes_athlete}</p>
+                    </div>
+                  )}
+                </div>
               </div>
             </motion.div>
           </div>
         )}
       </AnimatePresence>
-
-      {/* Delete Confirmation Modal */}
-      <AnimatePresence>
-        {showDeleteConfirm && (
-          <div className="fixed inset-0 z-[60] flex items-center justify-center p-4 bg-black/50">
-            <motion.div
-              initial={{ opacity: 0, scale: 0.95 }}
-              animate={{ opacity: 1, scale: 1 }}
-              exit={{ opacity: 0, scale: 0.95 }}
-              className="bg-white dark:bg-gray-800 rounded-xl shadow-xl max-w-sm w-full p-6"
-            >
-              <h3 className="text-lg font-bold text-gray-900 dark:text-white mb-2">
-                ¿Eliminar evento?
-              </h3>
-              <p className="text-gray-600 dark:text-gray-400 mb-6">
-                Esta acción no se puede deshacer. El evento "{selectedEvent?.title}" será eliminado permanentemente.
-              </p>
-              <div className="flex justify-end space-x-3">
-                <button
-                  onClick={() => setShowDeleteConfirm(false)}
-                  className="px-4 py-2 text-gray-700 dark:text-gray-300 hover:bg-gray-100 dark:hover:bg-gray-700 rounded-lg transition-colors"
-                >
-                  Cancelar
-                </button>
-                <button
-                  onClick={handleDeleteEvent}
-                  className="px-4 py-2 bg-red-600 hover:bg-red-700 text-white rounded-lg transition-colors"
-                >
-                  Eliminar
-                </button>
-              </div>
-            </motion.div>
-          </div>
-        )}
-      </AnimatePresence>
-    </div>
-  );
-};
-
-// Reusable Event Form Component
-const EventForm = ({ formData, setFormData, athletes, selectedDate, isEditing }) => {
-  return (
-    <div className="space-y-4">
-      {/* Date Display */}
-      <div className="p-3 bg-blue-50 dark:bg-blue-900/20 rounded-lg">
-        <p className="text-sm text-blue-600 dark:text-blue-400">
-          {selectedDate?.toLocaleDateString('es-ES', {
-            weekday: 'long',
-            year: 'numeric',
-            month: 'long',
-            day: 'numeric',
-          })}
-        </p>
-      </div>
-
-      {/* Title */}
-      <div>
-        <label className="block text-sm font-medium text-gray-700 dark:text-gray-300 mb-2">
-          Título *
-        </label>
-        <input
-          type="text"
-          value={formData.title}
-          onChange={(e) => setFormData({ ...formData, title: e.target.value })}
-          placeholder="Ej: Sesión de series 400m"
-          className="w-full px-4 py-2 border border-gray-300 dark:border-gray-600 rounded-lg bg-white dark:bg-gray-700 text-gray-900 dark:text-white focus:ring-2 focus:ring-blue-500 focus:border-transparent"
-        />
-      </div>
-
-      {/* Athlete */}
-      <div>
-        <label className="block text-sm font-medium text-gray-700 dark:text-gray-300 mb-2">
-          Atleta *
-        </label>
-        <select
-          value={formData.athleteId}
-          onChange={(e) => setFormData({ ...formData, athleteId: e.target.value })}
-          className="w-full px-4 py-2 border border-gray-300 dark:border-gray-600 rounded-lg bg-white dark:bg-gray-700 text-gray-900 dark:text-white focus:ring-2 focus:ring-blue-500 focus:border-transparent"
-        >
-          <option value="">Selecciona un atleta</option>
-          {athletes.map((athlete) => (
-            <option key={athlete.id} value={athlete.id}>
-              {athlete.firstName} {athlete.lastName}
-            </option>
-          ))}
-        </select>
-      </div>
-
-      {/* Type */}
-      <div>
-        <label className="block text-sm font-medium text-gray-700 dark:text-gray-300 mb-2">
-          Tipo de Entrenamiento
-        </label>
-        <select
-          value={formData.type}
-          onChange={(e) => setFormData({ ...formData, type: e.target.value })}
-          className="w-full px-4 py-2 border border-gray-300 dark:border-gray-600 rounded-lg bg-white dark:bg-gray-700 text-gray-900 dark:text-white focus:ring-2 focus:ring-blue-500 focus:border-transparent"
-        >
-          <option value="running">Carrera</option>
-          <option value="gym">Gimnasio</option>
-          <option value="rest">Descanso</option>
-          <option value="cross_training">Entrenamiento Cruzado</option>
-        </select>
-      </div>
-
-      {/* Status (only when editing) */}
-      {isEditing && (
-        <div>
-          <label className="block text-sm font-medium text-gray-700 dark:text-gray-300 mb-2">
-            Estado
-          </label>
-          <select
-            value={formData.status}
-            onChange={(e) => setFormData({ ...formData, status: e.target.value })}
-            className="w-full px-4 py-2 border border-gray-300 dark:border-gray-600 rounded-lg bg-white dark:bg-gray-700 text-gray-900 dark:text-white focus:ring-2 focus:ring-blue-500 focus:border-transparent"
-          >
-            <option value="planned">Planificado</option>
-            <option value="in_progress">En Progreso</option>
-            <option value="completed">Completado</option>
-            <option value="skipped">Omitido</option>
-          </select>
-        </div>
-      )}
-
-      {/* Time */}
-      <div>
-        <label className="block text-sm font-medium text-gray-700 dark:text-gray-300 mb-2">
-          Hora (opcional)
-        </label>
-        <input
-          type="time"
-          value={formData.time}
-          onChange={(e) => setFormData({ ...formData, time: e.target.value })}
-          className="w-full px-4 py-2 border border-gray-300 dark:border-gray-600 rounded-lg bg-white dark:bg-gray-700 text-gray-900 dark:text-white focus:ring-2 focus:ring-blue-500 focus:border-transparent"
-        />
-      </div>
-
-      {/* Description */}
-      <div>
-        <label className="block text-sm font-medium text-gray-700 dark:text-gray-300 mb-2">
-          Descripción (opcional)
-        </label>
-        <textarea
-          value={formData.description}
-          onChange={(e) => setFormData({ ...formData, description: e.target.value })}
-          rows={3}
-          placeholder="Añade notas o instrucciones..."
-          className="w-full px-4 py-2 border border-gray-300 dark:border-gray-600 rounded-lg bg-white dark:bg-gray-700 text-gray-900 dark:text-white focus:ring-2 focus:ring-blue-500 focus:border-transparent resize-none"
-        />
-      </div>
     </div>
   );
 };

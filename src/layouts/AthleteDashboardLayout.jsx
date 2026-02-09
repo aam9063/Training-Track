@@ -36,9 +36,9 @@ const AthleteDashboardLayout = () => {
       
       {/* Main Content with responsive margin */}
       <div className={`
-        transition-all duration-300 
-        lg:${sidebarCollapsed ? 'pl-20' : 'pl-64'}
+        transition-all duration-300
         pt-16 lg:pt-0
+        ${sidebarCollapsed ? 'lg:pl-20' : 'lg:pl-64'}
       `}>
         <main className="min-h-screen">
           <Outlet />

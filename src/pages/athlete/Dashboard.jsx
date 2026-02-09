@@ -15,6 +15,7 @@ import {
   FiAward,
 } from 'react-icons/fi';
 import { supabase } from '../../lib/supabase';
+import { toLocalDateStr } from '../../lib/dateUtils';
 import { getWeekStartDate } from '../../services/weeklyTrainingService';
 import { getAthleteCompetitions } from '../../services/athleteService';
 
@@ -50,8 +51,8 @@ const AthleteDashboard = () => {
         .from('training_sessions')
         .select('*')
         .eq('athlete_id', profile.id)
-        .gte('scheduled_date', weekStart.toISOString().split('T')[0])
-        .lte('scheduled_date', weekEnd.toISOString().split('T')[0])
+        .gte('scheduled_date', toLocalDateStr(weekStart))
+        .lte('scheduled_date', toLocalDateStr(weekEnd))
         .order('scheduled_date', { ascending: true });
 
       if (weekError) throw weekError;
@@ -62,7 +63,7 @@ const AthleteDashboard = () => {
         .from('training_sessions')
         .select('*')
         .eq('athlete_id', profile.id)
-        .gte('scheduled_date', weekStart.toISOString().split('T')[0])
+        .gte('scheduled_date', toLocalDateStr(weekStart))
         .neq('training_type', 'rest')
         .order('scheduled_date', { ascending: true })
         .limit(10);
@@ -239,27 +240,29 @@ const AthleteDashboard = () => {
           </p>
         </motion.div>
 
-        <motion.div
-          initial={{ opacity: 0, y: 20 }}
-          animate={{ opacity: 1, y: 0 }}
-          transition={{ delay: 0.4 }}
-          className="bg-white dark:bg-gray-800 rounded-xl p-4 sm:p-6 shadow-sm border border-gray-200 dark:border-gray-700"
-        >
-          <div className="flex items-center justify-between mb-3 sm:mb-4">
-            <h3 className="text-xs sm:text-sm font-medium text-gray-600 dark:text-gray-400">
-              Sesiones
-            </h3>
-            <div className="p-1.5 sm:p-2 bg-orange-50 dark:bg-orange-900/20 rounded-lg">
-              <FiCalendar className="w-4 h-4 sm:w-5 sm:h-5 text-orange-600 dark:text-orange-400" />
+        <Link to="/athlete/training">
+          <motion.div
+            initial={{ opacity: 0, y: 20 }}
+            animate={{ opacity: 1, y: 0 }}
+            transition={{ delay: 0.4 }}
+            className="bg-white dark:bg-gray-800 rounded-xl p-4 sm:p-6 shadow-sm border border-gray-200 dark:border-gray-700 hover:border-orange-400 dark:hover:border-orange-500 hover:shadow-md transition-all cursor-pointer"
+          >
+            <div className="flex items-center justify-between mb-3 sm:mb-4">
+              <h3 className="text-xs sm:text-sm font-medium text-gray-600 dark:text-gray-400">
+                Sesiones
+              </h3>
+              <div className="p-1.5 sm:p-2 bg-orange-50 dark:bg-orange-900/20 rounded-lg">
+                <FiCalendar className="w-4 h-4 sm:w-5 sm:h-5 text-orange-600 dark:text-orange-400" />
+              </div>
             </div>
-          </div>
-          <p className="text-2xl sm:text-3xl font-bold text-gray-900 dark:text-white mb-1">
-            {weekStats.sessions}
-          </p>
-          <p className="text-xs sm:text-sm text-gray-500 dark:text-gray-400">
-            Planificadas
-          </p>
-        </motion.div>
+            <p className="text-2xl sm:text-3xl font-bold text-gray-900 dark:text-white mb-1">
+              {weekStats.sessions}
+            </p>
+            <p className="text-xs sm:text-sm text-gray-500 dark:text-gray-400">
+              Planificadas
+            </p>
+          </motion.div>
+        </Link>
       </div>
 
       {/* Upcoming Sessions */}
@@ -455,7 +458,7 @@ const AthleteDashboard = () => {
           <div className="grid grid-cols-2 gap-3">
             <Link
               to="/athlete/metrics"
-              className="p-4 bg-gradient-to-br from-blue-50 to-indigo-50 dark:from-blue-900/20 dark:to-indigo-900/20 rounded-xl border border-blue-100 dark:border-blue-800/30 hover:shadow-md transition-all group"
+              className="p-4 rounded-xl border border-blue-100 dark:border-blue-800/30 hover:shadow-md transition-all group"
             >
               <div className="w-10 h-10 bg-blue-500 rounded-lg flex items-center justify-center mb-3 group-hover:scale-110 transition-transform">
                 <FiBarChart2 className="w-5 h-5 text-white" />

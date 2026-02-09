@@ -31,16 +31,16 @@ const AthleteDashboardLayout = () => {
   }
 
   return (
-    <div className="min-h-screen bg-gray-50 dark:bg-gray-900">
+    <div className="min-h-screen bg-gray-50 dark:bg-gray-900 overflow-x-hidden">
       <AthleteSidebar onCollapse={setSidebarCollapsed} />
-      
+
       {/* Main Content with responsive margin */}
       <div className={`
         transition-all duration-300
         pt-16 lg:pt-0
         ${sidebarCollapsed ? 'lg:pl-20' : 'lg:pl-64'}
       `}>
-        <main className="min-h-screen">
+        <main className="min-h-screen overflow-x-hidden">
           <Outlet />
         </main>
       </div>

@@ -299,39 +299,39 @@ const AthleteMetricsView = () => {
   return (
     <div className="p-4 sm:p-6 lg:p-8 min-h-screen bg-gray-50 dark:bg-gray-900">
       {/* Header */}
-      <div className="flex items-center justify-between mb-6">
-        <div className="flex items-center space-x-4">
+      <div className="flex flex-col sm:flex-row sm:items-center sm:justify-between gap-3 mb-6">
+        <div className="flex items-center space-x-3 sm:space-x-4 min-w-0">
           <button
             onClick={() => navigate(`/dashboard/athletes/${athleteId}`)}
-            className="p-2 hover:bg-gray-200 dark:hover:bg-gray-700 rounded-lg transition-colors"
+            className="p-2 hover:bg-gray-200 dark:hover:bg-gray-700 rounded-lg transition-colors flex-shrink-0"
           >
             <FiArrowLeft className="w-5 h-5 text-gray-600 dark:text-gray-400" />
           </button>
-          <div>
-            <h1 className="text-2xl font-bold text-gray-900 dark:text-white">
+          <div className="min-w-0">
+            <h1 className="text-xl sm:text-2xl font-bold text-gray-900 dark:text-white truncate">
               Métricas de Rendimiento
             </h1>
-            <p className="text-gray-500 dark:text-gray-400">{athleteName}</p>
+            <p className="text-sm text-gray-500 dark:text-gray-400 truncate">{athleteName}</p>
           </div>
         </div>
 
         {/* Period Selector */}
-        <div className="flex items-center space-x-2 bg-white dark:bg-gray-800 rounded-lg p-1 border border-gray-200 dark:border-gray-700">
+        <div className="flex items-center space-x-1 sm:space-x-2 bg-white dark:bg-gray-800 rounded-lg p-1 border border-gray-200 dark:border-gray-700 self-start sm:self-auto">
           {[
-            { value: '4weeks', label: '4 Semanas' },
-            { value: '8weeks', label: '8 Semanas' },
-            { value: '12weeks', label: '12 Semanas' },
+            { value: '4weeks', label: '4', labelFull: 'Semanas' },
+            { value: '8weeks', label: '8', labelFull: 'Semanas' },
+            { value: '12weeks', label: '12', labelFull: 'Semanas' },
           ].map((period) => (
             <button
               key={period.value}
               onClick={() => setSelectedPeriod(period.value)}
-              className={`px-3 py-1.5 text-sm font-medium rounded-md transition-colors ${
+              className={`px-2 sm:px-3 py-1.5 text-xs sm:text-sm font-medium rounded-md transition-colors whitespace-nowrap ${
                 selectedPeriod === period.value
                   ? 'bg-blue-600 text-white'
                   : 'text-gray-600 dark:text-gray-400 hover:bg-gray-100 dark:hover:bg-gray-700'
               }`}
             >
-              {period.label}
+              {period.label} <span className="hidden sm:inline">{period.labelFull}</span><span className="sm:hidden">Sem.</span>
             </button>
           ))}
         </div>
@@ -351,15 +351,15 @@ const AthleteMetricsView = () => {
         <div className="space-y-6">
           {/* Summary Cards with Comparison */}
           {periodComparison && (
-            <div className="grid grid-cols-2 md:grid-cols-4 gap-4">
+            <div className="grid grid-cols-2 md:grid-cols-4 gap-2 sm:gap-4">
               <motion.div
                 initial={{ opacity: 0, y: 20 }}
                 animate={{ opacity: 1, y: 0 }}
-                className="bg-white dark:bg-gray-800 rounded-xl p-4 border border-gray-200 dark:border-gray-700"
+                className="bg-white dark:bg-gray-800 rounded-xl p-3 sm:p-4 border border-gray-200 dark:border-gray-700"
               >
                 <div className="flex items-center justify-between mb-2">
-                  <FiActivity className="w-5 h-5 text-orange-500" />
-                  <span className={`text-xs font-medium px-2 py-0.5 rounded-full ${
+                  <FiActivity className="w-4 h-4 sm:w-5 sm:h-5 text-orange-500" />
+                  <span className={`text-[10px] sm:text-xs font-medium px-1.5 sm:px-2 py-0.5 rounded-full ${
                     periodComparison.changes.distance >= 0
                       ? 'bg-green-100 text-green-700 dark:bg-green-900/30 dark:text-green-400'
                       : 'bg-red-100 text-red-700 dark:bg-red-900/30 dark:text-red-400'
@@ -367,21 +367,21 @@ const AthleteMetricsView = () => {
                     {periodComparison.changes.distance >= 0 ? '+' : ''}{periodComparison.changes.distance}%
                   </span>
                 </div>
-                <p className="text-2xl font-bold text-gray-900 dark:text-white">
+                <p className="text-xl sm:text-2xl font-bold text-gray-900 dark:text-white truncate">
                   {(periodComparison.current.distance / 1000).toFixed(1)} km
                 </p>
-                <p className="text-xs text-gray-500">Distancia (últimas 2 sem.)</p>
+                <p className="text-[10px] sm:text-xs text-gray-500">Distancia (últimas 2 sem.)</p>
               </motion.div>
 
               <motion.div
                 initial={{ opacity: 0, y: 20 }}
                 animate={{ opacity: 1, y: 0 }}
                 transition={{ delay: 0.1 }}
-                className="bg-white dark:bg-gray-800 rounded-xl p-4 border border-gray-200 dark:border-gray-700"
+                className="bg-white dark:bg-gray-800 rounded-xl p-3 sm:p-4 border border-gray-200 dark:border-gray-700"
               >
                 <div className="flex items-center justify-between mb-2">
-                  <FiClock className="w-5 h-5 text-blue-500" />
-                  <span className={`text-xs font-medium px-2 py-0.5 rounded-full ${
+                  <FiClock className="w-4 h-4 sm:w-5 sm:h-5 text-blue-500" />
+                  <span className={`text-[10px] sm:text-xs font-medium px-1.5 sm:px-2 py-0.5 rounded-full ${
                     periodComparison.changes.time >= 0
                       ? 'bg-green-100 text-green-700 dark:bg-green-900/30 dark:text-green-400'
                       : 'bg-red-100 text-red-700 dark:bg-red-900/30 dark:text-red-400'
@@ -389,21 +389,21 @@ const AthleteMetricsView = () => {
                     {periodComparison.changes.time >= 0 ? '+' : ''}{periodComparison.changes.time}%
                   </span>
                 </div>
-                <p className="text-2xl font-bold text-gray-900 dark:text-white">
+                <p className="text-lg sm:text-2xl font-bold text-gray-900 dark:text-white truncate">
                   {formatDuration(periodComparison.current.time)}
                 </p>
-                <p className="text-xs text-gray-500">Tiempo (últimas 2 sem.)</p>
+                <p className="text-[10px] sm:text-xs text-gray-500">Tiempo (últimas 2 sem.)</p>
               </motion.div>
 
               <motion.div
                 initial={{ opacity: 0, y: 20 }}
                 animate={{ opacity: 1, y: 0 }}
                 transition={{ delay: 0.2 }}
-                className="bg-white dark:bg-gray-800 rounded-xl p-4 border border-gray-200 dark:border-gray-700"
+                className="bg-white dark:bg-gray-800 rounded-xl p-3 sm:p-4 border border-gray-200 dark:border-gray-700"
               >
                 <div className="flex items-center justify-between mb-2">
-                  <FiCalendar className="w-5 h-5 text-purple-500" />
-                  <span className={`text-xs font-medium px-2 py-0.5 rounded-full ${
+                  <FiCalendar className="w-4 h-4 sm:w-5 sm:h-5 text-purple-500" />
+                  <span className={`text-[10px] sm:text-xs font-medium px-1.5 sm:px-2 py-0.5 rounded-full ${
                     periodComparison.changes.activities >= 0
                       ? 'bg-green-100 text-green-700 dark:bg-green-900/30 dark:text-green-400'
                       : 'bg-red-100 text-red-700 dark:bg-red-900/30 dark:text-red-400'
@@ -411,21 +411,21 @@ const AthleteMetricsView = () => {
                     {periodComparison.changes.activities >= 0 ? '+' : ''}{periodComparison.changes.activities}%
                   </span>
                 </div>
-                <p className="text-2xl font-bold text-gray-900 dark:text-white">
+                <p className="text-xl sm:text-2xl font-bold text-gray-900 dark:text-white">
                   {periodComparison.current.activities}
                 </p>
-                <p className="text-xs text-gray-500">Actividades (últimas 2 sem.)</p>
+                <p className="text-[10px] sm:text-xs text-gray-500">Actividades (últimas 2)</p>
               </motion.div>
 
               <motion.div
                 initial={{ opacity: 0, y: 20 }}
                 animate={{ opacity: 1, y: 0 }}
                 transition={{ delay: 0.3 }}
-                className="bg-white dark:bg-gray-800 rounded-xl p-4 border border-gray-200 dark:border-gray-700"
+                className="bg-white dark:bg-gray-800 rounded-xl p-3 sm:p-4 border border-gray-200 dark:border-gray-700"
               >
                 <div className="flex items-center justify-between mb-2">
-                  <FiTrendingUp className="w-5 h-5 text-green-500" />
-                  <span className={`text-xs font-medium px-2 py-0.5 rounded-full ${
+                  <FiTrendingUp className="w-4 h-4 sm:w-5 sm:h-5 text-green-500" />
+                  <span className={`text-[10px] sm:text-xs font-medium px-1.5 sm:px-2 py-0.5 rounded-full ${
                     periodComparison.changes.elevation >= 0
                       ? 'bg-green-100 text-green-700 dark:bg-green-900/30 dark:text-green-400'
                       : 'bg-red-100 text-red-700 dark:bg-red-900/30 dark:text-red-400'
@@ -433,10 +433,10 @@ const AthleteMetricsView = () => {
                     {periodComparison.changes.elevation >= 0 ? '+' : ''}{periodComparison.changes.elevation}%
                   </span>
                 </div>
-                <p className="text-2xl font-bold text-gray-900 dark:text-white">
+                <p className="text-xl sm:text-2xl font-bold text-gray-900 dark:text-white">
                   {Math.round(periodComparison.current.elevation)}m
                 </p>
-                <p className="text-xs text-gray-500">Desnivel (últimas 2 sem.)</p>
+                <p className="text-[10px] sm:text-xs text-gray-500">Desnivel (últimas 2 sem.)</p>
               </motion.div>
             </div>
           )}
@@ -447,7 +447,7 @@ const AthleteMetricsView = () => {
               initial={{ opacity: 0, y: 20 }}
               animate={{ opacity: 1, y: 0 }}
               transition={{ delay: 0.1 }}
-              className="bg-white dark:bg-gray-800 rounded-2xl p-6 border border-gray-200 dark:border-gray-700"
+              className="bg-white dark:bg-gray-800 rounded-2xl p-4 sm:p-6 border border-gray-200 dark:border-gray-700"
             >
               <h3 className="text-lg font-bold text-gray-900 dark:text-white mb-4 flex items-center">
                 <FiBarChart2 className="w-5 h-5 mr-2 text-orange-500" />
@@ -505,7 +505,7 @@ const AthleteMetricsView = () => {
                 initial={{ opacity: 0, y: 20 }}
                 animate={{ opacity: 1, y: 0 }}
                 transition={{ delay: 0.2 }}
-                className="bg-white dark:bg-gray-800 rounded-2xl p-6 border border-gray-200 dark:border-gray-700"
+                className="bg-white dark:bg-gray-800 rounded-2xl p-4 sm:p-6 border border-gray-200 dark:border-gray-700"
               >
                 <h3 className="text-lg font-bold text-gray-900 dark:text-white mb-4 flex items-center">
                   <FiClock className="w-5 h-5 mr-2 text-blue-500" />
@@ -553,7 +553,7 @@ const AthleteMetricsView = () => {
                 initial={{ opacity: 0, y: 20 }}
                 animate={{ opacity: 1, y: 0 }}
                 transition={{ delay: 0.3 }}
-                className="bg-white dark:bg-gray-800 rounded-2xl p-6 border border-gray-200 dark:border-gray-700"
+                className="bg-white dark:bg-gray-800 rounded-2xl p-4 sm:p-6 border border-gray-200 dark:border-gray-700"
               >
                 <h3 className="text-lg font-bold text-gray-900 dark:text-white mb-4 flex items-center">
                   <FiTrendingUp className="w-5 h-5 mr-2 text-green-500" />
@@ -600,7 +600,7 @@ const AthleteMetricsView = () => {
               initial={{ opacity: 0, y: 20 }}
               animate={{ opacity: 1, y: 0 }}
               transition={{ delay: 0.35 }}
-              className="bg-white dark:bg-gray-800 rounded-2xl p-6 border border-gray-200 dark:border-gray-700"
+              className="bg-white dark:bg-gray-800 rounded-2xl p-4 sm:p-6 border border-gray-200 dark:border-gray-700"
             >
               <h3 className="text-lg font-bold text-gray-900 dark:text-white mb-4 flex items-center">
                 <FiZap className="w-5 h-5 mr-2 text-blue-500" />
@@ -687,7 +687,7 @@ const AthleteMetricsView = () => {
                 initial={{ opacity: 0, y: 20 }}
                 animate={{ opacity: 1, y: 0 }}
                 transition={{ delay: 0.4 }}
-                className="bg-white dark:bg-gray-800 rounded-2xl p-6 border border-gray-200 dark:border-gray-700"
+                className="bg-white dark:bg-gray-800 rounded-2xl p-4 sm:p-6 border border-gray-200 dark:border-gray-700"
               >
                 <h3 className="text-lg font-bold text-gray-900 dark:text-white mb-4 flex items-center">
                   <FiHeart className="w-5 h-5 mr-2 text-red-500" />
@@ -737,7 +737,7 @@ const AthleteMetricsView = () => {
                 initial={{ opacity: 0, y: 20 }}
                 animate={{ opacity: 1, y: 0 }}
                 transition={{ delay: 0.5 }}
-                className="bg-white dark:bg-gray-800 rounded-2xl p-6 border border-gray-200 dark:border-gray-700"
+                className="bg-white dark:bg-gray-800 rounded-2xl p-4 sm:p-6 border border-gray-200 dark:border-gray-700"
               >
                 <h3 className="text-lg font-bold text-gray-900 dark:text-white mb-4 flex items-center">
                   <FiZap className="w-5 h-5 mr-2 text-purple-500" />
@@ -806,7 +806,7 @@ const AthleteMetricsView = () => {
                 initial={{ opacity: 0, y: 20 }}
                 animate={{ opacity: 1, y: 0 }}
                 transition={{ delay: 0.6 }}
-                className="bg-white dark:bg-gray-800 rounded-2xl p-6 border border-gray-200 dark:border-gray-700"
+                className="bg-white dark:bg-gray-800 rounded-2xl p-4 sm:p-6 border border-gray-200 dark:border-gray-700"
               >
                 <h3 className="text-lg font-bold text-gray-900 dark:text-white mb-4 flex items-center">
                   <FiActivity className="w-5 h-5 mr-2 text-indigo-500" />

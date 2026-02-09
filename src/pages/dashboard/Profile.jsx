@@ -1,6 +1,7 @@
 import { useState, useRef, useEffect } from 'react';
 import { useAuth } from '../../contexts/AuthContext';
-import { uploadProfileImage } from '../../services/storageService';
+import { uploadProfileImage, deleteProfileImage } from '../../services/storageService';
+import ImageCropModal from '../../components/common/ImageCropModal';
 import { motion } from 'framer-motion';
 import {
   FiMail,
@@ -16,6 +17,8 @@ const Profile = () => {
   const { user, profile, updateProfile, updateCoachProfile, updateAthleteProfile, refreshProfile } = useAuth();
   const [editing, setEditing] = useState(false);
   const [uploadingImage, setUploadingImage] = useState(false);
+  const [deletingImage, setDeletingImage] = useState(false);
+  const [cropImage, setCropImage] = useState(null);
   const fileInputRef = useRef(null);
   
   // Usar profile si existe, sino usar user metadata
@@ -136,7 +139,7 @@ const Profile = () => {
     });
   };
 
-  const handleImageUpload = async (e) => {
+  const handleImageUpload = (e) => {
     const file = e.target.files?.[0];
     if (!file || !user?.id) return;
 
@@ -145,8 +148,16 @@ const Profile = () => {
       return;
     }
 
+    const objectUrl = URL.createObjectURL(file);
+    setCropImage(objectUrl);
+    if (fileInputRef.current) fileInputRef.current.value = '';
+  };
+
+  const handleCropComplete = async (croppedBlob) => {
+    setCropImage(null);
     setUploadingImage(true);
     try {
+      const file = new File([croppedBlob], 'avatar.jpg', { type: 'image/jpeg' });
       const { error } = await uploadProfileImage(user.id, file);
       if (error) throw error;
       await refreshProfile();
@@ -155,7 +166,21 @@ const Profile = () => {
       alert('Error al subir la imagen');
     } finally {
       setUploadingImage(false);
-      if (fileInputRef.current) fileInputRef.current.value = '';
+    }
+  };
+
+  const handleDeleteImage = async () => {
+    if (!confirm('¿Eliminar tu foto de perfil?')) return;
+    setDeletingImage(true);
+    try {
+      const { error } = await deleteProfileImage(user.id);
+      if (error) throw error;
+      await refreshProfile();
+    } catch (error) {
+      console.error('Error deleting image:', error);
+      alert('Error al eliminar la imagen');
+    } finally {
+      setDeletingImage(false);
     }
   };
 
@@ -248,13 +273,24 @@ const Profile = () => {
               <p className="text-gray-600 dark:text-gray-400 capitalize">
                 {displayProfile.role === 'coach' ? 'Entrenador' : 'Atleta'}
               </p>
-              <button
-                onClick={() => fileInputRef.current?.click()}
-                disabled={uploadingImage}
-                className="mt-2 text-sm text-blue-600 dark:text-blue-400 hover:underline disabled:opacity-50"
-              >
-                {uploadingImage ? 'Subiendo...' : 'Cambiar foto'}
-              </button>
+              <div className="flex items-center space-x-3 mt-2">
+                <button
+                  onClick={() => fileInputRef.current?.click()}
+                  disabled={uploadingImage || deletingImage}
+                  className="text-sm text-blue-600 dark:text-blue-400 hover:underline disabled:opacity-50"
+                >
+                  {uploadingImage ? 'Subiendo...' : 'Cambiar foto'}
+                </button>
+                {displayProfile.profile_image && (
+                  <button
+                    onClick={handleDeleteImage}
+                    disabled={deletingImage || uploadingImage}
+                    className="text-sm text-red-500 dark:text-red-400 hover:underline disabled:opacity-50"
+                  >
+                    {deletingImage ? 'Eliminando...' : 'Eliminar foto'}
+                  </button>
+                )}
+              </div>
             </div>
           </div>
 
@@ -518,6 +554,18 @@ const Profile = () => {
           </div>
         </div>
       </motion.div>
+
+      {/* Image Crop Modal */}
+      {cropImage && (
+        <ImageCropModal
+          imageSrc={cropImage}
+          onCropComplete={handleCropComplete}
+          onCancel={() => {
+            URL.revokeObjectURL(cropImage);
+            setCropImage(null);
+          }}
+        />
+      )}
     </div>
   );
 };

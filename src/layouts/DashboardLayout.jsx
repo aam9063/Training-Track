@@ -32,7 +32,7 @@ const DashboardLayout = () => {
 
   // Coach dashboard
   return (
-    <div className="min-h-screen bg-gray-50 dark:bg-gray-900">
+    <div className="min-h-screen bg-gray-50 dark:bg-gray-900 overflow-x-hidden">
       <Sidebar onCollapse={setSidebarCollapsed} />
 
       {/* Main Content - Fixed: Use conditional classes instead of template literals */}
@@ -43,7 +43,7 @@ const DashboardLayout = () => {
           ${sidebarCollapsed ? 'lg:pl-20' : 'lg:pl-64'}
         `}
       >
-        <main className="min-h-screen">
+        <main className="min-h-screen overflow-x-hidden">
           <Outlet />
         </main>
       </div>

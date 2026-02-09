@@ -140,10 +140,10 @@ const ActivityTypeDistribution = ({ activities }) => {
   }
 
   return (
-    <div className="flex flex-col h-full">
+    <div className="flex flex-col">
       {/* Chart */}
-      <div className="flex-1 flex items-center justify-center" style={{ minHeight: '180px' }}>
-        <div className="w-48 h-48">
+      <div className="flex items-center justify-center py-2">
+        <div className="w-44 h-44 sm:w-48 sm:h-48">
           <Doughnut
             data={chartData}
             options={{
@@ -168,17 +168,17 @@ const ActivityTypeDistribution = ({ activities }) => {
         {sortedTypes.map(([type, data]) => {
           const percentage = totalTime > 0 ? Math.round((data.time / totalTime) * 100) : 0;
           return (
-            <div key={type} className="flex items-center justify-between text-sm">
-              <div className="flex items-center space-x-2">
+            <div key={type} className="flex items-center justify-between text-xs sm:text-sm gap-2">
+              <div className="flex items-center space-x-2 min-w-0">
                 <div
-                  className="w-3 h-3 rounded-full"
+                  className="w-2.5 h-2.5 sm:w-3 sm:h-3 rounded-full flex-shrink-0"
                   style={{ backgroundColor: activityColors[type] || '#6b7280' }}
                 />
-                <span className="text-gray-700 dark:text-gray-300">
+                <span className="text-gray-700 dark:text-gray-300 truncate">
                   {activityTypeLabels[type] || type}
                 </span>
               </div>
-              <div className="flex items-center space-x-3 text-gray-500 dark:text-gray-400">
+              <div className="flex items-center space-x-2 sm:space-x-3 text-gray-500 dark:text-gray-400 flex-shrink-0 whitespace-nowrap">
                 <span>{data.count} act.</span>
                 <span>{formatTime(data.time)}</span>
                 <span className="font-medium text-gray-900 dark:text-white">{percentage}%</span>
@@ -191,12 +191,12 @@ const ActivityTypeDistribution = ({ activities }) => {
       {/* Summary */}
       <div className="mt-4 pt-4 border-t border-gray-200 dark:border-gray-700 grid grid-cols-2 gap-4 text-center">
         <div>
-          <p className="text-2xl font-bold text-gray-900 dark:text-white">{activities.length}</p>
-          <p className="text-xs text-gray-500 dark:text-gray-400">Actividades</p>
+          <p className="text-xl sm:text-2xl font-bold text-gray-900 dark:text-white">{activities.length}</p>
+          <p className="text-[10px] sm:text-xs text-gray-500 dark:text-gray-400">Actividades</p>
         </div>
         <div>
-          <p className="text-2xl font-bold text-gray-900 dark:text-white">{(totalDistance / 1000).toFixed(1)}</p>
-          <p className="text-xs text-gray-500 dark:text-gray-400">km totales</p>
+          <p className="text-xl sm:text-2xl font-bold text-gray-900 dark:text-white">{(totalDistance / 1000).toFixed(1)}</p>
+          <p className="text-[10px] sm:text-xs text-gray-500 dark:text-gray-400">km totales</p>
         </div>
       </div>
     </div>
@@ -349,29 +349,30 @@ const TotalActivityTimeChart = ({ activities, selectedPeriod, onPeriodChange }) 
           >
             <FiChevronRight className="w-5 h-5 text-gray-600 dark:text-gray-400" />
           </button>
-          <span className="text-sm text-gray-600 dark:text-gray-400 flex items-center space-x-1">
-            <FiClock className="w-4 h-4" />
+          <span className="text-xs sm:text-sm text-gray-600 dark:text-gray-400 flex items-center space-x-1 whitespace-nowrap">
+            <FiClock className="w-4 h-4 flex-shrink-0" />
             <span>{formatDateRange()}</span>
           </span>
         </div>
 
         <div className="flex items-center bg-gray-100 dark:bg-gray-700 rounded-lg p-1">
           {[
-            { value: '7days', label: '7 días' },
-            { value: '4weeks', label: '4 semanas' },
-            { value: '6months', label: '6 meses' },
-            { value: '1year', label: '1 año' },
+            { value: '7days', label: '7d', labelSm: '7 días' },
+            { value: '4weeks', label: '4s', labelSm: '4 semanas' },
+            { value: '6months', label: '6m', labelSm: '6 meses' },
+            { value: '1year', label: '1a', labelSm: '1 año' },
           ].map((period) => (
             <button
               key={period.value}
               onClick={() => onPeriodChange(period.value)}
-              className={`px-3 py-1.5 rounded-md text-xs sm:text-sm font-medium transition-all ${
+              className={`px-2 sm:px-3 py-1.5 rounded-md text-xs sm:text-sm font-medium transition-all ${
                 selectedPeriod === period.value
                   ? 'bg-white dark:bg-gray-600 text-gray-900 dark:text-white shadow-sm'
                   : 'text-gray-600 dark:text-gray-400 hover:text-gray-900 dark:hover:text-white'
               }`}
             >
-              {period.label}
+              <span className="sm:hidden">{period.label}</span>
+              <span className="hidden sm:inline">{period.labelSm}</span>
             </button>
           ))}
         </div>
@@ -779,30 +780,30 @@ const AthleteMetrics = () => {
             <FiActivity className="w-5 h-5 mr-2 text-orange-500" />
             Estadísticas Totales (Strava)
           </h3>
-          <div className="grid grid-cols-2 sm:grid-cols-4 gap-4">
-            <div className="text-center p-4 bg-gray-50 dark:bg-gray-700/50 rounded-xl">
-              <p className="text-2xl sm:text-3xl font-bold text-gray-900 dark:text-white">
+          <div className="grid grid-cols-2 sm:grid-cols-4 gap-3 sm:gap-4">
+            <div className="text-center p-3 sm:p-4 bg-gray-50 dark:bg-gray-700/50 rounded-xl">
+              <p className="text-xl sm:text-3xl font-bold text-gray-900 dark:text-white">
                 {stravaStats.all_run_totals?.count || 0}
               </p>
-              <p className="text-xs sm:text-sm text-gray-500 dark:text-gray-400">Carreras totales</p>
+              <p className="text-[10px] sm:text-sm text-gray-500 dark:text-gray-400">Carreras totales</p>
             </div>
-            <div className="text-center p-4 bg-gray-50 dark:bg-gray-700/50 rounded-xl">
-              <p className="text-2xl sm:text-3xl font-bold text-gray-900 dark:text-white">
+            <div className="text-center p-3 sm:p-4 bg-gray-50 dark:bg-gray-700/50 rounded-xl">
+              <p className="text-xl sm:text-3xl font-bold text-gray-900 dark:text-white">
                 {((stravaStats.all_run_totals?.distance || 0) / 1000).toFixed(0)} km
               </p>
-              <p className="text-xs sm:text-sm text-gray-500 dark:text-gray-400">Distancia total</p>
+              <p className="text-[10px] sm:text-sm text-gray-500 dark:text-gray-400">Distancia total</p>
             </div>
-            <div className="text-center p-4 bg-gray-50 dark:bg-gray-700/50 rounded-xl">
-              <p className="text-2xl sm:text-3xl font-bold text-gray-900 dark:text-white">
+            <div className="text-center p-3 sm:p-4 bg-gray-50 dark:bg-gray-700/50 rounded-xl">
+              <p className="text-xl sm:text-3xl font-bold text-gray-900 dark:text-white">
                 {Math.round((stravaStats.all_run_totals?.elapsed_time || 0) / 3600)}h
               </p>
-              <p className="text-xs sm:text-sm text-gray-500 dark:text-gray-400">Tiempo total</p>
+              <p className="text-[10px] sm:text-sm text-gray-500 dark:text-gray-400">Tiempo total</p>
             </div>
-            <div className="text-center p-4 bg-gray-50 dark:bg-gray-700/50 rounded-xl">
-              <p className="text-2xl sm:text-3xl font-bold text-gray-900 dark:text-white">
+            <div className="text-center p-3 sm:p-4 bg-gray-50 dark:bg-gray-700/50 rounded-xl">
+              <p className="text-xl sm:text-3xl font-bold text-gray-900 dark:text-white">
                 {((stravaStats.all_run_totals?.elevation_gain || 0) / 1000).toFixed(1)}k
               </p>
-              <p className="text-xs sm:text-sm text-gray-500 dark:text-gray-400">Desnivel (m)</p>
+              <p className="text-[10px] sm:text-sm text-gray-500 dark:text-gray-400">Desnivel (m)</p>
             </div>
           </div>
         </motion.div>
@@ -815,11 +816,11 @@ const AthleteMetrics = () => {
           initial={{ opacity: 0, y: 20 }}
           animate={{ opacity: 1, y: 0 }}
           transition={{ delay: 0.4 }}
-          className="bg-white dark:bg-gray-800 rounded-xl p-4 sm:p-6 shadow-sm border border-gray-200 dark:border-gray-700"
+          className="bg-white dark:bg-gray-800 rounded-xl p-4 sm:p-6 shadow-sm border border-gray-200 dark:border-gray-700 overflow-hidden"
         >
           <h3 className="text-base sm:text-lg font-bold text-gray-900 dark:text-white mb-4 flex items-center">
-            <FiActivity className="w-5 h-5 mr-2 text-blue-500" />
-            Distribución de Actividades
+            <FiActivity className="w-5 h-5 mr-2 text-blue-500 flex-shrink-0" />
+            <span className="truncate">Distribución de Actividades</span>
           </h3>
           <ActivityTypeDistribution activities={rawActivities} />
         </motion.div>
@@ -885,10 +886,10 @@ const AthleteMetrics = () => {
             return (
               <>
                 {/* Average line indicator */}
-                <div className="flex items-center justify-end mb-2 text-sm text-gray-500 dark:text-gray-400">
+                <div className="flex items-center justify-end mb-2 text-xs sm:text-sm text-gray-500 dark:text-gray-400">
                   <div className="flex items-center">
-                    <div className="w-8 h-0.5 bg-gray-400 dark:bg-gray-500 mr-2"></div>
-                    <span>Media = {speedData.avgSpeed} km/h</span>
+                    <div className="w-6 sm:w-8 h-0.5 bg-gray-400 dark:bg-gray-500 mr-1.5 sm:mr-2 flex-shrink-0"></div>
+                    <span className="whitespace-nowrap">Media = {speedData.avgSpeed} km/h</span>
                   </div>
                 </div>
                 <div className="h-48 sm:h-64">
@@ -969,33 +970,33 @@ const AthleteMetrics = () => {
           className="grid grid-cols-1 sm:grid-cols-2 gap-4 mb-6 sm:mb-8"
         >
           {stravaMetrics.longestRun && (
-            <div className="bg-gradient-to-r from-yellow-50 to-orange-50 dark:from-yellow-900/20 dark:to-orange-900/20 rounded-xl p-6 border-2 border-yellow-200 dark:border-yellow-800">
+            <div className="bg-gradient-to-r from-yellow-50 to-orange-50 dark:from-yellow-900/20 dark:to-orange-900/20 rounded-xl p-4 sm:p-6 border-2 border-yellow-200 dark:border-yellow-800">
               <div className="flex items-center justify-between mb-3">
-                <span className="text-sm font-medium text-yellow-700 dark:text-yellow-400">
+                <span className="text-xs sm:text-sm font-medium text-yellow-700 dark:text-yellow-400">
                   Carrera más larga
                 </span>
-                <FiTarget className="w-5 h-5 text-yellow-600" />
+                <FiTarget className="w-5 h-5 text-yellow-600 flex-shrink-0" />
               </div>
-              <p className="text-3xl font-bold text-yellow-700 dark:text-yellow-300 mb-1">
+              <p className="text-2xl sm:text-3xl font-bold text-yellow-700 dark:text-yellow-300 mb-1">
                 {stravaMetrics.longestRun.distanceKm} km
               </p>
-              <p className="text-sm text-gray-600 dark:text-gray-400">
+              <p className="text-xs sm:text-sm text-gray-600 dark:text-gray-400 truncate">
                 {stravaMetrics.longestRun.name}
               </p>
             </div>
           )}
           {stravaMetrics.fastestPace && (
-            <div className="bg-gradient-to-r from-green-50 to-emerald-50 dark:from-green-900/20 dark:to-emerald-900/20 rounded-xl p-6 border-2 border-green-200 dark:border-green-800">
+            <div className="bg-gradient-to-r from-green-50 to-emerald-50 dark:from-green-900/20 dark:to-emerald-900/20 rounded-xl p-4 sm:p-6 border-2 border-green-200 dark:border-green-800">
               <div className="flex items-center justify-between mb-3">
-                <span className="text-sm font-medium text-green-700 dark:text-green-400">
+                <span className="text-xs sm:text-sm font-medium text-green-700 dark:text-green-400">
                   Ritmo más rápido
                 </span>
-                <FiZap className="w-5 h-5 text-green-600" />
+                <FiZap className="w-5 h-5 text-green-600 flex-shrink-0" />
               </div>
-              <p className="text-3xl font-bold text-green-700 dark:text-green-300 mb-1">
+              <p className="text-2xl sm:text-3xl font-bold text-green-700 dark:text-green-300 mb-1">
                 {stravaMetrics.fastestPace.pace}
               </p>
-              <p className="text-sm text-gray-600 dark:text-gray-400">
+              <p className="text-xs sm:text-sm text-gray-600 dark:text-gray-400 truncate">
                 {stravaMetrics.fastestPace.name} ({stravaMetrics.fastestPace.distanceKm} km)
               </p>
             </div>

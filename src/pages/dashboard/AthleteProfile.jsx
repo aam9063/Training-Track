@@ -95,6 +95,7 @@ const AthleteProfile = () => {
   const [stravaActivities, setStravaActivities] = useState([]);
   const [stravaLoading, setStravaLoading] = useState(true);
   const [stravaConnected, setStravaConnected] = useState(false);
+  const [visibleActivities, setVisibleActivities] = useState(5);
   const [stravaMetrics, setStravaMetrics] = useState(null);
   const [stravaBestEfforts, setStravaBestEfforts] = useState([]);
   const [activitiesRPE, setActivitiesRPE] = useState({});
@@ -182,7 +183,7 @@ const AthleteProfile = () => {
     loadTrainings();
   }, [loadTrainings]);
 
-  // Load Strava activities
+  // Load Strava activities - two-phase: fast list first, then metrics
   useEffect(() => {
     const loadStravaData = async () => {
       if (!athleteId) return;
@@ -194,23 +195,41 @@ const AthleteProfile = () => {
         setStravaConnected(!!connection);
 
         if (connection) {
-          // Get latest activities (30 for metrics calculation)
+          // Phase 1: Fetch only 10 activities for the list (fast)
           const { data: activities } = await getAthleteStravaActivities(athleteId, {
-            per_page: 30,
+            per_page: 10,
           });
 
           if (activities?.length > 0) {
-            const formatted = activities.slice(0, 15).map(formatStravaActivity);
+            const formatted = activities.map(formatStravaActivity);
             setStravaActivities(formatted);
-            // Calculate metrics from all 30 activities
-            setStravaMetrics(calculateStravaMetrics(activities));
-            // Extract best efforts/personal bests
-            setStravaBestEfforts(extractBestEfforts(activities));
+            setStravaLoading(false);
 
-            // Fetch RPE for displayed activities
-            const ids = formatted.map((a) => String(a.id));
-            const { data: rpeMap } = await getActivitiesRPE(athleteId, ids);
-            setActivitiesRPE(rpeMap || {});
+            // Fetch RPE for displayed activities (parallel with phase 2)
+            const rpePromise = getActivitiesRPE(athleteId, formatted.map((a) => String(a.id)));
+
+            // Phase 2: Fetch more activities in background for metrics
+            const { data: allActivities } = await getAthleteStravaActivities(athleteId, {
+              per_page: 30,
+            });
+
+            if (allActivities?.length > 0) {
+              // Update activities list with the full set
+              const allFormatted = allActivities.slice(0, 15).map(formatStravaActivity);
+              setStravaActivities(allFormatted);
+              setStravaMetrics(calculateStravaMetrics(allActivities));
+              setStravaBestEfforts(extractBestEfforts(allActivities));
+
+              // Get RPE for all displayed activities
+              const allIds = allFormatted.map((a) => String(a.id));
+              const { data: rpeMap } = await getActivitiesRPE(athleteId, allIds);
+              setActivitiesRPE(rpeMap || {});
+            } else {
+              const { data: rpeMap } = await rpePromise;
+              setActivitiesRPE(rpeMap || {});
+              setStravaMetrics(calculateStravaMetrics(activities));
+              setStravaBestEfforts(extractBestEfforts(activities));
+            }
           } else {
             setStravaActivities([]);
             setStravaMetrics(null);
@@ -548,59 +567,57 @@ const AthleteProfile = () => {
   return (
     <div className="p-4 sm:p-6 lg:p-8 min-h-screen bg-gray-50 dark:bg-gray-900">
       {/* Header */}
-      <div className="flex items-center justify-between mb-6">
-        <div className="flex items-center space-x-4">
+      <div className="flex flex-col sm:flex-row sm:items-center sm:justify-between gap-3 mb-6">
+        <div className="flex items-center space-x-3 min-w-0">
           <button
             onClick={() => navigate('/dashboard/athletes')}
-            className="p-2 hover:bg-gray-200 dark:hover:bg-gray-700 rounded-lg transition-colors"
+            className="p-2 hover:bg-gray-200 dark:hover:bg-gray-700 rounded-lg transition-colors flex-shrink-0"
           >
             <FiArrowLeft className="w-5 h-5 text-gray-600 dark:text-gray-400" />
           </button>
-          <div className="flex items-center space-x-4">
-            {athlete.user?.profile_image ? (
-              <img
-                src={athlete.user.profile_image}
-                alt={athleteName}
-                className="w-16 h-16 rounded-full object-cover border-2 border-blue-500"
-              />
-            ) : (
-              <div className="w-16 h-16 rounded-full bg-gradient-to-br from-blue-500 to-purple-600 flex items-center justify-center text-white text-xl font-bold">
-                {initials}
-              </div>
-            )}
-            <div>
-              <h1 className="text-2xl font-bold text-gray-900 dark:text-white">
-                {athleteName}
-              </h1>
-              {athlete.race_distances?.length > 0 ? (
-                <div className="flex flex-wrap gap-1.5 mt-1">
-                  {athlete.race_distances.map((dist) => (
-                    <span key={dist} className="px-2 py-0.5 bg-blue-100 dark:bg-blue-900/30 text-blue-700 dark:text-blue-300 rounded-full text-xs font-medium">
-                      {dist}
-                    </span>
-                  ))}
-                </div>
-              ) : (
-                <p className="text-gray-500 dark:text-gray-400 text-sm">
-                  Sin distancias configuradas
-                </p>
-              )}
+          {athlete.user?.profile_image ? (
+            <img
+              src={athlete.user.profile_image}
+              alt={athleteName}
+              className="w-12 h-12 sm:w-16 sm:h-16 rounded-full object-cover border-2 border-blue-500 flex-shrink-0"
+            />
+          ) : (
+            <div className="w-12 h-12 sm:w-16 sm:h-16 rounded-full bg-gradient-to-br from-blue-500 to-purple-600 flex items-center justify-center text-white text-lg sm:text-xl font-bold flex-shrink-0">
+              {initials}
             </div>
+          )}
+          <div className="min-w-0">
+            <h1 className="text-xl sm:text-2xl font-bold text-gray-900 dark:text-white truncate">
+              {athleteName}
+            </h1>
+            {athlete.race_distances?.length > 0 ? (
+              <div className="flex flex-wrap gap-1 sm:gap-1.5 mt-1">
+                {athlete.race_distances.map((dist) => (
+                  <span key={dist} className="px-1.5 sm:px-2 py-0.5 bg-blue-100 dark:bg-blue-900/30 text-blue-700 dark:text-blue-300 rounded-full text-[10px] sm:text-xs font-medium">
+                    {dist}
+                  </span>
+                ))}
+              </div>
+            ) : (
+              <p className="text-gray-500 dark:text-gray-400 text-sm">
+                Sin distancias configuradas
+              </p>
+            )}
           </div>
         </div>
 
         {/* Action Icons */}
-        <div className="flex items-center space-x-3">
+        <div className="flex items-center space-x-2 sm:space-x-3 self-end sm:self-auto">
           <button
             onClick={() => {/* TODO: Historic trainings */}}
-            className="p-3 bg-white dark:bg-gray-800 rounded-xl shadow-sm hover:shadow-md transition-all border border-gray-200 dark:border-gray-700 group"
+            className="p-2.5 sm:p-3 bg-white dark:bg-gray-800 rounded-xl shadow-sm hover:shadow-md transition-all border border-gray-200 dark:border-gray-700 group"
             title="Histórico de entrenamientos"
           >
             <FiSearch className="w-5 h-5 text-gray-600 dark:text-gray-400 group-hover:text-blue-600" />
           </button>
           <button
             onClick={() => setShowMessageModal(true)}
-            className="p-3 bg-white dark:bg-gray-800 rounded-xl shadow-sm hover:shadow-md transition-all border border-gray-200 dark:border-gray-700 group"
+            className="p-2.5 sm:p-3 bg-white dark:bg-gray-800 rounded-xl shadow-sm hover:shadow-md transition-all border border-gray-200 dark:border-gray-700 group"
             title="Enviar mensaje"
           >
             <FiMessageCircle className="w-5 h-5 text-gray-600 dark:text-gray-400 group-hover:text-blue-600" />
@@ -617,26 +634,26 @@ const AthleteProfile = () => {
           className="col-span-12 bg-white dark:bg-gray-800 rounded-2xl shadow-sm border border-gray-200 dark:border-gray-700 overflow-hidden"
         >
           {/* Week Navigator */}
-          <div className="flex items-center justify-between p-4 border-b border-gray-200 dark:border-gray-700 bg-gray-50 dark:bg-gray-800/50">
-            <h2 className="text-lg font-bold text-gray-900 dark:text-white flex items-center">
-              <FiCalendar className="w-5 h-5 mr-2 text-blue-600" />
+          <div className="flex flex-col sm:flex-row sm:items-center sm:justify-between gap-2 p-3 sm:p-4 border-b border-gray-200 dark:border-gray-700 bg-gray-50 dark:bg-gray-800/50">
+            <h2 className="text-base sm:text-lg font-bold text-gray-900 dark:text-white flex items-center">
+              <FiCalendar className="w-4 h-4 sm:w-5 sm:h-5 mr-2 text-blue-600" />
               Planificación Semanal
             </h2>
-            <div className="flex items-center space-x-4">
+            <div className="flex items-center space-x-2 sm:space-x-4">
               <button
                 onClick={prevWeek}
-                className="p-2 hover:bg-gray-200 dark:hover:bg-gray-700 rounded-lg transition-colors"
+                className="p-1.5 sm:p-2 hover:bg-gray-200 dark:hover:bg-gray-700 rounded-lg transition-colors"
               >
-                <FiChevronLeft className="w-5 h-5 text-gray-600 dark:text-gray-400" />
+                <FiChevronLeft className="w-4 h-4 sm:w-5 sm:h-5 text-gray-600 dark:text-gray-400" />
               </button>
-              <span className="font-medium text-gray-700 dark:text-gray-300 min-w-[200px] text-center">
-                Semana {getWeekNumber(currentWeek)} ({weekDays[0].toLocaleDateString('es-ES', { day: '2-digit', month: '2-digit' })} - {weekDays[6].toLocaleDateString('es-ES', { day: '2-digit', month: '2-digit', year: '2-digit' })})
+              <span className="text-xs sm:text-sm font-medium text-gray-700 dark:text-gray-300 text-center whitespace-nowrap">
+                Semana {getWeekNumber(currentWeek)} ({weekDays[0].toLocaleDateString('es-ES', { day: 'numeric', month: 'numeric' })} - {weekDays[6].toLocaleDateString('es-ES', { day: 'numeric', month: 'numeric', year: '2-digit' })})
               </span>
               <button
                 onClick={nextWeek}
-                className="p-2 hover:bg-gray-200 dark:hover:bg-gray-700 rounded-lg transition-colors"
+                className="p-1.5 sm:p-2 hover:bg-gray-200 dark:hover:bg-gray-700 rounded-lg transition-colors"
               >
-                <FiChevronRight className="w-5 h-5 text-gray-600 dark:text-gray-400" />
+                <FiChevronRight className="w-4 h-4 sm:w-5 sm:h-5 text-gray-600 dark:text-gray-400" />
               </button>
             </div>
           </div>
@@ -647,57 +664,101 @@ const AthleteProfile = () => {
               <FiLoader className="w-6 h-6 animate-spin text-blue-600" />
             </div>
           ) : (
-            <div className="grid grid-cols-7 divide-x divide-gray-200 dark:divide-gray-700">
-              {weekDays.map((day, index) => {
-                const training = trainings[index];
-                const isToday = day.toDateString() === new Date().toDateString();
+            <>
+              {/* Desktop: 7-column grid */}
+              <div className="hidden sm:grid grid-cols-7 divide-x divide-gray-200 dark:divide-gray-700">
+                {weekDays.map((day, index) => {
+                  const training = trainings[index];
+                  const isToday = day.toDateString() === new Date().toDateString();
 
-                return (
-                  <div
-                    key={index}
-                    className={`min-h-[180px] p-3 ${isToday ? 'bg-blue-50 dark:bg-blue-900/20' : ''}`}
-                  >
-                    {/* Day Header */}
-                    <div className="text-center mb-3 pb-2 border-b border-gray-200 dark:border-gray-700">
-                      <p className="text-xs font-semibold text-gray-500 dark:text-gray-400 uppercase">
-                        {DAYS_OF_WEEK[index].slice(0, 3)}
-                      </p>
-                      <p className={`text-lg font-bold ${isToday ? 'text-blue-600' : 'text-gray-900 dark:text-white'}`}>
-                        {day.getDate()}
-                      </p>
+                  return (
+                    <div
+                      key={index}
+                      className={`min-h-[180px] p-3 ${isToday ? 'bg-blue-50 dark:bg-blue-900/20' : ''}`}
+                    >
+                      <div className="text-center mb-3 pb-2 border-b border-gray-200 dark:border-gray-700">
+                        <p className="text-xs font-semibold text-gray-500 dark:text-gray-400 uppercase">
+                          {DAYS_OF_WEEK[index].slice(0, 3)}
+                        </p>
+                        <p className={`text-lg font-bold ${isToday ? 'text-blue-600' : 'text-gray-900 dark:text-white'}`}>
+                          {day.getDate()}
+                        </p>
+                      </div>
+                      {training ? (
+                        <div className="space-y-2">
+                          <div className={`h-1.5 rounded-full ${getTypeColor(training.type)}`} />
+                          <p className="text-xs font-medium text-gray-500 dark:text-gray-400">
+                            {getTypeLabel(training.type)}
+                          </p>
+                          <p className="text-sm font-semibold text-gray-900 dark:text-white line-clamp-2">
+                            {training.title}
+                          </p>
+                          {training.duration && (
+                            <p className="text-xs text-gray-500 dark:text-gray-400 flex items-center">
+                              <FiClock className="w-3 h-3 mr-1" />
+                              {training.duration} min
+                            </p>
+                          )}
+                          {training.exercises?.length > 0 && (
+                            <p className="text-xs text-gray-400 dark:text-gray-500">
+                              {training.exercises.length} ejercicio{training.exercises.length > 1 ? 's' : ''}
+                            </p>
+                          )}
+                        </div>
+                      ) : (
+                        <div className="flex items-center justify-center h-24 text-gray-300 dark:text-gray-600">
+                          <span className="text-xs">Sin entreno</span>
+                        </div>
+                      )}
                     </div>
+                  );
+                })}
+              </div>
 
-                    {/* Training Content */}
-                    {training ? (
-                      <div className="space-y-2">
-                        <div className={`h-1.5 rounded-full ${getTypeColor(training.type)}`} />
-                        <p className="text-xs font-medium text-gray-500 dark:text-gray-400">
-                          {getTypeLabel(training.type)}
-                        </p>
-                        <p className="text-sm font-semibold text-gray-900 dark:text-white line-clamp-2">
-                          {training.title}
-                        </p>
-                        {training.duration && (
-                          <p className="text-xs text-gray-500 dark:text-gray-400 flex items-center">
-                            <FiClock className="w-3 h-3 mr-1" />
-                            {training.duration} min
+              {/* Mobile: Stacked list */}
+              <div className="sm:hidden divide-y divide-gray-200 dark:divide-gray-700">
+                {weekDays.map((day, index) => {
+                  const training = trainings[index];
+                  const isToday = day.toDateString() === new Date().toDateString();
+                  if (!training && !isToday) return null;
+
+                  return (
+                    <div
+                      key={index}
+                      className={`p-3 ${isToday ? 'bg-blue-50 dark:bg-blue-900/20' : ''}`}
+                    >
+                      <div className="flex items-center gap-3">
+                        <div className="flex-shrink-0 text-center w-10">
+                          <p className="text-[10px] font-semibold text-gray-500 dark:text-gray-400 uppercase">
+                            {DAYS_OF_WEEK[index].slice(0, 3)}
                           </p>
-                        )}
-                        {training.exercises?.length > 0 && (
-                          <p className="text-xs text-gray-400 dark:text-gray-500">
-                            {training.exercises.length} ejercicio{training.exercises.length > 1 ? 's' : ''}
+                          <p className={`text-lg font-bold ${isToday ? 'text-blue-600' : 'text-gray-900 dark:text-white'}`}>
+                            {day.getDate()}
                           </p>
+                        </div>
+                        {training ? (
+                          <div className="flex-1 min-w-0">
+                            <div className="flex items-center gap-2">
+                              <div className={`w-2 h-2 rounded-full flex-shrink-0 ${getTypeColor(training.type)}`} />
+                              <p className="text-sm font-semibold text-gray-900 dark:text-white truncate">
+                                {training.title}
+                              </p>
+                            </div>
+                            <p className="text-xs text-gray-500 dark:text-gray-400 mt-0.5">
+                              {getTypeLabel(training.type)}
+                              {training.duration ? ` · ${training.duration} min` : ''}
+                              {training.exercises?.length > 0 ? ` · ${training.exercises.length} ejerc.` : ''}
+                            </p>
+                          </div>
+                        ) : (
+                          <p className="text-xs text-gray-400 dark:text-gray-500">Sin entreno</p>
                         )}
                       </div>
-                    ) : (
-                      <div className="flex items-center justify-center h-24 text-gray-300 dark:text-gray-600">
-                        <span className="text-xs">Sin entreno</span>
-                      </div>
-                    )}
-                  </div>
-                );
-              })}
-            </div>
+                    </div>
+                  );
+                })}
+              </div>
+            </>
           )}
         </motion.div>
 
@@ -706,16 +767,16 @@ const AthleteProfile = () => {
           initial={{ opacity: 0, y: 20 }}
           animate={{ opacity: 1, y: 0 }}
           transition={{ delay: 0.1 }}
-          className="col-span-12 lg:col-span-7 bg-white dark:bg-gray-800 rounded-2xl shadow-sm border border-gray-200 dark:border-gray-700 overflow-hidden"
+          className="col-span-12 lg:col-span-7 bg-white dark:bg-gray-800 rounded-2xl shadow-sm border border-gray-200 dark:border-gray-700 overflow-hidden flex flex-col"
         >
-          <div className="p-4 border-b border-gray-200 dark:border-gray-700 bg-gradient-to-r from-orange-500 to-orange-600">
+          <div className="p-4 border-b border-gray-200 dark:border-gray-700 bg-gradient-to-r from-orange-500 to-orange-600 flex-shrink-0">
             <h2 className="text-lg font-bold text-white flex items-center">
               <FiActivity className="w-5 h-5 mr-2" />
               Últimos Entrenamientos (Strava)
             </h2>
           </div>
 
-          <div className="p-4 max-h-[400px] overflow-y-auto custom-scrollbar-orange">
+          <div className="p-4 flex-1 overflow-y-auto max-h-[600px] custom-scrollbar-orange">
             {stravaLoading ? (
               <div className="flex items-center justify-center py-8">
                 <FiLoader className="w-6 h-6 animate-spin text-orange-500" />
@@ -735,19 +796,19 @@ const AthleteProfile = () => {
               </div>
             ) : (
               <div className="space-y-3">
-                {stravaActivities.map((activity) => (
+                {stravaActivities.slice(0, visibleActivities).map((activity) => (
                   <div
                     key={activity.id}
                     onClick={() => loadActivityDetail(activity)}
                     className="p-4 bg-gray-50 dark:bg-gray-700/50 rounded-xl hover:bg-gray-100 dark:hover:bg-gray-700 transition-colors cursor-pointer border-2 border-transparent hover:border-orange-400"
                   >
-                    <div className="flex items-start justify-between mb-2">
-                      <div className="flex items-center gap-2">
-                        <div>
-                          <h4 className="font-semibold text-gray-900 dark:text-white">
+                    <div className="flex items-start justify-between mb-2 gap-2">
+                      <div className="flex items-center gap-2 min-w-0">
+                        <div className="min-w-0">
+                          <h4 className="font-semibold text-gray-900 dark:text-white truncate text-sm sm:text-base">
                             {activity.name}
                           </h4>
-                          <p className="text-xs text-gray-500 dark:text-gray-400">
+                          <p className="text-[10px] sm:text-xs text-gray-500 dark:text-gray-400">
                             {new Date(activity.date).toLocaleDateString('es-ES', {
                               weekday: 'short',
                               day: 'numeric',
@@ -758,7 +819,7 @@ const AthleteProfile = () => {
                         {activitiesRPE[String(activity.id)]?.score && (
                           <button
                             onClick={(e) => { e.stopPropagation(); setRpeDetailActivity(activity); }}
-                            className="text-2xl hover:scale-110 transition-transform"
+                            className="text-2xl hover:scale-110 transition-transform flex-shrink-0"
                             title={`Esfuerzo: ${getRPELabel(activitiesRPE[String(activity.id)].score)} - Click para ver detalles`}
                           >
                             {getRPEEmoji(activitiesRPE[String(activity.id)].score)}
@@ -766,37 +827,37 @@ const AthleteProfile = () => {
                         )}
                       </div>
                       {activity.has_heartrate && (
-                        <span className="flex items-center text-xs text-red-500">
+                        <span className="flex items-center text-[10px] sm:text-xs text-red-500 flex-shrink-0 whitespace-nowrap">
                           <FiHeart className="w-3 h-3 mr-1" />
                           {activity.average_heartrate} bpm
                         </span>
                       )}
                     </div>
 
-                    <div className="grid grid-cols-4 gap-3 text-center">
+                    <div className="grid grid-cols-4 gap-1 sm:gap-3 text-center">
                       <div>
-                        <p className="text-lg font-bold text-blue-600 dark:text-blue-400">
+                        <p className="text-sm sm:text-lg font-bold text-blue-600 dark:text-blue-400">
                           {activity.distanceKm}
                         </p>
-                        <p className="text-xs text-gray-500">km</p>
+                        <p className="text-[10px] sm:text-xs text-gray-500">km</p>
                       </div>
                       <div>
-                        <p className="text-lg font-bold text-purple-600 dark:text-purple-400">
+                        <p className="text-sm sm:text-lg font-bold text-purple-600 dark:text-purple-400">
                           {activity.formattedTime}
                         </p>
-                        <p className="text-xs text-gray-500">tiempo</p>
+                        <p className="text-[10px] sm:text-xs text-gray-500">tiempo</p>
                       </div>
                       <div>
-                        <p className="text-lg font-bold text-green-600 dark:text-green-400">
+                        <p className="text-sm sm:text-lg font-bold text-green-600 dark:text-green-400">
                           {activity.pace}
                         </p>
-                        <p className="text-xs text-gray-500">ritmo</p>
+                        <p className="text-[10px] sm:text-xs text-gray-500">ritmo</p>
                       </div>
                       <div>
-                        <p className="text-lg font-bold text-orange-600 dark:text-orange-400">
+                        <p className="text-sm sm:text-lg font-bold text-orange-600 dark:text-orange-400">
                           {activity.total_elevation_gain || 0}
                         </p>
-                        <p className="text-xs text-gray-500">m+</p>
+                        <p className="text-[10px] sm:text-xs text-gray-500">m+</p>
                       </div>
                     </div>
 
@@ -805,6 +866,14 @@ const AthleteProfile = () => {
                     </div>
                   </div>
                 ))}
+                {visibleActivities < stravaActivities.length && (
+                  <button
+                    onClick={() => setVisibleActivities(prev => Math.min(prev + 5, stravaActivities.length))}
+                    className="w-full py-3 text-sm font-medium text-orange-600 dark:text-orange-400 bg-orange-50 dark:bg-orange-900/20 hover:bg-orange-100 dark:hover:bg-orange-900/30 rounded-xl transition-colors"
+                  >
+                    Ver más ({stravaActivities.length - visibleActivities} restantes)
+                  </button>
+                )}
               </div>
             )}
           </div>
@@ -815,7 +884,7 @@ const AthleteProfile = () => {
           initial={{ opacity: 0, y: 20 }}
           animate={{ opacity: 1, y: 0 }}
           transition={{ delay: 0.2 }}
-          className="col-span-12 lg:col-span-5 bg-white dark:bg-gray-800 rounded-2xl shadow-sm border border-gray-200 dark:border-gray-700 overflow-hidden"
+          className="col-span-12 lg:col-span-5 bg-white dark:bg-gray-800 rounded-2xl shadow-sm border border-gray-200 dark:border-gray-700 overflow-hidden flex flex-col"
         >
           {/* Personal Data */}
           {(athlete.date_of_birth || athlete.weight || athlete.height) && (
@@ -867,7 +936,7 @@ const AthleteProfile = () => {
             </button>
           </div>
 
-          <div className="p-4 max-h-[400px] overflow-y-auto custom-scrollbar">
+          <div className="p-4 flex-1 overflow-y-auto max-h-[600px] custom-scrollbar">
             {stravaMetrics ? (
               <>
                 {/* Main Strava Stats */}

@@ -609,13 +609,13 @@ const Training = () => {
                   onClick={() => loadActivityDetail(activity)}
                   className="p-4 bg-white dark:bg-gray-800 rounded-xl hover:shadow-md cursor-pointer transition-all border-2 border-gray-200 dark:border-gray-700 hover:border-orange-400 dark:hover:border-orange-500"
                 >
-                  <div className="flex items-start justify-between mb-2">
-                    <div className="flex items-center gap-2">
-                      <div>
-                        <h4 className="font-semibold text-gray-900 dark:text-white">
+                  <div className="flex items-start justify-between mb-2 gap-2">
+                    <div className="flex items-center gap-2 min-w-0">
+                      <div className="min-w-0">
+                        <h4 className="font-semibold text-gray-900 dark:text-white text-sm sm:text-base truncate">
                           {activity.name}
                         </h4>
-                        <p className="text-xs text-gray-500 dark:text-gray-400">
+                        <p className="text-[10px] sm:text-xs text-gray-500 dark:text-gray-400">
                           {new Date(activity.date).toLocaleDateString('es-ES', {
                             weekday: 'short',
                             day: 'numeric',
@@ -641,37 +641,37 @@ const Training = () => {
                       )}
                     </div>
                     {activity.has_heartrate && (
-                      <span className="flex items-center text-xs text-red-500">
+                      <span className="flex items-center text-[10px] sm:text-xs text-red-500 flex-shrink-0 whitespace-nowrap">
                         <FiHeart className="w-3 h-3 mr-1" />
                         {activity.average_heartrate} bpm
                       </span>
                     )}
                   </div>
 
-                  <div className="grid grid-cols-4 gap-3 text-center">
+                  <div className="grid grid-cols-4 gap-1 sm:gap-3 text-center">
                     <div>
-                      <p className="text-lg font-bold text-blue-600 dark:text-blue-400">
+                      <p className="text-sm sm:text-lg font-bold text-blue-600 dark:text-blue-400">
                         {activity.distanceKm}
                       </p>
-                      <p className="text-xs text-gray-500">km</p>
+                      <p className="text-[10px] sm:text-xs text-gray-500">km</p>
                     </div>
                     <div>
-                      <p className="text-lg font-bold text-purple-600 dark:text-purple-400">
+                      <p className="text-sm sm:text-lg font-bold text-purple-600 dark:text-purple-400">
                         {activity.formattedTime}
                       </p>
-                      <p className="text-xs text-gray-500">tiempo</p>
+                      <p className="text-[10px] sm:text-xs text-gray-500">tiempo</p>
                     </div>
                     <div>
-                      <p className="text-lg font-bold text-green-600 dark:text-green-400">
+                      <p className="text-sm sm:text-lg font-bold text-green-600 dark:text-green-400">
                         {activity.pace}
                       </p>
-                      <p className="text-xs text-gray-500">ritmo</p>
+                      <p className="text-[10px] sm:text-xs text-gray-500">ritmo</p>
                     </div>
                     <div>
-                      <p className="text-lg font-bold text-orange-600 dark:text-orange-400">
+                      <p className="text-sm sm:text-lg font-bold text-orange-600 dark:text-orange-400">
                         {activity.total_elevation_gain || 0}
                       </p>
-                      <p className="text-xs text-gray-500">m+</p>
+                      <p className="text-[10px] sm:text-xs text-gray-500">m+</p>
                     </div>
                   </div>
 

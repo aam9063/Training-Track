@@ -317,42 +317,43 @@ const Dashboard = () => {
           <div className="bg-white dark:bg-gray-800 rounded-xl shadow-sm border border-gray-200 dark:border-gray-700 p-4 sm:p-6">
             {/* Header */}
             <div className="flex items-center justify-between mb-4">
-              <h2 className="text-xl font-bold text-gray-900 dark:text-white flex items-center">
-                <FiCalendar className="w-5 h-5 mr-2" />
-                Agenda Semanal
+              <h2 className="text-base sm:text-xl font-bold text-gray-900 dark:text-white flex items-center">
+                <FiCalendar className="w-5 h-5 mr-2 flex-shrink-0" />
+                <span className="truncate">Agenda Semanal</span>
               </h2>
               <Link
                 to="/dashboard/calendar"
-                className="text-sm text-blue-600 hover:text-blue-700 dark:text-blue-400 font-medium flex items-center"
+                className="text-xs sm:text-sm text-blue-600 hover:text-blue-700 dark:text-blue-400 font-medium flex items-center whitespace-nowrap ml-2"
               >
-                Ver calendario
+                <span className="hidden sm:inline">Ver calendario</span>
+                <span className="sm:hidden">Ver</span>
                 <FiArrowRight className="w-4 h-4 ml-1" />
               </Link>
             </div>
 
             {/* Week Navigation */}
             <div className="flex items-center justify-between mb-4">
-              <div className="flex items-center space-x-2">
+              <div className="flex items-center space-x-1 sm:space-x-2">
                 <button
                   onClick={goToPreviousWeek}
-                  className="p-1.5 hover:bg-gray-100 dark:hover:bg-gray-700 rounded-lg transition-colors"
+                  className="p-1 sm:p-1.5 hover:bg-gray-100 dark:hover:bg-gray-700 rounded-lg transition-colors"
                 >
-                  <FiChevronLeft className="w-5 h-5 text-gray-600 dark:text-gray-400" />
+                  <FiChevronLeft className="w-4 h-4 sm:w-5 sm:h-5 text-gray-600 dark:text-gray-400" />
                 </button>
-                <span className="text-sm font-medium text-gray-700 dark:text-gray-300 min-w-[160px] text-center">
+                <span className="text-xs sm:text-sm font-medium text-gray-700 dark:text-gray-300 text-center whitespace-nowrap">
                   {getWeekRangeLabel()}
                 </span>
                 <button
                   onClick={goToNextWeek}
-                  className="p-1.5 hover:bg-gray-100 dark:hover:bg-gray-700 rounded-lg transition-colors"
+                  className="p-1 sm:p-1.5 hover:bg-gray-100 dark:hover:bg-gray-700 rounded-lg transition-colors"
                 >
-                  <FiChevronRight className="w-5 h-5 text-gray-600 dark:text-gray-400" />
+                  <FiChevronRight className="w-4 h-4 sm:w-5 sm:h-5 text-gray-600 dark:text-gray-400" />
                 </button>
               </div>
               {!isCurrentWeek() && (
                 <button
                   onClick={goToCurrentWeek}
-                  className="text-xs px-3 py-1.5 bg-blue-100 dark:bg-blue-900/30 text-blue-700 dark:text-blue-400 rounded-full font-medium hover:bg-blue-200 dark:hover:bg-blue-900/50 transition-colors"
+                  className="text-xs px-2 sm:px-3 py-1 sm:py-1.5 bg-blue-100 dark:bg-blue-900/30 text-blue-700 dark:text-blue-400 rounded-full font-medium hover:bg-blue-200 dark:hover:bg-blue-900/50 transition-colors"
                 >
                   Hoy
                 </button>

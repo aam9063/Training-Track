@@ -14,6 +14,7 @@ import {
   FiZap,
   FiBarChart2,
 } from 'react-icons/fi';
+import { BsStars } from 'react-icons/bs';
 import { Line, Bar, Doughnut } from 'react-chartjs-2';
 import {
   Chart as ChartJS,
@@ -56,6 +57,8 @@ import {
   calculateStravaMetrics,
   calculatePeriodComparison,
 } from '../../services/stravaService';
+import { generatePerformanceReport } from '../../services/aiReportService';
+import { generateReportPDF } from '../../lib/reportPdfExport';
 
 const AthleteMetricsView = () => {
   const { athleteId } = useParams();
@@ -69,6 +72,8 @@ const AthleteMetricsView = () => {
   const [metrics, setMetrics] = useState(null);
   const [periodComparison, setPeriodComparison] = useState(null);
   const [selectedPeriod, setSelectedPeriod] = useState('4weeks'); // 4weeks, 8weeks, 12weeks
+  const [generatingReport, setGeneratingReport] = useState(false);
+  const [reportError, setReportError] = useState(null);
 
   // Load athlete data
   useEffect(() => {
@@ -279,6 +284,44 @@ const AthleteMetricsView = () => {
     return days;
   };
 
+  // AI Report generation handler
+  const handleGenerateReport = async () => {
+    setGeneratingReport(true);
+    setReportError(null);
+
+    try {
+      // Fetch full athlete details (with personal_bests, paces, VAM, Conconi)
+      const { data: athleteDetails, error: detailsError } = await getAthleteDetails(athleteId);
+      if (detailsError) throw new Error('Error al obtener datos del atleta');
+
+      // Map selectedPeriod to weeks
+      const periodWeeks = selectedPeriod === '4weeks' ? 4 : selectedPeriod === '8weeks' ? 8 : 12;
+
+      // Generate AI analysis via Edge Function (also saves to DB)
+      const { reportData, aiAnalysis } = await generatePerformanceReport(
+        athleteDetails,
+        activities,
+        periodWeeks
+      );
+
+      // Generate and download PDF
+      generateReportPDF({
+        athlete: athleteDetails,
+        athleteName,
+        reportData,
+        aiAnalysis,
+        generatedDate: new Date(),
+      });
+    } catch (error) {
+      console.error('Error generating report:', error);
+      setReportError(error.message || 'Error al generar el informe');
+      // Auto-dismiss after 10 seconds
+      setTimeout(() => setReportError(null), 10000);
+    } finally {
+      setGeneratingReport(false);
+    }
+  };
+
   const weeklyData = getWeeklyChartData();
   const activityTypes = getActivityTypeDistribution();
   const dailyData = getDailyChartData();
@@ -315,27 +358,67 @@ const AthleteMetricsView = () => {
           </div>
         </div>
 
-        {/* Period Selector */}
-        <div className="flex items-center space-x-1 sm:space-x-2 bg-white dark:bg-gray-800 rounded-lg p-1 border border-gray-200 dark:border-gray-700 self-start sm:self-auto">
-          {[
-            { value: '4weeks', label: '4', labelFull: 'Semanas' },
-            { value: '8weeks', label: '8', labelFull: 'Semanas' },
-            { value: '12weeks', label: '12', labelFull: 'Semanas' },
-          ].map((period) => (
-            <button
-              key={period.value}
-              onClick={() => setSelectedPeriod(period.value)}
-              className={`px-2 sm:px-3 py-1.5 text-xs sm:text-sm font-medium rounded-md transition-colors whitespace-nowrap ${
-                selectedPeriod === period.value
-                  ? 'bg-blue-600 text-white'
-                  : 'text-gray-600 dark:text-gray-400 hover:bg-gray-100 dark:hover:bg-gray-700'
-              }`}
-            >
-              {period.label} <span className="hidden sm:inline">{period.labelFull}</span><span className="sm:hidden">Sem.</span>
-            </button>
-          ))}
+        <div className="flex items-center gap-2 self-start sm:self-auto">
+          {/* Period Selector */}
+          <div className="flex items-center space-x-1 sm:space-x-2 bg-white dark:bg-gray-800 rounded-lg p-1 border border-gray-200 dark:border-gray-700">
+            {[
+              { value: '4weeks', label: '4', labelFull: 'Semanas' },
+              { value: '8weeks', label: '8', labelFull: 'Semanas' },
+              { value: '12weeks', label: '12', labelFull: 'Semanas' },
+            ].map((period) => (
+              <button
+                key={period.value}
+                onClick={() => setSelectedPeriod(period.value)}
+                className={`px-2 sm:px-3 py-1.5 text-xs sm:text-sm font-medium rounded-md transition-colors whitespace-nowrap ${
+                  selectedPeriod === period.value
+                    ? 'bg-sky-600 text-white'
+                    : 'text-gray-600 dark:text-gray-400 hover:bg-gray-100 dark:hover:bg-gray-700'
+                }`}
+              >
+                {period.label} <span className="hidden sm:inline">{period.labelFull}</span><span className="sm:hidden">Sem.</span>
+              </button>
+            ))}
+          </div>
+
+          {/* AI Report Button */}
+          <button
+            onClick={handleGenerateReport}
+            disabled={!stravaConnected || generatingReport || !activities.length}
+            className="flex items-center gap-1.5 px-3 py-2 bg-gradient-to-r from-sky-600 to-sky-700 hover:from-sky-700 hover:to-sky-800 text-white text-xs sm:text-sm font-medium rounded-lg shadow-sm hover:shadow-md disabled:opacity-50 disabled:cursor-not-allowed transition-all"
+            title="Generar informe de rendimiento con IA"
+          >
+            {generatingReport ? (
+              <>
+                <FiLoader className="w-4 h-4 animate-spin" />
+                <span className="hidden sm:inline">Generando...</span>
+              </>
+            ) : (
+              <>
+                <BsStars className="w-4 h-4" />
+                <span className="hidden sm:inline">Informe IA</span>
+              </>
+            )}
+          </button>
         </div>
       </div>
+
+      {/* Report Error Banner */}
+      {reportError && (
+        <motion.div
+          initial={{ opacity: 0, y: -10 }}
+          animate={{ opacity: 1, y: 0 }}
+          exit={{ opacity: 0 }}
+          className="mb-4 p-3 bg-red-50 dark:bg-red-900/20 border border-red-200 dark:border-red-800 rounded-xl flex items-center justify-between"
+        >
+          <p className="text-sm text-red-600 dark:text-red-400">{reportError}</p>
+          <button
+            onClick={() => setReportError(null)}
+            className="text-red-400 hover:text-red-600 dark:hover:text-red-300 ml-3"
+          >
+            <span className="text-lg leading-none">&times;</span>
+          </button>
+        </motion.div>
+      )}
 
       {!stravaConnected ? (
         <div className="bg-white dark:bg-gray-800 rounded-2xl p-12 text-center">

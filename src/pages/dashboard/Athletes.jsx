@@ -1,4 +1,4 @@
-import { useState, useEffect } from 'react';
+import { useState, useEffect, useCallback } from 'react';
 import { Link } from 'react-router-dom';
 import { useAuth } from '../../contexts/AuthContext';
 import { motion, AnimatePresence } from 'framer-motion';
@@ -40,7 +40,21 @@ const Athletes = () => {
   const [conconiModal, setConconiModal] = useState({ show: false, athlete: null });
   const [vamModal, setVamModal] = useState({ show: false, athlete: null });
   const [testMenuAthleteId, setTestMenuAthleteId] = useState(null);
+  const [testMenuPos, setTestMenuPos] = useState({ top: 0, left: 0 });
   const [processingRequest, setProcessingRequest] = useState(null);
+
+  const openTestMenu = useCallback((athleteId, e) => {
+    if (testMenuAthleteId === athleteId) {
+      setTestMenuAthleteId(null);
+      return;
+    }
+    const rect = e.currentTarget.getBoundingClientRect();
+    setTestMenuPos({
+      top: rect.top - 4,
+      left: rect.right,
+    });
+    setTestMenuAthleteId(athleteId);
+  }, [testMenuAthleteId]);
 
   // Get unique race distances for filter
   const raceDistances = ['all', ...new Set(athletes.flatMap(a => a.raceDistances || []))];
@@ -293,7 +307,7 @@ const Athletes = () => {
       )}
 
       {/* Athletes Table */}
-      <div className="bg-white dark:bg-gray-800 rounded-xl shadow-sm border border-gray-200 dark:border-gray-700 overflow-hidden">
+      <div className="bg-white dark:bg-gray-800 rounded-xl shadow-sm border border-gray-200 dark:border-gray-700">
         {filteredAthletes.length === 0 ? (
           <div className="text-center py-16">
             <FiUser className="w-16 h-16 text-gray-300 dark:text-gray-600 mx-auto mb-4" />
@@ -307,7 +321,7 @@ const Athletes = () => {
             </p>
           </div>
         ) : (
-          <div className="overflow-x-auto">
+          <div className="overflow-x-auto overflow-y-visible">
             <table className="w-full">
               <thead className="bg-gray-50 dark:bg-gray-700 border-b border-gray-200 dark:border-gray-600">
                 <tr>
@@ -407,42 +421,13 @@ const Athletes = () => {
                           <FiBarChart2 className="w-5 h-5" />
                         </Link>
                         
-                        <div className="relative">
-                          <button
-                            onClick={() => setTestMenuAthleteId(testMenuAthleteId === athlete.id ? null : athlete.id)}
-                            className="p-2 text-amber-600 hover:bg-amber-50 dark:hover:bg-amber-900/20 rounded-lg transition-colors"
-                            title="Tests"
-                          >
-                            <FiFileText className="w-5 h-5" />
-                          </button>
-                          {testMenuAthleteId === athlete.id && (
-                            <>
-                              <div className="fixed inset-0 z-40" onClick={() => setTestMenuAthleteId(null)} />
-                              <div className="absolute right-0 top-full mt-1 z-50 bg-white dark:bg-gray-800 rounded-xl shadow-lg border border-gray-200 dark:border-gray-700 overflow-hidden min-w-[170px]">
-                                <button
-                                  onClick={() => {
-                                    setTestMenuAthleteId(null);
-                                    setConconiModal({ show: true, athlete });
-                                  }}
-                                  className="w-full px-4 py-2.5 text-left text-sm text-gray-700 dark:text-gray-300 hover:bg-amber-50 dark:hover:bg-amber-900/20 flex items-center gap-2 transition-colors"
-                                >
-                                  <span className="w-2 h-2 rounded-full bg-amber-500" />
-                                  Test de Conconi
-                                </button>
-                                <button
-                                  onClick={() => {
-                                    setTestMenuAthleteId(null);
-                                    setVamModal({ show: true, athlete });
-                                  }}
-                                  className="w-full px-4 py-2.5 text-left text-sm text-gray-700 dark:text-gray-300 hover:bg-purple-50 dark:hover:bg-purple-900/20 flex items-center gap-2 transition-colors"
-                                >
-                                  <span className="w-2 h-2 rounded-full bg-purple-500" />
-                                  Test VAM
-                                </button>
-                              </div>
-                            </>
-                          )}
-                        </div>
+                        <button
+                          onClick={(e) => openTestMenu(athlete.id, e)}
+                          className="p-2 text-amber-600 hover:bg-amber-50 dark:hover:bg-amber-900/20 rounded-lg transition-colors"
+                          title="Tests"
+                        >
+                          <FiFileText className="w-5 h-5" />
+                        </button>
                         
                         <button
                           onClick={() => setDeleteModal({ show: true, athlete })}
@@ -460,6 +445,40 @@ const Athletes = () => {
           </div>
         )}
       </div>
+
+      {/* Test Menu (fixed position to avoid overflow clipping) */}
+      {testMenuAthleteId && (
+        <>
+          <div className="fixed inset-0 z-40" onClick={() => setTestMenuAthleteId(null)} />
+          <div
+            className="fixed z-50 bg-white dark:bg-gray-800 rounded-xl shadow-lg border border-gray-200 dark:border-gray-700 overflow-hidden min-w-[170px]"
+            style={{ top: testMenuPos.top, left: testMenuPos.left, transform: 'translate(-100%, -100%)' }}
+          >
+            <button
+              onClick={() => {
+                const athlete = athletes.find(a => a.id === testMenuAthleteId);
+                setTestMenuAthleteId(null);
+                if (athlete) setConconiModal({ show: true, athlete });
+              }}
+              className="w-full px-4 py-2.5 text-left text-sm text-gray-700 dark:text-gray-300 hover:bg-amber-50 dark:hover:bg-amber-900/20 flex items-center gap-2 transition-colors"
+            >
+              <span className="w-2 h-2 rounded-full bg-amber-500" />
+              Test de Conconi
+            </button>
+            <button
+              onClick={() => {
+                const athlete = athletes.find(a => a.id === testMenuAthleteId);
+                setTestMenuAthleteId(null);
+                if (athlete) setVamModal({ show: true, athlete });
+              }}
+              className="w-full px-4 py-2.5 text-left text-sm text-gray-700 dark:text-gray-300 hover:bg-purple-50 dark:hover:bg-purple-900/20 flex items-center gap-2 transition-colors"
+            >
+              <span className="w-2 h-2 rounded-full bg-purple-500" />
+              Test VAM
+            </button>
+          </div>
+        </>
+      )}
 
       {/* Delete Confirmation Modal */}
       <AnimatePresence>

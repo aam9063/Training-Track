@@ -1,58 +1,36 @@
 import { motion, useInView } from 'framer-motion';
 import { useRef } from 'react';
-import { Swiper, SwiperSlide } from 'swiper/react';
-import { Autoplay, Pagination, Navigation } from 'swiper/modules';
-import { HiStar } from 'react-icons/hi';
-
-// Import Swiper styles
-import 'swiper/css';
-import 'swiper/css/pagination';
-import 'swiper/css/navigation';
+import { HiLightningBolt, HiUserGroup, HiChartBar, HiChatAlt2 } from 'react-icons/hi';
+import { BsStars } from 'react-icons/bs';
 
 export default function Testimonials() {
   const ref = useRef(null);
   const isInView = useInView(ref, { once: true, margin: '-100px' });
 
-  const testimonials = [
+  const reasons = [
     {
-      name: 'Carlos Mendoza',
-      role: 'Entrenador Nacional de Medio Fondo',
-      image: 'https://randomuser.me/api/portraits/men/32.jpg',
-      rating: 5,
-      text: 'TrainingTrack Pro ha revolucionado la forma en que gestiono a mis 20 atletas. El análisis de datos me permite tomar decisiones más inteligentes y los resultados hablan por sí solos.',
-      specialty: '800m - 1500m',
+      icon: HiChartBar,
+      title: 'Datos reales, decisiones reales',
+      description:
+        'Conecta Strava, analiza métricas de rendimiento y toma decisiones basadas en datos, no en suposiciones.',
     },
     {
-      name: 'María González',
-      role: 'Atleta Internacional',
-      image: 'https://randomuser.me/api/portraits/women/44.jpg',
-      rating: 5,
-      text: 'Como atleta, poder ver mi progreso en tiempo real y comunicarme directamente con mi entrenador ha marcado la diferencia en mi preparación para competencias.',
-      specialty: '5000m - 10000m',
+      icon: BsStars,
+      title: 'Informes con IA',
+      description:
+        'Genera informes exhaustivos de rendimiento con inteligencia artificial. Análisis de carga, riesgo de lesión y recomendaciones.',
     },
     {
-      name: 'Roberto Silva',
-      role: 'Entrenador de Maratón',
-      image: 'https://randomuser.me/api/portraits/men/52.jpg',
-      rating: 5,
-      text: 'La planificación de entrenamientos es increíblemente intuitiva. Puedo crear planes personalizados para cada atleta en minutos y ajustarlos sobre la marcha.',
-      specialty: '21k - Maratón',
+      icon: HiUserGroup,
+      title: 'Hecho para entrenadores',
+      description:
+        'Gestiona todos tus atletas desde un solo panel. Planifica sesiones, comunica y analiza sin cambiar de herramienta.',
     },
     {
-      name: 'Ana Martínez',
-      role: 'Atleta de Medio Fondo',
-      image: 'https://randomuser.me/api/portraits/women/68.jpg',
-      rating: 5,
-      text: 'Las gráficas de rendimiento son espectaculares. Puedo ver exactamente dónde estoy mejorando y qué aspectos necesito trabajar más.',
-      specialty: '400m - 800m',
-    },
-    {
-      name: 'Luis Hernández',
-      role: 'Entrenador Universitario',
-      image: 'https://randomuser.me/api/portraits/men/67.jpg',
-      rating: 5,
-      text: 'Gestionar un equipo universitario nunca fue tan fácil. TrainingTrack Pro centraliza todo: entrenamientos, comunicación y análisis. Es indispensable.',
-      specialty: 'Equipo Universitario',
+      icon: HiChatAlt2,
+      title: 'Comunicación directa',
+      description:
+        'Mensajería integrada entre entrenador y atleta. Sin grupos de WhatsApp, sin perder información.',
     },
   ];
 
@@ -82,120 +60,78 @@ export default function Testimonials() {
             transition={{ duration: 0.5 }}
             className="inline-block px-4 py-2 bg-sky-100 dark:bg-sky-900/30 text-sky-600 dark:text-sky-400 rounded-full text-sm font-semibold mb-4"
           >
-            TESTIMONIOS
+            BETA ABIERTA
           </motion.span>
 
           <h2 className="text-4xl sm:text-5xl font-bold text-gray-900 dark:text-white mb-6">
-            Lo que dicen nuestros
+            Construido para
             <span className="block text-sky-600 dark:text-sky-400">
-              entrenadores y atletas
+              entrenadores exigentes
             </span>
           </h2>
 
           <p className="text-xl text-gray-600 dark:text-gray-300 max-w-3xl mx-auto">
-            Únete a la comunidad de profesionales que están transformando
-            el entrenamiento de atletismo
+            TrainingTrack Pro nace de la necesidad real de un entrenador.
+            Sin datos inflados, sin promesas vacías. Pruébalo y decide tú.
           </p>
         </motion.div>
 
-        {/* Testimonials Slider */}
+        {/* Reasons Grid */}
         <motion.div
           initial={{ opacity: 0, y: 50 }}
           animate={isInView ? { opacity: 1, y: 0 } : { opacity: 0, y: 50 }}
           transition={{ duration: 0.6, delay: 0.3 }}
-          className="relative"
+          className="grid grid-cols-1 md:grid-cols-2 gap-6 mb-16"
         >
-          <Swiper
-            modules={[Autoplay, Pagination, Navigation]}
-            spaceBetween={30}
-            slidesPerView={1}
-            pagination={{
-              clickable: true,
-              dynamicBullets: true,
-            }}
-            navigation={true}
-            autoplay={{
-              delay: 5000,
-              disableOnInteraction: false,
-            }}
-            breakpoints={{
-              640: {
-                slidesPerView: 1,
-              },
-              768: {
-                slidesPerView: 2,
-              },
-              1024: {
-                slidesPerView: 3,
-              },
-            }}
-            className="pb-16"
-          >
-            {testimonials.map((testimonial, index) => (
-              <SwiperSlide key={index}>
-                <div className="bg-white dark:bg-gray-800 rounded-2xl p-8 shadow-xl hover:shadow-2xl transition-all duration-300 h-full border border-gray-100 dark:border-gray-700">
-                  {/* Rating */}
-                  <div className="flex items-center mb-4">
-                    {[...Array(testimonial.rating)].map((_, i) => (
-                      <HiStar key={i} className="w-5 h-5 text-yellow-400" />
-                    ))}
+          {reasons.map((reason, index) => {
+            const Icon = reason.icon;
+            return (
+              <motion.div
+                key={index}
+                initial={{ opacity: 0, y: 20 }}
+                animate={isInView ? { opacity: 1, y: 0 } : { opacity: 0, y: 20 }}
+                transition={{ duration: 0.5, delay: 0.3 + index * 0.1 }}
+                className="bg-white dark:bg-gray-800 rounded-2xl p-8 shadow-xl hover:shadow-2xl transition-all duration-300 border border-gray-100 dark:border-gray-700 group"
+              >
+                <div className="flex items-start gap-5">
+                  <div className="w-12 h-12 rounded-xl bg-sky-100 dark:bg-sky-900/40 flex items-center justify-center flex-shrink-0 group-hover:scale-110 transition-transform duration-300">
+                    <Icon className="w-6 h-6 text-sky-600 dark:text-sky-400" />
                   </div>
-
-                  {/* Testimonial Text */}
-                  <p className="text-gray-600 dark:text-gray-300 mb-6 leading-relaxed italic">
-                    "{testimonial.text}"
-                  </p>
-
-                  {/* Author Info */}
-                  <div className="flex items-center space-x-4 pt-4 border-t border-gray-200 dark:border-gray-700">
-                    <img
-                      src={testimonial.image}
-                      alt={testimonial.name}
-                      className="w-14 h-14 rounded-full object-cover ring-2 ring-sky-500"
-                    />
-                    <div>
-                      <h4 className="font-bold text-gray-900 dark:text-white">
-                        {testimonial.name}
-                      </h4>
-                      <p className="text-sm text-gray-600 dark:text-gray-400">
-                        {testimonial.role}
-                      </p>
-                      <p className="text-xs text-sky-600 dark:text-sky-400 font-medium mt-1">
-                        {testimonial.specialty}
-                      </p>
-                    </div>
+                  <div>
+                    <h3 className="text-lg font-bold text-gray-900 dark:text-white mb-2">
+                      {reason.title}
+                    </h3>
+                    <p className="text-gray-600 dark:text-gray-400 leading-relaxed">
+                      {reason.description}
+                    </p>
                   </div>
                 </div>
-              </SwiperSlide>
-            ))}
-          </Swiper>
+              </motion.div>
+            );
+          })}
         </motion.div>
 
-        {/* Stats Section */}
+        {/* CTA Banner */}
         <motion.div
           initial={{ opacity: 0, y: 30 }}
           animate={isInView ? { opacity: 1, y: 0 } : { opacity: 0, y: 30 }}
           transition={{ duration: 0.6, delay: 0.6 }}
-          className="mt-16 grid grid-cols-2 md:grid-cols-4 gap-6"
+          className="bg-gradient-to-r from-sky-600 to-sky-700 rounded-2xl p-8 md:p-12 text-center"
         >
-          {[
-            { number: '4.9/5', label: 'Calificación Promedio' },
-            { number: '500+', label: 'Reseñas Positivas' },
-            { number: '98%', label: 'Tasa de Retención' },
-            { number: '24/7', label: 'Soporte Disponible' },
-          ].map((stat, index) => (
-            <div
-              key={index}
-              className="text-center bg-white dark:bg-gray-800 rounded-xl p-6 shadow-lg"
-            >
-              <div className="text-3xl font-bold text-sky-600 dark:text-sky-400 mb-2">
-                {stat.number}
-              </div>
-              <div className="text-sm text-gray-600 dark:text-gray-400">
-                {stat.label}
-              </div>
-            </div>
-          ))}
+          <HiLightningBolt className="w-10 h-10 text-sky-200 mx-auto mb-4" />
+          <h3 className="text-2xl md:text-3xl font-bold text-white mb-3">
+            Estamos en fase beta
+          </h3>
+          <p className="text-sky-100 text-lg max-w-2xl mx-auto mb-6">
+            Todas las funcionalidades disponibles de forma gratuita.
+            Regístrate, prueba la plataforma y ayúdanos a mejorarla con tu feedback.
+          </p>
+          <a
+            href="/register"
+            className="inline-flex items-center gap-2 px-8 py-3 bg-white text-sky-700 font-semibold rounded-xl hover:bg-sky-50 transition-colors shadow-lg"
+          >
+            Crear cuenta gratis
+          </a>
         </motion.div>
       </div>
     </section>

@@ -46,13 +46,14 @@ export default function FinalCTA() {
 
             {/* CTA Buttons */}
             <div className="flex flex-col sm:flex-row gap-4 mb-6">
-              <motion.button
+              <motion.a
+                href="/register"
                 whileHover={{ scale: 1.05 }}
                 whileTap={{ scale: 0.95 }}
-                className="px-8 py-4 bg-white text-sky-600 rounded-full font-semibold text-lg shadow-xl hover:shadow-2xl transition-all duration-200"
+                className="px-8 py-4 bg-white text-sky-600 rounded-full font-semibold text-lg shadow-xl hover:shadow-2xl transition-all duration-200 text-center"
               >
                 Comenzar prueba gratuita
-              </motion.button>
+              </motion.a>
 
               <motion.button
                 whileHover={{ scale: 1.05 }}

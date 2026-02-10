@@ -175,11 +175,11 @@ export default function About() {
           transition={{ duration: 0.7, delay: 0.5 }}
           className="relative"
         >
-          <div className="bg-gradient-to-br from-gray-900 via-gray-800 to-gray-900 dark:from-gray-800 dark:via-gray-700 dark:to-gray-800 rounded-3xl p-8 md:p-12 lg:p-16 overflow-hidden">
+          <div className="bg-gradient-to-br from-gray-100 via-gray-50 to-gray-100 dark:from-gray-800 dark:via-gray-700 dark:to-gray-800 rounded-3xl p-8 md:p-12 lg:p-16 overflow-hidden border border-gray-200 dark:border-gray-700">
             {/* Background pattern */}
-            <div className="absolute inset-0 opacity-10">
+            <div className="absolute inset-0 opacity-10 dark:opacity-10">
               <div className="absolute inset-0" style={{
-                backgroundImage: 'radial-gradient(circle at 2px 2px, white 1px, transparent 0)',
+                backgroundImage: 'radial-gradient(circle at 2px 2px, currentColor 1px, transparent 0)',
                 backgroundSize: '32px 32px'
               }} />
             </div>
@@ -187,17 +187,17 @@ export default function About() {
             <div className="relative grid lg:grid-cols-2 gap-12 items-center">
               {/* Left content */}
               <div>
-                <div className="inline-flex items-center gap-2 px-3 py-1.5 bg-white/10 rounded-full text-sm text-white/80 mb-6">
+                <div className="inline-flex items-center gap-2 px-3 py-1.5 bg-sky-100 dark:bg-white/10 rounded-full text-sm text-sky-600 dark:text-white/80 mb-6">
                   <HiRefresh className="w-4 h-4" />
                   Integraciones
                 </div>
 
-                <h3 className="text-3xl md:text-4xl font-bold text-white mb-6 leading-tight">
+                <h3 className="text-3xl md:text-4xl font-bold text-gray-900 dark:text-white mb-6 leading-tight">
                   Conectado con tus
-                  <span className="text-sky-400"> dispositivos favoritos</span>
+                  <span className="text-sky-600 dark:text-sky-400"> dispositivos favoritos</span>
                 </h3>
 
-                <p className="text-gray-300 text-lg mb-8 leading-relaxed">
+                <p className="text-gray-600 dark:text-gray-300 text-lg mb-8 leading-relaxed">
                   Sincroniza automáticamente con las principales plataformas.
                   Carga los entrenamientos directamente en tu reloj y recibe
                   los datos una vez completados.
@@ -205,38 +205,38 @@ export default function About() {
 
                 <div className="space-y-4">
                   <div className="flex items-start gap-3">
-                    <div className="flex-shrink-0 w-6 h-6 rounded-full bg-green-500/20 flex items-center justify-center mt-0.5">
-                      <svg className="w-3.5 h-3.5 text-green-400" fill="none" viewBox="0 0 24 24" stroke="currentColor">
+                    <div className="flex-shrink-0 w-6 h-6 rounded-full bg-green-100 dark:bg-green-500/20 flex items-center justify-center mt-0.5">
+                      <svg className="w-3.5 h-3.5 text-green-600 dark:text-green-400" fill="none" viewBox="0 0 24 24" stroke="currentColor">
                         <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={3} d="M5 13l4 4L19 7" />
                       </svg>
                     </div>
                     <div>
-                      <p className="text-white font-medium">Envío de entrenamientos</p>
-                      <p className="text-gray-400 text-sm">Planifica en TrainingTrack Pro y aparece en tu dispositivo</p>
+                      <p className="text-gray-900 dark:text-white font-medium">Envío de entrenamientos</p>
+                      <p className="text-gray-500 dark:text-gray-400 text-sm">Planifica en TrainingTrack Pro y aparece en tu dispositivo</p>
                     </div>
                   </div>
 
                   <div className="flex items-start gap-3">
-                    <div className="flex-shrink-0 w-6 h-6 rounded-full bg-green-500/20 flex items-center justify-center mt-0.5">
-                      <svg className="w-3.5 h-3.5 text-green-400" fill="none" viewBox="0 0 24 24" stroke="currentColor">
+                    <div className="flex-shrink-0 w-6 h-6 rounded-full bg-green-100 dark:bg-green-500/20 flex items-center justify-center mt-0.5">
+                      <svg className="w-3.5 h-3.5 text-green-600 dark:text-green-400" fill="none" viewBox="0 0 24 24" stroke="currentColor">
                         <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={3} d="M5 13l4 4L19 7" />
                       </svg>
                     </div>
                     <div>
-                      <p className="text-white font-medium">Importación automática</p>
-                      <p className="text-gray-400 text-sm">Los datos se sincronizan al finalizar el entrenamiento</p>
+                      <p className="text-gray-900 dark:text-white font-medium">Importación automática</p>
+                      <p className="text-gray-500 dark:text-gray-400 text-sm">Los datos se sincronizan al finalizar el entrenamiento</p>
                     </div>
                   </div>
 
                   <div className="flex items-start gap-3">
-                    <div className="flex-shrink-0 w-6 h-6 rounded-full bg-green-500/20 flex items-center justify-center mt-0.5">
-                      <svg className="w-3.5 h-3.5 text-green-400" fill="none" viewBox="0 0 24 24" stroke="currentColor">
+                    <div className="flex-shrink-0 w-6 h-6 rounded-full bg-green-100 dark:bg-green-500/20 flex items-center justify-center mt-0.5">
+                      <svg className="w-3.5 h-3.5 text-green-600 dark:text-green-400" fill="none" viewBox="0 0 24 24" stroke="currentColor">
                         <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={3} d="M5 13l4 4L19 7" />
                       </svg>
                     </div>
                     <div>
-                      <p className="text-white font-medium">Análisis unificado</p>
-                      <p className="text-gray-400 text-sm">Toda la información centralizada en un solo lugar</p>
+                      <p className="text-gray-900 dark:text-white font-medium">Análisis unificado</p>
+                      <p className="text-gray-500 dark:text-gray-400 text-sm">Toda la información centralizada en un solo lugar</p>
                     </div>
                   </div>
                 </div>

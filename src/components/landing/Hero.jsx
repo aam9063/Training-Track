@@ -1,33 +1,12 @@
-import { useEffect, useRef } from 'react';
-import { motion } from 'framer-motion';
-import gsap from 'gsap';
-import { ScrollTrigger } from 'gsap/ScrollTrigger';
-import { HiPlay, HiCheckCircle } from 'react-icons/hi';
+import { useState } from 'react';
+import { motion, AnimatePresence } from 'framer-motion';
+import { HiPlay, HiCheckCircle, HiX } from 'react-icons/hi';
 
-// Register GSAP plugin
-gsap.registerPlugin(ScrollTrigger);
+// YouTube video ID - change this when you upload your demo video
+const YOUTUBE_VIDEO_ID = 'TU_VIDEO_ID';
 
 export default function Hero() {
-  const statsRef = useRef(null);
-
-  useEffect(() => {
-    // Animate statistics numbers on mount
-    const stats = statsRef.current.querySelectorAll('.stat-number');
-
-    stats.forEach((stat) => {
-      const target = parseInt(stat.getAttribute('data-target'));
-      gsap.to(stat, {
-        innerHTML: target,
-        duration: 2,
-        ease: 'power2.out',
-        snap: { innerHTML: 1 },
-        scrollTrigger: {
-          trigger: stat,
-          start: 'top 80%',
-        },
-      });
-    });
-  }, []);
+  const [showDemo, setShowDemo] = useState(false);
 
   const containerVariants = {
     hidden: { opacity: 0 },
@@ -162,6 +141,7 @@ export default function Hero() {
             <motion.button
               whileHover={{ scale: 1.05 }}
               whileTap={{ scale: 0.95 }}
+              onClick={() => setShowDemo(true)}
               className="px-8 py-4 bg-white dark:bg-gray-800 text-gray-900 dark:text-white rounded-xl font-semibold text-lg border-2 border-gray-200 dark:border-gray-700 hover:border-sky-600 dark:hover:border-sky-400 transition-all duration-200 flex items-center space-x-2"
             >
               <HiPlay className="w-5 h-5" />
@@ -171,39 +151,74 @@ export default function Hero() {
 
           {/* Statistics */}
           <motion.div
-            ref={statsRef}
             variants={itemVariants}
             className="grid grid-cols-1 sm:grid-cols-3 gap-8 max-w-4xl mx-auto"
           >
             <div className="bg-white/50 dark:bg-gray-800/50 backdrop-blur-sm rounded-2xl p-6 border border-gray-200 dark:border-gray-700">
               <div className="text-4xl font-bold text-sky-600 dark:text-sky-400 mb-2">
-                <span className="stat-number" data-target="500">0</span>+
+                800m → 42K
               </div>
               <div className="text-gray-600 dark:text-gray-400 font-medium">
-                Entrenadores Activos
+                Todas las distancias
               </div>
             </div>
 
             <div className="bg-white/50 dark:bg-gray-800/50 backdrop-blur-sm rounded-2xl p-6 border border-gray-200 dark:border-gray-700">
               <div className="text-4xl font-bold text-sky-600 dark:text-sky-400 mb-2">
-                <span className="stat-number" data-target="5000">0</span>+
+                Strava + IA
               </div>
               <div className="text-gray-600 dark:text-gray-400 font-medium">
-                Atletas Registrados
+                Análisis inteligente
               </div>
             </div>
 
             <div className="bg-white/50 dark:bg-gray-800/50 backdrop-blur-sm rounded-2xl p-6 border border-gray-200 dark:border-gray-700">
               <div className="text-4xl font-bold text-sky-600 dark:text-sky-400 mb-2">
-                <span className="stat-number" data-target="98">0</span>%
+                100%
               </div>
               <div className="text-gray-600 dark:text-gray-400 font-medium">
-                Satisfacción
+                Gratuito en Beta
               </div>
             </div>
           </motion.div>
         </motion.div>
       </div>
+
+      {/* YouTube Demo Modal */}
+      <AnimatePresence>
+        {showDemo && (
+          <motion.div
+            initial={{ opacity: 0 }}
+            animate={{ opacity: 1 }}
+            exit={{ opacity: 0 }}
+            className="fixed inset-0 z-50 flex items-center justify-center bg-black/80 backdrop-blur-sm p-4"
+            onClick={() => setShowDemo(false)}
+          >
+            <motion.div
+              initial={{ scale: 0.8, opacity: 0 }}
+              animate={{ scale: 1, opacity: 1 }}
+              exit={{ scale: 0.8, opacity: 0 }}
+              transition={{ type: 'spring', damping: 25, stiffness: 300 }}
+              className="relative w-full max-w-4xl aspect-video"
+              onClick={(e) => e.stopPropagation()}
+            >
+              <button
+                onClick={() => setShowDemo(false)}
+                className="absolute -top-12 right-0 text-white hover:text-sky-400 transition-colors"
+              >
+                <HiX className="w-8 h-8" />
+              </button>
+              <iframe
+                src={`https://www.youtube.com/embed/${YOUTUBE_VIDEO_ID}?autoplay=1&rel=0`}
+                title="TrainingTrack Demo"
+                allow="accelerometer; autoplay; clipboard-write; encrypted-media; gyroscope; picture-in-picture"
+                allowFullScreen
+                className="w-full h-full rounded-2xl shadow-2xl"
+              />
+            </motion.div>
+          </motion.div>
+        )}
+      </AnimatePresence>
 
       {/* Scroll indicator */}
       <motion.div

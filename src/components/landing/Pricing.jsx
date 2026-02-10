@@ -1,28 +1,27 @@
 import { motion, useInView } from 'framer-motion';
 import { useRef, useState } from 'react';
-import { HiCheck, HiX, HiSparkles } from 'react-icons/hi';
+import { HiCheck, HiX, HiSparkles, HiLightningBolt } from 'react-icons/hi';
 
 export default function Pricing() {
   const ref = useRef(null);
   const isInView = useInView(ref, { once: true, margin: '-100px' });
-  const [billingCycle, setBillingCycle] = useState('monthly'); // monthly or yearly
+  const [billingCycle, setBillingCycle] = useState('monthly');
 
   const plans = [
     {
       name: 'Starter',
-      description: 'Perfecto para entrenadores que empiezan',
+      description: 'Para entrenadores que empiezan',
       monthlyPrice: 29,
       yearlyPrice: 290,
-      freeTrial: '1 mes gratis',
       features: [
         { text: 'Hasta 10 atletas', included: true },
-        { text: 'Planes de entrenamiento básicos', included: true },
-        { text: 'Gráficas de progreso', included: true },
+        { text: 'Planificación semanal de entrenamientos', included: true },
+        { text: 'Métricas básicas de Strava', included: true },
         { text: 'Mensajería con atletas', included: true },
         { text: 'Soporte por email', included: true },
-        { text: 'Análisis avanzado de rendimiento', included: false },
-        { text: 'Exportación de datos', included: false },
-        { text: 'API acceso', included: false },
+        { text: 'Informes IA de rendimiento', included: false },
+        { text: 'Banco de ejercicios personalizado', included: false },
+        { text: 'Cálculos fisiológicos avanzados', included: false },
       ],
       gradient: 'from-sky-500 to-sky-600',
       popular: false,
@@ -33,14 +32,14 @@ export default function Pricing() {
       monthlyPrice: 79,
       yearlyPrice: 790,
       features: [
-        { text: 'Hasta 50 atletas', included: true },
-        { text: 'Planes de entrenamiento avanzados', included: true },
-        { text: 'Gráficas y análisis completos', included: true },
-        { text: 'Mensajería ilimitada', included: true },
-        { text: 'Soporte prioritario 24/7', included: true },
-        { text: 'Análisis avanzado de rendimiento', included: true },
-        { text: 'Exportación de datos', included: true },
-        { text: 'API acceso', included: false },
+        { text: 'Hasta 30 atletas', included: true },
+        { text: '3 informes IA por atleta/mes', included: true },
+        { text: 'Gráficas avanzadas de progreso', included: true },
+        { text: 'Banco de ejercicios personalizado', included: true },
+        { text: 'Análisis de competiciones', included: true },
+        { text: 'Exportación de datos (CSV/PDF)', included: true },
+        { text: 'Soporte prioritario', included: true },
+        { text: 'Múltiples entrenadores', included: false },
       ],
       gradient: 'from-sky-600 to-sky-700',
       popular: true,
@@ -48,17 +47,17 @@ export default function Pricing() {
     {
       name: 'Enterprise',
       description: 'Para clubes y organizaciones',
-      monthlyPrice: 199,
-      yearlyPrice: 1990,
+      monthlyPrice: 149,
+      yearlyPrice: 1490,
       features: [
         { text: 'Atletas ilimitados', included: true },
-        { text: 'Todas las características Pro', included: true },
-        { text: 'Personalización completa', included: true },
-        { text: 'Múltiples entrenadores', included: true },
+        { text: 'Informes IA ilimitados', included: true },
+        { text: 'Múltiples entrenadores por cuenta', included: true },
+        { text: 'Cálculos fisiológicos (VAM, Conconi)', included: true },
+        { text: 'Predicción de tiempos de carrera', included: true },
+        { text: 'Exportación de datos completa', included: true },
+        { text: 'API de acceso', included: true },
         { text: 'Soporte dedicado', included: true },
-        { text: 'Análisis avanzado de rendimiento', included: true },
-        { text: 'Exportación de datos', included: true },
-        { text: 'API acceso completo', included: true },
       ],
       gradient: 'from-sky-700 to-sky-900',
       popular: false,
@@ -102,10 +101,52 @@ export default function Pricing() {
           </h2>
 
           <p className="text-xl text-gray-600 dark:text-gray-300 max-w-3xl mx-auto mb-8">
-            Elige el plan perfecto para ti. Sin contratos a largo plazo, cancela cuando quieras.
+            Elige el plan perfecto para ti. Sin contratos, cancela cuando quieras.
           </p>
+        </motion.div>
 
-          {/* Billing Toggle */}
+        {/* Beta Banner */}
+        <motion.div
+          initial={{ opacity: 0, y: 20 }}
+          animate={isInView ? { opacity: 1, y: 0 } : { opacity: 0, y: 20 }}
+          transition={{ duration: 0.5, delay: 0.2 }}
+          className="bg-gradient-to-r from-sky-600 to-sky-700 dark:from-sky-700 dark:to-sky-800 rounded-2xl p-6 md:p-8 mb-12 text-center"
+        >
+          <div className="flex items-center justify-center gap-3 mb-2">
+            <HiLightningBolt className="w-6 h-6 text-sky-200" />
+            <h3 className="text-2xl md:text-3xl font-bold text-white">
+              Gratis durante la beta
+            </h3>
+          </div>
+          <p className="text-sky-100 text-lg max-w-2xl mx-auto mb-4">
+            Todas las funcionalidades de todos los planes disponibles sin coste.
+            Acceso completo mientras dure la fase beta.
+          </p>
+          <a
+            href="/register"
+            className="inline-flex items-center gap-2 px-8 py-3 bg-white text-sky-700 font-semibold rounded-xl hover:bg-sky-50 transition-colors shadow-lg"
+          >
+            Empezar gratis
+          </a>
+        </motion.div>
+
+        {/* Future Plans Label */}
+        <motion.p
+          initial={{ opacity: 0 }}
+          animate={isInView ? { opacity: 1 } : { opacity: 0 }}
+          transition={{ duration: 0.5, delay: 0.3 }}
+          className="text-center text-sm font-medium text-gray-500 dark:text-gray-400 uppercase tracking-wider mb-4"
+        >
+          Planes tras la fase beta
+        </motion.p>
+
+        {/* Billing Toggle */}
+        <motion.div
+          initial={{ opacity: 0 }}
+          animate={isInView ? { opacity: 1 } : { opacity: 0 }}
+          transition={{ duration: 0.5, delay: 0.35 }}
+          className="flex justify-center mb-10"
+        >
           <div className="inline-flex items-center space-x-4 bg-gray-100 dark:bg-gray-800 rounded-full p-1">
             <button
               onClick={() => setBillingCycle('monthly')}
@@ -127,7 +168,7 @@ export default function Pricing() {
             >
               <span>Anual</span>
               <span className="text-xs bg-green-500 text-white px-2 py-1 rounded-full">
-                Ahorra 17%
+                -17%
               </span>
             </button>
           </div>
@@ -140,7 +181,7 @@ export default function Pricing() {
               key={index}
               initial={{ opacity: 0, y: 50 }}
               animate={isInView ? { opacity: 1, y: 0 } : { opacity: 0, y: 50 }}
-              transition={{ duration: 0.5, delay: index * 0.1 }}
+              transition={{ duration: 0.5, delay: 0.4 + index * 0.1 }}
               className={`relative bg-white dark:bg-gray-800 rounded-2xl p-8 shadow-xl border-2 transition-all duration-300 ${
                 plan.popular
                   ? 'border-sky-500 dark:border-sky-400 scale-105'
@@ -152,16 +193,7 @@ export default function Pricing() {
                 <div className="absolute -top-4 left-1/2 transform -translate-x-1/2">
                   <div className="bg-sky-600 text-white px-4 py-1 rounded-full text-sm font-semibold flex items-center space-x-1">
                     <HiSparkles className="w-4 h-4" />
-                    <span>Más Popular</span>
-                  </div>
-                </div>
-              )}
-
-              {/* Free Trial Badge */}
-              {plan.freeTrial && (
-                <div className="absolute -top-4 left-1/2 transform -translate-x-1/2">
-                  <div className="bg-gradient-to-r from-green-500 to-emerald-500 text-white px-4 py-1 rounded-full text-sm font-semibold">
-                    {plan.freeTrial}
+                    <span>Recomendado</span>
                   </div>
                 </div>
               )}
@@ -180,7 +212,7 @@ export default function Pricing() {
               <div className="text-center mb-8">
                 <div className="flex items-end justify-center">
                   <span className={`text-5xl font-bold bg-gradient-to-r ${plan.gradient} bg-clip-text text-transparent`}>
-                    {billingCycle === 'monthly' ? plan.monthlyPrice : plan.yearlyPrice} €
+                    {billingCycle === 'monthly' ? plan.monthlyPrice : plan.yearlyPrice}€
                   </span>
                   <span className="text-gray-600 dark:text-gray-400 ml-2 mb-2">
                     /{billingCycle === 'monthly' ? 'mes' : 'año'}
@@ -188,7 +220,7 @@ export default function Pricing() {
                 </div>
                 {billingCycle === 'yearly' && (
                   <p className="text-sm text-green-600 dark:text-green-400 mt-2">
-                    ${Math.round((plan.monthlyPrice - plan.yearlyPrice / 12) * 12)} de ahorro anual
+                    {Math.round(plan.monthlyPrice * 12 - plan.yearlyPrice)}€ de ahorro anual
                   </p>
                 )}
               </div>
@@ -215,18 +247,17 @@ export default function Pricing() {
                 ))}
               </ul>
 
-              {/* CTA Button */}
-              <motion.button
-                whileHover={{ scale: 1.02 }}
-                whileTap={{ scale: 0.98 }}
-                className={`w-full py-4 rounded-xl font-semibold text-lg transition-all duration-200 ${
+              {/* CTA Button - All go to register (free during beta) */}
+              <a
+                href="/register"
+                className={`block w-full py-4 rounded-xl font-semibold text-lg text-center transition-all duration-200 ${
                   plan.popular
-                    ? `bg-gradient-to-r ${plan.gradient} text-white shadow-lg hover:shadow-xl`
+                    ? `bg-gradient-to-r ${plan.gradient} text-white shadow-lg hover:shadow-xl hover:opacity-90`
                     : 'bg-gray-100 dark:bg-gray-700 text-gray-900 dark:text-white hover:bg-gray-200 dark:hover:bg-gray-600'
                 }`}
               >
-                Comenzar Ahora
-              </motion.button>
+                Empezar gratis
+              </a>
             </motion.div>
           ))}
         </div>
@@ -235,28 +266,28 @@ export default function Pricing() {
         <motion.div
           initial={{ opacity: 0, y: 30 }}
           animate={isInView ? { opacity: 1, y: 0 } : { opacity: 0, y: 30 }}
-          transition={{ duration: 0.6, delay: 0.6 }}
+          transition={{ duration: 0.6, delay: 0.7 }}
           className="text-center"
         >
           <p className="text-gray-600 dark:text-gray-400 mb-4">
-            Todos los planes incluyen prueba gratuita de 30 días. No se requiere tarjeta de crédito.
+            Durante la beta, todas las funcionalidades son gratuitas. No se requiere tarjeta de crédito.
           </p>
           <div className="flex flex-wrap items-center justify-center gap-6 text-sm text-gray-500 dark:text-gray-500">
             <div className="flex items-center">
               <HiCheck className="w-4 h-4 text-green-500 mr-2" />
-              Sin contratos a largo plazo
+              Sin tarjeta de crédito
             </div>
             <div className="flex items-center">
               <HiCheck className="w-4 h-4 text-green-500 mr-2" />
-              Cancela cuando quieras
+              Acceso completo en beta
+            </div>
+            <div className="flex items-center">
+              <HiCheck className="w-4 h-4 text-green-500 mr-2" />
+              Sin compromiso
             </div>
             <div className="flex items-center">
               <HiCheck className="w-4 h-4 text-green-500 mr-2" />
               Actualizaciones gratuitas
-            </div>
-            <div className="flex items-center">
-              <HiCheck className="w-4 h-4 text-green-500 mr-2" />
-              Soporte técnico 24/7
             </div>
           </div>
         </motion.div>

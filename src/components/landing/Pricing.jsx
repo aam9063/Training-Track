@@ -24,7 +24,7 @@ export default function Pricing() {
         { text: 'Exportación de datos', included: false },
         { text: 'API acceso', included: false },
       ],
-      gradient: 'from-blue-500 to-cyan-500',
+      gradient: 'from-sky-500 to-sky-600',
       popular: false,
     },
     {
@@ -42,7 +42,7 @@ export default function Pricing() {
         { text: 'Exportación de datos', included: true },
         { text: 'API acceso', included: false },
       ],
-      gradient: 'from-purple-500 to-pink-500',
+      gradient: 'from-sky-600 to-sky-700',
       popular: true,
     },
     {
@@ -60,7 +60,7 @@ export default function Pricing() {
         { text: 'Exportación de datos', included: true },
         { text: 'API acceso completo', included: true },
       ],
-      gradient: 'from-orange-500 to-red-500',
+      gradient: 'from-sky-700 to-sky-900',
       popular: false,
     },
   ];
@@ -73,8 +73,8 @@ export default function Pricing() {
     >
       {/* Background decoration */}
       <div className="absolute inset-0 overflow-hidden opacity-30">
-        <div className="absolute top-0 right-0 w-96 h-96 bg-purple-200 dark:bg-purple-900/20 rounded-full blur-3xl" />
-        <div className="absolute bottom-0 left-0 w-96 h-96 bg-blue-200 dark:bg-blue-900/20 rounded-full blur-3xl" />
+        <div className="absolute top-0 right-0 w-96 h-96 bg-sky-200 dark:bg-sky-900/20 rounded-full blur-3xl" />
+        <div className="absolute bottom-0 left-0 w-96 h-96 bg-gray-200 dark:bg-gray-800/30 rounded-full blur-3xl" />
       </div>
 
       <div className="relative max-w-7xl mx-auto px-4 sm:px-6 lg:px-8">
@@ -89,14 +89,14 @@ export default function Pricing() {
             initial={{ opacity: 0, scale: 0.5 }}
             animate={isInView ? { opacity: 1, scale: 1 } : { opacity: 0, scale: 0.5 }}
             transition={{ duration: 0.5 }}
-            className="inline-block px-4 py-2 bg-blue-100 dark:bg-blue-900/30 text-blue-600 dark:text-blue-400 rounded-full text-sm font-semibold mb-4"
+            className="inline-block px-4 py-2 bg-sky-100 dark:bg-sky-900/30 text-sky-600 dark:text-sky-400 rounded-full text-sm font-semibold mb-4"
           >
             PRECIOS
           </motion.span>
 
           <h2 className="text-4xl sm:text-5xl font-bold text-gray-900 dark:text-white mb-6">
             Planes que se adaptan a
-            <span className="block bg-gradient-to-r from-blue-600 to-purple-600 bg-clip-text text-transparent">
+            <span className="block text-sky-600 dark:text-sky-400">
               tus necesidades
             </span>
           </h2>
@@ -111,7 +111,7 @@ export default function Pricing() {
               onClick={() => setBillingCycle('monthly')}
               className={`px-6 py-2 rounded-full font-medium transition-all duration-200 ${
                 billingCycle === 'monthly'
-                  ? 'bg-white dark:bg-gray-700 text-blue-600 dark:text-blue-400 shadow-md'
+                  ? 'bg-white dark:bg-gray-700 text-sky-600 dark:text-sky-400 shadow-md'
                   : 'text-gray-600 dark:text-gray-400'
               }`}
             >
@@ -121,7 +121,7 @@ export default function Pricing() {
               onClick={() => setBillingCycle('yearly')}
               className={`px-6 py-2 rounded-full font-medium transition-all duration-200 flex items-center space-x-2 ${
                 billingCycle === 'yearly'
-                  ? 'bg-white dark:bg-gray-700 text-blue-600 dark:text-blue-400 shadow-md'
+                  ? 'bg-white dark:bg-gray-700 text-sky-600 dark:text-sky-400 shadow-md'
                   : 'text-gray-600 dark:text-gray-400'
               }`}
             >
@@ -143,14 +143,14 @@ export default function Pricing() {
               transition={{ duration: 0.5, delay: index * 0.1 }}
               className={`relative bg-white dark:bg-gray-800 rounded-2xl p-8 shadow-xl border-2 transition-all duration-300 ${
                 plan.popular
-                  ? 'border-purple-500 dark:border-purple-400 scale-105'
-                  : 'border-gray-200 dark:border-gray-700 hover:border-blue-300 dark:hover:border-blue-600'
+                  ? 'border-sky-500 dark:border-sky-400 scale-105'
+                  : 'border-gray-200 dark:border-gray-700 hover:border-sky-300 dark:hover:border-sky-600'
               }`}
             >
               {/* Popular Badge */}
               {plan.popular && (
                 <div className="absolute -top-4 left-1/2 transform -translate-x-1/2">
-                  <div className="bg-gradient-to-r from-purple-500 to-pink-500 text-white px-4 py-1 rounded-full text-sm font-semibold flex items-center space-x-1">
+                  <div className="bg-sky-600 text-white px-4 py-1 rounded-full text-sm font-semibold flex items-center space-x-1">
                     <HiSparkles className="w-4 h-4" />
                     <span>Más Popular</span>
                   </div>

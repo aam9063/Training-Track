@@ -1,42 +1,49 @@
 import { useRef, useState } from 'react';
 import { motion, useScroll, useTransform, AnimatePresence } from 'framer-motion';
+import { useTheme } from '../../contexts/ThemeContext';
 
 const initialScreenshots = [
   {
     id: 1,
-    src: '/img/1.png',
+    light: '/img/1.png',
+    dark: '/img/1-dark.png',
     alt: 'Dashboard de entrenador',
     title: 'Dashboard Intuitivo',
   },
   {
     id: 2,
-    src: '/img/2.png',
+    light: '/img/2.png',
+    dark: '/img/2-dark.png',
     alt: 'Calendario de entrenamientos',
     title: 'Planificación Visual',
   },
   {
     id: 3,
-    src: '/img/3.png',
+    light: '/img/3.png',
+    dark: '/img/3-dark.png',
     alt: 'Análisis de rendimiento',
     title: 'Métricas Avanzadas',
   },
   {
     id: 4,
-    src: '/img/4.png',
+    light: '/img/4.png',
+    dark: '/img/4-dark.png',
     alt: 'Perfil de atleta',
     title: 'Gestión de Atletas',
   },
   {
     id: 5,
-    src: '/img/5.png',
+    light: '/img/5.png',
+    dark: '/img/5-dark.png',
     alt: 'Estadísticas detalladas',
     title: 'Reportes Detallados',
-  },
+  }
 ];
 
 export default function AppShowcase() {
   const containerRef = useRef(null);
   const [activeIndex, setActiveIndex] = useState(0);
+  const { theme } = useTheme();
 
   const { scrollYProgress } = useScroll({
     target: containerRef,
@@ -45,6 +52,14 @@ export default function AppShowcase() {
 
   const y = useTransform(scrollYProgress, [0, 1], [100, -100]);
   const opacity = useTransform(scrollYProgress, [0, 0.2, 0.8, 1], [0, 1, 1, 0]);
+
+  const getSrc = (screenshot) => theme === 'dark' ? screenshot.dark : screenshot.light;
+
+  const handleImgError = (e, screenshot) => {
+    if (e.target.src !== screenshot.light) {
+      e.target.src = screenshot.light;
+    }
+  };
 
   // Get current main screenshot and secondary screenshots
   const mainScreenshot = initialScreenshots[activeIndex];
@@ -59,12 +74,12 @@ export default function AppShowcase() {
   return (
     <section
       ref={containerRef}
-      className="relative py-24 overflow-hidden bg-gradient-to-b from-white via-blue-50/50 to-white dark:from-gray-900 dark:via-gray-800 dark:to-gray-900"
+      className="relative py-24 overflow-hidden bg-gradient-to-b from-white via-sky-50/50 to-white dark:from-gray-900 dark:via-gray-800 dark:to-gray-900"
     >
       {/* Background decorations */}
       <div className="absolute inset-0 overflow-hidden pointer-events-none">
-        <div className="absolute top-1/4 left-0 w-72 h-72 bg-blue-400/10 dark:bg-blue-600/5 rounded-full blur-3xl" />
-        <div className="absolute bottom-1/4 right-0 w-96 h-96 bg-purple-400/10 dark:bg-purple-600/5 rounded-full blur-3xl" />
+        <div className="absolute top-1/4 left-0 w-72 h-72 bg-sky-400/10 dark:bg-sky-600/5 rounded-full blur-3xl" />
+        <div className="absolute bottom-1/4 right-0 w-96 h-96 bg-gray-400/10 dark:bg-gray-600/5 rounded-full blur-3xl" />
       </div>
 
       <div className="relative max-w-7xl mx-auto px-4 sm:px-6 lg:px-8">
@@ -80,13 +95,13 @@ export default function AppShowcase() {
             initial={{ opacity: 0, scale: 0.9 }}
             whileInView={{ opacity: 1, scale: 1 }}
             viewport={{ once: true }}
-            className="inline-block px-4 py-1.5 bg-blue-100 dark:bg-blue-900/30 text-blue-600 dark:text-blue-400 rounded-full text-sm font-semibold mb-4"
+            className="inline-block px-4 py-1.5 bg-sky-100 dark:bg-sky-900/30 text-sky-600 dark:text-sky-400 rounded-full text-sm font-semibold mb-4"
           >
             Interfaz Moderna
           </motion.span>
           <h2 className="text-4xl sm:text-5xl font-bold text-gray-900 dark:text-white mb-4">
             Diseñado para{' '}
-            <span className="bg-gradient-to-r from-blue-600 to-purple-600 bg-clip-text text-transparent">
+            <span className="text-sky-600 dark:text-sky-400">
               el rendimiento
             </span>
           </h2>
@@ -102,7 +117,7 @@ export default function AppShowcase() {
         >
           <div className="relative mx-auto max-w-5xl">
             {/* Glow effect */}
-            <div className="absolute -inset-4 bg-gradient-to-r from-blue-600/20 to-purple-600/20 rounded-3xl blur-2xl opacity-50" />
+            <div className="absolute -inset-4 bg-sky-600/20 rounded-3xl blur-2xl opacity-50" />
 
             {/* Main screenshot with 3D perspective */}
             <motion.div
@@ -113,16 +128,16 @@ export default function AppShowcase() {
               className="relative"
               style={{ perspective: '1000px' }}
             >
-              <div className="relative bg-gradient-to-b from-gray-800 to-gray-900 rounded-2xl p-2 shadow-2xl">
+              <div className="relative bg-gradient-to-b from-gray-100 to-gray-200 dark:from-gray-800 dark:to-gray-900 rounded-2xl p-2 shadow-2xl">
                 {/* Browser chrome */}
-                <div className="flex items-center gap-2 px-4 py-3 bg-gray-800 rounded-t-xl">
+                <div className="flex items-center gap-2 px-4 py-3 bg-gray-100 dark:bg-gray-800 rounded-t-xl">
                   <div className="flex gap-1.5">
                     <div className="w-3 h-3 rounded-full bg-red-500" />
                     <div className="w-3 h-3 rounded-full bg-yellow-500" />
                     <div className="w-3 h-3 rounded-full bg-green-500" />
                   </div>
                   <div className="flex-1 mx-4">
-                    <div className="bg-gray-700 rounded-lg px-4 py-1.5 text-gray-400 text-sm text-center">
+                    <div className="bg-gray-200 rounded-lg px-4 py-1.5 text-gray-400 text-sm text-center">
                       app.trainingtrackpro.es
                     </div>
                   </div>
@@ -132,9 +147,10 @@ export default function AppShowcase() {
                 <div className="relative overflow-hidden rounded-b-xl">
                   <AnimatePresence mode="wait">
                     <motion.img
-                      key={mainScreenshot.id}
-                      src={mainScreenshot.src}
+                      key={`${mainScreenshot.id}-${theme}`}
+                      src={getSrc(mainScreenshot)}
                       alt={mainScreenshot.alt}
+                      onError={(e) => handleImgError(e, mainScreenshot)}
                       initial={{ opacity: 0, scale: 1.05 }}
                       animate={{ opacity: 1, scale: 1 }}
                       exit={{ opacity: 0, scale: 0.95 }}
@@ -193,7 +209,7 @@ export default function AppShowcase() {
                 className="absolute -right-4 bottom-1/4 bg-white dark:bg-gray-800 rounded-xl shadow-xl p-4 border border-gray-200 dark:border-gray-700 hidden lg:block"
               >
                 <div className="text-center">
-                  <p className="text-2xl font-bold bg-gradient-to-r from-blue-600 to-purple-600 bg-clip-text text-transparent">
+                  <p className="text-2xl font-bold text-sky-600 dark:text-sky-400">
                     +15%
                   </p>
                   <p className="text-xs text-gray-500 dark:text-gray-400">Rendimiento</p>
@@ -219,12 +235,13 @@ export default function AppShowcase() {
                 className="group relative cursor-pointer"
               >
                 {/* Hover glow */}
-                <div className="absolute -inset-2 bg-gradient-to-r from-blue-600/0 to-purple-600/0 group-hover:from-blue-600/20 group-hover:to-purple-600/20 rounded-2xl blur-xl transition-all duration-500 opacity-0 group-hover:opacity-100" />
+                <div className="absolute -inset-2 bg-sky-600/0 group-hover:bg-sky-600/20 rounded-2xl blur-xl transition-all duration-500 opacity-0 group-hover:opacity-100" />
 
-                <div className="relative bg-white dark:bg-gray-800 rounded-xl overflow-hidden shadow-lg border border-gray-200 dark:border-gray-700 group-hover:border-blue-500/50 dark:group-hover:border-blue-400/50 transition-all duration-300">
+                <div className="relative bg-white dark:bg-gray-800 rounded-xl overflow-hidden shadow-lg border border-gray-200 dark:border-gray-700 group-hover:border-sky-500/50 dark:group-hover:border-sky-400/50 transition-all duration-300">
                   <img
-                    src={screenshot.src}
+                    src={getSrc(screenshot)}
                     alt={screenshot.alt}
+                    onError={(e) => handleImgError(e, screenshot)}
                     className="w-full aspect-[4/3] object-cover object-top"
                   />
 

@@ -9,12 +9,13 @@ import {
   FiFileText,
   FiChevronRight,
 } from 'react-icons/fi';
-import { parseConconiCSV, createConconiTest, formatPace } from '../../services/conconiService';
+import { parseConconiFile, createConconiTest, formatPace } from '../../services/conconiService';
 import { toLocalDateStr } from '../../lib/dateUtils';
 
 const ConconiTestModal = ({ isOpen, onClose, athlete, coachId, onSuccess }) => {
   const [step, setStep] = useState('upload'); // 'upload' | 'preview' | 'results'
   const [parsedSeries, setParsedSeries] = useState([]);
+  const [seriesDistance, setSeriesDistance] = useState(800);
   const [testMeta, setTestMeta] = useState({
     test_date: toLocalDateStr(new Date()),
     location: '',
@@ -44,6 +45,7 @@ const ConconiTestModal = ({ isOpen, onClose, athlete, coachId, onSuccess }) => {
       weather_conditions: '',
       notes: '',
     });
+    setSeriesDistance(800);
     setSaving(false);
     setError(null);
     setCalculatedPaces([]);
@@ -61,7 +63,7 @@ const ConconiTestModal = ({ isOpen, onClose, athlete, coachId, onSuccess }) => {
     setError(null);
     setFileName(file.name);
 
-    const { data, error: parseError } = await parseConconiCSV(file);
+    const { data, error: parseError } = await parseConconiFile(file, seriesDistance);
     if (parseError) {
       setError(parseError.message);
       return;
@@ -75,10 +77,10 @@ const ConconiTestModal = ({ isOpen, onClose, athlete, coachId, onSuccess }) => {
     e.preventDefault();
     setDragOver(false);
     const file = e.dataTransfer.files[0];
-    if (file && (file.name.endsWith('.csv') || file.type === 'text/csv')) {
+    if (file && (file.name.match(/\.(csv|xlsx?)$/i) || file.type === 'text/csv')) {
       handleFile(file);
     } else {
-      setError('Solo se aceptan archivos CSV');
+      setError('Solo se aceptan archivos CSV o Excel (.xlsx)');
     }
   };
 
@@ -86,7 +88,13 @@ const ConconiTestModal = ({ isOpen, onClose, athlete, coachId, onSuccess }) => {
     setSaving(true);
     setError(null);
 
-    const { data, error: saveError } = await createConconiTest(athleteId, coachId, testMeta, parsedSeries);
+    // Set correct distance on all series
+    const seriesWithDistance = parsedSeries.map((s) => ({
+      ...s,
+      distance_meters: seriesDistance,
+    }));
+
+    const { data, error: saveError } = await createConconiTest(athleteId, coachId, testMeta, seriesWithDistance);
 
     if (saveError) {
       setError(saveError.message || 'Error al guardar el test');
@@ -107,8 +115,8 @@ const ConconiTestModal = ({ isOpen, onClose, athlete, coachId, onSuccess }) => {
   };
 
   // Helper: estimate pace per km from series data (for preview)
-  const estimatePace = (timeSeconds, distanceMeters = 200) => {
-    const pacePerKm = (timeSeconds * 1000) / distanceMeters;
+  const estimatePace = (timeSeconds) => {
+    const pacePerKm = (timeSeconds * 1000) / seriesDistance;
     return formatPace(pacePerKm);
   };
 
@@ -161,9 +169,31 @@ const ConconiTestModal = ({ isOpen, onClose, athlete, coachId, onSuccess }) => {
             {step === 'upload' && (
               <div>
                 <p className="text-sm text-gray-600 dark:text-gray-400 mb-4">
-                  Sube el archivo CSV con los resultados del Test de Conconi. El archivo debe contener
+                  Sube el archivo CSV o Excel (.xlsx) con los resultados del Test de Conconi. El archivo debe contener
                   columnas de serie, tiempo, frecuencia cardíaca y opcionalmente tiempo de recuperación.
                 </p>
+
+                {/* Series distance selector */}
+                <div className="mb-4">
+                  <label className="block text-xs font-medium text-gray-600 dark:text-gray-400 mb-1">
+                    Distancia por serie
+                  </label>
+                  <div className="flex gap-2">
+                    {[200, 400, 800, 1000].map((d) => (
+                      <button
+                        key={d}
+                        onClick={() => setSeriesDistance(d)}
+                        className={`px-3 py-1.5 text-sm rounded-lg border transition-colors ${
+                          seriesDistance === d
+                            ? 'bg-amber-500 border-amber-500 text-white font-medium'
+                            : 'border-gray-300 dark:border-gray-600 text-gray-600 dark:text-gray-400 hover:border-amber-400'
+                        }`}
+                      >
+                        {d}m
+                      </button>
+                    ))}
+                  </div>
+                </div>
 
                 {/* Drag & Drop zone */}
                 <div
@@ -186,7 +216,7 @@ const ConconiTestModal = ({ isOpen, onClose, athlete, coachId, onSuccess }) => {
                     }`}
                   />
                   <p className="text-sm font-medium text-gray-700 dark:text-gray-300 mb-1">
-                    Arrastra tu archivo CSV aquí
+                    Arrastra tu archivo CSV o Excel aquí
                   </p>
                   <p className="text-xs text-gray-500 dark:text-gray-400">
                     o haz clic para seleccionar
@@ -194,7 +224,7 @@ const ConconiTestModal = ({ isOpen, onClose, athlete, coachId, onSuccess }) => {
                   <input
                     ref={fileInputRef}
                     type="file"
-                    accept=".csv"
+                    accept=".csv,.xls,.xlsx"
                     className="hidden"
                     onChange={(e) => {
                       const file = e.target.files?.[0];
@@ -340,7 +370,7 @@ const ConconiTestModal = ({ isOpen, onClose, athlete, coachId, onSuccess }) => {
                             )}
                           </td>
                           <td className="px-3 py-2 text-gray-500 dark:text-gray-400 font-mono text-xs">
-                            {estimatePace(s.time_seconds, s.distance_meters)}
+                            {estimatePace(s.time_seconds)}
                           </td>
                           <td className="px-3 py-2 text-gray-500 dark:text-gray-400 font-mono">
                             {s.recovery_time_seconds ? `${s.recovery_time_seconds}s` : '-'}

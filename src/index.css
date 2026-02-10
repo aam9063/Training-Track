@@ -34,7 +34,7 @@
 /* Swiper Custom Styles */
 .swiper-button-next,
 .swiper-button-prev {
-  color: #3b82f6 !important;
+  color: #0284c7 !important;
   background: white;
   width: 40px !important;
   height: 40px !important;
@@ -54,7 +54,7 @@
 }
 
 .swiper-pagination-bullet {
-  background: #3b82f6 !important;
+  background: #0284c7 !important;
   opacity: 0.5;
 }
 
@@ -74,31 +74,31 @@
 }
 
 .custom-scrollbar::-webkit-scrollbar-thumb {
-  background: linear-gradient(180deg, #3b82f6 0%, #8b5cf6 100%);
+  background: #0284c7;
   border-radius: 10px;
 }
 
 .custom-scrollbar::-webkit-scrollbar-thumb:hover {
-  background: linear-gradient(180deg, #2563eb 0%, #7c3aed 100%);
+  background: #0369a1;
 }
 
 /* Dark mode scrollbar */
 .dark .custom-scrollbar::-webkit-scrollbar-thumb {
-  background: linear-gradient(180deg, #60a5fa 0%, #a78bfa 100%);
+  background: #38bdf8;
 }
 
 .dark .custom-scrollbar::-webkit-scrollbar-thumb:hover {
-  background: linear-gradient(180deg, #3b82f6 0%, #8b5cf6 100%);
+  background: #0284c7;
 }
 
 /* Firefox scrollbar */
 .custom-scrollbar {
   scrollbar-width: thin;
-  scrollbar-color: #3b82f6 transparent;
+  scrollbar-color: #0284c7 transparent;
 }
 
 .dark .custom-scrollbar {
-  scrollbar-color: #60a5fa transparent;
+  scrollbar-color: #38bdf8 transparent;
 }
 
 /* Orange variant for Strava sections */

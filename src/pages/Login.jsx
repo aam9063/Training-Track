@@ -109,10 +109,10 @@ export default function Login() {
           {/* Logo */}
           <div className="text-center">
             <Link to="/" className="inline-flex items-center space-x-2">
-              <div className="w-12 h-12 bg-gradient-to-br from-blue-600 to-purple-600 rounded-xl flex items-center justify-center">
+              <div className="w-12 h-12 bg-sky-600 rounded-xl flex items-center justify-center">
                 <img src="/img/logo.png" alt="TrainingTrackPro" className="w-16 h-16 object-contain" />
               </div>
-              <span className="text-3xl font-bold bg-gradient-to-r from-blue-600 to-purple-600 bg-clip-text text-transparent">
+              <span className="text-3xl font-bold text-sky-600 dark:text-sky-400">
                 TrainingTrack Pro
               </span>
             </Link>
@@ -180,7 +180,7 @@ export default function Login() {
                   required
                   value={formData.email}
                   onChange={handleChange}
-                  className="w-full pl-10 pr-4 py-3 border-2 border-gray-200 dark:border-gray-700 rounded-xl bg-white dark:bg-gray-800 text-gray-900 dark:text-white placeholder-gray-400 focus:outline-none focus:border-blue-500 dark:focus:border-blue-400 transition-colors"
+                  className="w-full pl-10 pr-4 py-3 border-2 border-gray-200 dark:border-gray-700 rounded-xl bg-white dark:bg-gray-800 text-gray-900 dark:text-white placeholder-gray-400 focus:outline-none focus:border-sky-500 dark:focus:border-sky-400 transition-colors"
                   placeholder="tu@email.com"
                 />
               </div>
@@ -200,7 +200,7 @@ export default function Login() {
                   required
                   value={formData.password}
                   onChange={handleChange}
-                  className="w-full pl-10 pr-12 py-3 border-2 border-gray-200 dark:border-gray-700 rounded-xl bg-white dark:bg-gray-800 text-gray-900 dark:text-white placeholder-gray-400 focus:outline-none focus:border-blue-500 dark:focus:border-blue-400 transition-colors"
+                  className="w-full pl-10 pr-12 py-3 border-2 border-gray-200 dark:border-gray-700 rounded-xl bg-white dark:bg-gray-800 text-gray-900 dark:text-white placeholder-gray-400 focus:outline-none focus:border-sky-500 dark:focus:border-sky-400 transition-colors"
                   placeholder="••••••••"
                 />
                 <button
@@ -221,7 +221,7 @@ export default function Login() {
                   name="rememberMe"
                   checked={formData.rememberMe}
                   onChange={handleChange}
-                  className="w-4 h-4 text-blue-600 border-gray-300 rounded focus:ring-blue-500"
+                  className="w-4 h-4 text-sky-600 border-gray-300 rounded focus:ring-sky-500"
                 />
                 <span className="ml-2 text-sm text-gray-600 dark:text-gray-400">
                   Recordarme
@@ -229,7 +229,7 @@ export default function Login() {
               </label>
               <Link
                 to="/forgot-password"
-                className="text-sm font-medium text-blue-600 hover:text-blue-500 dark:text-blue-400"
+                className="text-sm font-medium text-sky-600 hover:text-sky-500 dark:text-sky-400"
               >
                 ¿Olvidaste tu contraseña?
               </Link>
@@ -241,7 +241,7 @@ export default function Login() {
               whileTap={{ scale: 0.98 }}
               type="submit"
               disabled={isLoading}
-              className="w-full py-3 px-4 bg-gradient-to-r from-blue-600 to-purple-600 text-white rounded-xl font-semibold hover:shadow-lg transition-all duration-200 disabled:opacity-50 disabled:cursor-not-allowed"
+              className="w-full py-3 px-4 bg-sky-600 hover:bg-sky-700 text-white rounded-xl font-semibold hover:shadow-lg transition-all duration-200 disabled:opacity-50 disabled:cursor-not-allowed"
             >
               {isLoading ? (
                 <span className="flex items-center justify-center">
@@ -262,7 +262,7 @@ export default function Login() {
             ¿No tienes cuenta?{' '}
             <Link
               to="/register"
-              className="font-semibold text-blue-600 hover:text-blue-500 dark:text-blue-400"
+              className="font-semibold text-sky-600 hover:text-sky-500 dark:text-sky-400"
             >
               Regístrate gratis
             </Link>
@@ -271,11 +271,11 @@ export default function Login() {
       </div>
 
       {/* Right Side - Image/Branding */}
-      <div className="hidden lg:flex lg:flex-1 bg-gradient-to-br from-blue-600 to-purple-600 relative overflow-hidden">
+      <div className="hidden lg:flex lg:flex-1 bg-sky-600 relative overflow-hidden">
         {/* Background decorations */}
         <div className="absolute inset-0">
           <div className="absolute top-20 right-20 w-72 h-72 bg-white/10 rounded-full blur-3xl" />
-          <div className="absolute bottom-20 left-20 w-96 h-96 bg-purple-400/20 rounded-full blur-3xl" />
+          <div className="absolute bottom-20 left-20 w-96 h-96 bg-sky-400/20 rounded-full blur-3xl" />
         </div>
 
         <div className="relative flex flex-col items-center justify-center p-12 text-white">
@@ -288,7 +288,7 @@ export default function Login() {
             <h2 className="text-4xl font-bold mb-6">
               Gestiona tus entrenamientos como un profesional
             </h2>
-            <p className="text-xl text-blue-100 mb-8">
+            <p className="text-xl text-sky-100 mb-8">
               Únete a cientos de entrenadores y atletas que ya confían en TrainingTrack Pro para alcanzar sus metas.
             </p>
 
@@ -296,15 +296,15 @@ export default function Login() {
             <div className="grid grid-cols-3 gap-6 mt-12">
               <div className="text-center">
                 <div className="text-3xl font-bold">500+</div>
-                <div className="text-blue-200 text-sm">Entrenadores</div>
+                <div className="text-sky-200 text-sm">Entrenadores</div>
               </div>
               <div className="text-center">
                 <div className="text-3xl font-bold">5000+</div>
-                <div className="text-blue-200 text-sm">Atletas</div>
+                <div className="text-sky-200 text-sm">Atletas</div>
               </div>
               <div className="text-center">
                 <div className="text-3xl font-bold">98%</div>
-                <div className="text-blue-200 text-sm">Satisfacción</div>
+                <div className="text-sky-200 text-sm">Satisfacción</div>
               </div>
             </div>
           </motion.div>

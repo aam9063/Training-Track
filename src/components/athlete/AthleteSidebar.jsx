@@ -1,6 +1,7 @@
 import { useState, useEffect, useRef } from 'react';
 import { Link, useLocation, useNavigate } from 'react-router-dom';
 import { useAuth } from '../../contexts/AuthContext';
+import { useTheme } from '../../contexts/ThemeContext';
 import {
   FiHome,
   FiCalendar,
@@ -13,6 +14,8 @@ import {
   FiMenu,
   FiX,
   FiMessageSquare,
+  FiSun,
+  FiMoon,
 } from 'react-icons/fi';
 
 const AthleteSidebar = ({ onCollapse }) => {
@@ -24,6 +27,7 @@ const AthleteSidebar = ({ onCollapse }) => {
   const location = useLocation();
   const navigate = useNavigate();
   const { user, profile, signOut } = useAuth();
+  const { theme, toggleTheme } = useTheme();
 
   // Usar profile si existe, sino usar datos básicos del user
   const displayName = profile?.first_name || user?.user_metadata?.first_name || 'Atleta';
@@ -165,6 +169,33 @@ const AthleteSidebar = ({ onCollapse }) => {
           })}
         </nav>
 
+        {/* Theme Toggle Switch */}
+        <div className="px-3 pb-2">
+          <button
+            onClick={toggleTheme}
+            className={`
+              w-full flex items-center px-3 py-2.5 rounded-lg
+              text-gray-700 dark:text-gray-300 hover:bg-gray-100 dark:hover:bg-gray-700
+              transition-colors
+              ${collapsed ? 'lg:justify-center' : 'space-x-3'}
+            `}
+            title={collapsed ? (theme === 'light' ? 'Modo oscuro' : 'Modo claro') : ''}
+          >
+            <div className="relative w-11 h-6 bg-gray-300 dark:bg-gray-600 rounded-full flex-shrink-0 transition-colors">
+              <div className={`absolute top-0.5 w-5 h-5 rounded-full bg-white shadow-md flex items-center justify-center transition-transform duration-300 ${theme === 'dark' ? 'translate-x-[22px]' : 'translate-x-0.5'}`}>
+                {theme === 'light' ? (
+                  <FiSun className="w-3 h-3 text-yellow-500" />
+                ) : (
+                  <FiMoon className="w-3 h-3 text-green-600" />
+                )}
+              </div>
+            </div>
+            <span className={`font-medium text-sm ${collapsed ? 'lg:hidden' : ''}`}>
+              {theme === 'light' ? 'Modo claro' : 'Modo oscuro'}
+            </span>
+          </button>
+        </div>
+
         {/* User Profile Section */}
         <div className="border-t border-gray-200 dark:border-gray-700 p-3">
           <button
@@ -190,7 +221,7 @@ const AthleteSidebar = ({ onCollapse }) => {
                 className="w-8 h-8 rounded-full object-cover flex-shrink-0"
               />
             ) : (
-              <div className="w-8 h-8 rounded-full bg-gradient-to-br from-green-500 to-blue-600 flex items-center justify-center flex-shrink-0">
+              <div className="w-8 h-8 rounded-full bg-green-600 flex items-center justify-center flex-shrink-0">
                 <span className="text-white font-semibold text-sm">
                   {displayName[0]}{displayLastName[0] || 'A'}
                 </span>

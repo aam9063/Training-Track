@@ -58,7 +58,7 @@ export default function Hero() {
   return (
     <section
       id="inicio"
-      className="relative min-h-screen flex items-center justify-center overflow-hidden bg-gradient-to-br from-blue-50 via-white to-purple-50 dark:from-gray-900 dark:via-gray-800 dark:to-purple-900 pt-20"
+      className="relative min-h-screen flex items-center justify-center overflow-hidden bg-gradient-to-br from-sky-50 via-white to-gray-50 dark:from-gray-900 dark:via-gray-800 dark:to-gray-900 pt-20"
     >
       {/* Animated background elements */}
       <div className="absolute inset-0 overflow-hidden">
@@ -72,7 +72,7 @@ export default function Hero() {
             repeat: Infinity,
             ease: 'linear',
           }}
-          className="absolute top-20 right-10 w-72 h-72 bg-blue-400/20 dark:bg-blue-600/10 rounded-full blur-3xl"
+          className="absolute top-20 right-10 w-72 h-72 bg-sky-400/20 dark:bg-sky-600/10 rounded-full blur-3xl"
         />
         <motion.div
           animate={{
@@ -84,7 +84,7 @@ export default function Hero() {
             repeat: Infinity,
             ease: 'linear',
           }}
-          className="absolute bottom-20 left-10 w-96 h-96 bg-purple-400/20 dark:bg-purple-600/10 rounded-full blur-3xl"
+          className="absolute bottom-20 left-10 w-96 h-96 bg-sky-300/15 dark:bg-sky-700/10 rounded-full blur-3xl"
         />
       </div>
 
@@ -96,9 +96,9 @@ export default function Hero() {
           className="text-center"
         >
           {/* Badge */}
-          <motion.div variants={itemVariants} className="inline-flex items-center space-x-2 px-4 py-2 bg-blue-100 dark:bg-blue-900/30 rounded-full mb-6">
-            <span className="w-2 h-2 bg-blue-600 rounded-full animate-pulse" />
-            <span className="text-sm font-medium text-blue-600 dark:text-blue-400">
+          <motion.div variants={itemVariants} className="inline-flex items-center space-x-2 px-4 py-2 bg-sky-100 dark:bg-sky-900/30 rounded-full mb-6">
+            <span className="w-2 h-2 bg-sky-600 rounded-full animate-pulse" />
+            <span className="text-sm font-medium text-sky-600 dark:text-sky-400">
               La plataforma líder en gestión de entrenamientos
             </span>
           </motion.div>
@@ -110,7 +110,7 @@ export default function Hero() {
           >
             Lleva tu rendimiento
             <br />
-            <span className="bg-gradient-to-r from-blue-600 to-purple-600 bg-clip-text text-transparent">
+            <span className="text-sky-600 dark:text-sky-400">
               al siguiente nivel
             </span>
           </motion.h1>
@@ -148,7 +148,7 @@ export default function Hero() {
             <motion.button
               whileHover={{ scale: 1.05 }}
               whileTap={{ scale: 0.95 }}
-              className="px-8 py-4 bg-gradient-to-r from-blue-600 to-purple-600 text-white rounded-xl font-semibold text-lg shadow-xl hover:shadow-2xl transition-all duration-200 flex items-center space-x-2"
+              className="px-8 py-4 bg-sky-600 hover:bg-sky-700 text-white rounded-xl font-semibold text-lg shadow-xl hover:shadow-2xl transition-all duration-200 flex items-center space-x-2"
             >
               <span>Empieza Gratis</span>
               <motion.span
@@ -162,7 +162,7 @@ export default function Hero() {
             <motion.button
               whileHover={{ scale: 1.05 }}
               whileTap={{ scale: 0.95 }}
-              className="px-8 py-4 bg-white dark:bg-gray-800 text-gray-900 dark:text-white rounded-xl font-semibold text-lg border-2 border-gray-200 dark:border-gray-700 hover:border-blue-600 dark:hover:border-blue-400 transition-all duration-200 flex items-center space-x-2"
+              className="px-8 py-4 bg-white dark:bg-gray-800 text-gray-900 dark:text-white rounded-xl font-semibold text-lg border-2 border-gray-200 dark:border-gray-700 hover:border-sky-600 dark:hover:border-sky-400 transition-all duration-200 flex items-center space-x-2"
             >
               <HiPlay className="w-5 h-5" />
               <span>Ver Demo</span>
@@ -176,7 +176,7 @@ export default function Hero() {
             className="grid grid-cols-1 sm:grid-cols-3 gap-8 max-w-4xl mx-auto"
           >
             <div className="bg-white/50 dark:bg-gray-800/50 backdrop-blur-sm rounded-2xl p-6 border border-gray-200 dark:border-gray-700">
-              <div className="text-4xl font-bold bg-gradient-to-r from-blue-600 to-purple-600 bg-clip-text text-transparent mb-2">
+              <div className="text-4xl font-bold text-sky-600 dark:text-sky-400 mb-2">
                 <span className="stat-number" data-target="500">0</span>+
               </div>
               <div className="text-gray-600 dark:text-gray-400 font-medium">
@@ -185,7 +185,7 @@ export default function Hero() {
             </div>
 
             <div className="bg-white/50 dark:bg-gray-800/50 backdrop-blur-sm rounded-2xl p-6 border border-gray-200 dark:border-gray-700">
-              <div className="text-4xl font-bold bg-gradient-to-r from-blue-600 to-purple-600 bg-clip-text text-transparent mb-2">
+              <div className="text-4xl font-bold text-sky-600 dark:text-sky-400 mb-2">
                 <span className="stat-number" data-target="5000">0</span>+
               </div>
               <div className="text-gray-600 dark:text-gray-400 font-medium">
@@ -194,7 +194,7 @@ export default function Hero() {
             </div>
 
             <div className="bg-white/50 dark:bg-gray-800/50 backdrop-blur-sm rounded-2xl p-6 border border-gray-200 dark:border-gray-700">
-              <div className="text-4xl font-bold bg-gradient-to-r from-blue-600 to-purple-600 bg-clip-text text-transparent mb-2">
+              <div className="text-4xl font-bold text-sky-600 dark:text-sky-400 mb-2">
                 <span className="stat-number" data-target="98">0</span>%
               </div>
               <div className="text-gray-600 dark:text-gray-400 font-medium">

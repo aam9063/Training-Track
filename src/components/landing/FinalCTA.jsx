@@ -19,12 +19,12 @@ export default function FinalCTA() {
   return (
     <section
       ref={ref}
-      className="py-24 bg-gradient-to-r from-blue-600 to-purple-600 relative overflow-hidden"
+      className="py-24 bg-sky-600 relative overflow-hidden"
     >
       {/* Background decorations */}
       <div className="absolute inset-0 overflow-hidden">
         <div className="absolute top-0 right-0 w-96 h-96 bg-white/10 rounded-full blur-3xl transform translate-x-1/2 -translate-y-1/2" />
-        <div className="absolute bottom-0 left-0 w-96 h-96 bg-purple-300/20 rounded-full blur-3xl transform -translate-x-1/2 translate-y-1/2" />
+        <div className="absolute bottom-0 left-0 w-96 h-96 bg-sky-400/20 rounded-full blur-3xl transform -translate-x-1/2 translate-y-1/2" />
       </div>
 
       <div className="relative max-w-7xl mx-auto px-4 sm:px-6 lg:px-8">
@@ -39,7 +39,7 @@ export default function FinalCTA() {
               Comienza hoy a transformar tu rendimiento como corredor
             </h2>
 
-            <p className="text-xl text-purple-100 mb-8 leading-relaxed">
+            <p className="text-xl text-sky-100 mb-8 leading-relaxed">
               Únete a miles de atletas que ya han mejorado sus marcas con TrainingTrack Pro.
               Prueba gratis durante 14 días, sin compromiso.
             </p>
@@ -49,7 +49,7 @@ export default function FinalCTA() {
               <motion.button
                 whileHover={{ scale: 1.05 }}
                 whileTap={{ scale: 0.95 }}
-                className="px-8 py-4 bg-white text-purple-600 rounded-full font-semibold text-lg shadow-xl hover:shadow-2xl transition-all duration-200"
+                className="px-8 py-4 bg-white text-sky-600 rounded-full font-semibold text-lg shadow-xl hover:shadow-2xl transition-all duration-200"
               >
                 Comenzar prueba gratuita
               </motion.button>
@@ -63,7 +63,7 @@ export default function FinalCTA() {
               </motion.button>
             </div>
 
-            <p className="text-purple-100 text-sm">
+            <p className="text-sky-100 text-sm">
               No se requiere tarjeta de crédito. Cancela cuando quieras.
             </p>
           </motion.div>
@@ -102,7 +102,7 @@ export default function FinalCTA() {
                       initial={{ height: 0 }}
                       animate={isInView ? { height: `${item.height}%` } : { height: 0 }}
                       transition={{ duration: 0.5, delay: 0.3 + index * 0.1 }}
-                      className="w-6 sm:w-8 bg-gradient-to-t from-blue-600 to-purple-400 rounded-t-lg relative group"
+                      className="w-6 sm:w-8 bg-gradient-to-t from-sky-700 to-sky-400 rounded-t-lg relative group"
                     >
                       <div className="absolute -top-6 left-1/2 transform -translate-x-1/2 opacity-0 group-hover:opacity-100 transition-opacity bg-gray-800 text-white text-xs px-2 py-1 rounded">
                         {item.height}%
@@ -131,7 +131,7 @@ export default function FinalCTA() {
                 </div>
                 <div className="bg-gray-50 rounded-xl p-4">
                   <p className="text-sm text-gray-500 mb-1">Ritmo promedio</p>
-                  <p className="text-2xl font-bold text-purple-600">4:52 /km</p>
+                  <p className="text-2xl font-bold text-sky-600">4:52 /km</p>
                 </div>
                 <div className="bg-gray-50 rounded-xl p-4">
                   <p className="text-sm text-gray-500 mb-1">Mejora</p>

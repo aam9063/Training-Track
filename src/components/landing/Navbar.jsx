@@ -62,11 +62,11 @@ export default function Navbar() {
             className="flex-shrink-0"
           >
             <a href="#inicio" className="flex items-center space-x-2">
-              <div className="w-10 h-10 bg-gradient-to-br from-blue-600 to-purple-600 rounded-lg flex items-center justify-center overflow-hidden">
+              <div className="w-10 h-10 bg-sky-600 rounded-lg flex items-center justify-center overflow-hidden">
                 <img src="/img/logo.png" alt="TrainingTrackPro" className="w-16 h-16 object-contain" />
               </div>
-              <span className="text-2xl font-bold bg-gradient-to-r from-blue-600 to-purple-600 bg-clip-text text-transparent">
-                TrainingTrack Pro
+              <span className="text-2xl font-bold text-gray-900 dark:text-white">
+                TrainingTrack<span className="text-sky-600 dark:text-sky-400">Pro</span>
               </span>
             </a>
           </motion.div>
@@ -84,7 +84,7 @@ export default function Navbar() {
                   e.preventDefault();
                   scrollToSection(link.href);
                 }}
-                className="text-gray-700 dark:text-gray-300 hover:text-blue-600 dark:hover:text-blue-400 transition-colors duration-200 font-medium"
+                className="text-gray-700 dark:text-gray-300 hover:text-sky-600 dark:hover:text-sky-400 transition-colors duration-200 font-medium"
               >
                 {link.name}
               </motion.a>
@@ -115,7 +115,7 @@ export default function Navbar() {
                 initial={{ opacity: 0, x: 20 }}
                 animate={{ opacity: 1, x: 0 }}
                 transition={{ delay: 0.4 }}
-                className="px-6 py-2.5 text-gray-700 dark:text-gray-300 hover:text-blue-600 dark:hover:text-blue-400 font-medium transition-colors duration-200"
+                className="px-6 py-2.5 text-gray-700 dark:text-gray-300 hover:text-sky-600 dark:hover:text-sky-400 font-medium transition-colors duration-200"
               >
                 Iniciar Sesión
               </motion.button>
@@ -127,7 +127,7 @@ export default function Navbar() {
                 initial={{ opacity: 0, x: 20 }}
                 animate={{ opacity: 1, x: 0 }}
                 transition={{ delay: 0.5 }}
-                className="px-6 py-2.5 bg-gradient-to-r from-blue-600 to-purple-600 text-white rounded-lg font-medium hover:shadow-lg hover:scale-105 transition-all duration-200"
+                className="px-6 py-2.5 bg-sky-600 hover:bg-sky-700 text-white rounded-lg font-medium hover:shadow-lg hover:scale-105 transition-all duration-200"
               >
                 Empieza Gratis
               </motion.button>
@@ -186,12 +186,12 @@ export default function Navbar() {
 
               <div className="pt-4 space-y-3">
                 <Link to="/login" onClick={() => setIsMobileMenuOpen(false)}>
-                  <button className="w-full px-6 py-3 mb-4 text-gray-700 dark:text-gray-300 border-2 border-gray-300 dark:border-gray-600 rounded-lg font-medium hover:border-blue-600 dark:hover:border-blue-400 transition-colors duration-200">
+                  <button className="w-full px-6 py-3 mb-4 text-gray-700 dark:text-gray-300 border-2 border-gray-300 dark:border-gray-600 rounded-lg font-medium hover:border-sky-600 dark:hover:border-sky-400 transition-colors duration-200">
                     Iniciar Sesión
                   </button>
                 </Link>
                 <Link to="/register" onClick={() => setIsMobileMenuOpen(false)}>
-                  <button className="w-full px-6 py-3 bg-gradient-to-r from-blue-600 to-purple-600 text-white rounded-lg font-medium hover:shadow-lg transition-all duration-200">
+                  <button className="w-full px-6 py-3 bg-sky-600 hover:bg-sky-700 text-white rounded-lg font-medium hover:shadow-lg transition-all duration-200">
                     Empieza Gratis
                   </button>
                 </Link>

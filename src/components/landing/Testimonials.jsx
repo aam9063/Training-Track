@@ -60,12 +60,12 @@ export default function Testimonials() {
     <section
       id="testimonios"
       ref={ref}
-      className="py-24 bg-gradient-to-br from-gray-50 to-blue-50 dark:from-gray-800 dark:to-gray-900 relative overflow-hidden"
+      className="py-24 bg-gradient-to-br from-gray-50 to-sky-50 dark:from-gray-800 dark:to-gray-900 relative overflow-hidden"
     >
       {/* Background elements */}
       <div className="absolute inset-0 overflow-hidden opacity-30">
-        <div className="absolute top-0 left-1/4 w-96 h-96 bg-blue-300 dark:bg-blue-900/30 rounded-full blur-3xl" />
-        <div className="absolute bottom-0 right-1/4 w-96 h-96 bg-purple-300 dark:bg-purple-900/30 rounded-full blur-3xl" />
+        <div className="absolute top-0 left-1/4 w-96 h-96 bg-sky-300 dark:bg-sky-900/30 rounded-full blur-3xl" />
+        <div className="absolute bottom-0 right-1/4 w-96 h-96 bg-gray-300 dark:bg-gray-700/30 rounded-full blur-3xl" />
       </div>
 
       <div className="relative max-w-7xl mx-auto px-4 sm:px-6 lg:px-8">
@@ -80,14 +80,14 @@ export default function Testimonials() {
             initial={{ opacity: 0, scale: 0.5 }}
             animate={isInView ? { opacity: 1, scale: 1 } : { opacity: 0, scale: 0.5 }}
             transition={{ duration: 0.5 }}
-            className="inline-block px-4 py-2 bg-blue-100 dark:bg-blue-900/30 text-blue-600 dark:text-blue-400 rounded-full text-sm font-semibold mb-4"
+            className="inline-block px-4 py-2 bg-sky-100 dark:bg-sky-900/30 text-sky-600 dark:text-sky-400 rounded-full text-sm font-semibold mb-4"
           >
             TESTIMONIOS
           </motion.span>
 
           <h2 className="text-4xl sm:text-5xl font-bold text-gray-900 dark:text-white mb-6">
             Lo que dicen nuestros
-            <span className="block bg-gradient-to-r from-blue-600 to-purple-600 bg-clip-text text-transparent">
+            <span className="block text-sky-600 dark:text-sky-400">
               entrenadores y atletas
             </span>
           </h2>
@@ -151,7 +151,7 @@ export default function Testimonials() {
                     <img
                       src={testimonial.image}
                       alt={testimonial.name}
-                      className="w-14 h-14 rounded-full object-cover ring-2 ring-blue-500"
+                      className="w-14 h-14 rounded-full object-cover ring-2 ring-sky-500"
                     />
                     <div>
                       <h4 className="font-bold text-gray-900 dark:text-white">
@@ -160,7 +160,7 @@ export default function Testimonials() {
                       <p className="text-sm text-gray-600 dark:text-gray-400">
                         {testimonial.role}
                       </p>
-                      <p className="text-xs text-blue-600 dark:text-blue-400 font-medium mt-1">
+                      <p className="text-xs text-sky-600 dark:text-sky-400 font-medium mt-1">
                         {testimonial.specialty}
                       </p>
                     </div>
@@ -188,7 +188,7 @@ export default function Testimonials() {
               key={index}
               className="text-center bg-white dark:bg-gray-800 rounded-xl p-6 shadow-lg"
             >
-              <div className="text-3xl font-bold bg-gradient-to-r from-blue-600 to-purple-600 bg-clip-text text-transparent mb-2">
+              <div className="text-3xl font-bold text-sky-600 dark:text-sky-400 mb-2">
                 {stat.number}
               </div>
               <div className="text-sm text-gray-600 dark:text-gray-400">

@@ -103,15 +103,15 @@ export default function Register() {
 
       // Show success message
       setSuccessMessage('¡Cuenta creada exitosamente! Redirigiendo al login...');
-      
+
       // Redirect to login after 2 seconds
       setTimeout(() => {
         navigate('/login');
       }, 2000);
     } catch (error) {
       console.error('Registration error:', error);
-      setErrors({ 
-        general: error.message || 'Error al crear la cuenta. Intenta de nuevo.' 
+      setErrors({
+        general: error.message || 'Error al crear la cuenta. Intenta de nuevo.'
       });
     } finally {
       setIsLoading(false);
@@ -156,10 +156,10 @@ export default function Register() {
           {/* Logo */}
           <div className="text-center">
             <Link to="/" className="inline-flex items-center space-x-2">
-              <div className="w-12 h-12 bg-gradient-to-br from-blue-600 to-purple-600 rounded-xl flex items-center justify-center">
-                <span className="text-white font-bold text-2xl">T</span>
-              </div>
-              <span className="text-3xl font-bold bg-gradient-to-r from-blue-600 to-purple-600 bg-clip-text text-transparent">
+              <div className="w-12 h-12 bg-sky-600 rounded-xl flex items-center justify-center">
+                <img src="/img/logo.png" alt="TrainingTrackPro" className="w-16 h-16 object-contain" />
+                image.png              </div>
+              <span className="text-3xl font-bold text-sky-600 dark:text-sky-400">
                 TrainingTrack Pro
               </span>
             </Link>
@@ -192,14 +192,14 @@ export default function Register() {
                     whileHover={{ scale: 1.02 }}
                     whileTap={{ scale: 0.98 }}
                     onClick={() => selectRole('coach')}
-                    className="w-full p-6 border-2 border-gray-200 dark:border-gray-700 rounded-2xl hover:border-blue-500 dark:hover:border-blue-400 transition-all duration-200 text-left group"
+                    className="w-full p-6 border-2 border-gray-200 dark:border-gray-700 rounded-2xl hover:border-sky-500 dark:hover:border-sky-400 transition-all duration-200 text-left group"
                   >
                     <div className="flex items-start space-x-4">
-                      <div className="w-14 h-14 bg-gradient-to-br from-blue-500 to-purple-500 rounded-xl flex items-center justify-center flex-shrink-0">
+                      <div className="w-14 h-14 bg-sky-600 rounded-xl flex items-center justify-center flex-shrink-0">
                         <HiAcademicCap className="w-7 h-7 text-white" />
                       </div>
                       <div>
-                        <h3 className="text-xl font-bold text-gray-900 dark:text-white group-hover:text-blue-600 dark:group-hover:text-blue-400 transition-colors">
+                        <h3 className="text-xl font-bold text-gray-900 dark:text-white group-hover:text-sky-600 dark:group-hover:text-sky-400 transition-colors">
                           Soy Entrenador
                         </h3>
                         <p className="text-gray-600 dark:text-gray-400 mt-1">
@@ -214,14 +214,14 @@ export default function Register() {
                     whileHover={{ scale: 1.02 }}
                     whileTap={{ scale: 0.98 }}
                     onClick={() => selectRole('athlete')}
-                    className="w-full p-6 border-2 border-gray-200 dark:border-gray-700 rounded-2xl hover:border-purple-500 dark:hover:border-purple-400 transition-all duration-200 text-left group"
+                    className="w-full p-6 border-2 border-gray-200 dark:border-gray-700 rounded-2xl hover:border-sky-500 dark:hover:border-sky-400 transition-all duration-200 text-left group"
                   >
                     <div className="flex items-start space-x-4">
-                      <div className="w-14 h-14 bg-gradient-to-br from-purple-500 to-pink-500 rounded-xl flex items-center justify-center flex-shrink-0">
+                      <div className="w-14 h-14 bg-sky-600 rounded-xl flex items-center justify-center flex-shrink-0">
                         <HiUserGroup className="w-7 h-7 text-white" />
                       </div>
                       <div>
-                        <h3 className="text-xl font-bold text-gray-900 dark:text-white group-hover:text-purple-600 dark:group-hover:text-purple-400 transition-colors">
+                        <h3 className="text-xl font-bold text-gray-900 dark:text-white group-hover:text-sky-600 dark:group-hover:text-sky-400 transition-colors">
                           Soy Atleta
                         </h3>
                         <p className="text-gray-600 dark:text-gray-400 mt-1">
@@ -237,7 +237,7 @@ export default function Register() {
                   ¿Ya tienes cuenta?{' '}
                   <Link
                     to="/login"
-                    className="font-semibold text-blue-600 hover:text-blue-500 dark:text-blue-400"
+                    className="font-semibold text-sky-600 hover:text-sky-500 dark:text-sky-400"
                   >
                     Inicia sesión
                   </Link>
@@ -264,11 +264,7 @@ export default function Register() {
 
                 {/* Header */}
                 <div className="text-center">
-                  <div className={`w-16 h-16 mx-auto rounded-2xl flex items-center justify-center mb-4 ${
-                    role === 'coach'
-                      ? 'bg-gradient-to-br from-blue-500 to-purple-500'
-                      : 'bg-gradient-to-br from-purple-500 to-pink-500'
-                  }`}>
+                  <div className={`w-16 h-16 mx-auto rounded-2xl flex items-center justify-center mb-4 bg-sky-600`}>
                     {role === 'coach' ? (
                       <HiAcademicCap className="w-8 h-8 text-white" />
                     ) : (
@@ -343,11 +339,10 @@ export default function Register() {
                           type="text"
                           value={formData.firstName}
                           onChange={handleChange}
-                          className={`w-full pl-10 pr-4 py-3 border-2 rounded-xl bg-white dark:bg-gray-800 text-gray-900 dark:text-white placeholder-gray-400 focus:outline-none transition-colors ${
-                            errors.firstName
+                          className={`w-full pl-10 pr-4 py-3 border-2 rounded-xl bg-white dark:bg-gray-800 text-gray-900 dark:text-white placeholder-gray-400 focus:outline-none transition-colors ${errors.firstName
                               ? 'border-red-500 focus:border-red-500'
-                              : 'border-gray-200 dark:border-gray-700 focus:border-blue-500 dark:focus:border-blue-400'
-                          }`}
+                              : 'border-gray-200 dark:border-gray-700 focus:border-sky-500 dark:focus:border-sky-400'
+                            }`}
                           placeholder="Juan"
                         />
                       </div>
@@ -366,11 +361,10 @@ export default function Register() {
                         type="text"
                         value={formData.lastName}
                         onChange={handleChange}
-                        className={`w-full px-4 py-3 border-2 rounded-xl bg-white dark:bg-gray-800 text-gray-900 dark:text-white placeholder-gray-400 focus:outline-none transition-colors ${
-                          errors.lastName
+                        className={`w-full px-4 py-3 border-2 rounded-xl bg-white dark:bg-gray-800 text-gray-900 dark:text-white placeholder-gray-400 focus:outline-none transition-colors ${errors.lastName
                             ? 'border-red-500 focus:border-red-500'
-                            : 'border-gray-200 dark:border-gray-700 focus:border-blue-500 dark:focus:border-blue-400'
-                        }`}
+                            : 'border-gray-200 dark:border-gray-700 focus:border-sky-500 dark:focus:border-sky-400'
+                          }`}
                         placeholder="Pérez"
                       />
                       {errors.lastName && (
@@ -392,11 +386,10 @@ export default function Register() {
                         type="email"
                         value={formData.email}
                         onChange={handleChange}
-                        className={`w-full pl-10 pr-4 py-3 border-2 rounded-xl bg-white dark:bg-gray-800 text-gray-900 dark:text-white placeholder-gray-400 focus:outline-none transition-colors ${
-                          errors.email
+                        className={`w-full pl-10 pr-4 py-3 border-2 rounded-xl bg-white dark:bg-gray-800 text-gray-900 dark:text-white placeholder-gray-400 focus:outline-none transition-colors ${errors.email
                             ? 'border-red-500 focus:border-red-500'
-                            : 'border-gray-200 dark:border-gray-700 focus:border-blue-500 dark:focus:border-blue-400'
-                        }`}
+                            : 'border-gray-200 dark:border-gray-700 focus:border-sky-500 dark:focus:border-sky-400'
+                          }`}
                         placeholder="tu@email.com"
                       />
                     </div>
@@ -423,11 +416,10 @@ export default function Register() {
                           type="email"
                           value={formData.coachEmail}
                           onChange={handleChange}
-                          className={`w-full pl-10 pr-4 py-3 border-2 rounded-xl bg-white dark:bg-gray-800 text-gray-900 dark:text-white placeholder-gray-400 focus:outline-none transition-colors ${
-                            errors.coachEmail
+                          className={`w-full pl-10 pr-4 py-3 border-2 rounded-xl bg-white dark:bg-gray-800 text-gray-900 dark:text-white placeholder-gray-400 focus:outline-none transition-colors ${errors.coachEmail
                               ? 'border-red-500 focus:border-red-500'
-                              : 'border-gray-200 dark:border-gray-700 focus:border-blue-500 dark:focus:border-blue-400'
-                          }`}
+                              : 'border-gray-200 dark:border-gray-700 focus:border-sky-500 dark:focus:border-sky-400'
+                            }`}
                           placeholder="entrenador@email.com"
                         />
                       </div>
@@ -453,11 +445,10 @@ export default function Register() {
                         type={showPassword ? 'text' : 'password'}
                         value={formData.password}
                         onChange={handleChange}
-                        className={`w-full pl-10 pr-12 py-3 border-2 rounded-xl bg-white dark:bg-gray-800 text-gray-900 dark:text-white placeholder-gray-400 focus:outline-none transition-colors ${
-                          errors.password
+                        className={`w-full pl-10 pr-12 py-3 border-2 rounded-xl bg-white dark:bg-gray-800 text-gray-900 dark:text-white placeholder-gray-400 focus:outline-none transition-colors ${errors.password
                             ? 'border-red-500 focus:border-red-500'
-                            : 'border-gray-200 dark:border-gray-700 focus:border-blue-500 dark:focus:border-blue-400'
-                        }`}
+                            : 'border-gray-200 dark:border-gray-700 focus:border-sky-500 dark:focus:border-sky-400'
+                          }`}
                         placeholder="Mínimo 8 caracteres"
                       />
                       <button
@@ -486,11 +477,10 @@ export default function Register() {
                         type={showConfirmPassword ? 'text' : 'password'}
                         value={formData.confirmPassword}
                         onChange={handleChange}
-                        className={`w-full pl-10 pr-12 py-3 border-2 rounded-xl bg-white dark:bg-gray-800 text-gray-900 dark:text-white placeholder-gray-400 focus:outline-none transition-colors ${
-                          errors.confirmPassword
+                        className={`w-full pl-10 pr-12 py-3 border-2 rounded-xl bg-white dark:bg-gray-800 text-gray-900 dark:text-white placeholder-gray-400 focus:outline-none transition-colors ${errors.confirmPassword
                             ? 'border-red-500 focus:border-red-500'
-                            : 'border-gray-200 dark:border-gray-700 focus:border-blue-500 dark:focus:border-blue-400'
-                        }`}
+                            : 'border-gray-200 dark:border-gray-700 focus:border-sky-500 dark:focus:border-sky-400'
+                          }`}
                         placeholder="Repite tu contraseña"
                       />
                       <button
@@ -514,15 +504,15 @@ export default function Register() {
                         name="acceptTerms"
                         checked={formData.acceptTerms}
                         onChange={handleChange}
-                        className="w-4 h-4 mt-1 text-blue-600 border-gray-300 rounded focus:ring-blue-500"
+                        className="w-4 h-4 mt-1 text-sky-600 border-gray-300 rounded focus:ring-sky-500"
                       />
                       <span className="ml-2 text-sm text-gray-600 dark:text-gray-400">
                         Acepto los{' '}
-                        <Link to="/terms" className="text-blue-600 hover:text-blue-500 dark:text-blue-400">
+                        <Link to="/terms" className="text-sky-600 hover:text-sky-500 dark:text-sky-400">
                           Términos y Condiciones
                         </Link>{' '}
                         y la{' '}
-                        <Link to="/privacy" className="text-blue-600 hover:text-blue-500 dark:text-blue-400">
+                        <Link to="/privacy" className="text-sky-600 hover:text-sky-500 dark:text-sky-400">
                           Política de Privacidad
                         </Link>
                       </span>
@@ -538,11 +528,7 @@ export default function Register() {
                     whileTap={{ scale: 0.98 }}
                     type="submit"
                     disabled={isLoading}
-                    className={`w-full py-3 px-4 text-white rounded-xl font-semibold hover:shadow-lg transition-all duration-200 disabled:opacity-50 disabled:cursor-not-allowed ${
-                      role === 'coach'
-                        ? 'bg-gradient-to-r from-blue-600 to-purple-600'
-                        : 'bg-gradient-to-r from-purple-600 to-pink-600'
-                    }`}
+                    className="w-full py-3 px-4 text-white rounded-xl font-semibold hover:shadow-lg transition-all duration-200 disabled:opacity-50 disabled:cursor-not-allowed bg-sky-600 hover:bg-sky-700"
                   >
                     {isLoading ? (
                       <span className="flex items-center justify-center">
@@ -563,7 +549,7 @@ export default function Register() {
                   ¿Ya tienes cuenta?{' '}
                   <Link
                     to="/login"
-                    className="font-semibold text-blue-600 hover:text-blue-500 dark:text-blue-400"
+                    className="font-semibold text-sky-600 hover:text-sky-500 dark:text-sky-400"
                   >
                     Inicia sesión
                   </Link>
@@ -575,11 +561,11 @@ export default function Register() {
       </div>
 
       {/* Right Side - Image/Branding */}
-      <div className="hidden lg:flex lg:flex-1 bg-gradient-to-br from-blue-600 to-purple-600 relative overflow-hidden">
+      <div className="hidden lg:flex lg:flex-1 bg-sky-600 relative overflow-hidden">
         {/* Background decorations */}
         <div className="absolute inset-0">
           <div className="absolute top-20 right-20 w-72 h-72 bg-white/10 rounded-full blur-3xl" />
-          <div className="absolute bottom-20 left-20 w-96 h-96 bg-purple-400/20 rounded-full blur-3xl" />
+          <div className="absolute bottom-20 left-20 w-96 h-96 bg-sky-400/20 rounded-full blur-3xl" />
         </div>
 
         <div className="relative flex flex-col items-center justify-center p-12 text-white">
@@ -592,7 +578,7 @@ export default function Register() {
             <h2 className="text-4xl font-bold mb-6">
               Únete a la comunidad TrainingTrack Pro
             </h2>
-            <p className="text-xl text-blue-100 mb-8">
+            <p className="text-xl text-sky-100 mb-8">
               La plataforma líder en gestión de entrenamientos para medio fondo y fondo. Desde 400m hasta maratón.
             </p>
 

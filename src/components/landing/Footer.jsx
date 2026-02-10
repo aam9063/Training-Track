@@ -46,8 +46,8 @@ export default function Footer() {
     <footer className="bg-gray-900 text-gray-300 relative overflow-hidden">
       {/* Background decoration */}
       <div className="absolute inset-0 overflow-hidden opacity-10">
-        <div className="absolute top-0 left-1/4 w-96 h-96 bg-blue-500 rounded-full blur-3xl" />
-        <div className="absolute bottom-0 right-1/4 w-96 h-96 bg-purple-500 rounded-full blur-3xl" />
+        <div className="absolute top-0 left-1/4 w-96 h-96 bg-sky-500 rounded-full blur-3xl" />
+        <div className="absolute bottom-0 right-1/4 w-96 h-96 bg-gray-500 rounded-full blur-3xl" />
       </div>
 
       <div className="relative max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 py-16">
@@ -62,7 +62,7 @@ export default function Footer() {
               transition={{ duration: 0.5 }}
             >
               <div className="flex items-center space-x-2 mb-4">
-                <div className="w-10 h-10 bg-gradient-to-br from-blue-600 to-purple-600 rounded-lg flex items-center justify-center">
+                <div className="w-10 h-10 bg-sky-600 rounded-lg flex items-center justify-center">
                 <img src="/img/logo.png" alt="TrainingTrackPro" className="w-16 h-16 object-contain" />
 
                 </div>
@@ -77,15 +77,15 @@ export default function Footer() {
               {/* Contact Info */}
               <div className="space-y-3">
                 <div className="flex items-center space-x-3 text-sm">
-                  <HiMail className="w-5 h-5 text-blue-500" />
+                  <HiMail className="w-5 h-5 text-sky-500" />
                   <span>contacto@trainingtrackpro.com</span>
                 </div>
                 <div className="flex items-center space-x-3 text-sm">
-                  <HiPhone className="w-5 h-5 text-blue-500" />
+                  <HiPhone className="w-5 h-5 text-sky-500" />
                   <span>+34 900 123 456</span>
                 </div>
                 <div className="flex items-center space-x-3 text-sm">
-                  <HiLocationMarker className="w-5 h-5 text-blue-500" />
+                  <HiLocationMarker className="w-5 h-5 text-sky-500" />
                   <span>Alicante, España</span>
                 </div>
               </div>
@@ -198,12 +198,12 @@ export default function Footer() {
               <input
                 type="email"
                 placeholder="tu@email.com"
-                className="flex-1 px-4 py-3 rounded-lg bg-gray-800 border border-gray-700 text-white placeholder-gray-500 focus:outline-none focus:border-blue-500 transition-colors"
+                className="flex-1 px-4 py-3 rounded-lg bg-gray-800 border border-gray-700 text-white placeholder-gray-500 focus:outline-none focus:border-sky-500 transition-colors"
               />
               <motion.button
                 whileHover={{ scale: 1.05 }}
                 whileTap={{ scale: 0.95 }}
-                className="px-6 py-3 bg-gradient-to-r from-blue-600 to-purple-600 text-white rounded-lg font-semibold hover:shadow-lg transition-all duration-200"
+                className="px-6 py-3 bg-sky-600 hover:bg-sky-700 text-white rounded-lg font-semibold hover:shadow-lg transition-all duration-200"
               >
                 Suscribirse
               </motion.button>

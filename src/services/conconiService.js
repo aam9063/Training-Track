@@ -1,6 +1,7 @@
 import { supabase } from '../lib/supabase';
 import { toLocalDateStr } from '../lib/dateUtils';
 import Papa from 'papaparse';
+import * as XLSX from 'xlsx';
 
 /**
  * Format pace from seconds per km to "m:ss/km" string
@@ -13,97 +14,264 @@ export const formatPace = (secondsPerKm) => {
 };
 
 /**
- * Parse a Conconi test CSV file
- * Expected columns: serie/serie_number, tiempo/time_seconds (supports mm:ss), fc/heart_rate, recuperacion/recovery_time_120ppm
+ * Process raw rows (from CSV or XLSX) into Conconi series objects.
+ * Each row is an object with string keys/values.
+ */
+const processRows = (rows, distanceMeters = 800) => {
+  if (!rows || rows.length === 0) {
+    throw new Error('El archivo está vacío');
+  }
+
+  const series = rows.map((row, index) => {
+    // Normalize column names (trim, lowercase)
+    const normalized = {};
+    Object.keys(row).forEach((key) => {
+      const val = row[key];
+      normalized[key.trim().toLowerCase().replace(/\s+/g, '_')] = typeof val === 'string' ? val.trim() : String(val ?? '');
+    });
+
+    // Parse series number
+    const seriesNumber =
+      parseInt(
+        normalized['serie_number'] ||
+          normalized['serie'] ||
+          normalized['series'] ||
+          normalized['numero']
+      ) || index + 1;
+
+    // Parse time: support mm:ss and raw seconds
+    const timeValue =
+      normalized['time_seconds'] ||
+      normalized['tiempo'] ||
+      normalized['time'] ||
+      normalized['tiempo_segundos'];
+    let timeSeconds;
+    if (timeValue && timeValue.includes(':')) {
+      const parts = timeValue.split(':').map(Number);
+      timeSeconds = parts[0] * 60 + (parts[1] || 0);
+    } else {
+      timeSeconds = parseInt(timeValue);
+    }
+
+    // Parse heart rate
+    const heartRate = parseInt(
+      normalized['heart_rate'] || normalized['fc'] || normalized['hr'] || normalized['frecuencia_cardiaca']
+    );
+
+    // Parse recovery time (optional)
+    const recoveryTime =
+      parseInt(
+        normalized['recovery_time_120ppm'] ||
+          normalized['recovery'] ||
+          normalized['recuperacion'] ||
+          normalized['tiempo_recuperacion']
+      ) || null;
+
+    // Validation
+    if (isNaN(timeSeconds) || timeSeconds <= 0) {
+      throw new Error(`Fila ${index + 1}: tiempo inválido "${timeValue}"`);
+    }
+    if (isNaN(heartRate) || heartRate <= 0) {
+      throw new Error(`Fila ${index + 1}: frecuencia cardíaca inválida`);
+    }
+
+    return {
+      series_number: seriesNumber,
+      distance_meters: distanceMeters,
+      time_seconds: timeSeconds,
+      heart_rate: heartRate,
+      recovery_time_seconds: recoveryTime,
+      max_heart_rate_reached: false,
+    };
+  });
+
+  if (series.length < 5) {
+    throw new Error(`Se necesitan al menos 5 series para calcular ritmos (tienes ${series.length})`);
+  }
+
+  // Sort by series number
+  series.sort((a, b) => a.series_number - b.series_number);
+
+  // Mark max HR series
+  const maxHR = Math.max(...series.map((s) => s.heart_rate));
+  series.forEach((s) => {
+    s.max_heart_rate_reached = s.heart_rate >= maxHR;
+  });
+
+  return series;
+};
+
+/**
+ * Parse a time value into seconds.
+ * Handles: "2'30", "1'28", "57"", "1:03", raw seconds,
+ * and Excel day fractions (small decimals like 0.001736).
+ */
+const parseTimeStr = (val) => {
+  if (val == null) return null;
+
+  // Excel day fraction: a number < 1 representing time as fraction of 24h
+  if (typeof val === 'number') {
+    if (val > 0 && val < 1) {
+      // Day fraction → seconds: val * 24 * 3600
+      return Math.round(val * 86400);
+    }
+    // Could be raw seconds (e.g. 150) — only valid if reasonable (< 3600)
+    if (val > 0 && val < 3600) return Math.round(val);
+    return null;
+  }
+
+  const s = String(val).trim().replace(/[\u2018\u2019\u2032]/g, "'").replace(/[\u201C\u201D\u2033]/g, '"');
+  if (!s || s === '' || s.toUpperCase() === 'X' || s === '-') return null;
+
+  // Format: m'ss" or m'ss
+  const mApos = s.match(/^(\d+)'(\d+)"?$/);
+  if (mApos) return parseInt(mApos[1]) * 60 + parseInt(mApos[2]);
+
+  // Format: ss" (seconds only)
+  const secOnly = s.match(/^(\d+)"$/);
+  if (secOnly) return parseInt(secOnly[1]);
+
+  // Format: h:mm:ss or m:ss
+  if (s.includes(':')) {
+    const parts = s.split(':').map(Number);
+    if (parts.length === 3) return parts[0] * 3600 + parts[1] * 60 + (parts[2] || 0);
+    return parts[0] * 60 + (parts[1] || 0);
+  }
+
+  // Raw number (seconds)
+  const n = parseFloat(s);
+  if (isNaN(n)) return null;
+  // Small decimal → Excel day fraction
+  if (n > 0 && n < 1) return Math.round(n * 86400);
+  return n > 0 && n < 3600 ? Math.round(n) : null;
+};
+
+/**
+ * Detect and extract Conconi data from a transposed XLSX sheet.
+ * Looks for rows containing labels like "1.000m"/"1000m" (time), "Pulso" (HR),
+ * and "r: 120p"/"r:120p"/"120" (recovery).
+ * Series are in columns; each column = one series.
+ * Returns array of series objects or null if format not detected.
+ */
+const extractTransposedConconi = (sheet, distanceMeters = 800) => {
+  // Read formatted grid for label detection
+  const fmtGrid = XLSX.utils.sheet_to_json(sheet, { header: 1, defval: '', raw: false });
+  // Read raw grid for numeric values (Excel day fractions, integers)
+  const rawGrid = XLSX.utils.sheet_to_json(sheet, { header: 1, defval: '', raw: true });
+  if (!fmtGrid || fmtGrid.length < 2) return null;
+
+  // Find the key rows by scanning cells for known labels (use formatted grid for text)
+  let timeRowIdx = -1;
+  let pulsoRowIdx = -1;
+  let recoveryRowIdx = -1;
+  let maxLabelCol = -1;
+
+  for (let r = 0; r < fmtGrid.length; r++) {
+    const rowLen = fmtGrid[r]?.length || 0;
+    for (let c = 0; c < Math.min(rowLen, 6); c++) {
+      const cell = String(fmtGrid[r][c] ?? '').trim().toLowerCase().replace(/[\s.]+/g, '');
+      if (cell.includes('1000') && timeRowIdx < 0) {
+        timeRowIdx = r;
+        maxLabelCol = Math.max(maxLabelCol, c);
+      }
+      if ((cell === 'pulso' || cell === 'fc' || cell.includes('frecuencia') || cell.includes('heartrate')) && pulsoRowIdx < 0) {
+        pulsoRowIdx = r;
+        maxLabelCol = Math.max(maxLabelCol, c);
+      }
+      if ((cell.includes('120') || cell.includes('recupera')) && recoveryRowIdx < 0) {
+        recoveryRowIdx = r;
+        maxLabelCol = Math.max(maxLabelCol, c);
+      }
+    }
+  }
+
+  if (pulsoRowIdx < 0) return null;
+  if (timeRowIdx < 0 && pulsoRowIdx > 0) {
+    timeRowIdx = pulsoRowIdx - 1;
+  }
+
+  const dataStartCol = maxLabelCol + 1;
+  // Use RAW grid for data extraction (preserves Excel numeric time values)
+  const timeRow = rawGrid[timeRowIdx] || [];
+  const pulsoRow = rawGrid[pulsoRowIdx] || [];
+  const recoveryRow = recoveryRowIdx >= 0 ? (rawGrid[recoveryRowIdx] || []) : [];
+
+  const series = [];
+  const maxCol = Math.max(timeRow.length, pulsoRow.length, recoveryRow.length);
+  for (let c = dataStartCol; c < maxCol; c++) {
+    const timeVal = parseTimeStr(timeRow[c]);
+    const pulsoRaw = String(pulsoRow[c] ?? '').trim();
+    const hrVal = parseInt(pulsoRaw);
+    const recVal = parseTimeStr(recoveryRow[c]);
+
+    if (pulsoRaw.toUpperCase() === 'X' || pulsoRaw === '') continue;
+    if (isNaN(hrVal) || hrVal <= 0 || hrVal > 250) continue;
+
+    series.push({
+      series_number: series.length + 1,
+      distance_meters: distanceMeters,
+      time_seconds: timeVal || 0,
+      heart_rate: hrVal,
+      recovery_time_seconds: recVal,
+      max_heart_rate_reached: false,
+    });
+  }
+
+  if (series.length < 5) return null;
+
+  const maxHR = Math.max(...series.map((s) => s.heart_rate));
+  series.forEach((s) => {
+    s.max_heart_rate_reached = s.heart_rate >= maxHR;
+  });
+
+  return series;
+};
+
+/**
+ * Parse a Conconi test file (CSV or XLSX)
+ * Supports both:
+ *  - Simple row-per-series format (CSV/XLSX with columns: serie, tiempo, fc, recuperacion)
+ *  - Transposed spreadsheet format (XLSX with rows: 1.000m, Pulso, r:120p and series in columns)
  * Returns { data: series[], error }
  */
-export const parseConconiCSV = (file) => {
+export const parseConconiFile = (file, distanceMeters = 800) => {
+  const isXlsx = file.name.match(/\.xlsx?$/i);
+
+  if (isXlsx) {
+    return new Promise((resolve) => {
+      const reader = new FileReader();
+      reader.onload = (e) => {
+        try {
+          const wb = XLSX.read(e.target.result, { type: 'array' });
+          const sheet = wb.Sheets[wb.SheetNames[0]];
+
+          // Try transposed format first (the typical coach spreadsheet)
+          const transposed = extractTransposedConconi(sheet, distanceMeters);
+          if (transposed) {
+            resolve({ data: transposed, error: null });
+            return;
+          }
+
+          // Fallback to simple row-per-series format
+          const rows = XLSX.utils.sheet_to_json(sheet, { defval: '' });
+          resolve({ data: processRows(rows, distanceMeters), error: null });
+        } catch (error) {
+          resolve({ data: null, error: error instanceof Error ? error : new Error(String(error)) });
+        }
+      };
+      reader.onerror = () => resolve({ data: null, error: new Error('Error al leer el archivo') });
+      reader.readAsArrayBuffer(file);
+    });
+  }
+
+  // CSV fallback
   return new Promise((resolve) => {
     Papa.parse(file, {
       header: true,
       skipEmptyLines: true,
       complete: (results) => {
         try {
-          if (!results.data || results.data.length === 0) {
-            throw new Error('El archivo CSV está vacío');
-          }
-
-          const series = results.data.map((row, index) => {
-            // Normalize column names (trim, lowercase)
-            const normalized = {};
-            Object.keys(row).forEach((key) => {
-              normalized[key.trim().toLowerCase().replace(/\s+/g, '_')] = row[key]?.trim();
-            });
-
-            // Parse series number
-            const seriesNumber =
-              parseInt(
-                normalized['serie_number'] ||
-                  normalized['serie'] ||
-                  normalized['series'] ||
-                  normalized['numero']
-              ) || index + 1;
-
-            // Parse time: support mm:ss and raw seconds
-            const timeValue =
-              normalized['time_seconds'] ||
-              normalized['tiempo'] ||
-              normalized['time'] ||
-              normalized['tiempo_segundos'];
-            let timeSeconds;
-            if (timeValue && timeValue.includes(':')) {
-              const parts = timeValue.split(':').map(Number);
-              timeSeconds = parts[0] * 60 + (parts[1] || 0);
-            } else {
-              timeSeconds = parseInt(timeValue);
-            }
-
-            // Parse heart rate
-            const heartRate = parseInt(
-              normalized['heart_rate'] || normalized['fc'] || normalized['hr'] || normalized['frecuencia_cardiaca']
-            );
-
-            // Parse recovery time (optional)
-            const recoveryTime =
-              parseInt(
-                normalized['recovery_time_120ppm'] ||
-                  normalized['recovery'] ||
-                  normalized['recuperacion'] ||
-                  normalized['tiempo_recuperacion']
-              ) || null;
-
-            // Validation
-            if (isNaN(timeSeconds) || timeSeconds <= 0) {
-              throw new Error(`Fila ${index + 1}: tiempo inválido "${timeValue}"`);
-            }
-            if (isNaN(heartRate) || heartRate <= 0) {
-              throw new Error(`Fila ${index + 1}: frecuencia cardíaca inválida`);
-            }
-
-            return {
-              series_number: seriesNumber,
-              distance_meters: 200,
-              time_seconds: timeSeconds,
-              heart_rate: heartRate,
-              recovery_time_seconds: recoveryTime,
-              max_heart_rate_reached: false,
-            };
-          });
-
-          if (series.length < 5) {
-            throw new Error(`Se necesitan al menos 5 series para calcular ritmos (tienes ${series.length})`);
-          }
-
-          // Sort by series number
-          series.sort((a, b) => a.series_number - b.series_number);
-
-          // Mark max HR series
-          const maxHR = Math.max(...series.map((s) => s.heart_rate));
-          series.forEach((s) => {
-            s.max_heart_rate_reached = s.heart_rate >= maxHR;
-          });
-
-          resolve({ data: series, error: null });
+          resolve({ data: processRows(results.data, distanceMeters), error: null });
         } catch (error) {
           resolve({ data: null, error });
         }
@@ -114,6 +282,9 @@ export const parseConconiCSV = (file) => {
     });
   });
 };
+
+// Legacy alias
+export const parseConconiCSV = parseConconiFile;
 
 /**
  * Create a Conconi test with series, then calculate paces via SQL RPC

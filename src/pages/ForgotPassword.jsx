@@ -38,10 +38,10 @@ export default function ForgotPassword() {
         {/* Logo */}
         <div className="text-center">
           <Link to="/" className="inline-flex items-center space-x-2">
-            <div className="w-12 h-12 bg-gradient-to-br from-blue-600 to-purple-600 rounded-xl flex items-center justify-center">
+            <div className="w-12 h-12 bg-sky-600 rounded-xl flex items-center justify-center">
               <img src="/img/logo.png" alt="TrainingTrackPro" className="w-16 h-16 object-contain" />
             </div>
-            <span className="text-3xl font-bold bg-gradient-to-r from-blue-600 to-purple-600 bg-clip-text text-transparent">
+            <span className="text-3xl font-bold text-sky-600 dark:text-sky-400">
               TrainingTrack Pro
             </span>
           </Link>
@@ -66,7 +66,7 @@ export default function ForgotPassword() {
             </p>
             <Link
               to="/login"
-              className="inline-flex items-center gap-2 text-blue-600 hover:text-blue-500 dark:text-blue-400 font-medium"
+              className="inline-flex items-center gap-2 text-sky-600 hover:text-sky-500 dark:text-sky-400 font-medium"
             >
               <HiArrowLeft className="w-4 h-4" />
               Volver al inicio de sesión
@@ -107,7 +107,7 @@ export default function ForgotPassword() {
                     required
                     value={email}
                     onChange={(e) => { setEmail(e.target.value); setError(''); }}
-                    className="w-full pl-10 pr-4 py-3 border-2 border-gray-200 dark:border-gray-700 rounded-xl bg-white dark:bg-gray-800 text-gray-900 dark:text-white placeholder-gray-400 focus:outline-none focus:border-blue-500 dark:focus:border-blue-400 transition-colors"
+                    className="w-full pl-10 pr-4 py-3 border-2 border-gray-200 dark:border-gray-700 rounded-xl bg-white dark:bg-gray-800 text-gray-900 dark:text-white placeholder-gray-400 focus:outline-none focus:border-sky-500 dark:focus:border-sky-400 transition-colors"
                     placeholder="tu@email.com"
                   />
                 </div>
@@ -118,7 +118,7 @@ export default function ForgotPassword() {
                 whileTap={{ scale: 0.98 }}
                 type="submit"
                 disabled={isLoading}
-                className="w-full py-3 px-4 bg-gradient-to-r from-blue-600 to-purple-600 text-white rounded-xl font-semibold hover:shadow-lg transition-all duration-200 disabled:opacity-50 disabled:cursor-not-allowed"
+                className="w-full py-3 px-4 bg-sky-600 hover:bg-sky-700 text-white rounded-xl font-semibold hover:shadow-lg transition-all duration-200 disabled:opacity-50 disabled:cursor-not-allowed"
               >
                 {isLoading ? (
                   <span className="flex items-center justify-center">
@@ -137,7 +137,7 @@ export default function ForgotPassword() {
             <p className="text-center">
               <Link
                 to="/login"
-                className="inline-flex items-center gap-2 text-sm font-medium text-blue-600 hover:text-blue-500 dark:text-blue-400"
+                className="inline-flex items-center gap-2 text-sm font-medium text-sky-600 hover:text-sky-500 dark:text-sky-400"
               >
                 <HiArrowLeft className="w-4 h-4" />
                 Volver al inicio de sesión

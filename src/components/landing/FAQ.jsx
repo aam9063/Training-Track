@@ -58,12 +58,12 @@ export default function FAQ() {
     <section
       id="faq"
       ref={ref}
-      className="py-24 bg-gradient-to-br from-gray-50 to-purple-50 dark:from-gray-800 dark:to-gray-900 relative overflow-hidden"
+      className="py-24 bg-gradient-to-br from-gray-50 to-sky-50 dark:from-gray-800 dark:to-gray-900 relative overflow-hidden"
     >
       {/* Background decoration */}
       <div className="absolute inset-0 overflow-hidden opacity-30">
-        <div className="absolute top-1/4 left-0 w-96 h-96 bg-blue-300 dark:bg-blue-900/30 rounded-full blur-3xl" />
-        <div className="absolute bottom-1/4 right-0 w-96 h-96 bg-purple-300 dark:bg-purple-900/30 rounded-full blur-3xl" />
+        <div className="absolute top-1/4 left-0 w-96 h-96 bg-sky-300 dark:bg-sky-900/30 rounded-full blur-3xl" />
+        <div className="absolute bottom-1/4 right-0 w-96 h-96 bg-gray-300 dark:bg-gray-700/30 rounded-full blur-3xl" />
       </div>
 
       <div className="relative max-w-4xl mx-auto px-4 sm:px-6 lg:px-8">
@@ -78,14 +78,14 @@ export default function FAQ() {
             initial={{ opacity: 0, scale: 0.5 }}
             animate={isInView ? { opacity: 1, scale: 1 } : { opacity: 0, scale: 0.5 }}
             transition={{ duration: 0.5 }}
-            className="inline-block px-4 py-2 bg-blue-100 dark:bg-blue-900/30 text-blue-600 dark:text-blue-400 rounded-full text-sm font-semibold mb-4"
+            className="inline-block px-4 py-2 bg-sky-100 dark:bg-sky-900/30 text-sky-600 dark:text-sky-400 rounded-full text-sm font-semibold mb-4"
           >
             PREGUNTAS FRECUENTES
           </motion.span>
 
           <h2 className="text-4xl sm:text-5xl font-bold text-gray-900 dark:text-white mb-6">
             ¿Tienes preguntas?
-            <span className="block bg-gradient-to-r from-blue-600 to-purple-600 bg-clip-text text-transparent">
+            <span className="block text-sky-600 dark:text-sky-400">
               Tenemos respuestas
             </span>
           </h2>
@@ -122,7 +122,7 @@ export default function FAQ() {
                   transition={{ duration: 0.3 }}
                   className="flex-shrink-0"
                 >
-                  <HiChevronDown className="w-6 h-6 text-blue-600 dark:text-blue-400" />
+                  <HiChevronDown className="w-6 h-6 text-sky-600 dark:text-sky-400" />
                 </motion.div>
               </button>
 
@@ -162,7 +162,7 @@ export default function FAQ() {
             <motion.button
               whileHover={{ scale: 1.05 }}
               whileTap={{ scale: 0.95 }}
-              className="px-8 py-3 bg-gradient-to-r from-blue-600 to-purple-600 text-white rounded-xl font-semibold hover:shadow-lg transition-all duration-200"
+              className="px-8 py-3 bg-sky-600 hover:bg-sky-700 text-white rounded-xl font-semibold hover:shadow-lg transition-all duration-200"
             >
               Contactar Soporte
             </motion.button>

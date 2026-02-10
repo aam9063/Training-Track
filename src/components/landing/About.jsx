@@ -19,13 +19,13 @@ export default function About() {
       icon: HiChartBar,
       title: 'Análisis Inteligente',
       description: 'Métricas avanzadas, zonas de entrenamiento y análisis de rendimiento basados en tus datos reales.',
-      gradient: 'from-blue-500 to-cyan-500',
+      gradient: 'from-sky-500 to-sky-600',
     },
     {
       icon: HiUsers,
       title: 'Gestión Centralizada',
       description: 'Todos tus atletas en un solo lugar. Perfiles detallados, historial y comunicación directa.',
-      gradient: 'from-purple-500 to-pink-500',
+      gradient: 'from-slate-600 to-slate-700',
     },
     {
       icon: HiClock,
@@ -43,7 +43,7 @@ export default function About() {
       icon: HiTrendingUp,
       title: 'Evolución Continua',
       description: 'Visualiza el progreso con gráficas interactivas, PRs y comparativas temporales.',
-      gradient: 'from-indigo-500 to-blue-500',
+      gradient: 'from-sky-600 to-sky-700',
     },
     {
       icon: HiLightningBolt,
@@ -88,8 +88,8 @@ export default function About() {
     >
       {/* Background decoration */}
       <div className="absolute inset-0 overflow-hidden pointer-events-none">
-        <div className="absolute top-0 right-0 w-[600px] h-[600px] bg-gradient-to-br from-blue-400/10 to-purple-400/10 dark:from-blue-600/5 dark:to-purple-600/5 rounded-full blur-3xl transform translate-x-1/2 -translate-y-1/2" />
-        <div className="absolute bottom-0 left-0 w-[600px] h-[600px] bg-gradient-to-tr from-orange-400/10 to-pink-400/10 dark:from-orange-600/5 dark:to-pink-600/5 rounded-full blur-3xl transform -translate-x-1/2 translate-y-1/2" />
+        <div className="absolute top-0 right-0 w-[600px] h-[600px] bg-gradient-to-br from-sky-400/10 to-gray-400/5 dark:from-sky-600/5 dark:to-gray-600/5 rounded-full blur-3xl transform translate-x-1/2 -translate-y-1/2" />
+        <div className="absolute bottom-0 left-0 w-[600px] h-[600px] bg-gradient-to-tr from-gray-400/10 to-sky-400/5 dark:from-gray-600/5 dark:to-sky-600/5 rounded-full blur-3xl transform -translate-x-1/2 translate-y-1/2" />
       </div>
 
       <div className="relative max-w-7xl mx-auto px-4 sm:px-6 lg:px-8">
@@ -104,18 +104,18 @@ export default function About() {
             initial={{ opacity: 0, scale: 0.5 }}
             animate={isInView ? { opacity: 1, scale: 1 } : { opacity: 0, scale: 0.5 }}
             transition={{ duration: 0.5 }}
-            className="inline-flex items-center gap-2 px-4 py-2 bg-blue-100 dark:bg-blue-900/30 text-blue-600 dark:text-blue-400 rounded-full text-sm font-semibold mb-6"
+            className="inline-flex items-center gap-2 px-4 py-2 bg-sky-100 dark:bg-sky-900/30 text-sky-600 dark:text-sky-400 rounded-full text-sm font-semibold mb-6"
           >
             <span className="relative flex h-2 w-2">
-              <span className="animate-ping absolute inline-flex h-full w-full rounded-full bg-blue-400 opacity-75"></span>
-              <span className="relative inline-flex rounded-full h-2 w-2 bg-blue-500"></span>
+              <span className="animate-ping absolute inline-flex h-full w-full rounded-full bg-sky-400 opacity-75"></span>
+              <span className="relative inline-flex rounded-full h-2 w-2 bg-sky-500"></span>
             </span>
             CONOCE TRAINING TRACK PRO
           </motion.span>
 
           <h2 className="text-4xl sm:text-5xl lg:text-6xl font-bold text-gray-900 dark:text-white mb-6 leading-tight">
             La plataforma completa para
-            <span className="block mt-2 bg-gradient-to-r from-blue-600 via-purple-600 to-pink-600 bg-clip-text text-transparent">
+            <span className="block mt-2 text-sky-600 dark:text-sky-400">
               el atletismo moderno
             </span>
           </h2>
@@ -194,7 +194,7 @@ export default function About() {
 
                 <h3 className="text-3xl md:text-4xl font-bold text-white mb-6 leading-tight">
                   Conectado con tus
-                  <span className="text-transparent bg-clip-text bg-gradient-to-r from-blue-400 to-cyan-400"> dispositivos favoritos</span>
+                  <span className="text-sky-400"> dispositivos favoritos</span>
                 </h3>
 
                 <p className="text-gray-300 text-lg mb-8 leading-relaxed">
@@ -251,7 +251,7 @@ export default function About() {
                     initial={{ scale: 0 }}
                     animate={isInView ? { scale: 1 } : { scale: 0 }}
                     transition={{ duration: 0.5, delay: 0.3 }}
-                    className="absolute top-1/2 left-1/2 transform -translate-x-1/2 -translate-y-1/2 w-24 h-24 bg-gradient-to-br from-blue-600 to-purple-600 rounded-2xl flex items-center justify-center shadow-2xl z-10"
+                    className="absolute top-1/2 left-1/2 transform -translate-x-1/2 -translate-y-1/2 w-24 h-24 bg-sky-600 rounded-2xl flex items-center justify-center shadow-2xl z-10"
                   >
                     <span className="text-2xl font-bold text-white">TP</span>
                   </motion.div>
@@ -336,7 +336,7 @@ export default function About() {
               transition={{ duration: 0.5, delay: 0.9 + index * 0.1 }}
               className="text-center group"
             >
-              <div className="text-4xl md:text-5xl font-bold bg-gradient-to-r from-blue-600 to-purple-600 bg-clip-text text-transparent mb-2 group-hover:scale-110 transition-transform duration-300">
+              <div className="text-4xl md:text-5xl font-bold text-sky-600 dark:text-sky-400 mb-2 group-hover:scale-110 transition-transform duration-300">
                 {stat.value}
               </div>
               <div className="text-gray-900 dark:text-white font-semibold">

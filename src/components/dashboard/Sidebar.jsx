@@ -1,6 +1,7 @@
 import { useState, useEffect, useRef } from 'react';
 import { Link, useLocation, useNavigate } from 'react-router-dom';
 import { useAuth } from '../../contexts/AuthContext';
+import { useTheme } from '../../contexts/ThemeContext';
 import {
   FiHome,
   FiUsers,
@@ -13,6 +14,8 @@ import {
   FiMenu,
   FiX,
   FiMessageSquare,
+  FiSun,
+  FiMoon,
 } from 'react-icons/fi';
 
 const Sidebar = ({ onCollapse }) => {
@@ -24,6 +27,7 @@ const Sidebar = ({ onCollapse }) => {
   const location = useLocation();
   const navigate = useNavigate();
   const { user, profile, signOut } = useAuth();
+  const { theme, toggleTheme } = useTheme();
 
   // Usar profile si existe, sino usar datos básicos del user
   const displayName = profile?.first_name || user?.user_metadata?.first_name || 'Usuario';
@@ -113,7 +117,7 @@ const Sidebar = ({ onCollapse }) => {
           <img src="/img/logo.png" alt="TrainingTrackPro" className="w-8 h-8 object-contain flex-shrink-0" />
           {!collapsed && (
             <span className="text-xl font-bold text-gray-900 dark:text-white">
-              TrainingTrack<span className="text-blue-600">Pro</span>
+              TrainingTrack<span className="text-sky-600">Pro</span>
             </span>
           )}
         </Link>
@@ -152,7 +156,7 @@ const Sidebar = ({ onCollapse }) => {
                 transition-all duration-200
                 ${
                   active
-                    ? 'bg-blue-50 dark:bg-blue-900/20 text-blue-600 dark:text-blue-400'
+                    ? 'bg-sky-50 dark:bg-sky-900/20 text-sky-600 dark:text-sky-400'
                     : 'text-gray-700 dark:text-gray-300 hover:bg-gray-100 dark:hover:bg-gray-700'
                 }
                 ${collapsed ? 'justify-center' : ''}
@@ -167,6 +171,35 @@ const Sidebar = ({ onCollapse }) => {
           );
         })}
       </nav>
+
+      {/* Theme Toggle Switch */}
+      <div className="px-3 pb-2">
+        <button
+          onClick={toggleTheme}
+          className={`
+            w-full flex items-center px-3 py-2.5 rounded-lg
+            text-gray-700 dark:text-gray-300 hover:bg-gray-100 dark:hover:bg-gray-700
+            transition-colors
+            ${collapsed ? 'justify-center' : 'space-x-3'}
+          `}
+          title={collapsed ? (theme === 'light' ? 'Modo oscuro' : 'Modo claro') : ''}
+        >
+          <div className="relative w-11 h-6 bg-gray-300 dark:bg-gray-600 rounded-full flex-shrink-0 transition-colors">
+            <div className={`absolute top-0.5 w-5 h-5 rounded-full bg-white shadow-md flex items-center justify-center transition-transform duration-300 ${theme === 'dark' ? 'translate-x-[22px]' : 'translate-x-0.5'}`}>
+              {theme === 'light' ? (
+                <FiSun className="w-3 h-3 text-yellow-500" />
+              ) : (
+                <FiMoon className="w-3 h-3 text-sky-600" />
+              )}
+            </div>
+          </div>
+          {!collapsed && (
+            <span className="font-medium text-sm">
+              {theme === 'light' ? 'Modo claro' : 'Modo oscuro'}
+            </span>
+          )}
+        </button>
+      </div>
 
       {/* User Section */}
       <div className="border-t border-gray-200 dark:border-gray-700 p-3">
@@ -193,7 +226,7 @@ const Sidebar = ({ onCollapse }) => {
                 className="w-8 h-8 rounded-full object-cover flex-shrink-0"
               />
             ) : (
-              <div className="w-8 h-8 rounded-full bg-gradient-to-br from-blue-500 to-purple-600 flex items-center justify-center flex-shrink-0">
+              <div className="w-8 h-8 rounded-full bg-sky-600 flex items-center justify-center flex-shrink-0">
                 <span className="text-white font-semibold text-sm">
                   {displayName[0]}{displayLastName[0] || 'C'}
                 </span>

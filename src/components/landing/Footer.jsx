@@ -8,28 +8,28 @@ export default function Footer() {
 
   const footerLinks = {
     product: [
-      { name: 'Características', href: '#' },
+      { name: 'Características', href: '/not-found' },
       { name: 'Pricing', href: '#pricing' },
-      { name: 'Casos de Uso', href: '#' },
+      { name: 'Casos de Uso', href: '/not-found' },
       { name: 'Testimonios', href: '#testimonios' },
     ],
     company: [
       { name: 'Sobre Nosotros', href: '#conocenos' },
-      { name: 'Blog', href: '#' },
-      { name: 'Carreras', href: '#' },
-      { name: 'Prensa', href: '#' },
+      { name: 'Blog', href: '/not-found' },
+      { name: 'Carreras', href: '/not-found' },
+      { name: 'Prensa', href: '/not-found' },
     ],
     resources: [
-      { name: 'Documentación', href: '#' },
-      { name: 'Centro de Ayuda', href: '#' },
-      { name: 'API', href: '#' },
-      { name: 'Comunidad', href: '#' },
+      { name: 'Documentación', href: '/not-found' },
+      { name: 'Centro de Ayuda', href: '/not-found' },
+      { name: 'API', href: '/not-found' },
+      { name: 'Comunidad', href: '/not-found' },
     ],
     legal: [
-      { name: 'Privacidad', href: '#' },
-      { name: 'Términos', href: '#' },
-      { name: 'Cookies', href: '#' },
-      { name: 'Licencias', href: '#' },
+      { name: 'Privacidad', href: '/not-found' },
+      { name: 'Términos', href: '/not-found' },
+      { name: 'Cookies', href: '/not-found' },
+      { name: 'Licencias', href: '/not-found' },
     ],
   };
 

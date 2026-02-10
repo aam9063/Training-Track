@@ -76,9 +76,7 @@ export default function ResetPassword() {
         {/* Logo */}
         <div className="text-center">
           <Link to="/" className="inline-flex items-center space-x-2">
-            <div className="w-12 h-12 bg-sky-600 rounded-xl flex items-center justify-center">
-              <img src="/img/logo.png" alt="TrainingTrackPro" className="w-16 h-16 object-contain" />
-            </div>
+            <img src="/img/logo.png" alt="TrainingTrackPro" className="w-12 h-12 object-contain" />
             <span className="text-3xl font-bold text-sky-600 dark:text-sky-400">
               TrainingTrack Pro
             </span>

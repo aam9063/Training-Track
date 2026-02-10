@@ -439,6 +439,7 @@ export const RUNNING_CATEGORIES = {
 export const GYM_CATEGORIES = {
   max_strength: 'Fuerza Máxima',
   general_strength: 'Fuerza General',
+  explosive_strength: 'Fuerza Explosiva',
   core: 'Core',
   mobility: 'Movilidad',
   plyometrics: 'Pliometría',

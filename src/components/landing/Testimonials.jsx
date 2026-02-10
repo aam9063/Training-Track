@@ -19,7 +19,7 @@ export default function Testimonials() {
       role: 'Entrenador Nacional de Medio Fondo',
       image: 'https://randomuser.me/api/portraits/men/32.jpg',
       rating: 5,
-      text: 'TrackPro ha revolucionado la forma en que gestiono a mis 20 atletas. El análisis de datos me permite tomar decisiones más inteligentes y los resultados hablan por sí solos.',
+      text: 'TrainingTrack Pro ha revolucionado la forma en que gestiono a mis 20 atletas. El análisis de datos me permite tomar decisiones más inteligentes y los resultados hablan por sí solos.',
       specialty: '800m - 1500m',
     },
     {
@@ -51,7 +51,7 @@ export default function Testimonials() {
       role: 'Entrenador Universitario',
       image: 'https://randomuser.me/api/portraits/men/67.jpg',
       rating: 5,
-      text: 'Gestionar un equipo universitario nunca fue tan fácil. TrackPro centraliza todo: entrenamientos, comunicación y análisis. Es indispensable.',
+      text: 'Gestionar un equipo universitario nunca fue tan fácil. TrainingTrack Pro centraliza todo: entrenamientos, comunicación y análisis. Es indispensable.',
       specialty: 'Equipo Universitario',
     },
   ];

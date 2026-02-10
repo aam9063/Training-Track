@@ -107,10 +107,12 @@ export const getAthleteDetails = async (athleteId) => {
       console.error('Error fetching user:', userError);
     }
 
-    // Fetch personal bests and paces in parallel
-    const [pbRes, pacesRes] = await Promise.all([
+    // Fetch personal bests, paces, latest VAM test, and latest Conconi test in parallel
+    const [pbRes, pacesRes, vamRes, conconiRes] = await Promise.all([
       supabase.from('personal_bests').select('*').eq('athlete_id', athleteId).order('date', { ascending: false }),
-      supabase.from('athlete_paces').select('*').eq('athlete_id', athleteId).is('valid_until', null),
+      supabase.from('athlete_paces').select('*').eq('athlete_id', athleteId).is('valid_until', null).order('pace_code', { ascending: true }),
+      supabase.from('vam_tests').select('*').eq('athlete_id', athleteId).order('test_date', { ascending: false }).limit(1),
+      supabase.from('conconi_tests').select('*, conconi_test_series(*)').eq('athlete_id', athleteId).order('test_date', { ascending: false }).limit(1),
     ]);
 
     const combined = {
@@ -118,6 +120,8 @@ export const getAthleteDetails = async (athleteId) => {
       user: user || {},
       personal_bests: pbRes.data || [],
       athlete_paces: pacesRes.data || [],
+      latest_vam: vamRes.data?.[0] || null,
+      latest_conconi: conconiRes.data?.[0] || null,
     };
 
     return { data: combined, error: null };

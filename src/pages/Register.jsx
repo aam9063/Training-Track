@@ -160,7 +160,7 @@ export default function Register() {
                 <span className="text-white font-bold text-2xl">T</span>
               </div>
               <span className="text-3xl font-bold bg-gradient-to-r from-blue-600 to-purple-600 bg-clip-text text-transparent">
-                TrackPro
+                TrainingTrack Pro
               </span>
             </Link>
           </div>
@@ -181,7 +181,7 @@ export default function Register() {
                     Crear cuenta
                   </h2>
                   <p className="mt-2 text-gray-600 dark:text-gray-400">
-                    ¿Cómo quieres usar TrackPro?
+                    ¿Cómo quieres usar TrainingTrack Pro?
                   </p>
                 </div>
 
@@ -590,7 +590,7 @@ export default function Register() {
             className="text-center max-w-lg"
           >
             <h2 className="text-4xl font-bold mb-6">
-              Únete a la comunidad TrackPro
+              Únete a la comunidad TrainingTrack Pro
             </h2>
             <p className="text-xl text-blue-100 mb-8">
               La plataforma líder en gestión de entrenamientos para medio fondo y fondo. Desde 400m hasta maratón.

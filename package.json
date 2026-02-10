@@ -20,6 +20,7 @@
     "leaflet": "^1.9.4",
     "mapbox-gl": "^3.18.1",
     "motion": "^12.29.2",
+    "papaparse": "^5.5.3",
     "react": "^19.2.0",
     "react-chartjs-2": "^5.3.1",
     "react-dom": "^19.2.0",

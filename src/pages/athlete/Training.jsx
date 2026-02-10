@@ -15,9 +15,9 @@ import {
   FiTrendingUp,
   FiFlag,
   FiExternalLink,
+  FiZap,
 } from 'react-icons/fi';
-import { jsPDF } from 'jspdf';
-import autoTable from 'jspdf-autotable';
+import { generateWeeklyPDF } from '../../lib/pdfExport';
 import { useAuth } from '../../contexts/AuthContext';
 import { getWeeklyTraining, getWeekStartDate, DAYS_OF_WEEK } from '../../services/weeklyTrainingService';
 import {
@@ -31,6 +31,7 @@ import {
   loadStravaTokens,
 } from '../../services/stravaService';
 import { saveActivityRPE, getActivitiesRPE, getRPEEmoji } from '../../services/rpeService';
+import { supabase } from '../../lib/supabase';
 import RPEModal from '../../components/athlete/RPEModal';
 import mapboxgl from 'mapbox-gl';
 import polyline from '@mapbox/polyline';
@@ -46,6 +47,12 @@ const Training = () => {
   const [selectedDay, setSelectedDay] = useState(null);
   const [selectedDayIndex, setSelectedDayIndex] = useState(null);
 
+  // Paces, VAM & personal bests state
+  const [athletePaces, setAthletePaces] = useState([]);
+  const [latestVam, setLatestVam] = useState(null);
+  const [latestConconiTest, setLatestConconiTest] = useState(null);
+  const [personalBests, setPersonalBests] = useState([]);
+
   // Strava state
   const [stravaConnected, setStravaConnected] = useState(false);
   const [stravaActivities, setStravaActivities] = useState([]);
@@ -56,6 +63,28 @@ const Training = () => {
   const [editRpeActivity, setEditRpeActivity] = useState(null);
   const mapContainerRef = useRef(null);
   const mapRef = useRef(null);
+
+  // Load paces & VAM data
+  useEffect(() => {
+    const loadTestData = async () => {
+      if (!profile?.id) return;
+      try {
+        const [pacesRes, vamRes, conconiRes, pbRes] = await Promise.all([
+          supabase.from('athlete_paces').select('*').eq('athlete_id', profile.id).is('valid_until', null).order('pace_code', { ascending: true }),
+          supabase.from('vam_tests').select('*').eq('athlete_id', profile.id).order('test_date', { ascending: false }).limit(1),
+          supabase.from('conconi_tests').select('*, conconi_test_series(*)').eq('athlete_id', profile.id).order('test_date', { ascending: false }).limit(1),
+          supabase.from('personal_bests').select('*').eq('athlete_id', profile.id).order('date', { ascending: false }),
+        ]);
+        setAthletePaces(pacesRes.data || []);
+        setLatestVam(vamRes.data?.[0] || null);
+        setLatestConconiTest(conconiRes.data?.[0] || null);
+        setPersonalBests(pbRes.data || []);
+      } catch (err) {
+        console.error('Error loading test data:', err);
+      }
+    };
+    loadTestData();
+  }, [profile?.id]);
 
   // Load Strava activities
   useEffect(() => {
@@ -260,72 +289,15 @@ const Training = () => {
   };
 
   const downloadPDF = () => {
-    const doc = new jsPDF();
-
-    // Título
-    doc.setFontSize(20);
-    doc.text('Plan de Entrenamiento Semanal', 14, 20);
-
-    // Fecha de la semana
-    doc.setFontSize(12);
-    const weekStart = weekDays[0].toLocaleDateString('es-ES');
-    const weekEnd = weekDays[6].toLocaleDateString('es-ES');
-    doc.text(`Semana: ${weekStart} - ${weekEnd}`, 14, 30);
-
-    // Tabla de entrenamientos
-    const tableData = weekDays.map((day, index) => {
-      const training = trainings[index];
-      if (!training) return [DAYS_OF_WEEK[index], '-', '-', '-', '-'];
-
-      if (training.type === 'rest') {
-        return [DAYS_OF_WEEK[index], 'Descanso', '-', '-', '-'];
-      }
-
-      const exerciseList = training.exercises
-        ?.map((ex) => `${ex.name}${ex.sets ? ` ${ex.sets}x${ex.reps || ''}` : ''}`)
-        .join(', ') || '-';
-
-      return [
-        DAYS_OF_WEEK[index],
-        training.title || '-',
-        training.totalDistance || '-',
-        training.duration ? `${training.duration} min` : '-',
-        exerciseList,
-      ];
+    generateWeeklyPDF({
+      athleteName: `${profile.first_name || ''} ${profile.last_name || ''}`.trim().toUpperCase(),
+      personalBests,
+      athletePaces,
+      latestVam,
+      latestConconiTest,
+      trainings,
+      weekDays,
     });
-
-    autoTable(doc, {
-      head: [['Día', 'Entrenamiento', 'Distancia', 'Duración', 'Ejercicios']],
-      body: tableData,
-      startY: 40,
-      theme: 'grid',
-      headStyles: {
-        fillColor: [59, 130, 246],
-        textColor: 255,
-        fontStyle: 'bold',
-      },
-      styles: {
-        fontSize: 9,
-        cellPadding: 4,
-      },
-      columnStyles: {
-        0: { cellWidth: 22 },
-        1: { cellWidth: 35 },
-        2: { cellWidth: 25 },
-        3: { cellWidth: 22 },
-        4: { cellWidth: 80 },
-      },
-    });
-
-    // Footer
-    doc.setFontSize(10);
-    doc.text(
-      `Generado el ${new Date().toLocaleDateString('es-ES')} | TrackPro`,
-      14,
-      doc.internal.pageSize.height - 10
-    );
-
-    doc.save(`plan-entrenamiento-${weekStart}.pdf`);
   };
 
   const getTypeLabel = (type) => {
@@ -432,6 +404,264 @@ const Training = () => {
           <FiChevronRight className="w-5 h-5 sm:w-6 sm:h-6 text-gray-600 dark:text-gray-400" />
         </button>
       </div>
+
+      {/* Conconi Paces + VAM Results */}
+      {(athletePaces.length > 0 || latestVam) && (
+        <div className="grid grid-cols-1 lg:grid-cols-2 gap-4 mb-4 sm:mb-6">
+          {/* Conconi Paces Table */}
+          <div className="bg-white dark:bg-gray-800 rounded-xl shadow-sm border border-gray-200 dark:border-gray-700 overflow-hidden">
+            <div className="px-3 sm:px-4 py-2.5 border-b border-gray-200 dark:border-gray-700 flex items-center">
+              <FiZap className="w-4 h-4 mr-2 text-amber-500" />
+              <h3 className="text-sm font-bold text-gray-900 dark:text-white">Test de Conconi</h3>
+            </div>
+            {athletePaces.length > 0 ? (() => {
+              const paceOrder = ['RM', 'R10', 'R9', 'R8', 'R7', 'R6', 'R5', 'R4', 'R3', 'R2', 'R1', 'RR'];
+              const sorted = paceOrder
+                .map(code => athletePaces.find(p => p.pace_code === code))
+                .filter(Boolean);
+              // Background colors matching the screenshot gradient: red → orange → yellow → green
+              const bgColors = {
+                RM:  'bg-red-600',
+                R10: 'bg-red-500',
+                R9:  'bg-red-400',
+                R8:  'bg-orange-500',
+                R7:  'bg-orange-400',
+                R6:  'bg-yellow-500',
+                R5:  'bg-yellow-400',
+                R4:  'bg-lime-400',
+                R3:  'bg-lime-500',
+                R2:  'bg-green-400',
+                R1:  'bg-green-500',
+                RR:  'bg-emerald-600',
+              };
+              // Percentage labels per zone (approximate from screenshot)
+              const pctLabels = {
+                RM:  '100%',
+                R10: '92%',
+                R9:  '90%',
+                R8:  '88%',
+                R7:  '86%',
+                R6:  '84%',
+                R5:  '82%',
+                R4:  '78%',
+                R3:  '72%',
+                R2:  '62%',
+                R1:  '50%',
+                RR:  '42%',
+              };
+              // Map recovery times from conconi series to pace zones (best effort mapping)
+              const seriesRecovery = {};
+              if (latestConconiTest?.conconi_test_series) {
+                const series = [...latestConconiTest.conconi_test_series].sort((a, b) => a.series_number - b.series_number);
+                // Map series to paces: last series ≈ R10, first ≈ R1, distribute linearly
+                const totalSeries = series.length;
+                const totalPaces = sorted.length;
+                sorted.forEach((pace, i) => {
+                  if (pace.pace_code === 'RR') return; // RR has no series
+                  const seriesIdx = Math.round((i / (totalPaces - 1)) * (totalSeries - 1));
+                  const s = series[Math.min(seriesIdx, totalSeries - 1)];
+                  if (s?.recovery_time_seconds) {
+                    seriesRecovery[pace.pace_code] = s.recovery_time_seconds;
+                  }
+                });
+              }
+              const maxHr = latestConconiTest?.max_hr_reached;
+              const formatPaceVal = (secs) => {
+                const min = Math.floor(secs / 60);
+                const sec = Math.round(secs % 60);
+                return `${min}'${String(sec).padStart(2, '0')}"`;
+              };
+              const formatRecovery = (secs) => {
+                if (!secs) return '';
+                const min = Math.floor(secs / 60);
+                const sec = secs % 60;
+                return sec > 0 ? `${min}'${String(sec).padStart(2, '0')}"` : `${min}'`;
+              };
+
+              return (
+                <div className="overflow-x-auto">
+                  <table className="w-full text-[11px] sm:text-xs min-w-[600px]">
+                    <thead>
+                      <tr>
+                        <th className="text-left py-1.5 px-2 text-gray-500 dark:text-gray-400 font-medium whitespace-nowrap sticky left-0 bg-white dark:bg-gray-800 z-10 w-24"></th>
+                        {sorted.map(pace => (
+                          <th key={pace.pace_code} className={`px-1 py-1.5 text-center text-white font-bold whitespace-nowrap ${bgColors[pace.pace_code] || 'bg-gray-500'}`}>
+                            {pace.pace_code}
+                          </th>
+                        ))}
+                      </tr>
+                    </thead>
+                    <tbody>
+                      {/* Percentage row */}
+                      <tr className="bg-gray-50 dark:bg-gray-700/30">
+                        <td className="py-1 px-2 text-gray-400 dark:text-gray-500 font-medium whitespace-nowrap sticky left-0 bg-gray-50 dark:bg-gray-700/30 z-10"></td>
+                        {sorted.map(pace => (
+                          <td key={pace.pace_code} className="px-1 py-1 text-center text-gray-500 dark:text-gray-400 whitespace-nowrap">
+                            {pctLabels[pace.pace_code] || ''}
+                          </td>
+                        ))}
+                      </tr>
+                      {/* Ritmo row */}
+                      <tr className="border-t border-gray-200 dark:border-gray-700">
+                        <td className="py-1.5 px-2 text-gray-600 dark:text-gray-300 font-semibold whitespace-nowrap sticky left-0 bg-white dark:bg-gray-800 z-10">Ritmo/1.000m</td>
+                        {sorted.map(pace => (
+                          <td key={pace.pace_code} className="px-1 py-1.5 text-center font-mono font-semibold text-gray-900 dark:text-white whitespace-nowrap">
+                            {formatPaceVal(pace.pace_seconds_per_km)}
+                          </td>
+                        ))}
+                      </tr>
+                      {/* Pulso row */}
+                      <tr className="border-t border-gray-200 dark:border-gray-700 bg-gray-50 dark:bg-gray-700/30">
+                        <td className="py-1.5 px-2 text-gray-600 dark:text-gray-300 font-semibold whitespace-nowrap sticky left-0 bg-gray-50 dark:bg-gray-700/30 z-10">Pulso</td>
+                        {sorted.map(pace => (
+                          <td key={pace.pace_code} className="px-1 py-1.5 text-center font-mono text-gray-700 dark:text-gray-300 whitespace-nowrap">
+                            {pace.heart_rate_min && pace.heart_rate_max
+                              ? `${pace.heart_rate_max}`
+                              : ''}
+                          </td>
+                        ))}
+                      </tr>
+                      {/* Recovery time row */}
+                      {Object.keys(seriesRecovery).length > 0 && (
+                        <tr className="border-t border-gray-200 dark:border-gray-700">
+                          <td className="py-1.5 px-2 text-gray-600 dark:text-gray-300 font-semibold whitespace-nowrap sticky left-0 bg-white dark:bg-gray-800 z-10">Recu. a 120p</td>
+                          {sorted.map(pace => (
+                            <td key={pace.pace_code} className="px-1 py-1.5 text-center font-mono text-gray-700 dark:text-gray-300 whitespace-nowrap">
+                              {seriesRecovery[pace.pace_code] ? formatRecovery(seriesRecovery[pace.pace_code]) : ''}
+                            </td>
+                          ))}
+                        </tr>
+                      )}
+                    </tbody>
+                  </table>
+                  {maxHr && (
+                    <div className="px-3 py-1.5 text-[10px] text-gray-500 dark:text-gray-400 border-t border-gray-100 dark:border-gray-700">
+                      FC máx: <span className="font-semibold text-gray-700 dark:text-gray-300">{maxHr} ppm</span>
+                    </div>
+                  )}
+                </div>
+              );
+            })() : (
+              <div className="text-center py-6">
+                <FiZap className="w-7 h-7 text-gray-300 dark:text-gray-600 mx-auto mb-1.5" />
+                <p className="text-xs text-gray-500 dark:text-gray-400">Sin test de Conconi</p>
+              </div>
+            )}
+          </div>
+
+          {/* VAM Results */}
+          <div className="bg-white dark:bg-gray-800 rounded-xl shadow-sm border border-gray-200 dark:border-gray-700 overflow-hidden">
+            <div className="px-3 sm:px-4 py-2.5 border-b border-gray-200 dark:border-gray-700 flex items-center">
+              <FiActivity className="w-4 h-4 mr-2 text-purple-500" />
+              <h3 className="text-sm font-bold text-gray-900 dark:text-white">Test VAM</h3>
+            </div>
+            {latestVam ? (() => {
+              const vamKmh = parseFloat(latestVam.vam_kmh);
+              const paceSecsKm = latestVam.pace_seconds_per_km;
+              const vo2max = (vamKmh * 3.5).toFixed(1);
+              // Derived thresholds
+              const mlssKmh = (vamKmh * 0.88).toFixed(1);
+              const mlssPace = Math.round(3600 / (vamKmh * 0.88));
+              const vt2Kmh = (vamKmh * 0.875).toFixed(1);
+              const vt2Pace = Math.round(3600 / (vamKmh * 0.875));
+              const vt1Kmh = (vamKmh * 0.775).toFixed(1);
+              const vt1Pace = Math.round(3600 / (vamKmh * 0.775));
+              const maxHr = latestConconiTest?.max_hr_reached;
+              const formatP = (secs) => {
+                const m = Math.floor(secs / 60);
+                const s = Math.round(secs % 60);
+                return `${m}'${String(s).padStart(2, '0')}"`;
+              };
+
+              return (
+                <div className="overflow-x-auto">
+                  <table className="w-full text-[11px] sm:text-xs min-w-[500px]">
+                    <thead>
+                      <tr>
+                        {[
+                          { label: 'FCmax', color: 'bg-red-500' },
+                          { label: 'VAM', color: 'bg-purple-500' },
+                          { label: 'VO2max', color: 'bg-blue-500' },
+                          { label: 'MLSS', color: 'bg-orange-500' },
+                          { label: 'VT2', color: 'bg-yellow-500' },
+                          { label: 'VT1', color: 'bg-green-500' },
+                        ].map(col => (
+                          <th key={col.label} className={`px-2 py-1.5 text-center text-white font-bold whitespace-nowrap ${col.color}`}>
+                            {col.label}
+                          </th>
+                        ))}
+                      </tr>
+                    </thead>
+                    <tbody>
+                      {/* km/h row */}
+                      <tr className="border-t border-gray-200 dark:border-gray-700">
+                        {[
+                          maxHr ? `${maxHr}` : '-',
+                          `${vamKmh.toFixed(1)}`,
+                          vo2max,
+                          mlssKmh,
+                          vt2Kmh,
+                          vt1Kmh,
+                        ].map((val, i) => (
+                          <td key={i} className="px-2 py-1.5 text-center font-mono font-semibold text-gray-900 dark:text-white whitespace-nowrap">
+                            {val}
+                          </td>
+                        ))}
+                      </tr>
+                      {/* Units row */}
+                      <tr className="bg-gray-50 dark:bg-gray-700/30">
+                        {[
+                          maxHr ? 'ppm' : '',
+                          'km/h',
+                          'ml/kg/min',
+                          'km/h',
+                          'km/h',
+                          'km/h',
+                        ].map((unit, i) => (
+                          <td key={i} className="px-2 py-1 text-center text-[10px] text-gray-500 dark:text-gray-400 whitespace-nowrap">
+                            {unit}
+                          </td>
+                        ))}
+                      </tr>
+                      {/* Pace row */}
+                      <tr className="border-t border-gray-200 dark:border-gray-700">
+                        {[
+                          '',
+                          formatP(paceSecsKm),
+                          '',
+                          formatP(mlssPace),
+                          formatP(vt2Pace),
+                          formatP(vt1Pace),
+                        ].map((val, i) => (
+                          <td key={i} className="px-2 py-1.5 text-center font-mono text-gray-700 dark:text-gray-300 whitespace-nowrap">
+                            {val}
+                          </td>
+                        ))}
+                      </tr>
+                      {/* min/km label row */}
+                      <tr className="bg-gray-50 dark:bg-gray-700/30">
+                        {['', 'min/km', '', 'min/km', 'min/km', 'min/km'].map((unit, i) => (
+                          <td key={i} className="px-2 py-1 text-center text-[10px] text-gray-500 dark:text-gray-400 whitespace-nowrap">
+                            {unit}
+                          </td>
+                        ))}
+                      </tr>
+                    </tbody>
+                  </table>
+                  <div className="px-3 py-1.5 text-[10px] text-gray-500 dark:text-gray-400 border-t border-gray-100 dark:border-gray-700">
+                    Test: {new Date(latestVam.test_date).toLocaleDateString('es-ES')} &middot; {latestVam.distance_meters}m &middot; {Math.floor(latestVam.duration_seconds / 60)}'{String(latestVam.duration_seconds % 60).padStart(2, '0')}"
+                  </div>
+                </div>
+              );
+            })() : (
+              <div className="text-center py-6">
+                <FiActivity className="w-7 h-7 text-gray-300 dark:text-gray-600 mx-auto mb-1.5" />
+                <p className="text-xs text-gray-500 dark:text-gray-400">Sin test de VAM</p>
+              </div>
+            )}
+          </div>
+        </div>
+      )}
 
       {/* Loading State */}
       {loading ? (

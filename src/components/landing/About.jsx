@@ -110,7 +110,7 @@ export default function About() {
               <span className="animate-ping absolute inline-flex h-full w-full rounded-full bg-blue-400 opacity-75"></span>
               <span className="relative inline-flex rounded-full h-2 w-2 bg-blue-500"></span>
             </span>
-            CONOCE TRACKPRO
+            CONOCE TRAINING TRACK PRO
           </motion.span>
 
           <h2 className="text-4xl sm:text-5xl lg:text-6xl font-bold text-gray-900 dark:text-white mb-6 leading-tight">
@@ -212,7 +212,7 @@ export default function About() {
                     </div>
                     <div>
                       <p className="text-white font-medium">Envío de entrenamientos</p>
-                      <p className="text-gray-400 text-sm">Planifica en TrackPro y aparece en tu dispositivo</p>
+                      <p className="text-gray-400 text-sm">Planifica en TrainingTrack Pro y aparece en tu dispositivo</p>
                     </div>
                   </div>
 

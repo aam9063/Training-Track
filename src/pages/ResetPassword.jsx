@@ -77,10 +77,10 @@ export default function ResetPassword() {
         <div className="text-center">
           <Link to="/" className="inline-flex items-center space-x-2">
             <div className="w-12 h-12 bg-gradient-to-br from-blue-600 to-purple-600 rounded-xl flex items-center justify-center">
-              <span className="text-white font-bold text-2xl">T</span>
+              <img src="/img/logo.png" alt="TrainingTrackPro" className="w-16 h-16 object-contain" />
             </div>
             <span className="text-3xl font-bold bg-gradient-to-r from-blue-600 to-purple-600 bg-clip-text text-transparent">
-              TrackPro
+              TrainingTrack Pro
             </span>
           </Link>
         </div>

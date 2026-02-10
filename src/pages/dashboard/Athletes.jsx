@@ -14,6 +14,7 @@ import {
   FiUserCheck,
   FiUserX,
   FiClock,
+  FiFileText,
 } from 'react-icons/fi';
 import {
   getAthletes,
@@ -23,6 +24,8 @@ import {
   rejectAthleteRequest,
 } from '../../services/athleteService';
 import WeeklyTrainingModal from '../../components/dashboard/WeeklyTrainingModal';
+import ConconiTestModal from '../../components/dashboard/ConconiTestModal';
+import VAMTestModal from '../../components/dashboard/VAMTestModal';
 
 const Athletes = () => {
   const { profile } = useAuth();
@@ -34,6 +37,9 @@ const Athletes = () => {
   const [selectedSpecialty, setSelectedSpecialty] = useState('all');
   const [deleteModal, setDeleteModal] = useState({ show: false, athlete: null });
   const [trainingModal, setTrainingModal] = useState({ show: false, athlete: null });
+  const [conconiModal, setConconiModal] = useState({ show: false, athlete: null });
+  const [vamModal, setVamModal] = useState({ show: false, athlete: null });
+  const [testMenuAthleteId, setTestMenuAthleteId] = useState(null);
   const [processingRequest, setProcessingRequest] = useState(null);
 
   // Get unique race distances for filter
@@ -400,20 +406,44 @@ const Athletes = () => {
                         >
                           <FiBarChart2 className="w-5 h-5" />
                         </Link>
-                        <Link
-                          to={`/dashboard/athletes/${athlete.id}`}
-                          className="p-2 text-blue-600 hover:bg-blue-50 dark:hover:bg-blue-900/20 rounded-lg transition-colors"
-                          title="Ver perfil"
-                        >
-                          <FiUser className="w-5 h-5" />
-                        </Link>
-                        <button
-                          onClick={() => alert('Editar atleta próximamente')}
-                          className="p-2 text-green-600 hover:bg-green-50 dark:hover:bg-green-900/20 rounded-lg transition-colors"
-                          title="Editar"
-                        >
-                          <FiEdit2 className="w-5 h-5" />
-                        </button>
+                        
+                        <div className="relative">
+                          <button
+                            onClick={() => setTestMenuAthleteId(testMenuAthleteId === athlete.id ? null : athlete.id)}
+                            className="p-2 text-amber-600 hover:bg-amber-50 dark:hover:bg-amber-900/20 rounded-lg transition-colors"
+                            title="Tests"
+                          >
+                            <FiFileText className="w-5 h-5" />
+                          </button>
+                          {testMenuAthleteId === athlete.id && (
+                            <>
+                              <div className="fixed inset-0 z-40" onClick={() => setTestMenuAthleteId(null)} />
+                              <div className="absolute right-0 top-full mt-1 z-50 bg-white dark:bg-gray-800 rounded-xl shadow-lg border border-gray-200 dark:border-gray-700 overflow-hidden min-w-[170px]">
+                                <button
+                                  onClick={() => {
+                                    setTestMenuAthleteId(null);
+                                    setConconiModal({ show: true, athlete });
+                                  }}
+                                  className="w-full px-4 py-2.5 text-left text-sm text-gray-700 dark:text-gray-300 hover:bg-amber-50 dark:hover:bg-amber-900/20 flex items-center gap-2 transition-colors"
+                                >
+                                  <span className="w-2 h-2 rounded-full bg-amber-500" />
+                                  Test de Conconi
+                                </button>
+                                <button
+                                  onClick={() => {
+                                    setTestMenuAthleteId(null);
+                                    setVamModal({ show: true, athlete });
+                                  }}
+                                  className="w-full px-4 py-2.5 text-left text-sm text-gray-700 dark:text-gray-300 hover:bg-purple-50 dark:hover:bg-purple-900/20 flex items-center gap-2 transition-colors"
+                                >
+                                  <span className="w-2 h-2 rounded-full bg-purple-500" />
+                                  Test VAM
+                                </button>
+                              </div>
+                            </>
+                          )}
+                        </div>
+                        
                         <button
                           onClick={() => setDeleteModal({ show: true, athlete })}
                           className="p-2 text-red-600 hover:bg-red-50 dark:hover:bg-red-900/20 rounded-lg transition-colors"
@@ -477,8 +507,29 @@ const Athletes = () => {
         athlete={trainingModal.athlete}
         coachId={profile?.coach_id || profile?.id}
         onSuccess={() => {
-          // Optionally refresh or show success message
           console.log('Entrenamiento guardado exitosamente');
+        }}
+      />
+
+      {/* Conconi Test Modal */}
+      <ConconiTestModal
+        isOpen={conconiModal.show}
+        onClose={() => setConconiModal({ show: false, athlete: null })}
+        athlete={conconiModal.athlete}
+        coachId={profile?.coach_id || profile?.id}
+        onSuccess={() => {
+          console.log('Test de Conconi guardado exitosamente');
+        }}
+      />
+
+      {/* VAM Test Modal */}
+      <VAMTestModal
+        isOpen={vamModal.show}
+        onClose={() => setVamModal({ show: false, athlete: null })}
+        athlete={vamModal.athlete}
+        coachId={profile?.coach_id || profile?.id}
+        onSuccess={() => {
+          console.log('Test VAM guardado exitosamente');
         }}
       />
     </div>

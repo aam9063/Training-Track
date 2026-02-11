@@ -10,7 +10,7 @@ export default function Footer() {
     product: [
       { name: 'Características', href: '/not-found' },
       { name: 'Pricing', href: '#pricing' },
-      { name: 'Casos de Uso', href: '/not-found' },
+      { name: 'Casos de Uso', href: '/casos-de-uso' },
       { name: 'Testimonios', href: '#testimonios' },
     ],
     company: [

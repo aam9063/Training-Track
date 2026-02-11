@@ -46,7 +46,7 @@ export default function PromoBanner() {
               <div className="flex items-center gap-2">
                 <BsStars className="w-4 h-4 text-sky-200" />
                 <span className="text-white font-semibold text-sm">
-                  Beta Abierta
+                  Hola, bienvenido a TrainingTrack Pro
                 </span>
               </div>
               <button

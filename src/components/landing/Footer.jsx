@@ -28,7 +28,7 @@ export default function Footer() {
     legal: [
       { name: 'Privacidad', href: '/not-found' },
       { name: 'Términos', href: '/not-found' },
-      { name: 'Cookies', href: '/not-found' },
+      { name: 'Cookies', href: '#', onClick: () => { localStorage.removeItem('cookie_consent'); window.location.reload(); } },
       { name: 'Licencias', href: '/not-found' },
     ],
   };
@@ -171,7 +171,8 @@ export default function Footer() {
                 <li key={index}>
                   <a
                     href={link.href}
-                    className="text-gray-500 dark:text-gray-400 hover:text-gray-900 dark:hover:text-white transition-colors duration-200"
+                    onClick={link.onClick ? (e) => { e.preventDefault(); link.onClick(); } : undefined}
+                    className="text-gray-500 dark:text-gray-400 hover:text-gray-900 dark:hover:text-white transition-colors duration-200 cursor-pointer"
                   >
                     {link.name}
                   </a>

@@ -10,6 +10,7 @@ import FinalCTA from '../components/landing/FinalCTA';
 import Footer from '../components/landing/Footer';
 import ScrollToTop from '../components/landing/ScrollToTop';
 import PromoBanner from '../components/landing/PromoBanner';
+import CookieConsent from '../components/landing/CookieConsent';
 
 export default function Landing() {
   return (
@@ -26,6 +27,7 @@ export default function Landing() {
       <Footer />
       <ScrollToTop />
       <PromoBanner />
+      <CookieConsent />
     </div>
   );
 }

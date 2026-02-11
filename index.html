@@ -2,10 +2,121 @@
 <html lang="es">
   <head>
     <meta charset="UTF-8" />
-    <link rel="icon" type="image/png" href="/img/logo.png" />
     <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+
+    <!-- SEO Basico -->
     <title>TrainingTrack Pro - Plataforma de Gestión de Entrenamiento de Atletismo</title>
-    <meta name="description" content="La plataforma líder en gestión de entrenamientos de atletismo para entrenadores y atletas">
+    <meta name="description" content="Plataforma de gestión de entrenamientos de atletismo para entrenadores y atletas. Planificación semanal, métricas de Strava, informes de rendimiento con IA, tests fisiológicos y más.">
+    <meta name="keywords" content="entrenamiento atletismo, planificación deportiva, entrenador personal, métricas Strava, informes IA, rendimiento deportivo, running, trail, maratón, gestión atletas">
+    <meta name="author" content="TrainingTrack Pro">
+    <meta name="robots" content="index, follow">
+    <link rel="canonical" href="https://trainingtrackpro.com/" />
+
+    <!-- Favicon -->
+    <link rel="icon" type="image/png" sizes="32x32" href="/img/logo.png" />
+    <link rel="apple-touch-icon" href="/img/logo.png" />
+
+    <!-- Open Graph (Facebook, LinkedIn, WhatsApp) -->
+    <meta property="og:type" content="website" />
+    <meta property="og:url" content="https://trainingtrackpro.com/" />
+    <meta property="og:title" content="TrainingTrack Pro - Gestión de Entrenamiento de Atletismo" />
+    <meta property="og:description" content="Planifica entrenamientos, analiza métricas de Strava y genera informes de rendimiento con IA. La plataforma para entrenadores y atletas." />
+    <meta property="og:image" content="https://trainingtrackpro.com/img/og-image.png" />
+    <meta property="og:image:width" content="1200" />
+    <meta property="og:image:height" content="630" />
+    <meta property="og:locale" content="es_ES" />
+    <meta property="og:site_name" content="TrainingTrack Pro" />
+
+    <!-- Twitter Card -->
+    <meta name="twitter:card" content="summary_large_image" />
+    <meta name="twitter:title" content="TrainingTrack Pro - Gestión de Entrenamiento de Atletismo" />
+    <meta name="twitter:description" content="Planifica entrenamientos, analiza métricas de Strava y genera informes de rendimiento con IA." />
+    <meta name="twitter:image" content="https://trainingtrackpro.com/img/og-image.png" />
+
+    <!-- PWA / Movil -->
+    <meta name="theme-color" content="#0284c7" />
+    <meta name="mobile-web-app-capable" content="yes" />
+    <meta name="apple-mobile-web-app-status-bar-style" content="default" />
+    <meta name="apple-mobile-web-app-title" content="TrainingTrack Pro" />
+    <link rel="manifest" href="/manifest.json" />
+
+    <!-- Structured Data: Organization -->
+    <script type="application/ld+json">
+    {
+      "@context": "https://schema.org",
+      "@type": "SoftwareApplication",
+      "name": "TrainingTrack Pro",
+      "applicationCategory": "SportsApplication",
+      "operatingSystem": "Web",
+      "description": "Plataforma de gestión de entrenamientos de atletismo para entrenadores y atletas. Planificación semanal, métricas de Strava, informes de rendimiento con IA y tests fisiológicos.",
+      "url": "https://trainingtrackpro.com",
+      "offers": {
+        "@type": "AggregateOffer",
+        "priceCurrency": "EUR",
+        "lowPrice": "0",
+        "highPrice": "149",
+        "offerCount": "3"
+      },
+      "author": {
+        "@type": "Organization",
+        "name": "TrainingTrack Pro",
+        "url": "https://trainingtrackpro.com",
+        "email": "contacto@trainingtrackpro.com",
+        "address": {
+          "@type": "PostalAddress",
+          "addressLocality": "Alicante",
+          "addressCountry": "ES"
+        }
+      },
+      "aggregateRating": {
+        "@type": "AggregateRating",
+        "ratingValue": "4.8",
+        "ratingCount": "50"
+      }
+    }
+    </script>
+
+    <!-- Structured Data: FAQ (para Google Rich Results) -->
+    <script type="application/ld+json">
+    {
+      "@context": "https://schema.org",
+      "@type": "FAQPage",
+      "mainEntity": [
+        {
+          "@type": "Question",
+          "name": "¿TrainingTrack Pro es gratuito?",
+          "acceptedAnswer": {
+            "@type": "Answer",
+            "text": "Durante la fase beta, el acceso es completamente gratuito con todas las funcionalidades. No se requiere tarjeta de crédito."
+          }
+        },
+        {
+          "@type": "Question",
+          "name": "¿Cómo se integra con Strava?",
+          "acceptedAnswer": {
+            "@type": "Answer",
+            "text": "Los atletas conectan su cuenta de Strava con un solo clic. Las actividades se sincronizan automáticamente y el entrenador puede ver métricas, rutas y rendimiento en tiempo real."
+          }
+        },
+        {
+          "@type": "Question",
+          "name": "¿Qué incluyen los informes de IA?",
+          "acceptedAnswer": {
+            "@type": "Answer",
+            "text": "Los informes generados por inteligencia artificial incluyen análisis de rendimiento, ratio ACWR, riesgo de lesión, progresión de métricas y recomendaciones personalizadas de entrenamiento."
+          }
+        },
+        {
+          "@type": "Question",
+          "name": "¿Puedo usar la app en el móvil?",
+          "acceptedAnswer": {
+            "@type": "Answer",
+            "text": "Sí, TrainingTrack Pro es una aplicación web responsive que funciona en cualquier dispositivo: ordenador, tablet o móvil, sin necesidad de instalar nada."
+          }
+        }
+      ]
+    }
+    </script>
   </head>
   <body>
     <div id="root"></div>

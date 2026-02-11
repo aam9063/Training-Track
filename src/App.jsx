@@ -26,6 +26,13 @@ const Calendar = lazy(() => import('./pages/dashboard/Calendar'));
 const Profile = lazy(() => import('./pages/dashboard/Profile'));
 const CoachMessages = lazy(() => import('./pages/dashboard/Messages'));
 
+// Admin pages
+const AdminLayout = lazy(() => import('./layouts/AdminLayout'));
+const AdminLogin = lazy(() => import('./pages/admin/AdminLogin'));
+const AdminDashboard = lazy(() => import('./pages/admin/AdminDashboard'));
+const AdminUsers = lazy(() => import('./pages/admin/Users'));
+const AdminUserDetail = lazy(() => import('./pages/admin/UserDetail'));
+
 // Athlete pages
 const AthleteDashboard = lazy(() => import('./pages/athlete/Dashboard'));
 const Training = lazy(() => import('./pages/athlete/Training'));
@@ -79,6 +86,16 @@ function App() {
                 <Route path="devices" element={<Devices />} />
                 <Route path="messages" element={<AthleteMessages />} />
                 <Route path="profile" element={<Profile />} />
+              </Route>
+
+              {/* Admin Login (public) */}
+              <Route path="/admin/login" element={<AdminLogin />} />
+
+              {/* Protected Admin Routes */}
+              <Route path="/admin" element={<AdminLayout />}>
+                <Route index element={<AdminDashboard />} />
+                <Route path="users" element={<AdminUsers />} />
+                <Route path="users/:userId" element={<AdminUserDetail />} />
               </Route>
 
               {/* 404 */}

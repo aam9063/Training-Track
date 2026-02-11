@@ -35,6 +35,12 @@ export function AuthProvider({ children }) {
         return fallbackProfile;
       }
 
+      // Check if account is deactivated
+      if (userData.is_active === false) {
+        await supabase.auth.signOut();
+        return null;
+      }
+
       // Then get role-specific data
       let roleData = null;
       if (userData.role === 'coach') {
@@ -464,6 +470,7 @@ export function AuthProvider({ children }) {
     loading,
     isCoach: profile?.role === 'coach',
     isAthlete: profile?.role === 'athlete',
+    isAdmin: profile?.is_admin === true,
     signUp,
     signIn,
     signInWithGoogle,

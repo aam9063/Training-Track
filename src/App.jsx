@@ -14,6 +14,7 @@ const ForgotPassword = lazy(() => import('./pages/ForgotPassword'));
 const ResetPassword = lazy(() => import('./pages/ResetPassword'));
 const NotFound = lazy(() => import('./pages/NotFound'));
 const UseCases = lazy(() => import('./pages/UseCases'));
+const PrivacyPolicy = lazy(() => import('./pages/PrivacyPolicy'));
 
 // Coach pages
 const Dashboard = lazy(() => import('./pages/dashboard/Dashboard'));
@@ -56,6 +57,7 @@ function App() {
               <Route path="/forgot-password" element={<ForgotPassword />} />
               <Route path="/reset-password" element={<ResetPassword />} />
               <Route path="/casos-de-uso" element={<UseCases />} />
+              <Route path="/privacidad" element={<PrivacyPolicy />} />
 
               {/* Protected Coach Dashboard Routes */}
               <Route path="/dashboard" element={<DashboardLayout />}>

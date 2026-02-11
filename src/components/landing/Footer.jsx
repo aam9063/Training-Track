@@ -26,7 +26,7 @@ export default function Footer() {
       { name: 'Comunidad', href: '/not-found' },
     ],
     legal: [
-      { name: 'Privacidad', href: '/not-found' },
+      { name: 'Privacidad', href: '/privacidad' },
       { name: 'Términos', href: '/not-found' },
       { name: 'Cookies', href: '#', onClick: () => { localStorage.removeItem('cookie_consent'); window.location.reload(); } },
       { name: 'Licencias', href: '/not-found' },

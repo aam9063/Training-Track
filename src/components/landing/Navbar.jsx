@@ -1,5 +1,5 @@
 import { useState, useEffect } from 'react';
-import { Link } from 'react-router-dom';
+import { Link, useLocation, useNavigate } from 'react-router-dom';
 import { motion, AnimatePresence } from 'framer-motion';
 import { HiSun, HiMoon, HiMenu, HiX } from 'react-icons/hi';
 import { useTheme } from '../../contexts/ThemeContext';
@@ -8,6 +8,10 @@ export default function Navbar() {
   const [isScrolled, setIsScrolled] = useState(false);
   const [isMobileMenuOpen, setIsMobileMenuOpen] = useState(false);
   const { theme, toggleTheme } = useTheme();
+  const location = useLocation();
+  const navigate = useNavigate();
+
+  const isLanding = location.pathname === '/';
 
   useEffect(() => {
     const handleScroll = () => {
@@ -27,10 +31,16 @@ export default function Navbar() {
   ];
 
   const scrollToSection = (href, fromMobile = false) => {
+    if (!isLanding) {
+      // Navigate to landing with the hash
+      navigate('/' + href);
+      if (fromMobile) setIsMobileMenuOpen(false);
+      return;
+    }
+
     const element = document.querySelector(href);
     if (element) {
       if (fromMobile) {
-        // Close menu first, then scroll after animation completes
         setIsMobileMenuOpen(false);
         setTimeout(() => {
           element.scrollIntoView({ behavior: 'smooth' });
@@ -61,7 +71,12 @@ export default function Navbar() {
             transition={{ delay: 0.2 }}
             className="flex-shrink-0"
           >
-            <a href="#inicio" className="flex items-center space-x-2">
+            <a href={isLanding ? "#inicio" : "/"} onClick={(e) => {
+              if (isLanding) {
+                e.preventDefault();
+                scrollToSection('#inicio');
+              }
+            }} className="flex items-center space-x-2">
               <div className="w-10 h-10 bg-sky-600 rounded-lg flex items-center justify-center overflow-hidden">
                 <img src="/img/logo.png" alt="TrainingTrackPro" className="w-16 h-16 object-contain" />
               </div>

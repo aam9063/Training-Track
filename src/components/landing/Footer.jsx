@@ -222,7 +222,7 @@ export default function Footer() {
         >
           {/* Copyright */}
           <div className="text-gray-500 dark:text-gray-400 text-sm">
-            © {currentYear} TrainingTrack Pro. Todos los derechos reservados.
+            © {currentYear} Training Track Pro. Todos los derechos reservados.
           </div>
 
           {/* Social Links */}

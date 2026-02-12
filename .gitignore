@@ -31,5 +31,5 @@ dist-ssr
 
 .mcp.json
 .claude/*
-
+.agents/*
 supabase/*

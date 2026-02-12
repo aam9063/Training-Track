@@ -292,7 +292,7 @@ const CoachMessages = () => {
   }
 
   return (
-    <div className="flex h-[calc(100vh-4rem)] overflow-hidden">
+    <div className="flex h-[calc(100vh-4rem)] lg:h-screen overflow-hidden">
       {/* Left Panel — Conversation List */}
       <div
         className={`
@@ -436,7 +436,7 @@ const CoachMessages = () => {
             {/* Messages Area */}
             <div
               ref={messagesContainerRef}
-              className="flex-1 overflow-y-auto px-4 py-4 space-y-1"
+              className="flex-1 overflow-y-auto px-4 py-4"
             >
               {loadingMessages ? (
                 <div className="flex items-center justify-center h-full">

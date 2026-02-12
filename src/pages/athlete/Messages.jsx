@@ -196,7 +196,7 @@ const AthleteMessages = () => {
   }
 
   return (
-    <div className="flex flex-col h-[calc(100vh-4rem)] overflow-hidden">
+    <div className="flex flex-col h-[calc(100vh-4rem)] lg:h-screen overflow-hidden">
       {/* Chat Header */}
       <div className="px-4 py-3 border-b border-gray-200 dark:border-gray-700 bg-white dark:bg-gray-800 flex items-center space-x-3">
         {coachInfo.profile_image ? (
@@ -223,7 +223,7 @@ const AthleteMessages = () => {
       {/* Messages Area */}
       <div
         ref={messagesContainerRef}
-        className="flex-1 overflow-y-auto px-4 py-4 space-y-1 bg-gray-50 dark:bg-gray-900"
+        className="flex-1 overflow-y-auto px-4 py-4 bg-gray-50 dark:bg-gray-900"
       >
         {messages.length === 0 ? (
           <div className="flex items-center justify-center h-full">

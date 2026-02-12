@@ -70,6 +70,9 @@ export const getMonthSessions = async (coachId, year, month) => {
         notes_athlete: session.notes_athlete,
         estimated_duration_minutes: session.estimated_duration_minutes,
         actual_duration_minutes: session.actual_duration_minutes,
+        rpe_score: session.rpe_score,
+        rpe_notes: session.rpe_notes,
+        completed_at: session.completed_at,
       };
     });
 
@@ -183,6 +186,81 @@ export const deleteSession = async (sessionId) => {
   } catch (error) {
     console.error('Error deleting session:', error);
     return { error };
+  }
+};
+
+// Get sessions for a specific month (athlete perspective)
+export const getAthleteMonthSessions = async (athleteId, year, month) => {
+  if (!athleteId) {
+    console.warn('getAthleteMonthSessions: No athleteId provided');
+    return { data: [], error: null };
+  }
+
+  try {
+    const startDate = toLocalDateStr(new Date(year, month - 1, 1));
+    const endDate = toLocalDateStr(new Date(year, month, 0));
+
+    const { data: sessions, error: sessionsError } = await supabase
+      .from('training_sessions')
+      .select('*')
+      .eq('athlete_id', athleteId)
+      .gte('scheduled_date', startDate)
+      .lte('scheduled_date', endDate)
+      .order('scheduled_date', { ascending: true })
+      .order('scheduled_time', { ascending: true, nullsFirst: false });
+
+    if (sessionsError) {
+      console.error('Error fetching athlete sessions:', sessionsError);
+      return { data: [], error: sessionsError };
+    }
+
+    if (!sessions || sessions.length === 0) {
+      return { data: [], error: null };
+    }
+
+    const transformedSessions = sessions.map(session => ({
+      id: session.id,
+      title: session.title,
+      date: session.scheduled_date,
+      time: session.scheduled_time,
+      type: session.training_type,
+      status: session.status,
+      description: session.description,
+      notes_coach: session.notes_coach,
+      notes_athlete: session.notes_athlete,
+      estimated_duration_minutes: session.estimated_duration_minutes,
+      actual_duration_minutes: session.actual_duration_minutes,
+      rpe_score: session.rpe_score,
+      rpe_notes: session.rpe_notes,
+      completed_at: session.completed_at,
+    }));
+
+    return { data: transformedSessions, error: null };
+  } catch (error) {
+    console.error('Error fetching athlete month sessions:', error);
+    return { data: [], error };
+  }
+};
+
+// Reschedule a session to a new date (for drag & drop)
+export const rescheduleSession = async (sessionId, newDate) => {
+  if (!sessionId || !newDate) {
+    return { data: null, error: new Error('Missing sessionId or newDate') };
+  }
+
+  try {
+    const { data, error } = await supabase
+      .from('training_sessions')
+      .update({ scheduled_date: newDate })
+      .eq('id', sessionId)
+      .select()
+      .single();
+
+    if (error) throw error;
+    return { data, error: null };
+  } catch (error) {
+    console.error('Error rescheduling session:', error);
+    return { data: null, error };
   }
 };
 

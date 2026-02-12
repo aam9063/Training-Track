@@ -2,9 +2,11 @@ import { useState, useEffect, useRef } from 'react';
 import { Link, useLocation, useNavigate } from 'react-router-dom';
 import { useAuth } from '../../contexts/AuthContext';
 import { useTheme } from '../../contexts/ThemeContext';
+import { useNotifications } from '../../contexts/NotificationContext';
 import {
   FiHome,
   FiCalendar,
+  FiActivity,
   FiBarChart2,
   FiWatch,
   FiChevronLeft,
@@ -28,6 +30,7 @@ const AthleteSidebar = ({ onCollapse }) => {
   const navigate = useNavigate();
   const { user, profile, signOut } = useAuth();
   const { theme, toggleTheme } = useTheme();
+  const { unreadMessages } = useNotifications();
 
   // Usar profile si existe, sino usar datos básicos del user
   const displayName = profile?.first_name || user?.user_metadata?.first_name || 'Atleta';
@@ -46,9 +49,11 @@ const AthleteSidebar = ({ onCollapse }) => {
 
   const menuItems = [
     { path: '/athlete/dashboard', icon: FiHome, label: 'Dashboard' },
-    { path: '/athlete/training', icon: FiCalendar, label: 'Mis Entrenamientos' },
+    { path: '/athlete/training', icon: FiActivity, label: 'Mis Entrenamientos' },
+    { path: '/athlete/calendar', icon: FiCalendar, label: 'Calendario' },
     { path: '/athlete/metrics', icon: FiBarChart2, label: 'Mis Métricas' },
     { path: '/athlete/devices', icon: FiWatch, label: 'Dispositivos' },
+    { path: '/athlete/messages', icon: FiMessageSquare, label: 'Mensajes', badge: unreadMessages },
   ];
 
   const handleSignOut = async () => {
@@ -152,7 +157,7 @@ const AthleteSidebar = ({ onCollapse }) => {
                 key={item.path}
                 to={item.path}
                 className={`
-                  flex items-center space-x-3 px-3 py-2.5 rounded-lg
+                  relative flex items-center space-x-3 px-3 py-2.5 rounded-lg
                   transition-all duration-200
                   ${collapsed ? 'lg:justify-center' : ''}
                   ${
@@ -163,7 +168,18 @@ const AthleteSidebar = ({ onCollapse }) => {
                 `}
               >
                 <Icon className={`w-5 h-5 flex-shrink-0 ${active ? 'text-green-600 dark:text-green-400' : ''}`} />
-                <span className={`font-medium ${collapsed ? 'lg:hidden' : ''}`}>{item.label}</span>
+                <span className={`font-medium flex-1 ${collapsed ? 'lg:hidden' : ''}`}>{item.label}</span>
+                {item.badge > 0 && (
+                  collapsed ? (
+                    <span className="absolute -top-1 -right-1 bg-red-500 text-white text-[10px] font-bold rounded-full w-4 h-4 flex items-center justify-center lg:flex hidden">
+                      {item.badge > 9 ? '9+' : item.badge}
+                    </span>
+                  ) : (
+                    <span className="bg-red-500 text-white text-xs font-bold rounded-full px-1.5 py-0.5 min-w-[20px] text-center">
+                      {item.badge > 99 ? '99+' : item.badge}
+                    </span>
+                  )
+                )}
               </Link>
             );
           })}

@@ -16,10 +16,21 @@ import {
   FiFlag,
   FiExternalLink,
   FiZap,
+  FiCheck,
+  FiCheckCircle,
+  FiSkipForward,
+  FiRotateCcw,
 } from 'react-icons/fi';
 import { generateWeeklyPDF } from '../../lib/pdfExport';
 import { useAuth } from '../../contexts/AuthContext';
-import { getWeeklyTraining, getWeekStartDate, DAYS_OF_WEEK } from '../../services/weeklyTrainingService';
+import {
+  getWeeklyTraining,
+  getWeekStartDate,
+  DAYS_OF_WEEK,
+  completeSession,
+  skipSession,
+  revertSession,
+} from '../../services/weeklyTrainingService';
 import {
   isStravaConnected,
   getStravaActivities,
@@ -30,7 +41,8 @@ import {
   getActivityTypeLabel,
   loadStravaTokens,
 } from '../../services/stravaService';
-import { saveActivityRPE, getActivitiesRPE, getRPEEmoji } from '../../services/rpeService';
+import { saveActivityRPE, getActivitiesRPE, getRPEEmoji, RPE_OPTIONS } from '../../services/rpeService';
+import { showSuccess, showError } from '../../lib/toast';
 import { supabase } from '../../lib/supabase';
 import RPEModal from '../../components/athlete/RPEModal';
 import mapboxgl from 'mapbox-gl';
@@ -61,6 +73,13 @@ const Training = () => {
   const [visibleActivities, setVisibleActivities] = useState(5);
   const [activitiesRPE, setActivitiesRPE] = useState({});
   const [editRpeActivity, setEditRpeActivity] = useState(null);
+  // Completion flow state
+  const [showCompletionFlow, setShowCompletionFlow] = useState(false);
+  const [rpeScore, setRpeScore] = useState(null);
+  const [rpeNotes, setRpeNotes] = useState('');
+  const [athleteNotes, setAthleteNotes] = useState('');
+  const [actualDuration, setActualDuration] = useState('');
+  const [saving, setSaving] = useState(false);
   const mapContainerRef = useRef(null);
   const mapRef = useRef(null);
 
@@ -201,16 +220,26 @@ const Training = () => {
           // Format exercises for display
           const exercises = session.exercises?.map((ex) => {
             const exercise = ex.running_exercise || ex.gym_exercise;
+            const isGym = !!ex.gym_exercise_id;
             return {
+              id: ex.id,
               name: exercise?.name || 'Ejercicio',
               category: exercise?.category,
+              isGym,
               sets: ex.planned_sets,
               reps: ex.planned_reps,
               distance: ex.planned_distance_meters,
+              durationSeconds: ex.planned_duration_seconds,
+              weight: ex.planned_weight_kg,
               paceCode: ex.pace_code,
               paceDescription: ex.pace_description,
               rest: ex.rest_seconds,
               notes: ex.notes,
+              completedSets: ex.completed_sets,
+              completedReps: ex.completed_reps,
+              completedDistance: ex.completed_distance_meters,
+              completedDuration: ex.completed_duration_seconds,
+              completedWeight: ex.completed_weight_kg,
             };
           }) || [];
 
@@ -228,12 +257,17 @@ const Training = () => {
             type: session.training_type,
             description: session.description,
             notes: session.notes_coach,
+            notesAthlete: session.notes_athlete,
             duration: session.estimated_duration_minutes,
+            actualDuration: session.actual_duration_minutes,
             exercises,
             totalDistance: totalDistance > 0 ? `${(totalDistance / 1000).toFixed(1)} km` : null,
             totalDistanceMeters: totalDistance,
             status: session.status,
             date: session.scheduled_date,
+            rpeScore: session.rpe_score,
+            rpeNotes: session.rpe_notes,
+            completedAt: session.completed_at,
           };
         });
       }
@@ -280,12 +314,83 @@ const Training = () => {
     if (training) {
       setSelectedDay(training);
       setSelectedDayIndex(dayIndex);
+      setShowCompletionFlow(false);
+      setRpeScore(training.rpeScore || null);
+      setRpeNotes(training.rpeNotes || '');
+      setAthleteNotes(training.notesAthlete || '');
+      setActualDuration(training.actualDuration ? String(training.actualDuration) : '');
     }
   };
 
   const closeDayDetail = () => {
     setSelectedDay(null);
     setSelectedDayIndex(null);
+    setShowCompletionFlow(false);
+    setSaving(false);
+  };
+
+  const isPastOrToday = (dateStr) => {
+    const d = new Date(dateStr);
+    const today = new Date();
+    today.setHours(0, 0, 0, 0);
+    d.setHours(0, 0, 0, 0);
+    return d <= today;
+  };
+
+  const handleCompleteSession = async () => {
+    if (!selectedDay?.id) return;
+    setSaving(true);
+    try {
+      const { error } = await completeSession(selectedDay.id, {
+        rpeScore: rpeScore || null,
+        rpeNotes: rpeNotes || null,
+        notesAthlete: athleteNotes || null,
+        actualDurationMinutes: actualDuration ? parseInt(actualDuration) : null,
+      });
+      if (error) throw error;
+      showSuccess('Sesión completada correctamente');
+      closeDayDetail();
+      loadTrainings();
+    } catch (error) {
+      console.error('Error completing session:', error);
+      showError('Error al completar la sesión');
+    } finally {
+      setSaving(false);
+    }
+  };
+
+  const handleSkipSession = async () => {
+    if (!selectedDay?.id) return;
+    setSaving(true);
+    try {
+      const { error } = await skipSession(selectedDay.id, athleteNotes || null);
+      if (error) throw error;
+      showSuccess('Sesión marcada como omitida');
+      closeDayDetail();
+      loadTrainings();
+    } catch (error) {
+      console.error('Error skipping session:', error);
+      showError('Error al omitir la sesión');
+    } finally {
+      setSaving(false);
+    }
+  };
+
+  const handleRevertSession = async () => {
+    if (!selectedDay?.id) return;
+    setSaving(true);
+    try {
+      const { error } = await revertSession(selectedDay.id);
+      if (error) throw error;
+      showSuccess('Sesión revertida a planificada');
+      closeDayDetail();
+      loadTrainings();
+    } catch (error) {
+      console.error('Error reverting session:', error);
+      showError('Error al revertir la sesión');
+    } finally {
+      setSaving(false);
+    }
   };
 
   const downloadPDF = () => {
@@ -690,6 +795,9 @@ const Training = () => {
             const isRest = training?.type === 'rest';
             const isToday = day.toDateString() === new Date().toDateString();
             const hasTraining = !!training;
+            const isCompleted = training?.status === 'completed';
+            const isSkipped = training?.status === 'skipped';
+            const canComplete = hasTraining && !isRest && training?.status === 'planned' && isPastOrToday(training.date);
 
             return (
               <motion.div
@@ -699,12 +807,16 @@ const Training = () => {
                 transition={{ delay: index * 0.05 }}
                 onClick={() => openDayDetail(training, index)}
                 className={`
-                  bg-white dark:bg-gray-800 rounded-xl p-4 shadow-sm border-2
-                  ${isToday
-                    ? 'border-blue-500 dark:border-blue-400'
-                    : 'border-gray-200 dark:border-gray-700'}
+                  bg-white dark:bg-gray-800 rounded-xl p-4 shadow-sm border-2 relative
+                  ${isCompleted
+                    ? 'border-green-500 dark:border-green-400'
+                    : isSkipped
+                      ? 'border-gray-400 dark:border-gray-500'
+                      : isToday
+                        ? 'border-blue-500 dark:border-blue-400'
+                        : 'border-gray-200 dark:border-gray-700'}
                   ${isRest ? 'bg-gray-50 dark:bg-gray-800/50' : ''}
-                  ${hasTraining ? 'cursor-pointer hover:shadow-md hover:border-blue-400 dark:hover:border-blue-500 transition-all' : ''}
+                  ${hasTraining ? 'cursor-pointer hover:shadow-md transition-all' : ''}
                   min-h-[250px] sm:min-h-[280px] lg:min-h-[300px]
                 `}
               >
@@ -723,13 +835,38 @@ const Training = () => {
                   )}
                 </div>
 
+                {/* Status indicator */}
+                {isCompleted && (
+                  <div className="absolute top-3 right-3 flex items-center space-x-1">
+                    {training.rpeScore && <span className="text-lg">{getRPEEmoji(training.rpeScore)}</span>}
+                    <FiCheckCircle className="w-5 h-5 text-green-500" />
+                  </div>
+                )}
+                {isSkipped && (
+                  <div className="absolute top-3 right-3">
+                    <FiSkipForward className="w-5 h-5 text-gray-400" />
+                  </div>
+                )}
+
                 {/* Training Content */}
                 {training ? (
                   <div className="space-y-2 sm:space-y-3">
-                    {/* Type Badge */}
-                    <span className={`inline-block text-xs px-2 py-1 rounded-full ${getTypeColor(training.type)}`}>
-                      {getTypeLabel(training.type)}
-                    </span>
+                    {/* Type Badge + Status */}
+                    <div className="flex items-center gap-2 flex-wrap">
+                      <span className={`inline-block text-xs px-2 py-1 rounded-full ${getTypeColor(training.type)}`}>
+                        {getTypeLabel(training.type)}
+                      </span>
+                      {isCompleted && (
+                        <span className="inline-block text-xs px-2 py-1 rounded-full bg-green-100 text-green-700 dark:bg-green-900/30 dark:text-green-400">
+                          Completado
+                        </span>
+                      )}
+                      {isSkipped && (
+                        <span className="inline-block text-xs px-2 py-1 rounded-full bg-gray-200 text-gray-600 dark:bg-gray-700 dark:text-gray-400">
+                          Omitido
+                        </span>
+                      )}
+                    </div>
 
                     <h3 className={`font-bold text-base sm:text-lg ${
                       isRest
@@ -779,11 +916,18 @@ const Training = () => {
                           </div>
                         )}
 
-                        {/* Click indicator */}
+                        {/* Click indicator / Complete button */}
                         <div className="mt-2 pt-2 text-center">
-                          <span className="text-xs text-blue-500 dark:text-blue-400">
-                            Click para ver detalles →
-                          </span>
+                          {canComplete ? (
+                            <span className="inline-flex items-center space-x-1 text-xs font-medium text-green-600 dark:text-green-400">
+                              <FiCheck className="w-3.5 h-3.5" />
+                              <span>Completar sesión</span>
+                            </span>
+                          ) : (
+                            <span className="text-xs text-blue-500 dark:text-blue-400">
+                              {isCompleted ? 'Ver resultado →' : 'Ver detalles →'}
+                            </span>
+                          )}
                         </div>
                       </>
                     )}
@@ -1148,9 +1292,21 @@ const Training = () => {
                     <h2 className="text-xl font-bold text-gray-900 dark:text-white">
                       {selectedDay.title}
                     </h2>
-                    <span className={`inline-block mt-2 text-xs px-3 py-1 rounded-full ${getTypeColor(selectedDay.type)}`}>
-                      {getTypeLabel(selectedDay.type)}
-                    </span>
+                    <div className="flex items-center gap-2 mt-2">
+                      <span className={`inline-block text-xs px-3 py-1 rounded-full ${getTypeColor(selectedDay.type)}`}>
+                        {getTypeLabel(selectedDay.type)}
+                      </span>
+                      {selectedDay.status === 'completed' && (
+                        <span className="inline-block text-xs px-3 py-1 rounded-full bg-green-100 text-green-700 dark:bg-green-900/30 dark:text-green-400">
+                          Completado
+                        </span>
+                      )}
+                      {selectedDay.status === 'skipped' && (
+                        <span className="inline-block text-xs px-3 py-1 rounded-full bg-gray-200 text-gray-600 dark:bg-gray-700 dark:text-gray-400">
+                          Omitido
+                        </span>
+                      )}
+                    </div>
                   </div>
                   <button
                     onClick={closeDayDetail}
@@ -1175,6 +1331,49 @@ const Training = () => {
                   </div>
                 ) : (
                   <div className="space-y-6">
+                    {/* Completed Session RPE Summary */}
+                    {selectedDay.status === 'completed' && selectedDay.rpeScore && (
+                      <div className="bg-green-50 dark:bg-green-900/20 rounded-lg p-4 border border-green-200 dark:border-green-800">
+                        <div className="flex items-center justify-between">
+                          <div className="flex items-center space-x-3">
+                            <span className="text-3xl">{getRPEEmoji(selectedDay.rpeScore)}</span>
+                            <div>
+                              <p className="font-semibold text-green-800 dark:text-green-300">
+                                Esfuerzo percibido: {RPE_OPTIONS.find(o => o.score === selectedDay.rpeScore)?.label}
+                              </p>
+                              {selectedDay.rpeNotes && (
+                                <p className="text-sm text-green-700 dark:text-green-400 mt-1">{selectedDay.rpeNotes}</p>
+                              )}
+                            </div>
+                          </div>
+                          {selectedDay.actualDuration && (
+                            <div className="text-right">
+                              <p className="text-sm text-green-600 dark:text-green-400">Duración real</p>
+                              <p className="font-bold text-green-800 dark:text-green-300">{selectedDay.actualDuration} min</p>
+                            </div>
+                          )}
+                        </div>
+                        {selectedDay.notesAthlete && (
+                          <p className="mt-3 text-sm text-green-700 dark:text-green-400 border-t border-green-200 dark:border-green-800 pt-3">
+                            💬 {selectedDay.notesAthlete}
+                          </p>
+                        )}
+                      </div>
+                    )}
+
+                    {/* Skipped Session Info */}
+                    {selectedDay.status === 'skipped' && (
+                      <div className="bg-gray-100 dark:bg-gray-700/50 rounded-lg p-4 border border-gray-300 dark:border-gray-600">
+                        <div className="flex items-center space-x-2">
+                          <FiSkipForward className="w-5 h-5 text-gray-500" />
+                          <p className="font-semibold text-gray-700 dark:text-gray-300">Sesión omitida</p>
+                        </div>
+                        {selectedDay.notesAthlete && (
+                          <p className="mt-2 text-sm text-gray-600 dark:text-gray-400">{selectedDay.notesAthlete}</p>
+                        )}
+                      </div>
+                    )}
+
                     {/* Summary Stats */}
                     <div className="grid grid-cols-2 gap-4">
                       {selectedDay.totalDistance && (
@@ -1192,7 +1391,7 @@ const Training = () => {
                         <div className="bg-purple-50 dark:bg-purple-900/20 rounded-lg p-4">
                           <div className="flex items-center space-x-2 mb-1">
                             <FiClock className="w-4 h-4 text-purple-600 dark:text-purple-400" />
-                            <span className="text-sm text-purple-600 dark:text-purple-400">Duración</span>
+                            <span className="text-sm text-purple-600 dark:text-purple-400">Duración est.</span>
                           </div>
                           <p className="text-2xl font-bold text-purple-700 dark:text-purple-300">
                             {selectedDay.duration} min
@@ -1222,13 +1421,18 @@ const Training = () => {
                         <div className="space-y-3">
                           {selectedDay.exercises.map((exercise, index) => (
                             <div
-                              key={index}
-                              className="bg-gray-50 dark:bg-gray-700/50 rounded-lg p-4 border border-gray-200 dark:border-gray-600"
+                              key={exercise.id || index}
+                              className="rounded-lg p-4 border bg-gray-50 dark:bg-gray-700/50 border-gray-200 dark:border-gray-600"
                             >
                               <div className="flex items-start justify-between mb-2">
-                                <h5 className="font-medium text-gray-900 dark:text-white">
-                                  {index + 1}. {exercise.name}
-                                </h5>
+                                <div className="flex items-start space-x-3">
+                                  {selectedDay.status === 'completed' && (
+                                    <FiCheckCircle className="w-5 h-5 text-green-500 mt-0.5 flex-shrink-0" />
+                                  )}
+                                  <h5 className="font-medium text-gray-900 dark:text-white">
+                                    {index + 1}. {exercise.name}
+                                  </h5>
+                                </div>
                                 {exercise.paceCode && (
                                   <span className="text-xs px-2 py-1 bg-green-100 dark:bg-green-900/30 text-green-700 dark:text-green-400 rounded-full">
                                     {exercise.paceCode}
@@ -1236,6 +1440,7 @@ const Training = () => {
                                 )}
                               </div>
 
+                              {/* Planned values */}
                               <div className="grid grid-cols-2 sm:grid-cols-4 gap-3 text-sm">
                                 {exercise.sets && (
                                   <div>
@@ -1293,19 +1498,166 @@ const Training = () => {
                         </p>
                       </div>
                     )}
+
+                    {/* RPE Section (inline, shown when completing) */}
+                    {showCompletionFlow && selectedDay.status === 'planned' && (
+                      <div className="bg-gradient-to-br from-green-50 to-emerald-50 dark:from-green-900/20 dark:to-emerald-900/20 rounded-xl p-5 border border-green-200 dark:border-green-800">
+                        <h4 className="text-base font-bold text-green-800 dark:text-green-300 mb-1">
+                          ¿Cómo te has sentido?
+                        </h4>
+                        <p className="text-sm text-green-600 dark:text-green-400 mb-4">
+                          Indica tu percepción de esfuerzo
+                        </p>
+
+                        {/* Emoji RPE Scale */}
+                        <div className="flex justify-center gap-2 sm:gap-3 mb-5">
+                          {RPE_OPTIONS.map((option) => (
+                            <button
+                              key={option.score}
+                              onClick={() => setRpeScore(option.score)}
+                              className={`flex flex-col items-center p-2 sm:p-3 rounded-xl transition-all duration-200 ${
+                                rpeScore === option.score
+                                  ? 'bg-green-200 dark:bg-green-800/50 ring-2 ring-green-500 scale-110'
+                                  : 'hover:bg-green-100 dark:hover:bg-green-800/30 hover:scale-105'
+                              }`}
+                            >
+                              <span className="text-2xl sm:text-3xl mb-1">{option.emoji}</span>
+                              <span className={`text-[10px] sm:text-xs font-medium ${
+                                rpeScore === option.score
+                                  ? 'text-green-700 dark:text-green-300'
+                                  : 'text-gray-500 dark:text-gray-400'
+                              }`}>
+                                {option.label}
+                              </span>
+                            </button>
+                          ))}
+                        </div>
+
+                        {/* Athlete notes */}
+                        <div className="mb-3">
+                          <label className="block text-sm font-medium text-green-700 dark:text-green-400 mb-1">
+                            Sensaciones / Comentarios (opcional)
+                          </label>
+                          <textarea
+                            value={athleteNotes}
+                            onChange={(e) => setAthleteNotes(e.target.value)}
+                            placeholder="¿Cómo te has sentido? Describe tus sensaciones..."
+                            rows={2}
+                            className="w-full px-3 py-2 rounded-lg border border-green-300 dark:border-green-700 bg-white dark:bg-gray-800 text-gray-900 dark:text-white placeholder-gray-400 text-sm focus:ring-2 focus:ring-green-500 focus:border-transparent resize-none"
+                          />
+                        </div>
+
+                        {/* Actual duration */}
+                        <div className="mb-4">
+                          <label className="block text-sm font-medium text-green-700 dark:text-green-400 mb-1">
+                            Duración real (min, opcional)
+                          </label>
+                          <input
+                            type="number"
+                            value={actualDuration}
+                            onChange={(e) => setActualDuration(e.target.value)}
+                            placeholder={selectedDay.duration ? `Est: ${selectedDay.duration}` : 'Minutos'}
+                            className="w-32 px-3 py-2 rounded-lg border border-green-300 dark:border-green-700 bg-white dark:bg-gray-800 text-gray-900 dark:text-white text-sm focus:ring-2 focus:ring-green-500 focus:border-transparent"
+                          />
+                        </div>
+
+                        <div className="flex items-center gap-3">
+                          <button
+                            onClick={handleCompleteSession}
+                            disabled={saving}
+                            className="flex-1 py-2.5 bg-green-600 hover:bg-green-700 disabled:bg-green-400 text-white rounded-lg font-semibold transition-colors text-sm"
+                          >
+                            {saving ? 'Guardando...' : 'Guardar y Completar'}
+                          </button>
+                          <button
+                            onClick={() => setShowCompletionFlow(false)}
+                            className="px-4 py-2.5 text-sm text-green-700 dark:text-green-400 hover:bg-green-100 dark:hover:bg-green-800/30 rounded-lg transition-colors"
+                          >
+                            Cancelar
+                          </button>
+                        </div>
+                      </div>
+                    )}
                   </div>
                 )}
               </div>
 
               {/* Modal Footer */}
-              <div className="p-4 border-t border-gray-200 dark:border-gray-700 flex-shrink-0">
-                <button
-                  onClick={closeDayDetail}
-                  className="w-full px-4 py-2 bg-gray-100 dark:bg-gray-700 text-gray-700 dark:text-gray-300 rounded-lg hover:bg-gray-200 dark:hover:bg-gray-600 transition-colors"
-                >
-                  Cerrar
-                </button>
-              </div>
+              {selectedDay.type !== 'rest' && !showCompletionFlow && (
+                <div className="p-4 border-t border-gray-200 dark:border-gray-700 flex-shrink-0">
+                  {selectedDay.status === 'planned' && isPastOrToday(selectedDay.date) ? (
+                    <div className="flex items-center gap-3">
+                      <button
+                        onClick={() => setShowCompletionFlow(true)}
+                        disabled={saving}
+                        className="flex-1 flex items-center justify-center space-x-2 py-2.5 bg-green-600 hover:bg-green-700 disabled:bg-gray-300 dark:disabled:bg-gray-600 text-white rounded-lg font-semibold transition-colors text-sm"
+                      >
+                        <FiCheckCircle className="w-4 h-4" />
+                        <span>Completar Sesión</span>
+                      </button>
+                      <button
+                        onClick={handleSkipSession}
+                        disabled={saving}
+                        className="flex items-center space-x-1 px-4 py-2.5 text-sm text-gray-600 dark:text-gray-400 hover:bg-gray-100 dark:hover:bg-gray-700 rounded-lg transition-colors"
+                      >
+                        <FiSkipForward className="w-4 h-4" />
+                        <span>Omitir</span>
+                      </button>
+                    </div>
+                  ) : selectedDay.status === 'completed' ? (
+                    <div className="flex items-center gap-3">
+                      <button
+                        onClick={closeDayDetail}
+                        className="flex-1 px-4 py-2.5 bg-gray-100 dark:bg-gray-700 text-gray-700 dark:text-gray-300 rounded-lg hover:bg-gray-200 dark:hover:bg-gray-600 transition-colors text-sm"
+                      >
+                        Cerrar
+                      </button>
+                      <button
+                        onClick={handleRevertSession}
+                        disabled={saving}
+                        className="flex items-center space-x-1 px-4 py-2.5 text-sm text-gray-500 hover:bg-gray-100 dark:hover:bg-gray-700 rounded-lg transition-colors"
+                      >
+                        <FiRotateCcw className="w-4 h-4" />
+                        <span>Revertir</span>
+                      </button>
+                    </div>
+                  ) : selectedDay.status === 'skipped' ? (
+                    <div className="flex items-center gap-3">
+                      <button
+                        onClick={closeDayDetail}
+                        className="flex-1 px-4 py-2.5 bg-gray-100 dark:bg-gray-700 text-gray-700 dark:text-gray-300 rounded-lg hover:bg-gray-200 dark:hover:bg-gray-600 transition-colors text-sm"
+                      >
+                        Cerrar
+                      </button>
+                      <button
+                        onClick={handleRevertSession}
+                        disabled={saving}
+                        className="flex items-center space-x-1 px-4 py-2.5 text-sm text-blue-600 dark:text-blue-400 hover:bg-blue-50 dark:hover:bg-blue-900/20 rounded-lg transition-colors"
+                      >
+                        <FiRotateCcw className="w-4 h-4" />
+                        <span>Revertir a planificado</span>
+                      </button>
+                    </div>
+                  ) : (
+                    <button
+                      onClick={closeDayDetail}
+                      className="w-full px-4 py-2.5 bg-gray-100 dark:bg-gray-700 text-gray-700 dark:text-gray-300 rounded-lg hover:bg-gray-200 dark:hover:bg-gray-600 transition-colors text-sm"
+                    >
+                      Cerrar
+                    </button>
+                  )}
+                </div>
+              )}
+              {selectedDay.type === 'rest' && (
+                <div className="p-4 border-t border-gray-200 dark:border-gray-700 flex-shrink-0">
+                  <button
+                    onClick={closeDayDetail}
+                    className="w-full px-4 py-2.5 bg-gray-100 dark:bg-gray-700 text-gray-700 dark:text-gray-300 rounded-lg hover:bg-gray-200 dark:hover:bg-gray-600 transition-colors text-sm"
+                  >
+                    Cerrar
+                  </button>
+                </div>
+              )}
             </motion.div>
           </div>
         )}

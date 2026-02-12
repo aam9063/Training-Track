@@ -10,6 +10,9 @@ import {
   FiHeart,
   FiMapPin,
   FiLoader,
+  FiChevronUp,
+  FiChevronDown,
+  FiUsers,
 } from 'react-icons/fi';
 import { Line, Bar, Doughnut } from 'react-chartjs-2';
 import {
@@ -68,6 +71,10 @@ const Metrics = () => {
   const [completionRate, setCompletionRate] = useState(null);
   const [periodComparison, setPeriodComparison] = useState(null);
   const [topPerformers, setTopPerformers] = useState([]);
+  const [sortKey, setSortKey] = useState('totalDistanceKm');
+  const [sortDirection, setSortDirection] = useState('desc');
+  const [compareMode, setCompareMode] = useState(false);
+  const [selectedForCompare, setSelectedForCompare] = useState([]);
 
   // Calculate the "after" epoch timestamp from dateRange
   const getAfterTimestamp = useCallback(() => {
@@ -244,6 +251,9 @@ const Metrics = () => {
         avgPace: d.metrics.avgPace,
         totalActivities: d.metrics.totalActivities,
         avgHeartrate: d.metrics.avgHeartrate,
+        totalElevation: parseFloat(d.metrics.totalElevation) || 0,
+        totalTimeFormatted: d.metrics.totalTimeFormatted,
+        longestRunKm: d.metrics.longestRun?.distanceKm || 0,
       }))
       .sort((a, b) => b.totalDistanceKm - a.totalDistanceKm);
 
@@ -259,6 +269,45 @@ const Metrics = () => {
       computeIndividualMetrics(selectedAthlete);
     }
   }, [selectedAthlete, athleteDataCache, computeAggregatedMetrics, computeIndividualMetrics]);
+
+  // Sorted performers for ranking table
+  const sortedPerformers = useMemo(() => {
+    if (!topPerformers.length) return [];
+    return [...topPerformers].sort((a, b) => {
+      let aVal = a[sortKey];
+      let bVal = b[sortKey];
+      // Handle pace strings (e.g. "5:30") — lower is better
+      if (sortKey === 'avgPace') {
+        const parsePace = (p) => {
+          if (!p) return Infinity;
+          const parts = p.split(':');
+          return parseInt(parts[0]) * 60 + parseInt(parts[1] || 0);
+        };
+        aVal = parsePace(aVal);
+        bVal = parsePace(bVal);
+      }
+      if (aVal == null) return 1;
+      if (bVal == null) return -1;
+      return sortDirection === 'asc' ? aVal - bVal : bVal - aVal;
+    });
+  }, [topPerformers, sortKey, sortDirection]);
+
+  const handleSort = (key) => {
+    if (sortKey === key) {
+      setSortDirection(prev => prev === 'asc' ? 'desc' : 'asc');
+    } else {
+      setSortKey(key);
+      setSortDirection(key === 'avgPace' ? 'asc' : 'desc');
+    }
+  };
+
+  const toggleCompareAthlete = (id) => {
+    setSelectedForCompare(prev => {
+      if (prev.includes(id)) return prev.filter(x => x !== id);
+      if (prev.length >= 3) return prev;
+      return [...prev, id];
+    });
+  };
 
   // ----- Chart data builders -----
 
@@ -824,53 +873,236 @@ const Metrics = () => {
         </motion.div>
       </div>
 
-      {/* Top Performers (only in "all" mode) */}
-      {selectedAthlete === 'all' && topPerformers.length > 0 && (
+      {/* Ranking de Atletas (sortable + compare mode) */}
+      {selectedAthlete === 'all' && sortedPerformers.length > 0 && (
         <motion.div
           initial={{ opacity: 0, y: 20 }}
           animate={{ opacity: 1, y: 0 }}
           transition={{ delay: 0.5 }}
           className="bg-white dark:bg-gray-800 rounded-xl shadow-sm border border-gray-200 dark:border-gray-700 p-4 sm:p-6"
         >
-          <h3 className="text-base sm:text-lg font-bold text-gray-900 dark:text-white mb-4 flex items-center">
-            <FiAward className="w-5 h-5 mr-2 text-yellow-500 flex-shrink-0" />
-            Ranking de Atletas
-          </h3>
-          <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-3 sm:gap-4">
-            {topPerformers.map((performer, index) => (
-              <div
-                key={performer.id}
-                className="flex items-center justify-between p-3 sm:p-4 bg-gray-50 dark:bg-gray-700/50 rounded-xl"
+          <div className="flex items-center justify-between mb-4">
+            <h3 className="text-base sm:text-lg font-bold text-gray-900 dark:text-white flex items-center">
+              <FiAward className="w-5 h-5 mr-2 text-yellow-500 flex-shrink-0" />
+              Ranking de Atletas
+            </h3>
+            {sortedPerformers.length >= 2 && (
+              <button
+                onClick={() => { setCompareMode(prev => !prev); setSelectedForCompare([]); }}
+                className={`flex items-center gap-1.5 px-3 py-1.5 rounded-lg text-sm font-medium transition-colors ${
+                  compareMode
+                    ? 'bg-purple-100 text-purple-700 dark:bg-purple-900/50 dark:text-purple-300'
+                    : 'bg-gray-100 text-gray-600 dark:bg-gray-700 dark:text-gray-400 hover:bg-gray-200 dark:hover:bg-gray-600'
+                }`}
               >
-                <div className="flex items-center space-x-3 min-w-0">
-                  <div className={`w-8 h-8 rounded-full flex items-center justify-center text-white font-bold text-sm flex-shrink-0 ${
-                    index === 0 ? 'bg-gradient-to-br from-yellow-400 to-yellow-600' :
-                    index === 1 ? 'bg-gradient-to-br from-gray-300 to-gray-500' :
-                    index === 2 ? 'bg-gradient-to-br from-amber-600 to-amber-800' :
-                    'bg-gradient-to-br from-blue-500 to-purple-600'
-                  }`}>
-                    {index + 1}
-                  </div>
-                  <div className="min-w-0">
-                    <p className="font-medium text-gray-900 dark:text-white truncate">
-                      {performer.name}
-                    </p>
-                    <p className="text-xs sm:text-sm text-gray-500 dark:text-gray-400">
-                      {performer.avgPace || '-'}
-                    </p>
-                  </div>
-                </div>
-                <div className="text-right flex-shrink-0 ml-3">
-                  <p className="text-sm font-semibold text-gray-900 dark:text-white">
-                    {performer.totalDistanceKm} km
-                  </p>
-                  <p className="text-xs text-gray-500 dark:text-gray-400">
-                    {performer.totalActivities} act.
-                  </p>
-                </div>
-              </div>
-            ))}
+                <FiUsers className="w-4 h-4" />
+                {compareMode ? 'Cancelar' : 'Comparar'}
+              </button>
+            )}
           </div>
+
+          {compareMode && (
+            <p className="text-xs text-gray-500 dark:text-gray-400 mb-3">
+              Selecciona 2-3 atletas para comparar ({selectedForCompare.length}/3)
+            </p>
+          )}
+
+          {/* Sortable Table */}
+          <div className="overflow-x-auto">
+            <table className="w-full text-sm">
+              <thead>
+                <tr className="border-b border-gray-200 dark:border-gray-700">
+                  {compareMode && <th className="py-2 px-1 w-8" />}
+                  <th className="py-2 px-2 text-left text-xs font-medium text-gray-500 dark:text-gray-400 w-8">#</th>
+                  <th className="py-2 px-2 text-left text-xs font-medium text-gray-500 dark:text-gray-400">Atleta</th>
+                  {[
+                    { key: 'totalDistanceKm', label: 'Distancia' },
+                    { key: 'avgPace', label: 'Ritmo' },
+                    { key: 'totalActivities', label: 'Act.' },
+                    { key: 'avgHeartrate', label: 'FC' },
+                    { key: 'totalElevation', label: 'Desnivel' },
+                  ].map(col => (
+                    <th
+                      key={col.key}
+                      onClick={() => handleSort(col.key)}
+                      className="py-2 px-2 text-right text-xs font-medium text-gray-500 dark:text-gray-400 cursor-pointer hover:text-gray-700 dark:hover:text-gray-200 select-none whitespace-nowrap"
+                    >
+                      <span className="inline-flex items-center gap-0.5">
+                        {col.label}
+                        {sortKey === col.key && (
+                          sortDirection === 'asc'
+                            ? <FiChevronUp className="w-3 h-3" />
+                            : <FiChevronDown className="w-3 h-3" />
+                        )}
+                      </span>
+                    </th>
+                  ))}
+                </tr>
+              </thead>
+              <tbody>
+                {sortedPerformers.map((performer, index) => {
+                  const isSelected = selectedForCompare.includes(performer.id);
+                  return (
+                    <tr
+                      key={performer.id}
+                      className={`border-b border-gray-100 dark:border-gray-700/50 transition-colors ${
+                        isSelected ? 'bg-purple-50 dark:bg-purple-900/20' : 'hover:bg-gray-50 dark:hover:bg-gray-700/30'
+                      }`}
+                    >
+                      {compareMode && (
+                        <td className="py-2.5 px-1">
+                          <input
+                            type="checkbox"
+                            checked={isSelected}
+                            onChange={() => toggleCompareAthlete(performer.id)}
+                            disabled={!isSelected && selectedForCompare.length >= 3}
+                            className="w-4 h-4 rounded border-gray-300 text-purple-600 focus:ring-purple-500"
+                          />
+                        </td>
+                      )}
+                      <td className="py-2.5 px-2">
+                        <div className={`w-6 h-6 rounded-full flex items-center justify-center text-white font-bold text-xs flex-shrink-0 ${
+                          index === 0 ? 'bg-gradient-to-br from-yellow-400 to-yellow-600' :
+                          index === 1 ? 'bg-gradient-to-br from-gray-300 to-gray-500' :
+                          index === 2 ? 'bg-gradient-to-br from-amber-600 to-amber-800' :
+                          'bg-gradient-to-br from-blue-500 to-purple-600'
+                        }`}>
+                          {index + 1}
+                        </div>
+                      </td>
+                      <td className="py-2.5 px-2">
+                        <p className="font-medium text-gray-900 dark:text-white truncate max-w-[120px]">
+                          {performer.name}
+                        </p>
+                      </td>
+                      <td className="py-2.5 px-2 text-right font-semibold text-gray-900 dark:text-white">
+                        {performer.totalDistanceKm} km
+                      </td>
+                      <td className="py-2.5 px-2 text-right text-gray-600 dark:text-gray-400">
+                        {performer.avgPace || '-'}
+                      </td>
+                      <td className="py-2.5 px-2 text-right text-gray-600 dark:text-gray-400">
+                        {performer.totalActivities}
+                      </td>
+                      <td className="py-2.5 px-2 text-right text-gray-600 dark:text-gray-400">
+                        {performer.avgHeartrate || '-'}{performer.avgHeartrate ? ' bpm' : ''}
+                      </td>
+                      <td className="py-2.5 px-2 text-right text-gray-600 dark:text-gray-400">
+                        {performer.totalElevation}m
+                      </td>
+                    </tr>
+                  );
+                })}
+              </tbody>
+            </table>
+          </div>
+
+          {/* Comparison Panel */}
+          {compareMode && selectedForCompare.length >= 2 && (() => {
+            const compareColors = ['#8b5cf6', '#f59e0b', '#10b981'];
+            const compared = selectedForCompare.map(id => sortedPerformers.find(p => p.id === id)).filter(Boolean);
+            const comparisonMetrics = [
+              { key: 'totalDistanceKm', label: 'Distancia (km)', format: v => `${v} km` },
+              { key: 'totalActivities', label: 'Actividades', format: v => v },
+              { key: 'totalElevation', label: 'Desnivel (m)', format: v => `${v}m` },
+              { key: 'avgHeartrate', label: 'FC Media', format: v => v ? `${v} bpm` : '-' },
+              { key: 'longestRunKm', label: 'Carrera más larga', format: v => `${v} km` },
+            ];
+
+            return (
+              <motion.div
+                initial={{ opacity: 0, height: 0 }}
+                animate={{ opacity: 1, height: 'auto' }}
+                className="mt-6 pt-6 border-t border-gray-200 dark:border-gray-700"
+              >
+                <h4 className="text-sm font-bold text-gray-900 dark:text-white mb-4 flex items-center">
+                  <FiUsers className="w-4 h-4 mr-2 text-purple-500" />
+                  Comparativa
+                </h4>
+
+                {/* Comparison Bar Chart */}
+                <div className="h-64 mb-6">
+                  <Bar
+                    data={{
+                      labels: comparisonMetrics.map(m => m.label),
+                      datasets: compared.map((athlete, i) => ({
+                        label: athlete.name,
+                        data: comparisonMetrics.map(m => parseFloat(athlete[m.key]) || 0),
+                        backgroundColor: compareColors[i] + '99',
+                        borderColor: compareColors[i],
+                        borderWidth: 1,
+                        borderRadius: 4,
+                      })),
+                    }}
+                    options={{
+                      responsive: true,
+                      maintainAspectRatio: false,
+                      plugins: {
+                        legend: {
+                          position: 'top',
+                          labels: {
+                            usePointStyle: true,
+                            pointStyle: 'circle',
+                            padding: 16,
+                            font: { size: 12 },
+                          },
+                        },
+                        tooltip: {
+                          callbacks: {
+                            label: (ctx) => {
+                              const metric = comparisonMetrics[ctx.dataIndex];
+                              return `${ctx.dataset.label}: ${metric.format(ctx.raw)}`;
+                            },
+                          },
+                        },
+                      },
+                      scales: {
+                        x: {
+                          grid: { display: false },
+                          ticks: { font: { size: 11 } },
+                        },
+                        y: {
+                          beginAtZero: true,
+                          grid: { color: 'rgba(156, 163, 175, 0.15)' },
+                        },
+                      },
+                    }}
+                  />
+                </div>
+
+                {/* Comparison Table */}
+                <div className="overflow-x-auto">
+                  <table className="w-full text-sm">
+                    <thead>
+                      <tr className="border-b border-gray-200 dark:border-gray-700">
+                        <th className="py-2 px-3 text-left text-xs font-medium text-gray-500 dark:text-gray-400">Métrica</th>
+                        {compared.map((a, i) => (
+                          <th key={a.id} className="py-2 px-3 text-right text-xs font-medium" style={{ color: compareColors[i] }}>
+                            {a.name}
+                          </th>
+                        ))}
+                      </tr>
+                    </thead>
+                    <tbody>
+                      {[
+                        ...comparisonMetrics,
+                        { key: 'avgPace', label: 'Ritmo Medio', format: v => v || '-' },
+                      ].map(metric => (
+                        <tr key={metric.key} className="border-b border-gray-100 dark:border-gray-700/50">
+                          <td className="py-2 px-3 text-gray-600 dark:text-gray-400">{metric.label}</td>
+                          {compared.map(a => (
+                            <td key={a.id} className="py-2 px-3 text-right font-medium text-gray-900 dark:text-white">
+                              {metric.format(a[metric.key])}
+                            </td>
+                          ))}
+                        </tr>
+                      ))}
+                    </tbody>
+                  </table>
+                </div>
+              </motion.div>
+            );
+          })()}
         </motion.div>
       )}
 

@@ -2,6 +2,7 @@ import { useState, useEffect, useRef } from 'react';
 import { Link, useLocation, useNavigate } from 'react-router-dom';
 import { useAuth } from '../../contexts/AuthContext';
 import { useTheme } from '../../contexts/ThemeContext';
+import { useNotifications } from '../../contexts/NotificationContext';
 import {
   FiHome,
   FiUsers,
@@ -28,6 +29,7 @@ const Sidebar = ({ onCollapse }) => {
   const navigate = useNavigate();
   const { user, profile, signOut } = useAuth();
   const { theme, toggleTheme } = useTheme();
+  const { unreadMessages } = useNotifications();
 
   // Usar profile si existe, sino usar datos básicos del user
   const displayName = profile?.first_name || user?.user_metadata?.first_name || 'Usuario';
@@ -49,6 +51,7 @@ const Sidebar = ({ onCollapse }) => {
     { path: '/dashboard/athletes', icon: FiUsers, label: 'Mis Atletas' },
     { path: '/dashboard/metrics', icon: FiBarChart2, label: 'Métricas' },
     { path: '/dashboard/calendar', icon: FiCalendar, label: 'Calendario' },
+    { path: '/dashboard/messages', icon: FiMessageSquare, label: 'Mensajes', badge: unreadMessages },
   ];
 
   const handleSignOut = async () => {
@@ -152,7 +155,7 @@ const Sidebar = ({ onCollapse }) => {
               key={item.path}
               to={item.path}
               className={`
-                flex items-center space-x-3 px-3 py-2.5 rounded-lg
+                relative flex items-center space-x-3 px-3 py-2.5 rounded-lg
                 transition-all duration-200
                 ${
                   active
@@ -165,7 +168,18 @@ const Sidebar = ({ onCollapse }) => {
             >
               <Icon className={`${collapsed ? 'w-6 h-6' : 'w-5 h-5'} flex-shrink-0`} />
               {!collapsed && (
-                <span className="font-medium text-sm">{item.label}</span>
+                <span className="font-medium text-sm flex-1">{item.label}</span>
+              )}
+              {item.badge > 0 && (
+                collapsed ? (
+                  <span className="absolute -top-1 -right-1 bg-red-500 text-white text-[10px] font-bold rounded-full w-4 h-4 flex items-center justify-center">
+                    {item.badge > 9 ? '9+' : item.badge}
+                  </span>
+                ) : (
+                  <span className="bg-red-500 text-white text-xs font-bold rounded-full px-1.5 py-0.5 min-w-[20px] text-center">
+                    {item.badge > 99 ? '99+' : item.badge}
+                  </span>
+                )
               )}
             </Link>
           );

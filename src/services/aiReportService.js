@@ -20,7 +20,7 @@ import { supabase } from '../lib/supabase';
 /**
  * Calculate daily loads from activities (distance in km as load proxy)
  */
-const getDailyLoads = (activities, days) => {
+export const getDailyLoads = (activities, days) => {
   const now = new Date();
   const dailyLoads = new Array(days).fill(0);
 
@@ -48,7 +48,7 @@ const stdDev = (arr) => {
 /**
  * Calculate training load metrics (ACWR, monotony, strain)
  */
-const calculateLoadMetrics = (activities) => {
+export const calculateLoadMetrics = (activities) => {
   const daily28 = getDailyLoads(activities, 28);
   const daily7 = daily28.slice(0, 7);
 

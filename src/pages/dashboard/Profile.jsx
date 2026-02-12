@@ -1,4 +1,5 @@
 import { useState, useRef, useEffect } from 'react';
+import { showSuccess, showError, showWarning } from '../../lib/toast';
 import { useAuth } from '../../contexts/AuthContext';
 import { uploadProfileImage, deleteProfileImage } from '../../services/storageService';
 import ImageCropModal from '../../components/common/ImageCropModal';
@@ -97,10 +98,10 @@ const Profile = () => {
       }
 
       setEditing(false);
-      alert('Perfil actualizado correctamente');
+      showSuccess('Perfil actualizado correctamente');
     } catch (error) {
       console.error('Error updating profile:', error);
-      alert('Error al actualizar el perfil');
+      showError('Error al actualizar el perfil');
     } finally {
       setLoading(false);
     }
@@ -144,7 +145,7 @@ const Profile = () => {
     if (!file || !user?.id) return;
 
     if (file.size > 5 * 1024 * 1024) {
-      alert('La imagen no puede superar los 5MB');
+      showWarning('La imagen no puede superar los 5MB');
       return;
     }
 
@@ -161,9 +162,10 @@ const Profile = () => {
       const { error } = await uploadProfileImage(user.id, file);
       if (error) throw error;
       await refreshProfile();
+      showSuccess('Imagen de perfil actualizada');
     } catch (error) {
       console.error('Error uploading image:', error);
-      alert('Error al subir la imagen');
+      showError('Error al subir la imagen');
     } finally {
       setUploadingImage(false);
     }
@@ -176,9 +178,10 @@ const Profile = () => {
       const { error } = await deleteProfileImage(user.id);
       if (error) throw error;
       await refreshProfile();
+      showSuccess('Imagen de perfil eliminada');
     } catch (error) {
       console.error('Error deleting image:', error);
-      alert('Error al eliminar la imagen');
+      showError('Error al eliminar la imagen');
     } finally {
       setDeletingImage(false);
     }

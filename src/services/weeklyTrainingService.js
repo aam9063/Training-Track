@@ -402,6 +402,127 @@ export const updateSessionExercises = async (sessionId, exercises) => {
   }
 };
 
+/**
+ * Marca una sesión como completada con RPE y feedback del atleta
+ */
+export const completeSession = async (sessionId, { rpeScore, rpeNotes, notesAthlete, actualDurationMinutes } = {}) => {
+  try {
+    const { data, error } = await supabase
+      .from('training_sessions')
+      .update({
+        status: 'completed',
+        completed_at: new Date().toISOString(),
+        rpe_score: rpeScore || null,
+        rpe_notes: rpeNotes || null,
+        notes_athlete: notesAthlete || null,
+        actual_duration_minutes: actualDurationMinutes || null,
+      })
+      .eq('id', sessionId)
+      .select()
+      .single();
+
+    if (error) throw error;
+    return { data, error: null };
+  } catch (error) {
+    console.error('Error completing session:', error);
+    return { data: null, error };
+  }
+};
+
+/**
+ * Marca una sesión como omitida
+ */
+export const skipSession = async (sessionId, notesAthlete) => {
+  try {
+    const { data, error } = await supabase
+      .from('training_sessions')
+      .update({
+        status: 'skipped',
+        notes_athlete: notesAthlete || null,
+      })
+      .eq('id', sessionId)
+      .select()
+      .single();
+
+    if (error) throw error;
+    return { data, error: null };
+  } catch (error) {
+    console.error('Error skipping session:', error);
+    return { data: null, error };
+  }
+};
+
+/**
+ * Revierte una sesión a estado planificado
+ */
+export const revertSession = async (sessionId) => {
+  try {
+    const { data, error } = await supabase
+      .from('training_sessions')
+      .update({
+        status: 'planned',
+        completed_at: null,
+        rpe_score: null,
+        rpe_notes: null,
+        notes_athlete: null,
+        actual_duration_minutes: null,
+      })
+      .eq('id', sessionId)
+      .select()
+      .single();
+
+    if (error) throw error;
+    return { data, error: null };
+  } catch (error) {
+    console.error('Error reverting session:', error);
+    return { data: null, error };
+  }
+};
+
+/**
+ * Actualiza los campos completados de un ejercicio individual
+ */
+export const updateExerciseCompletion = async (exerciseId, completedData) => {
+  try {
+    const { data, error } = await supabase
+      .from('training_session_exercises')
+      .update({
+        completed_sets: completedData.sets ?? null,
+        completed_reps: completedData.reps ?? null,
+        completed_distance_meters: completedData.distance ?? null,
+        completed_duration_seconds: completedData.duration ?? null,
+        completed_weight_kg: completedData.weight ?? null,
+      })
+      .eq('id', exerciseId)
+      .select()
+      .single();
+
+    if (error) throw error;
+    return { data, error: null };
+  } catch (error) {
+    console.error('Error updating exercise completion:', error);
+    return { data: null, error };
+  }
+};
+
+/**
+ * Actualiza los campos completados de múltiples ejercicios en batch
+ */
+export const updateExercisesCompletion = async (exercises) => {
+  try {
+    const promises = exercises.map(({ id, ...completedData }) =>
+      updateExerciseCompletion(id, completedData)
+    );
+    const results = await Promise.all(promises);
+    const firstError = results.find(r => r.error);
+    if (firstError) throw firstError.error;
+    return { error: null };
+  } catch (error) {
+    console.error('Error updating exercises completion:', error);
+    return { error };
+  }
+};
+
 // Helpers para fechas
 export const getWeekStartDate = (date = new Date()) => {
   const d = new Date(date);

@@ -490,14 +490,14 @@ const AthleteDashboard = () => {
             </Link>
 
             <Link
-              to="/athlete/devices"
+              to="/athlete/calendar"
               className="p-4 bg-gradient-to-br from-orange-50 to-pink-50 dark:from-orange-900/20 dark:to-pink-900/20 rounded-xl border border-orange-100 dark:border-orange-800/30 hover:shadow-md transition-all group"
             >
               <div className="w-10 h-10 bg-orange-500 rounded-lg flex items-center justify-center mb-3 group-hover:scale-110 transition-transform">
-                <FiActivity className="w-5 h-5 text-white" />
+                <FiCalendar className="w-5 h-5 text-white" />
               </div>
-              <p className="font-semibold text-gray-900 dark:text-white text-sm">Strava</p>
-              <p className="text-xs text-gray-500 dark:text-gray-400 mt-1">Actividades recientes</p>
+              <p className="font-semibold text-gray-900 dark:text-white text-sm">Calendario</p>
+              <p className="text-xs text-gray-500 dark:text-gray-400 mt-1">Vista mensual completa</p>
             </Link>
           </div>
         </motion.div>

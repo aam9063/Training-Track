@@ -1,4 +1,5 @@
 import { useState, useEffect } from 'react';
+import { showSuccess, showError } from '../../lib/toast';
 import { motion, AnimatePresence } from 'framer-motion';
 import {
   FiX,
@@ -255,11 +256,12 @@ const WeeklyTrainingModal = ({
 
       if (error) throw error;
 
+      showSuccess('Entrenamiento semanal guardado');
       onSuccess?.();
       onClose();
     } catch (error) {
       console.error('Error saving weekly training:', error);
-      alert('Error al guardar el entrenamiento semanal');
+      showError('Error al guardar el entrenamiento semanal');
     } finally {
       setSaving(false);
     }
@@ -278,10 +280,11 @@ const WeeklyTrainingModal = ({
       await deleteWeeklyTraining(coachId, athlete.id, weekStartDate);
       setDays(initializeEmptyWeek());
       setExistingWeekData(null);
+      showSuccess('Entrenamiento eliminado');
       onSuccess?.();
     } catch (error) {
       console.error('Error deleting weekly training:', error);
-      alert('Error al eliminar el entrenamiento');
+      showError('Error al eliminar el entrenamiento');
     } finally {
       setSaving(false);
     }

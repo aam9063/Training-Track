@@ -1,5 +1,6 @@
 import { useState, useEffect, useCallback } from 'react';
 import { Link } from 'react-router-dom';
+import { showSuccess, showError, showInfo } from '../../lib/toast';
 import { useAuth } from '../../contexts/AuthContext';
 import { motion, AnimatePresence } from 'framer-motion';
 import {
@@ -106,9 +107,10 @@ const Athletes = () => {
       // Mover de pendientes a activos
       setPendingRequests(prev => prev.filter(r => r.relationshipId !== request.relationshipId));
       setAthletes(prev => [...prev, { ...request, status: 'active' }]);
+      showSuccess('Solicitud aceptada correctamente');
     } catch (error) {
       console.error('Error aceptando solicitud:', error);
-      alert('Error al aceptar la solicitud');
+      showError('Error al aceptar la solicitud');
     } finally {
       setProcessingRequest(null);
     }
@@ -121,9 +123,10 @@ const Athletes = () => {
       if (error) throw error;
 
       setPendingRequests(prev => prev.filter(r => r.relationshipId !== request.relationshipId));
+      showSuccess('Solicitud rechazada');
     } catch (error) {
       console.error('Error rechazando solicitud:', error);
-      alert('Error al rechazar la solicitud');
+      showError('Error al rechazar la solicitud');
     } finally {
       setProcessingRequest(null);
     }
@@ -162,9 +165,10 @@ const Athletes = () => {
 
       setAthletes(athletes.filter(a => a.id !== deleteModal.athlete.id));
       setDeleteModal({ show: false, athlete: null });
+      showSuccess('Atleta eliminado correctamente');
     } catch (error) {
       console.error('Error deleting athlete:', error);
-      alert('Error al eliminar el atleta');
+      showError('Error al eliminar el atleta');
     }
   };
 
@@ -194,7 +198,7 @@ const Athletes = () => {
           </div>
           <button
             className="flex items-center space-x-2 px-4 py-2 bg-blue-600 hover:bg-blue-700 text-white rounded-lg transition-colors"
-            onClick={() => alert('Función de añadir atleta próximamente')}
+            onClick={() => showInfo('Función de añadir atleta próximamente')}
           >
             <FiPlus className="w-5 h-5" />
             <span>Añadir Atleta</span>

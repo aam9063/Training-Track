@@ -1,4 +1,5 @@
 import { useState, useEffect, useCallback, useRef } from 'react';
+import { showSuccess, showError } from '../../lib/toast';
 import { useParams, useNavigate } from 'react-router-dom';
 import { motion, AnimatePresence } from 'framer-motion';
 import {
@@ -21,7 +22,6 @@ import {
   FiPlus,
   FiTrash2,
   FiAward,
-  FiSend,
   FiUser,
   FiFileText,
 } from 'react-icons/fi';
@@ -76,8 +76,7 @@ import {
 import mapboxgl from 'mapbox-gl';
 import polyline from '@mapbox/polyline';
 import 'mapbox-gl/dist/mapbox-gl.css';
-import { supabase } from '../../lib/supabase';
-import { getActivitiesRPE, getRPEEmoji, getRPELabel } from '../../services/rpeService';
+import { getActivitiesRPE, getRPEEmoji, getRPELabel, RPE_OPTIONS } from '../../services/rpeService';
 import WeeklyTrainingModal from '../../components/dashboard/WeeklyTrainingModal';
 import ConconiTestModal from '../../components/dashboard/ConconiTestModal';
 import VAMTestModal from '../../components/dashboard/VAMTestModal';
@@ -112,10 +111,6 @@ const AthleteProfile = () => {
   const [savingEvent, setSavingEvent] = useState(false);
   const mapContainerRef = useRef(null);
   const mapRef = useRef(null);
-  // Message modal states
-  const [showMessageModal, setShowMessageModal] = useState(false);
-  const [messageData, setMessageData] = useState({ subject: '', content: '' });
-  const [sendingMessage, setSendingMessage] = useState(false);
   const [showTrainingModal, setShowTrainingModal] = useState(false);
   const [showConconiModal, setShowConconiModal] = useState(false);
   const [showVAMModal, setShowVAMModal] = useState(false);
@@ -176,6 +171,7 @@ const AthleteProfile = () => {
             duration: session.estimated_duration_minutes,
             exercises,
             status: session.status,
+            rpe_score: session.rpe_score,
           };
         });
       }
@@ -310,8 +306,10 @@ const AthleteProfile = () => {
 
       // Reload competitions
       await loadCompetitions();
+      showSuccess('Competicion guardada correctamente');
     } catch (error) {
       console.error('Error saving competition:', error);
+      showError('Error al guardar la competicion');
     } finally {
       setSavingEvent(false);
     }
@@ -327,34 +325,10 @@ const AthleteProfile = () => {
 
       // Reload competitions
       await loadCompetitions();
+      showSuccess('Competicion eliminada');
     } catch (error) {
       console.error('Error deleting competition:', error);
-    }
-  };
-
-  // Handle send message to athlete
-  const handleSendMessage = async () => {
-    if (!messageData.subject || !messageData.content) return;
-
-    setSendingMessage(true);
-    try {
-      const { error } = await supabase.from('coach_messages').insert({
-        coach_id: profile.id,
-        athlete_id: athleteId,
-        subject: messageData.subject,
-        content: messageData.content,
-        read: false,
-      });
-
-      if (error) throw error;
-
-      // Reset form and close modal
-      setMessageData({ subject: '', content: '' });
-      setShowMessageModal(false);
-    } catch (error) {
-      console.error('Error sending message:', error);
-    } finally {
-      setSendingMessage(false);
+      showError('Error al eliminar la competicion');
     }
   };
 
@@ -667,7 +641,7 @@ const AthleteProfile = () => {
             )}
           </div>
           <button
-            onClick={() => setShowMessageModal(true)}
+            onClick={() => navigate('/dashboard/messages', { state: { openConversationWith: athleteId } })}
             className="p-2.5 sm:p-3 bg-white dark:bg-gray-800 rounded-xl shadow-sm hover:shadow-md transition-all border border-gray-200 dark:border-gray-700 group"
             title="Enviar mensaje"
           >
@@ -736,8 +710,18 @@ const AthleteProfile = () => {
                         </p>
                       </div>
                       {training ? (
-                        <div className="space-y-2">
-                          <div className={`h-1.5 rounded-full ${getTypeColor(training.type)}`} />
+                        <div className={`space-y-2 ${training.status === 'completed' ? 'border-l-2 border-green-500 pl-2' : training.status === 'skipped' ? 'border-l-2 border-gray-400 pl-2 opacity-60' : ''}`}>
+                          <div className="flex items-center justify-between">
+                            <div className={`h-1.5 rounded-full flex-1 ${training.status === 'completed' ? 'bg-green-500' : training.status === 'skipped' ? 'bg-gray-400' : getTypeColor(training.type)}`} />
+                            {training.status === 'completed' && training.rpe_score && (
+                              <span className="ml-1 text-sm" title={`RPE: ${RPE_OPTIONS.find(r => r.score === training.rpe_score)?.label}`}>
+                                {RPE_OPTIONS.find(r => r.score === training.rpe_score)?.emoji}
+                              </span>
+                            )}
+                            {training.status === 'skipped' && (
+                              <span className="ml-1 text-[10px] text-gray-400">Omitido</span>
+                            )}
+                          </div>
                           <p className="text-xs font-medium text-gray-500 dark:text-gray-400">
                             {getTypeLabel(training.type)}
                           </p>
@@ -788,12 +772,18 @@ const AthleteProfile = () => {
                           </p>
                         </div>
                         {training ? (
-                          <div className="flex-1 min-w-0">
+                          <div className={`flex-1 min-w-0 ${training.status === 'skipped' ? 'opacity-60' : ''}`}>
                             <div className="flex items-center gap-2">
-                              <div className={`w-2 h-2 rounded-full flex-shrink-0 ${getTypeColor(training.type)}`} />
+                              <div className={`w-2 h-2 rounded-full flex-shrink-0 ${training.status === 'completed' ? 'bg-green-500' : training.status === 'skipped' ? 'bg-gray-400' : getTypeColor(training.type)}`} />
                               <p className="text-sm font-semibold text-gray-900 dark:text-white truncate">
                                 {training.title}
                               </p>
+                              {training.status === 'completed' && training.rpe_score && (
+                                <span className="text-sm flex-shrink-0">{RPE_OPTIONS.find(r => r.score === training.rpe_score)?.emoji}</span>
+                              )}
+                              {training.status === 'skipped' && (
+                                <span className="text-[10px] text-gray-400 flex-shrink-0">Omitido</span>
+                              )}
                             </div>
                             <p className="text-xs text-gray-500 dark:text-gray-400 mt-0.5">
                               {getTypeLabel(training.type)}
@@ -1955,98 +1945,6 @@ const AthleteProfile = () => {
                   ) : (
                     'Guardar'
                   )}
-                </button>
-              </div>
-            </motion.div>
-          </div>
-        )}
-      </AnimatePresence>
-
-      {/* Message Modal */}
-      <AnimatePresence>
-        {showMessageModal && (
-          <div className="fixed inset-0 bg-black bg-opacity-50 flex items-center justify-center z-50 p-4">
-            <motion.div
-              initial={{ opacity: 0, scale: 0.95 }}
-              animate={{ opacity: 1, scale: 1 }}
-              exit={{ opacity: 0, scale: 0.95 }}
-              className="bg-white dark:bg-gray-800 rounded-xl shadow-xl w-full max-w-lg"
-            >
-              <div className="flex items-center justify-between p-4 border-b border-gray-200 dark:border-gray-700">
-                <h2 className="text-lg font-bold text-gray-900 dark:text-white">
-                  Enviar Mensaje
-                </h2>
-                <button
-                  onClick={() => setShowMessageModal(false)}
-                  className="p-2 hover:bg-gray-100 dark:hover:bg-gray-700 rounded-lg transition-colors"
-                >
-                  <FiX className="w-5 h-5 text-gray-500" />
-                </button>
-              </div>
-
-              <div className="p-4 space-y-4">
-                {/* Recipient info */}
-                <div className="flex items-center space-x-3 p-3 bg-gray-50 dark:bg-gray-700/50 rounded-lg">
-                  <div className="w-10 h-10 rounded-full bg-gradient-to-br from-blue-500 to-purple-600 flex items-center justify-center flex-shrink-0">
-                    <span className="text-white font-semibold text-sm">
-                      {athlete?.user?.first_name?.[0] || 'A'}{athlete?.user?.last_name?.[0] || ''}
-                    </span>
-                  </div>
-                  <div>
-                    <p className="font-medium text-gray-900 dark:text-white">
-                      Para: {athlete?.user?.first_name} {athlete?.user?.last_name}
-                    </p>
-                    <p className="text-sm text-gray-500 dark:text-gray-400">Atleta</p>
-                  </div>
-                </div>
-
-                {/* Subject */}
-                <div>
-                  <label className="block text-sm font-medium text-gray-700 dark:text-gray-300 mb-1">
-                    Asunto
-                  </label>
-                  <input
-                    type="text"
-                    value={messageData.subject}
-                    onChange={(e) => setMessageData({ ...messageData, subject: e.target.value })}
-                    placeholder="Asunto del mensaje"
-                    className="w-full px-4 py-2 border border-gray-300 dark:border-gray-600 rounded-lg bg-white dark:bg-gray-700 text-gray-900 dark:text-white focus:ring-2 focus:ring-blue-500 focus:border-transparent"
-                  />
-                </div>
-
-                {/* Content */}
-                <div>
-                  <label className="block text-sm font-medium text-gray-700 dark:text-gray-300 mb-1">
-                    Mensaje
-                  </label>
-                  <textarea
-                    value={messageData.content}
-                    onChange={(e) => setMessageData({ ...messageData, content: e.target.value })}
-                    placeholder="Escribe tu mensaje..."
-                    rows={5}
-                    className="w-full px-4 py-2 border border-gray-300 dark:border-gray-600 rounded-lg bg-white dark:bg-gray-700 text-gray-900 dark:text-white focus:ring-2 focus:ring-blue-500 focus:border-transparent resize-none"
-                  />
-                </div>
-              </div>
-
-              <div className="flex items-center justify-end space-x-3 p-4 border-t border-gray-200 dark:border-gray-700">
-                <button
-                  onClick={() => setShowMessageModal(false)}
-                  className="px-4 py-2 text-gray-700 dark:text-gray-300 hover:bg-gray-100 dark:hover:bg-gray-700 rounded-lg transition-colors"
-                >
-                  Cancelar
-                </button>
-                <button
-                  onClick={handleSendMessage}
-                  disabled={sendingMessage || !messageData.subject || !messageData.content}
-                  className="flex items-center space-x-2 px-4 py-2 bg-blue-600 hover:bg-blue-700 disabled:bg-blue-400 text-white rounded-lg font-medium transition-colors"
-                >
-                  {sendingMessage ? (
-                    <FiLoader className="w-5 h-5 animate-spin" />
-                  ) : (
-                    <FiSend className="w-5 h-5" />
-                  )}
-                  <span>Enviar</span>
                 </button>
               </div>
             </motion.div>

@@ -7,18 +7,27 @@ import {
   FiX,
   FiCalendar,
   FiClock,
-  FiUser,
   FiMapPin,
   FiActivity,
   FiFlag,
   FiCheck,
   FiSkipForward,
+  FiMove,
 } from 'react-icons/fi';
-import { getMonthSessions } from '../../services/calendarService';
-import { getAthletes } from '../../services/athleteService';
+import {
+  DndContext,
+  DragOverlay,
+  useDraggable,
+  useDroppable,
+  PointerSensor,
+  useSensor,
+  useSensors,
+} from '@dnd-kit/core';
+import { getAthleteMonthSessions, rescheduleSession } from '../../services/calendarService';
 import { supabase } from '../../lib/supabase';
 import { toLocalDateStr } from '../../lib/dateUtils';
 import { RPE_OPTIONS } from '../../services/rpeService';
+import { showSuccess, showError } from '../../lib/toast';
 
 const DAYS_OF_WEEK = ['Dom', 'Lun', 'Mar', 'Mié', 'Jue', 'Vie', 'Sáb'];
 const MONTHS = [
@@ -26,12 +35,87 @@ const MONTHS = [
   'Julio', 'Agosto', 'Septiembre', 'Octubre', 'Noviembre', 'Diciembre',
 ];
 
-const Calendar = () => {
+// Draggable event pill sub-component
+const DraggableEventPill = ({ event, onClick, getTypeColor }) => {
+  const canDrag = !event.isCompetition && event.status === 'planned';
+  const { attributes, listeners, setNodeRef, isDragging } = useDraggable({
+    id: `event-${event.id}`,
+    data: { event },
+    disabled: !canDrag,
+  });
+
+  return (
+    <div
+      ref={setNodeRef}
+      {...(canDrag ? { ...listeners, ...attributes } : {})}
+      onClick={(e) => {
+        e.stopPropagation();
+        onClick(event, e);
+      }}
+      style={{ opacity: isDragging ? 0.4 : 1 }}
+      className={`event-pill text-xs px-2 py-1 rounded truncate hover:opacity-80 transition-opacity flex items-center ${
+        canDrag ? 'cursor-grab active:cursor-grabbing' : 'cursor-pointer'
+      } ${
+        event.isCompetition
+          ? 'bg-red-500 text-white'
+          : event.status === 'completed'
+            ? 'bg-green-500 text-white'
+            : event.status === 'skipped'
+              ? 'bg-gray-400 text-white'
+              : `${getTypeColor(event.type)} text-white`
+      }`}
+      title={event.isCompetition
+        ? event.name
+        : `${event.title}${event.status === 'completed' ? ' ✓' : event.status === 'skipped' ? ' (Omitido)' : ''}`
+      }
+    >
+      {event.isCompetition ? (
+        <>
+          <FiFlag className="inline w-3 h-3 mr-1 flex-shrink-0" />
+          <span className="truncate">{event.name}</span>
+        </>
+      ) : (
+        <>
+          {event.status === 'completed' && <FiCheck className="inline w-3 h-3 mr-1 flex-shrink-0" />}
+          {event.status === 'skipped' && <FiSkipForward className="inline w-3 h-3 mr-1 flex-shrink-0" />}
+          {canDrag && <FiMove className="inline w-3 h-3 mr-1 flex-shrink-0 opacity-60" />}
+          {event.time && event.status !== 'completed' && event.status !== 'skipped' && !canDrag && (
+            <span className="mr-1">{event.time.slice(0, 5)}</span>
+          )}
+          <span className="truncate">{event.title}</span>
+        </>
+      )}
+    </div>
+  );
+};
+
+// Droppable day cell sub-component
+const DroppableDayCell = ({ dateStr, children }) => {
+  const { setNodeRef, isOver } = useDroppable({
+    id: `day-${dateStr || 'empty'}`,
+    data: { dateStr },
+    disabled: !dateStr,
+  });
+
+  return (
+    <div
+      ref={setNodeRef}
+      className={`transition-all rounded-lg ${
+        isOver ? 'ring-2 ring-green-400 bg-green-50/50 dark:bg-green-900/20' : ''
+      }`}
+    >
+      {children}
+    </div>
+  );
+};
+
+const AthleteCalendar = () => {
   const { profile } = useAuth();
   const [currentDate, setCurrentDate] = useState(new Date());
   const [sessions, setSessions] = useState([]);
   const [competitions, setCompetitions] = useState([]);
   const [loading, setLoading] = useState(true);
+  const [activeDragEvent, setActiveDragEvent] = useState(null);
 
   // Modal states
   const [showEventModal, setShowEventModal] = useState(false);
@@ -39,13 +123,21 @@ const Calendar = () => {
   const [selectedDate, setSelectedDate] = useState(null);
   const [selectedEvent, setSelectedEvent] = useState(null);
 
-  // Extract dependencies for useEffect
   const currentMonth = currentDate.getMonth();
   const currentYear = currentDate.getFullYear();
-  const coachId = profile?.id;
+  const athleteId = profile?.id;
+
+  // DnD sensors with activation constraint to distinguish click vs drag
+  const sensors = useSensors(
+    useSensor(PointerSensor, {
+      activationConstraint: {
+        distance: 8,
+      },
+    })
+  );
 
   const loadData = useCallback(async () => {
-    if (!coachId) {
+    if (!athleteId) {
       setSessions([]);
       setCompetitions([]);
       setLoading(false);
@@ -60,53 +152,70 @@ const Calendar = () => {
       const startDate = toLocalDateStr(new Date(year, month - 1, 1));
       const endDate = toLocalDateStr(new Date(year, month, 0));
 
-      const [sessionsRes, athletesRes] = await Promise.all([
-        getMonthSessions(coachId, year, month),
-        getAthletes(coachId),
+      const [sessionsRes, compsRes] = await Promise.all([
+        getAthleteMonthSessions(athleteId, year, month),
+        supabase
+          .from('competitions')
+          .select('*')
+          .eq('athlete_id', athleteId)
+          .gte('event_date', startDate)
+          .lte('event_date', endDate)
+          .order('event_date', { ascending: true }),
       ]);
 
       if (sessionsRes.data) setSessions(sessionsRes.data);
-
-      // Fetch competitions for all athletes this month
-      if (athletesRes.data && athletesRes.data.length > 0) {
-        const athleteIds = athletesRes.data.map(a => a.id);
-
-        const { data: comps, error: compsError } = await supabase
-          .from('competitions')
-          .select('*')
-          .in('athlete_id', athleteIds)
-          .gte('event_date', startDate)
-          .lte('event_date', endDate)
-          .order('event_date', { ascending: true });
-
-        if (!compsError && comps) {
-          // Enrich with athlete names
-          const enrichedComps = comps.map(comp => {
-            const athlete = athletesRes.data.find(a => a.id === comp.athlete_id);
-            return {
-              ...comp,
-              athleteName: athlete
-                ? `${athlete.firstName || athlete.first_name || ''} ${athlete.lastName || athlete.last_name || ''}`.trim()
-                : 'Atleta',
-              athleteImage: athlete?.profile_image || athlete?.profileImage || null,
-              isCompetition: true,
-            };
-          });
-          setCompetitions(enrichedComps);
-        }
+      if (compsRes.data) {
+        setCompetitions(compsRes.data.map(c => ({ ...c, isCompetition: true })));
       }
     } catch (error) {
-      console.error('Error loading calendar data:', error);
+      console.error('Error loading athlete calendar data:', error);
       setSessions([]);
       setCompetitions([]);
     } finally {
       setLoading(false);
     }
-  }, [coachId, currentMonth, currentYear]);
+  }, [athleteId, currentMonth, currentYear]);
 
   useEffect(() => {
     loadData();
   }, [loadData]);
+
+  // DnD handlers
+  const handleDragStart = (event) => {
+    const draggedEvent = event.active.data.current.event;
+    setActiveDragEvent(draggedEvent);
+  };
+
+  const handleDragEnd = async (event) => {
+    setActiveDragEvent(null);
+    const { active, over } = event;
+    if (!over || !active) return;
+
+    const draggedEvent = active.data.current.event;
+    const targetDateStr = over.data.current.dateStr;
+
+    if (!targetDateStr || draggedEvent.date === targetDateStr) return;
+
+    // Optimistic update
+    const originalDate = draggedEvent.date;
+    setSessions(prev => prev.map(s =>
+      s.id === draggedEvent.id ? { ...s, date: targetDateStr } : s
+    ));
+
+    const { error } = await rescheduleSession(draggedEvent.id, targetDateStr);
+    if (error) {
+      showError('Error al reprogramar la sesión');
+      setSessions(prev => prev.map(s =>
+        s.id === draggedEvent.id ? { ...s, date: originalDate } : s
+      ));
+    } else {
+      showSuccess('Sesión reprogramada');
+    }
+  };
+
+  const handleDragCancel = () => {
+    setActiveDragEvent(null);
+  };
 
   const getDaysInMonth = (date) => {
     const year = date.getFullYear();
@@ -163,7 +272,6 @@ const Calendar = () => {
     );
   };
 
-  // Click on a date cell - show day events list
   const handleDateClick = (date, e) => {
     if (!date) return;
     if (e.target.closest('.event-pill')) return;
@@ -175,7 +283,6 @@ const Calendar = () => {
     }
   };
 
-  // Click on an event pill - opens event details modal
   const handleEventClick = (event, e) => {
     if (e) e.stopPropagation();
     setSelectedEvent(event);
@@ -229,7 +336,7 @@ const Calendar = () => {
     return (
       <div className="flex items-center justify-center min-h-screen">
         <div className="text-center">
-          <div className="animate-spin rounded-full h-12 w-12 border-b-2 border-blue-600 mx-auto"></div>
+          <div className="animate-spin rounded-full h-12 w-12 border-b-2 border-green-600 mx-auto"></div>
           <p className="mt-4 text-gray-600 dark:text-gray-400">Cargando calendario...</p>
         </div>
       </div>
@@ -242,8 +349,8 @@ const Calendar = () => {
       <div className="mb-6">
         <div className="flex flex-col sm:flex-row sm:items-center sm:justify-between gap-4">
           <div>
-            <h1 className="text-3xl font-bold text-gray-900 dark:text-white mb-2">Calendario</h1>
-            <p className="text-gray-600 dark:text-gray-400">Entrenamientos y competiciones de tus atletas</p>
+            <h1 className="text-3xl font-bold text-gray-900 dark:text-white mb-2">Mi Calendario</h1>
+            <p className="text-gray-600 dark:text-gray-400">Tus entrenamientos y competiciones</p>
           </div>
         </div>
       </div>
@@ -264,7 +371,7 @@ const Calendar = () => {
             </h2>
             <button
               onClick={goToToday}
-              className="px-3 py-1 text-sm bg-blue-100 dark:bg-blue-900/30 text-blue-600 dark:text-blue-400 rounded-lg hover:bg-blue-200 dark:hover:bg-blue-900/50 transition-colors"
+              className="px-3 py-1 text-sm bg-green-100 dark:bg-green-900/30 text-green-600 dark:text-green-400 rounded-lg hover:bg-green-200 dark:hover:bg-green-900/50 transition-colors"
             >
               Hoy
             </button>
@@ -278,7 +385,7 @@ const Calendar = () => {
           </button>
         </div>
 
-        {/* Calendar Grid */}
+        {/* Calendar Grid with DnD */}
         <div className="p-4">
           <div className="grid grid-cols-7 gap-2 mb-2">
             {DAYS_OF_WEEK.map((day) => (
@@ -288,79 +395,75 @@ const Calendar = () => {
             ))}
           </div>
 
-          <div className="grid grid-cols-7 gap-2">
-            {days.map((date, index) => {
-              const dayEvents = date ? getEventsForDate(date) : [];
-              const today = isToday(date);
-              const hasEvents = dayEvents.length > 0;
+          <DndContext
+            sensors={sensors}
+            onDragStart={handleDragStart}
+            onDragEnd={handleDragEnd}
+            onDragCancel={handleDragCancel}
+          >
+            <div className="grid grid-cols-7 gap-2">
+              {days.map((date, index) => {
+                const dayEvents = date ? getEventsForDate(date) : [];
+                const today = isToday(date);
+                const hasEvents = dayEvents.length > 0;
+                const dateStr = date ? toLocalDateStr(date) : null;
 
-              return (
-                <motion.div
-                  key={index}
-                  initial={{ opacity: 0 }}
-                  animate={{ opacity: 1 }}
-                  transition={{ delay: index * 0.01 }}
-                  onClick={(e) => handleDateClick(date, e)}
-                  className={`
-                    min-h-[100px] p-2 rounded-lg border transition-all
-                    ${date
-                      ? `bg-white dark:bg-gray-700 border-gray-200 dark:border-gray-600 ${hasEvents ? 'hover:border-blue-500 dark:hover:border-blue-500 hover:shadow-md cursor-pointer' : 'cursor-default'}`
-                      : 'bg-gray-50 dark:bg-gray-800/50 border-transparent cursor-default'}
-                    ${today ? 'ring-2 ring-blue-500 ring-offset-2 dark:ring-offset-gray-900' : ''}
-                  `}
-                >
-                  {date && (
-                    <>
-                      <div className={`text-sm font-semibold mb-1 ${today ? 'text-blue-600 dark:text-blue-400' : 'text-gray-900 dark:text-white'}`}>
-                        {date.getDate()}
-                      </div>
+                return (
+                  <DroppableDayCell key={index} dateStr={dateStr}>
+                    <motion.div
+                      initial={{ opacity: 0 }}
+                      animate={{ opacity: 1 }}
+                      transition={{ delay: index * 0.01 }}
+                      onClick={(e) => handleDateClick(date, e)}
+                      className={`
+                        min-h-[100px] p-2 rounded-lg border transition-all
+                        ${date
+                          ? `bg-white dark:bg-gray-700 border-gray-200 dark:border-gray-600 ${hasEvents ? 'hover:border-green-500 dark:hover:border-green-500 hover:shadow-md cursor-pointer' : 'cursor-default'}`
+                          : 'bg-gray-50 dark:bg-gray-800/50 border-transparent cursor-default'}
+                        ${today ? 'ring-2 ring-green-500 ring-offset-2 dark:ring-offset-gray-900' : ''}
+                      `}
+                    >
+                      {date && (
+                        <>
+                          <div className={`text-sm font-semibold mb-1 ${today ? 'text-green-600 dark:text-green-400' : 'text-gray-900 dark:text-white'}`}>
+                            {date.getDate()}
+                          </div>
 
-                      <div className="space-y-1">
-                        {dayEvents.slice(0, 2).map((event, i) => (
-                          <div
-                            key={event.id || i}
-                            onClick={(e) => handleEventClick(event, e)}
-                            className={`event-pill text-xs px-2 py-1 rounded truncate cursor-pointer hover:opacity-80 transition-opacity flex items-center ${
-                              event.isCompetition
-                                ? 'bg-red-500 text-white'
-                                : event.status === 'completed'
-                                  ? 'bg-green-500 text-white'
-                                  : event.status === 'skipped'
-                                    ? 'bg-gray-400 text-white'
-                                    : `${getTypeColor(event.type)} text-white`
-                            }`}
-                            title={event.isCompetition
-                              ? `${event.name} - ${event.athleteName}`
-                              : `${event.title} - ${event.athleteName}${event.status === 'completed' ? ' ✓' : event.status === 'skipped' ? ' (Omitido)' : ''}`
-                            }
-                          >
-                            {event.isCompetition ? (
-                              <>
-                                <FiFlag className="inline w-3 h-3 mr-1 flex-shrink-0" />
-                                <span className="truncate">{event.name}</span>
-                              </>
-                            ) : (
-                              <>
-                                {event.status === 'completed' && <FiCheck className="inline w-3 h-3 mr-1 flex-shrink-0" />}
-                                {event.status === 'skipped' && <FiSkipForward className="inline w-3 h-3 mr-1 flex-shrink-0" />}
-                                {event.time && event.status !== 'completed' && event.status !== 'skipped' && <span className="mr-1">{event.time.slice(0, 5)}</span>}
-                                <span className="truncate">{event.title}</span>
-                              </>
+                          <div className="space-y-1">
+                            {dayEvents.slice(0, 2).map((event, i) => (
+                              <DraggableEventPill
+                                key={event.id || i}
+                                event={event}
+                                onClick={handleEventClick}
+                                getTypeColor={getTypeColor}
+                              />
+                            ))}
+                            {dayEvents.length > 2 && (
+                              <div className="text-xs text-gray-500 dark:text-gray-400 px-2">
+                                +{dayEvents.length - 2} más
+                              </div>
                             )}
                           </div>
-                        ))}
-                        {dayEvents.length > 2 && (
-                          <div className="text-xs text-gray-500 dark:text-gray-400 px-2">
-                            +{dayEvents.length - 2} más
-                          </div>
-                        )}
-                      </div>
-                    </>
-                  )}
-                </motion.div>
-              );
-            })}
-          </div>
+                        </>
+                      )}
+                    </motion.div>
+                  </DroppableDayCell>
+                );
+              })}
+            </div>
+
+            {/* Drag Overlay */}
+            <DragOverlay>
+              {activeDragEvent && (
+                <div className={`text-xs px-2 py-1 rounded truncate flex items-center shadow-lg ${
+                  getTypeColor(activeDragEvent.type)
+                } text-white`}>
+                  <FiMove className="inline w-3 h-3 mr-1 flex-shrink-0" />
+                  <span className="truncate">{activeDragEvent.title}</span>
+                </div>
+              )}
+            </DragOverlay>
+          </DndContext>
         </div>
       </div>
 
@@ -386,6 +489,11 @@ const Calendar = () => {
           <div className="flex items-center space-x-2">
             <div className="w-3 h-3 rounded-full bg-gray-400" />
             <span className="text-sm text-gray-600 dark:text-gray-400">Omitido</span>
+          </div>
+          <div className="border-l border-gray-300 dark:border-gray-600 h-4 mx-1" />
+          <div className="flex items-center space-x-2">
+            <FiMove className="w-3 h-3 text-gray-500" />
+            <span className="text-sm text-gray-600 dark:text-gray-400">Arrastra para mover</span>
           </div>
         </div>
       </div>
@@ -427,10 +535,9 @@ const Calendar = () => {
                     <button
                       key={event.id || i}
                       onClick={() => handleEventClick(event)}
-                      className="w-full text-left p-4 rounded-lg border border-gray-200 dark:border-gray-600 hover:border-blue-500 dark:hover:border-blue-500 hover:shadow-sm transition-all"
+                      className="w-full text-left p-4 rounded-lg border border-gray-200 dark:border-gray-600 hover:border-green-500 dark:hover:border-green-500 hover:shadow-sm transition-all"
                     >
                       <div className="flex items-start space-x-3">
-                        {/* Type indicator */}
                         <div className={`w-3 h-3 rounded-full mt-1.5 flex-shrink-0 ${
                           event.isCompetition ? 'bg-red-500' : getTypeColor(event.type)
                         }`} />
@@ -445,11 +552,6 @@ const Calendar = () => {
                                 {event.time.slice(0, 5)}
                               </span>
                             )}
-                          </div>
-
-                          <div className="flex items-center space-x-2 text-sm text-gray-500 dark:text-gray-400">
-                            <FiUser className="w-3 h-3" />
-                            <span className="truncate">{event.athleteName}</span>
                           </div>
 
                           {!event.isCompetition && (
@@ -491,7 +593,7 @@ const Calendar = () => {
         )}
       </AnimatePresence>
 
-      {/* Event Detail Modal (Read-Only) */}
+      {/* Event Detail Modal */}
       <AnimatePresence>
         {showEventModal && selectedEvent && (
           <div className="fixed inset-0 z-50 flex items-center justify-center p-4 bg-black/50">
@@ -519,10 +621,10 @@ const Calendar = () => {
 
                 <div className="space-y-4">
                   {/* Date & Time */}
-                  <div className="p-3 bg-blue-50 dark:bg-blue-900/20 rounded-lg flex items-center space-x-3">
-                    <FiCalendar className="w-5 h-5 text-blue-600 dark:text-blue-400 flex-shrink-0" />
+                  <div className="p-3 bg-green-50 dark:bg-green-900/20 rounded-lg flex items-center space-x-3">
+                    <FiCalendar className="w-5 h-5 text-green-600 dark:text-green-400 flex-shrink-0" />
                     <div>
-                      <p className="text-sm font-medium text-blue-700 dark:text-blue-300">
+                      <p className="text-sm font-medium text-green-700 dark:text-green-300">
                         {new Date(selectedEvent.isCompetition ? selectedEvent.event_date : selectedEvent.date).toLocaleDateString('es-ES', {
                           weekday: 'long',
                           year: 'numeric',
@@ -531,7 +633,7 @@ const Calendar = () => {
                         })}
                       </p>
                       {!selectedEvent.isCompetition && selectedEvent.time && (
-                        <p className="text-sm text-blue-600 dark:text-blue-400 flex items-center mt-1">
+                        <p className="text-sm text-green-600 dark:text-green-400 flex items-center mt-1">
                           <FiClock className="w-3 h-3 mr-1" />
                           {selectedEvent.time.slice(0, 5)}
                         </p>
@@ -565,21 +667,16 @@ const Calendar = () => {
                         <FiFlag className="w-3 h-3" />
                         <span>Competición</span>
                       </span>
+                      {selectedEvent.priority && (
+                        <span className={`px-3 py-1 rounded-full text-sm text-white ${
+                          selectedEvent.priority === 'A' ? 'bg-red-500' :
+                          selectedEvent.priority === 'B' ? 'bg-orange-500' : 'bg-gray-500'
+                        }`}>
+                          Prioridad {selectedEvent.priority}
+                        </span>
+                      )}
                     </div>
                   )}
-
-                  {/* Athlete */}
-                  <div className="flex items-center space-x-3 p-3 bg-gray-50 dark:bg-gray-700/50 rounded-lg">
-                    <img
-                      src={selectedEvent.athleteImage || `https://ui-avatars.com/api/?name=${encodeURIComponent(selectedEvent.athleteName || 'A')}&background=random`}
-                      alt={selectedEvent.athleteName}
-                      className="w-10 h-10 rounded-full"
-                    />
-                    <div>
-                      <p className="text-sm text-gray-500 dark:text-gray-400">Atleta</p>
-                      <p className="font-medium text-gray-900 dark:text-white">{selectedEvent.athleteName}</p>
-                    </div>
-                  </div>
 
                   {/* Competition-specific fields */}
                   {selectedEvent.isCompetition && (
@@ -589,7 +686,9 @@ const Calendar = () => {
                           <FiActivity className="w-5 h-5 text-gray-500 flex-shrink-0" />
                           <div>
                             <p className="text-sm text-gray-500 dark:text-gray-400">Distancia</p>
-                            <p className="font-medium text-gray-900 dark:text-white">{selectedEvent.distance_km} km</p>
+                            <p className="font-medium text-gray-900 dark:text-white">
+                              {selectedEvent.distance_name ? `${selectedEvent.distance_name} (${selectedEvent.distance_km} km)` : `${selectedEvent.distance_km} km`}
+                            </p>
                           </div>
                         </div>
                       )}
@@ -639,7 +738,7 @@ const Calendar = () => {
                   {/* Athlete notes (training only) */}
                   {!selectedEvent.isCompetition && selectedEvent.notes_athlete && (
                     <div>
-                      <p className="text-sm text-gray-500 dark:text-gray-400 mb-1">Notas del atleta</p>
+                      <p className="text-sm text-gray-500 dark:text-gray-400 mb-1">Mis notas</p>
                       <p className="text-gray-900 dark:text-white whitespace-pre-wrap">{selectedEvent.notes_athlete}</p>
                     </div>
                   )}
@@ -680,7 +779,10 @@ const Calendar = () => {
                   {/* Skipped session info */}
                   {!selectedEvent.isCompetition && selectedEvent.status === 'skipped' && (
                     <div className="p-3 bg-gray-100 dark:bg-gray-700/50 rounded-lg">
-                      <p className="text-sm font-medium text-gray-600 dark:text-gray-400">Sesión omitida por el atleta</p>
+                      <p className="text-sm font-medium text-gray-600 dark:text-gray-400">Sesión omitida</p>
+                      {selectedEvent.notes_athlete && (
+                        <p className="text-sm text-gray-500 dark:text-gray-400 mt-1 whitespace-pre-wrap">{selectedEvent.notes_athlete}</p>
+                      )}
                     </div>
                   )}
                 </div>
@@ -693,4 +795,4 @@ const Calendar = () => {
   );
 };
 
-export default Calendar;
+export default AthleteCalendar;

@@ -294,7 +294,7 @@ const AthleteCalendar = () => {
     const colors = {
       running: 'bg-blue-500',
       gym: 'bg-purple-500',
-      rest: 'bg-green-500',
+      rest: 'bg-teal-500',
       cross_training: 'bg-orange-500',
     };
     return colors[type] || 'bg-gray-500';

@@ -171,7 +171,7 @@ export function AuthProvider({ children }) {
   }, [fetchProfile]);
 
   // Sign up with email
-  const signUp = useCallback(async ({ email, password, role, firstName, lastName, coachEmail }) => {
+  const signUp = useCallback(async ({ email, password, role, firstName, lastName, coachEmail, coachId }) => {
     try {
       const { data, error } = await supabase.auth.signUp({
         email,
@@ -182,6 +182,7 @@ export function AuthProvider({ children }) {
             first_name: firstName,
             last_name: lastName,
             coach_email: coachEmail || null,
+            coach_id: coachId || null,
           },
         },
       });

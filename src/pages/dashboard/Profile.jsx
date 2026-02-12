@@ -12,6 +12,9 @@ import {
   FiX,
   FiCalendar,
   FiActivity,
+  FiLink,
+  FiCopy,
+  FiCheck,
 } from 'react-icons/fi';
 
 const Profile = () => {
@@ -49,6 +52,19 @@ const Profile = () => {
   });
   const [newDistance, setNewDistance] = useState('');
   const [loading, setLoading] = useState(false);
+  const [copiedInvite, setCopiedInvite] = useState(false);
+
+  const handleCopyInviteLink = async () => {
+    const url = `https://training-pro.netlify.app/register?invite=${profile?.id || user?.id}`;
+    try {
+      await navigator.clipboard.writeText(url);
+      setCopiedInvite(true);
+      showSuccess('Enlace copiado al portapapeles');
+      setTimeout(() => setCopiedInvite(false), 3000);
+    } catch {
+      showError('No se pudo copiar el enlace');
+    }
+  };
 
   // Sync formData when profile loads from DB (useState only initializes once)
   useEffect(() => {
@@ -418,6 +434,49 @@ const Profile = () => {
                     />
                   </div>
                 </div>
+              </div>
+            )}
+
+            {/* Invite Link - only for coaches */}
+            {displayProfile.role === 'coach' && (
+              <div>
+                <h3 className="text-lg font-semibold text-gray-900 dark:text-white mb-4 flex items-center gap-2">
+                  <FiLink className="w-5 h-5 text-blue-600" />
+                  Enlace de Invitación
+                </h3>
+                <p className="text-sm text-gray-600 dark:text-gray-400 mb-3">
+                  Comparte este enlace con tus atletas para que se registren directamente como parte de tu equipo.
+                </p>
+                <div className="flex items-center gap-3">
+                  <div className="flex-1 px-4 py-2.5 bg-gray-50 dark:bg-gray-700/50 border border-gray-200 dark:border-gray-600 rounded-lg">
+                    <p className="text-sm font-mono text-gray-700 dark:text-gray-300 break-all">
+                      https://training-pro.netlify.app/register?invite={profile?.id || user?.id}
+                    </p>
+                  </div>
+                  <button
+                    onClick={handleCopyInviteLink}
+                    className={`flex items-center gap-2 px-4 py-2.5 rounded-lg text-sm font-medium transition-colors whitespace-nowrap ${
+                      copiedInvite
+                        ? 'bg-green-100 dark:bg-green-900/30 text-green-700 dark:text-green-300'
+                        : 'bg-blue-600 hover:bg-blue-700 text-white'
+                    }`}
+                  >
+                    {copiedInvite ? (
+                      <>
+                        <FiCheck className="w-4 h-4" />
+                        Copiado
+                      </>
+                    ) : (
+                      <>
+                        <FiCopy className="w-4 h-4" />
+                        Copiar enlace
+                      </>
+                    )}
+                  </button>
+                </div>
+                <p className="text-xs text-gray-500 dark:text-gray-500 mt-2">
+                  Los atletas que usen este enlace se registrarán directamente como parte de tu equipo.
+                </p>
               </div>
             )}
 

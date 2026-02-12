@@ -1,12 +1,14 @@
-import { useState } from 'react';
-import { Link, useNavigate } from 'react-router-dom';
+import { useState, useEffect } from 'react';
+import { Link, useNavigate, useSearchParams } from 'react-router-dom';
 import { motion, AnimatePresence } from 'framer-motion';
 import { HiUser, HiMail, HiLockClosed, HiEye, HiEyeOff, HiUserGroup, HiAcademicCap, HiArrowLeft } from 'react-icons/hi';
 import { FcGoogle } from 'react-icons/fc';
 import { useAuth } from '../contexts/AuthContext';
+import { supabase } from '../lib/supabase';
 
 export default function Register() {
   const navigate = useNavigate();
+  const [searchParams] = useSearchParams();
   const { signUp, signInWithGoogle } = useAuth();
   const [step, setStep] = useState(1); // 1: role selection, 2: form
   const [role, setRole] = useState(null); // 'coach' or 'athlete'
@@ -14,6 +16,27 @@ export default function Register() {
   const [showConfirmPassword, setShowConfirmPassword] = useState(false);
   const [isLoading, setIsLoading] = useState(false);
   const [successMessage, setSuccessMessage] = useState('');
+  const [inviteCoachId, setInviteCoachId] = useState(null);
+  const [inviteCoachName, setInviteCoachName] = useState(null);
+  const [loadingInvite, setLoadingInvite] = useState(false);
+
+  // Detect invite link and fetch coach info
+  useEffect(() => {
+    const inviteId = searchParams.get('invite');
+    if (inviteId) {
+      setLoadingInvite(true);
+      supabase.rpc('get_coach_public_info', { coach_uuid: inviteId })
+        .then(({ data, error }) => {
+          if (!error && data?.length > 0) {
+            setInviteCoachId(inviteId);
+            setInviteCoachName(`${data[0].first_name} ${data[0].last_name}`);
+            setRole('athlete');
+            setStep(2);
+          }
+          setLoadingInvite(false);
+        });
+    }
+  }, [searchParams]);
 
   const [formData, setFormData] = useState({
     firstName: '',
@@ -67,9 +90,9 @@ export default function Register() {
       newErrors.confirmPassword = 'Las contraseñas no coinciden';
     }
 
-    if (role === 'athlete' && !formData.coachEmail.trim()) {
+    if (role === 'athlete' && !inviteCoachId && !formData.coachEmail.trim()) {
       newErrors.coachEmail = 'El email de tu entrenador es requerido';
-    } else if (role === 'athlete' && !/^[^\s@]+@[^\s@]+\.[^\s@]+$/.test(formData.coachEmail)) {
+    } else if (role === 'athlete' && !inviteCoachId && !/^[^\s@]+@[^\s@]+\.[^\s@]+$/.test(formData.coachEmail)) {
       newErrors.coachEmail = 'Email del entrenador inválido';
     }
 
@@ -96,7 +119,8 @@ export default function Register() {
         role: role,
         firstName: formData.firstName,
         lastName: formData.lastName,
-        coachEmail: role === 'athlete' ? formData.coachEmail : null,
+        coachEmail: role === 'athlete' && !inviteCoachId ? formData.coachEmail : null,
+        coachId: inviteCoachId || null,
       });
 
       if (error) throw error;
@@ -163,8 +187,17 @@ export default function Register() {
             </Link>
           </div>
 
+          {loadingInvite && (
+            <div className="flex items-center justify-center py-12">
+              <svg className="animate-spin h-8 w-8 text-sky-600" xmlns="http://www.w3.org/2000/svg" fill="none" viewBox="0 0 24 24">
+                <circle className="opacity-25" cx="12" cy="12" r="10" stroke="currentColor" strokeWidth="4"></circle>
+                <path className="opacity-75" fill="currentColor" d="M4 12a8 8 0 018-8V0C5.373 0 0 5.373 0 12h4zm2 5.291A7.962 7.962 0 014 12H0c0 3.042 1.135 5.824 3 7.938l3-2.647z"></path>
+              </svg>
+            </div>
+          )}
+
           <AnimatePresence mode="wait">
-            {step === 1 ? (
+            {!loadingInvite && step === 1 ? (
               /* Step 1: Role Selection */
               <motion.div
                 key="role-selection"
@@ -252,13 +285,15 @@ export default function Register() {
                 className="space-y-6"
               >
                 {/* Back Button */}
-                <button
-                  onClick={goBack}
-                  className="flex items-center text-gray-600 dark:text-gray-400 hover:text-gray-900 dark:hover:text-white transition-colors"
-                >
-                  <HiArrowLeft className="w-5 h-5 mr-2" />
-                  Volver
-                </button>
+                {!inviteCoachId && (
+                  <button
+                    onClick={goBack}
+                    className="flex items-center text-gray-600 dark:text-gray-400 hover:text-gray-900 dark:hover:text-white transition-colors"
+                  >
+                    <HiArrowLeft className="w-5 h-5 mr-2" />
+                    Volver
+                  </button>
+                )}
 
                 {/* Header */}
                 <div className="text-center">
@@ -396,8 +431,29 @@ export default function Register() {
                     )}
                   </div>
 
-                  {/* Coach Email (Only for Athletes) */}
-                  {role === 'athlete' && (
+                  {/* Invite Banner */}
+                  {inviteCoachId && (
+                    <motion.div
+                      initial={{ opacity: 0, y: -10 }}
+                      animate={{ opacity: 1, y: 0 }}
+                      className="p-4 bg-blue-50 dark:bg-blue-900/20 border border-blue-200 dark:border-blue-800 rounded-xl"
+                    >
+                      <div className="flex items-center gap-3">
+                        <HiUserGroup className="w-6 h-6 text-blue-600 dark:text-blue-400 flex-shrink-0" />
+                        <div>
+                          <p className="text-sm font-medium text-blue-900 dark:text-blue-100">
+                            Invitación de {inviteCoachName}
+                          </p>
+                          <p className="text-xs text-blue-600 dark:text-blue-300">
+                            Te registrarás como atleta de este entrenador
+                          </p>
+                        </div>
+                      </div>
+                    </motion.div>
+                  )}
+
+                  {/* Coach Email (Only for Athletes without invite) */}
+                  {role === 'athlete' && !inviteCoachId && (
                     <motion.div
                       initial={{ opacity: 0, height: 0 }}
                       animate={{ opacity: 1, height: 'auto' }}

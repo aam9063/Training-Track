@@ -67,8 +67,6 @@ import ACWRGauge, { getACWRZone } from '../../components/shared/ACWRGauge';
 import { generateReportPDF } from '../../lib/reportPdfExport';
 import PMCChart from '../../components/athlete/PMCChart';
 import TrainingZonesCard from '../../components/athlete/TrainingZonesCard';
-import PeriodizationManager from '../../components/dashboard/PeriodizationManager';
-
 // Calculate HR training zones using Karvonen formula
 const calculateHRZones = (maxHR, restingHR) => {
   const zones = [
@@ -1000,16 +998,6 @@ const AthleteMetricsView = () => {
               athleteId={athleteId}
             />
           )}
-
-          {/* Periodization Manager - Coach view */}
-          <motion.div
-            initial={{ opacity: 0, y: 20 }}
-            animate={{ opacity: 1, y: 0 }}
-            transition={{ delay: 0.15 }}
-            className="bg-white dark:bg-gray-800 rounded-xl p-4 sm:p-6 shadow-sm border border-gray-200 dark:border-gray-700"
-          >
-            <PeriodizationManager athleteId={athleteId} />
-          </motion.div>
 
           {/* Two Column Charts */}
           <div className="grid grid-cols-1 lg:grid-cols-2 gap-6">

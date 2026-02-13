@@ -29,8 +29,12 @@ const WeeklyTrainingModal = ({
   coachId,
   onSuccess,
   existingTraining = null,
+  initialWeekStartDate = null,
+  embedded = false,
+  mesocycleContext = null,
+  onBack = null,
 }) => {
-  const [weekStartDate, setWeekStartDate] = useState(getWeekStartDate());
+  const [weekStartDate, setWeekStartDate] = useState(initialWeekStartDate || getWeekStartDate());
   const [days, setDays] = useState(initializeEmptyWeek());
   const [runningExercises, setRunningExercises] = useState([]);
   const [gymExercises, setGymExercises] = useState([]);
@@ -50,6 +54,13 @@ const WeeklyTrainingModal = ({
       exercises: [],
     }));
   }
+
+  // Sync weekStartDate when initialWeekStartDate changes (from wizard)
+  useEffect(() => {
+    if (initialWeekStartDate) {
+      setWeekStartDate(initialWeekStartDate);
+    }
+  }, [initialWeekStartDate]);
 
   // Load exercises on mount
   useEffect(() => {
@@ -307,55 +318,50 @@ const WeeklyTrainingModal = ({
 
   if (!isOpen) return null;
 
-  return (
-    <div className="fixed inset-0 z-50 flex items-center justify-center p-4 bg-black/50 overflow-y-auto">
-      <motion.div
-        initial={{ opacity: 0, scale: 0.95 }}
-        animate={{ opacity: 1, scale: 1 }}
-        exit={{ opacity: 0, scale: 0.95 }}
-        className="bg-white dark:bg-gray-800 rounded-xl shadow-xl w-full max-w-6xl max-h-[90vh] overflow-hidden flex flex-col"
-      >
-        {/* Header */}
-        <div className="p-6 border-b border-gray-200 dark:border-gray-700 flex-shrink-0">
-          <div className="flex items-center justify-between">
-            <div>
-              <h2 className="text-xl font-bold text-gray-900 dark:text-white">
-                Entrenamiento Semanal
-              </h2>
-              <p className="text-sm text-gray-500 dark:text-gray-400">
-                {athlete?.firstName} {athlete?.lastName}
-              </p>
-            </div>
-            <button
-              onClick={onClose}
-              className="p-2 hover:bg-gray-100 dark:hover:bg-gray-700 rounded-lg transition-colors"
-            >
-              <FiX className="w-5 h-5 text-gray-500" />
-            </button>
+  const headerContent = (
+    <div className={`${embedded ? 'px-4 sm:px-6 pb-4' : 'p-6'} border-b border-gray-200 dark:border-gray-700 flex-shrink-0`}>
+      {!embedded && (
+        <div className="flex items-center justify-between">
+          <div>
+            <h2 className="text-xl font-bold text-gray-900 dark:text-white">
+              Entrenamiento Semanal
+            </h2>
+            <p className="text-sm text-gray-500 dark:text-gray-400">
+              {athlete?.firstName} {athlete?.lastName}
+            </p>
           </div>
-
-          {/* Week Navigator */}
-          <div className="flex items-center justify-center space-x-4 mt-4">
-            <button
-              onClick={handlePreviousWeek}
-              className="p-2 hover:bg-gray-100 dark:hover:bg-gray-700 rounded-lg transition-colors"
-            >
-              <FiChevronLeft className="w-5 h-5" />
-            </button>
-            <span className="text-lg font-semibold text-gray-900 dark:text-white min-w-[200px] text-center">
-              {getWeekRange()}
-            </span>
-            <button
-              onClick={handleNextWeek}
-              className="p-2 hover:bg-gray-100 dark:hover:bg-gray-700 rounded-lg transition-colors"
-            >
-              <FiChevronRight className="w-5 h-5" />
-            </button>
-          </div>
+          <button
+            onClick={onClose}
+            className="p-2 hover:bg-gray-100 dark:hover:bg-gray-700 rounded-lg transition-colors"
+          >
+            <FiX className="w-5 h-5 text-gray-500" />
+          </button>
         </div>
+      )}
 
-        {/* Content */}
-        <div className="flex-1 overflow-y-auto p-6">
+      {/* Week Navigator */}
+      <div className={`flex items-center justify-center space-x-4 ${embedded ? '' : 'mt-4'}`}>
+        <button
+          onClick={handlePreviousWeek}
+          className="p-2 hover:bg-gray-100 dark:hover:bg-gray-700 rounded-lg transition-colors"
+        >
+          <FiChevronLeft className="w-5 h-5" />
+        </button>
+        <span className="text-lg font-semibold text-gray-900 dark:text-white min-w-[200px] text-center">
+          {getWeekRange()}
+        </span>
+        <button
+          onClick={handleNextWeek}
+          className="p-2 hover:bg-gray-100 dark:hover:bg-gray-700 rounded-lg transition-colors"
+        >
+          <FiChevronRight className="w-5 h-5" />
+        </button>
+      </div>
+    </div>
+  );
+
+  const bodyContent = (
+    <div className={`flex-1 overflow-y-auto ${embedded ? 'px-4 sm:px-6 py-4' : 'p-6'}`}>
           {loading ? (
             <div className="flex items-center justify-center py-12">
               <FiLoader className="w-8 h-8 animate-spin text-blue-600" />
@@ -411,45 +417,80 @@ const WeeklyTrainingModal = ({
               </div>
             </>
           )}
-        </div>
+    </div>
+  );
 
-        {/* Footer */}
-        <div className="p-6 border-t border-gray-200 dark:border-gray-700 flex-shrink-0">
-          <div className="flex justify-between">
-            <div>
-              {existingWeekData?.length > 0 && (
-                <button
-                  onClick={handleDeleteWeek}
-                  disabled={saving}
-                  className="px-4 py-2 text-red-600 hover:bg-red-50 dark:hover:bg-red-900/20 rounded-lg transition-colors flex items-center space-x-2"
-                >
-                  <FiTrash2 className="w-4 h-4" />
-                  <span>Eliminar Semana</span>
-                </button>
-              )}
-            </div>
-            <div className="flex space-x-3">
-              <button
-                onClick={onClose}
-                className="px-4 py-2 text-gray-700 dark:text-gray-300 hover:bg-gray-100 dark:hover:bg-gray-700 rounded-lg transition-colors"
-              >
-                Cancelar
-              </button>
-              <button
-                onClick={handleSave}
-                disabled={saving}
-                className="px-6 py-2 bg-blue-600 hover:bg-blue-700 text-white rounded-lg transition-colors flex items-center space-x-2 disabled:opacity-50"
-              >
-                {saving ? (
-                  <FiLoader className="w-4 h-4 animate-spin" />
-                ) : (
-                  <FiSave className="w-4 h-4" />
-                )}
-                <span>{existingWeekData?.length ? 'Actualizar' : 'Guardar'}</span>
-              </button>
-            </div>
-          </div>
+  const footerContent = (
+    <div className={`${embedded ? 'px-4 sm:px-6 pt-4 pb-2' : 'p-6'} border-t border-gray-200 dark:border-gray-700 flex-shrink-0`}>
+      <div className="flex justify-between">
+        <div className="flex items-center gap-2">
+          {onBack && (
+            <button
+              onClick={onBack}
+              className="px-4 py-2 text-gray-700 dark:text-gray-300 hover:bg-gray-100 dark:hover:bg-gray-700 rounded-lg transition-colors flex items-center space-x-1"
+            >
+              <FiChevronLeft className="w-4 h-4" />
+              <span>Atrás</span>
+            </button>
+          )}
+          {existingWeekData?.length > 0 && (
+            <button
+              onClick={handleDeleteWeek}
+              disabled={saving}
+              className="px-4 py-2 text-red-600 hover:bg-red-50 dark:hover:bg-red-900/20 rounded-lg transition-colors flex items-center space-x-2"
+            >
+              <FiTrash2 className="w-4 h-4" />
+              <span>Eliminar Semana</span>
+            </button>
+          )}
         </div>
+        <div className="flex space-x-3">
+          <button
+            onClick={onClose}
+            className="px-4 py-2 text-gray-700 dark:text-gray-300 hover:bg-gray-100 dark:hover:bg-gray-700 rounded-lg transition-colors"
+          >
+            Cancelar
+          </button>
+          <button
+            onClick={handleSave}
+            disabled={saving}
+            className="px-6 py-2 bg-blue-600 hover:bg-blue-700 text-white rounded-lg transition-colors flex items-center space-x-2 disabled:opacity-50"
+          >
+            {saving ? (
+              <FiLoader className="w-4 h-4 animate-spin" />
+            ) : (
+              <FiSave className="w-4 h-4" />
+            )}
+            <span>{existingWeekData?.length ? 'Actualizar' : 'Guardar'}</span>
+          </button>
+        </div>
+      </div>
+    </div>
+  );
+
+  // Embedded mode: render without overlay wrapper (used inside TrainingPlanningWizard)
+  if (embedded) {
+    return (
+      <div className="flex flex-col h-full">
+        {headerContent}
+        {bodyContent}
+        {footerContent}
+      </div>
+    );
+  }
+
+  // Standalone mode: render with full-screen overlay
+  return (
+    <div className="fixed inset-0 z-50 flex items-center justify-center p-4 bg-black/50 overflow-y-auto">
+      <motion.div
+        initial={{ opacity: 0, scale: 0.95 }}
+        animate={{ opacity: 1, scale: 1 }}
+        exit={{ opacity: 0, scale: 0.95 }}
+        className="bg-white dark:bg-gray-800 rounded-xl shadow-xl w-full max-w-6xl max-h-[90vh] overflow-hidden flex flex-col"
+      >
+        {headerContent}
+        {bodyContent}
+        {footerContent}
       </motion.div>
     </div>
   );

@@ -11,8 +11,9 @@ import {
   createMicrocycle, updateMicrocycle,
 } from '../../services/trainingLoadService';
 import { showSuccess, showError } from '../../lib/toast';
+import { toLocalDateStr } from '../../lib/dateUtils';
 
-const PHASE_OPTIONS = [
+export const PHASE_OPTIONS = [
   { value: 'base', label: 'Base', color: '#3B82F6', bg: 'bg-blue-100 dark:bg-blue-900/30 text-blue-700 dark:text-blue-300' },
   { value: 'build', label: 'Construcción', color: '#F59E0B', bg: 'bg-yellow-100 dark:bg-yellow-900/30 text-yellow-700 dark:text-yellow-300' },
   { value: 'peak', label: 'Pico', color: '#EF4444', bg: 'bg-red-100 dark:bg-red-900/30 text-red-700 dark:text-red-300' },
@@ -22,7 +23,7 @@ const PHASE_OPTIONS = [
   { value: 'transition', label: 'Transición', color: '#6B7280', bg: 'bg-gray-100 dark:bg-gray-700 text-gray-700 dark:text-gray-300' },
 ];
 
-const WEEK_TYPES = [
+export const WEEK_TYPES = [
   { value: 'normal', label: 'Normal' },
   { value: 'recovery', label: 'Recuperación' },
   { value: 'deload', label: 'Descarga' },
@@ -30,7 +31,7 @@ const WEEK_TYPES = [
   { value: 'race_week', label: 'Semana de carrera' },
 ];
 
-const getPhaseInfo = (phase) => PHASE_OPTIONS.find(p => p.value === phase) || PHASE_OPTIONS[6];
+export const getPhaseInfo = (phase) => PHASE_OPTIONS.find(p => p.value === phase) || PHASE_OPTIONS[6];
 
 export default function PeriodizationManager({ planId: externalPlanId, athleteId }) {
   const { profile } = useAuth();
@@ -116,7 +117,7 @@ export default function PeriodizationManager({ planId: externalPlanId, athleteId
         weekStart.setDate(weekStart.getDate() + i * 7);
         await createMicrocycle(meso.id, {
           week_number: i + 1,
-          start_date: weekStart.toISOString().split('T')[0],
+          start_date: toLocalDateStr(weekStart),
           week_type: i === weeks - 1 && newMeso.phase !== 'recovery' ? 'recovery' : 'normal',
           planned_km: newMeso.target_weekly_km ? parseFloat(newMeso.target_weekly_km) : null,
           planned_tss: newMeso.target_weekly_tss ? parseFloat(newMeso.target_weekly_tss) : null,
@@ -211,7 +212,7 @@ export default function PeriodizationManager({ planId: externalPlanId, athleteId
             className="bg-white dark:bg-gray-800 rounded-xl border border-gray-200 dark:border-gray-700 p-4 space-y-3"
           >
             <h4 className="text-sm font-semibold text-gray-900 dark:text-white">Nuevo Mesociclo</h4>
-            <div className="grid grid-cols-2 gap-3">
+            <div className="grid grid-cols-1 sm:grid-cols-2 gap-3">
               <div>
                 <label className="text-xs text-gray-600 dark:text-gray-400 mb-1 block">Nombre</label>
                 <input
@@ -239,7 +240,7 @@ export default function PeriodizationManager({ planId: externalPlanId, athleteId
                   type="date"
                   value={newMeso.start_date}
                   onChange={(e) => setNewMeso({ ...newMeso, start_date: e.target.value })}
-                  className="w-full px-3 py-2 text-sm border border-gray-300 dark:border-gray-600 rounded-lg bg-white dark:bg-gray-700 text-gray-900 dark:text-white"
+                  className="w-full min-w-0 px-2 py-2 text-sm border border-gray-300 dark:border-gray-600 rounded-lg bg-white dark:bg-gray-700 text-gray-900 dark:text-white"
                 />
               </div>
               <div>
@@ -248,7 +249,7 @@ export default function PeriodizationManager({ planId: externalPlanId, athleteId
                   type="date"
                   value={newMeso.end_date}
                   onChange={(e) => setNewMeso({ ...newMeso, end_date: e.target.value })}
-                  className="w-full px-3 py-2 text-sm border border-gray-300 dark:border-gray-600 rounded-lg bg-white dark:bg-gray-700 text-gray-900 dark:text-white"
+                  className="w-full min-w-0 px-2 py-2 text-sm border border-gray-300 dark:border-gray-600 rounded-lg bg-white dark:bg-gray-700 text-gray-900 dark:text-white"
                 />
               </div>
               <div>
@@ -365,7 +366,8 @@ export default function PeriodizationManager({ planId: externalPlanId, athleteId
                   className="overflow-hidden border-t border-gray-100 dark:border-gray-700"
                 >
                   <div className="p-4 space-y-2">
-                    <div className="grid grid-cols-12 text-[10px] font-medium text-gray-500 dark:text-gray-400 px-3 mb-1">
+                    {/* Desktop table header */}
+                    <div className="hidden sm:grid grid-cols-12 text-[10px] font-medium text-gray-500 dark:text-gray-400 px-3 mb-1">
                       <span className="col-span-2">Semana</span>
                       <span className="col-span-2">Inicio</span>
                       <span className="col-span-2">Tipo</span>
@@ -380,46 +382,94 @@ export default function PeriodizationManager({ planId: externalPlanId, athleteId
                           ? Math.round((micro.actual_km / micro.planned_km) * 100)
                           : null;
                         return (
-                          <div
-                            key={micro.id}
-                            className="grid grid-cols-12 items-center text-sm px-3 py-2 rounded-lg hover:bg-gray-50 dark:hover:bg-gray-750 transition-colors"
-                          >
-                            <span className="col-span-2 font-medium text-gray-900 dark:text-white">
-                              S{micro.week_number}
-                            </span>
-                            <span className="col-span-2 text-xs text-gray-500 dark:text-gray-400">
-                              {new Date(micro.start_date + 'T12:00:00').toLocaleDateString('es-ES', { day: 'numeric', month: 'short' })}
-                            </span>
-                            <span className="col-span-2">
-                              <select
-                                value={micro.week_type}
-                                onChange={(e) => handleUpdateMicrocycle(micro.id, { week_type: e.target.value })}
-                                className="text-xs px-1.5 py-0.5 rounded border border-gray-200 dark:border-gray-600 bg-white dark:bg-gray-700 text-gray-700 dark:text-gray-300"
-                              >
-                                {WEEK_TYPES.map(t => (
-                                  <option key={t.value} value={t.value}>{t.label}</option>
-                                ))}
-                              </select>
-                            </span>
-                            <span className="col-span-2 text-right text-gray-600 dark:text-gray-400">
-                              {micro.planned_km ? `${micro.planned_km} km` : '-'}
-                            </span>
-                            <span className="col-span-2 text-right font-medium text-gray-900 dark:text-white">
-                              {micro.actual_km ? `${micro.actual_km} km` : '-'}
-                            </span>
-                            <span className="col-span-2 text-right">
-                              {compliance !== null ? (
-                                <span className={`text-xs font-medium px-2 py-0.5 rounded-full ${
-                                  compliance >= 90 ? 'bg-green-100 text-green-700 dark:bg-green-900/30 dark:text-green-300'
-                                    : compliance >= 70 ? 'bg-yellow-100 text-yellow-700 dark:bg-yellow-900/30 dark:text-yellow-300'
-                                    : 'bg-red-100 text-red-700 dark:bg-red-900/30 dark:text-red-300'
-                                }`}>
-                                  {compliance}%
+                          <div key={micro.id}>
+                            {/* Desktop row */}
+                            <div className="hidden sm:grid grid-cols-12 items-center text-sm px-3 py-2 rounded-lg hover:bg-gray-50 dark:hover:bg-gray-750 transition-colors">
+                              <span className="col-span-2 font-medium text-gray-900 dark:text-white">
+                                S{micro.week_number}
+                              </span>
+                              <span className="col-span-2 text-xs text-gray-500 dark:text-gray-400">
+                                {new Date(micro.start_date + 'T12:00:00').toLocaleDateString('es-ES', { day: 'numeric', month: 'short' })}
+                              </span>
+                              <span className="col-span-2">
+                                <select
+                                  value={micro.week_type}
+                                  onChange={(e) => handleUpdateMicrocycle(micro.id, { week_type: e.target.value })}
+                                  className="text-xs px-1.5 py-0.5 rounded border border-gray-200 dark:border-gray-600 bg-white dark:bg-gray-700 text-gray-700 dark:text-gray-300"
+                                >
+                                  {WEEK_TYPES.map(t => (
+                                    <option key={t.value} value={t.value}>{t.label}</option>
+                                  ))}
+                                </select>
+                              </span>
+                              <span className="col-span-2 text-right text-gray-600 dark:text-gray-400">
+                                {micro.planned_km ? `${micro.planned_km} km` : '-'}
+                              </span>
+                              <span className="col-span-2 text-right font-medium text-gray-900 dark:text-white">
+                                {micro.actual_km ? `${micro.actual_km} km` : '-'}
+                              </span>
+                              <span className="col-span-2 text-right">
+                                {compliance !== null ? (
+                                  <span className={`text-xs font-medium px-2 py-0.5 rounded-full ${
+                                    compliance >= 90 ? 'bg-green-100 text-green-700 dark:bg-green-900/30 dark:text-green-300'
+                                      : compliance >= 70 ? 'bg-yellow-100 text-yellow-700 dark:bg-yellow-900/30 dark:text-yellow-300'
+                                      : 'bg-red-100 text-red-700 dark:bg-red-900/30 dark:text-red-300'
+                                  }`}>
+                                    {compliance}%
+                                  </span>
+                                ) : (
+                                  <span className="text-xs text-gray-400">-</span>
+                                )}
+                              </span>
+                            </div>
+
+                            {/* Mobile card */}
+                            <div className="sm:hidden flex items-center justify-between px-3 py-3 rounded-lg hover:bg-gray-50 dark:hover:bg-gray-750 transition-colors border-b border-gray-100 dark:border-gray-700 last:border-b-0">
+                              <div className="flex items-center gap-3">
+                                <span className="text-sm font-bold text-gray-900 dark:text-white w-8">
+                                  S{micro.week_number}
                                 </span>
-                              ) : (
-                                <span className="text-xs text-gray-400">-</span>
-                              )}
-                            </span>
+                                <div>
+                                  <p className="text-xs text-gray-500 dark:text-gray-400">
+                                    {new Date(micro.start_date + 'T12:00:00').toLocaleDateString('es-ES', { day: 'numeric', month: 'short' })}
+                                  </p>
+                                  <select
+                                    value={micro.week_type}
+                                    onChange={(e) => handleUpdateMicrocycle(micro.id, { week_type: e.target.value })}
+                                    className="text-xs mt-0.5 px-1.5 py-0.5 rounded border border-gray-200 dark:border-gray-600 bg-white dark:bg-gray-700 text-gray-700 dark:text-gray-300"
+                                  >
+                                    {WEEK_TYPES.map(t => (
+                                      <option key={t.value} value={t.value}>{t.label}</option>
+                                    ))}
+                                  </select>
+                                </div>
+                              </div>
+                              <div className="flex items-center gap-3 text-right">
+                                <div>
+                                  <p className="text-xs text-gray-500 dark:text-gray-400">Plan</p>
+                                  <p className="text-sm text-gray-700 dark:text-gray-300">
+                                    {micro.planned_km ? `${micro.planned_km} km` : '-'}
+                                  </p>
+                                </div>
+                                <div>
+                                  <p className="text-xs text-gray-500 dark:text-gray-400">Real</p>
+                                  <p className="text-sm font-medium text-gray-900 dark:text-white">
+                                    {micro.actual_km ? `${micro.actual_km} km` : '-'}
+                                  </p>
+                                </div>
+                                {compliance !== null ? (
+                                  <span className={`text-xs font-medium px-2 py-0.5 rounded-full ${
+                                    compliance >= 90 ? 'bg-green-100 text-green-700 dark:bg-green-900/30 dark:text-green-300'
+                                      : compliance >= 70 ? 'bg-yellow-100 text-yellow-700 dark:bg-yellow-900/30 dark:text-yellow-300'
+                                      : 'bg-red-100 text-red-700 dark:bg-red-900/30 dark:text-red-300'
+                                  }`}>
+                                    {compliance}%
+                                  </span>
+                                ) : (
+                                  <span className="text-xs text-gray-400">-</span>
+                                )}
+                              </div>
+                            </div>
                           </div>
                         );
                       })}

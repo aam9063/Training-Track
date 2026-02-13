@@ -24,7 +24,7 @@ import {
   acceptAthleteRequest,
   rejectAthleteRequest,
 } from '../../services/athleteService';
-import WeeklyTrainingModal from '../../components/dashboard/WeeklyTrainingModal';
+import TrainingPlanningWizard from '../../components/dashboard/TrainingPlanningWizard';
 import ConconiTestModal from '../../components/dashboard/ConconiTestModal';
 import VAMTestModal from '../../components/dashboard/VAMTestModal';
 
@@ -523,8 +523,8 @@ const Athletes = () => {
         )}
       </AnimatePresence>
 
-      {/* Weekly Training Modal */}
-      <WeeklyTrainingModal
+      {/* Training Planning Wizard */}
+      <TrainingPlanningWizard
         isOpen={trainingModal.show}
         onClose={() => setTrainingModal({ show: false, athlete: null })}
         athlete={trainingModal.athlete}

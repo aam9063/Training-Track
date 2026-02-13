@@ -77,7 +77,7 @@ import mapboxgl from 'mapbox-gl';
 import polyline from '@mapbox/polyline';
 import 'mapbox-gl/dist/mapbox-gl.css';
 import { getActivitiesRPE, getRPEEmoji, getRPELabel, RPE_OPTIONS } from '../../services/rpeService';
-import WeeklyTrainingModal from '../../components/dashboard/WeeklyTrainingModal';
+import TrainingPlanningWizard from '../../components/dashboard/TrainingPlanningWizard';
 import ConconiTestModal from '../../components/dashboard/ConconiTestModal';
 import VAMTestModal from '../../components/dashboard/VAMTestModal';
 
@@ -2002,8 +2002,8 @@ const AthleteProfile = () => {
         )}
       </AnimatePresence>
 
-      {/* Weekly Training Modal */}
-      <WeeklyTrainingModal
+      {/* Training Planning Wizard */}
+      <TrainingPlanningWizard
         isOpen={showTrainingModal}
         onClose={() => setShowTrainingModal(false)}
         athlete={athlete}

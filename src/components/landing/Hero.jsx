@@ -74,7 +74,7 @@ export default function Hero() {
             variants={containerVariants}
             initial="hidden"
             animate="visible"
-            className="text-left"
+            className="text-center lg:text-left"
           >
             {/* Badge */}
             <motion.div variants={itemVariants} className="inline-flex items-center space-x-2 px-4 py-2 bg-sky-100 dark:bg-sky-900/30 rounded-full mb-6">
@@ -99,7 +99,7 @@ export default function Hero() {
             {/* Subtitle */}
             <motion.p
               variants={itemVariants}
-              className="text-lg sm:text-xl text-gray-600 dark:text-gray-300 mb-8 max-w-xl leading-relaxed"
+              className="text-lg sm:text-xl text-gray-600 dark:text-gray-300 mb-8 max-w-xl mx-auto lg:mx-0 leading-relaxed"
             >
               La plataforma completa para entrenadores y atletas de medio fondo y fondo.
               Gestiona entrenamientos, analiza rendimiento y alcanza tus metas.
@@ -108,7 +108,7 @@ export default function Hero() {
             {/* Features List */}
             <motion.div
               variants={itemVariants}
-              className="flex flex-col gap-3 mb-8"
+              className="flex flex-col items-center lg:items-start gap-3 mb-8"
             >
               {features.map((feature, index) => (
                 <div
@@ -124,7 +124,7 @@ export default function Hero() {
             {/* CTA Buttons */}
             <motion.div
               variants={itemVariants}
-              className="flex flex-col sm:flex-row items-start gap-4"
+              className="flex flex-col sm:flex-row items-center lg:items-start gap-4"
             >
               <motion.button
                 whileHover={{ scale: 1.05 }}

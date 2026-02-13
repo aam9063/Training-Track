@@ -17,7 +17,6 @@ import {
 import {
   FiTrendingUp,
   FiActivity,
-  FiAward,
   FiTarget,
   FiLoader,
   FiHeart,
@@ -43,6 +42,9 @@ import {
 } from '../../services/stravaService';
 import { getDailyLoads, calculateLoadMetrics } from '../../services/aiReportService';
 import ACWRGauge, { getACWRZone } from '../../components/shared/ACWRGauge';
+import PMCChart from '../../components/athlete/PMCChart';
+import TrainingZonesCard from '../../components/athlete/TrainingZonesCard';
+import { syncPersonalBests, updateAthleteVdot } from '../../services/trainingLoadService';
 
 // Register Chart.js components
 ChartJS.register(
@@ -581,6 +583,19 @@ const AthleteMetrics = () => {
           // Extract best efforts
           const efforts = extractBestEfforts(activities);
           setBestEfforts(efforts);
+
+          // Auto-sync: update VDOT and PBs from Strava best efforts
+          try {
+            const allEfforts = activities.flatMap(a => a.best_efforts || []);
+            if (allEfforts.length > 0) {
+              await Promise.all([
+                updateAthleteVdot(profile.id, allEfforts),
+                syncPersonalBests(profile.id, allEfforts),
+              ]);
+            }
+          } catch (syncErr) {
+            console.error('Auto-sync error (non-critical):', syncErr);
+          }
         }
 
         // Get athlete stats
@@ -905,6 +920,37 @@ const AthleteMetrics = () => {
               </div>
             ))}
           </div>
+        </motion.div>
+      )}
+
+      {/* PMC Chart (CTL/ATL/TSB) */}
+      {stravaConnected && rawActivities.length > 0 && (
+        <motion.div
+          initial={{ opacity: 0, y: 20 }}
+          animate={{ opacity: 1, y: 0 }}
+          transition={{ delay: 0.33 }}
+          className="mb-6"
+        >
+          <PMCChart
+            activities={rawActivities}
+            athleteProfile={profile?.athlete}
+            athleteId={profile?.id}
+          />
+        </motion.div>
+      )}
+
+      {/* Training Zones (Daniels + HR) */}
+      {stravaConnected && (
+        <motion.div
+          initial={{ opacity: 0, y: 20 }}
+          animate={{ opacity: 1, y: 0 }}
+          transition={{ delay: 0.35 }}
+          className="mb-6"
+        >
+          <TrainingZonesCard
+            bestEfforts={rawActivities.flatMap(a => a.best_efforts || [])}
+            athleteId={profile?.id}
+          />
         </motion.div>
       )}
 
@@ -1351,71 +1397,6 @@ const AthleteMetrics = () => {
           )}
         </motion.div>
       )}
-
-      {/* Personal Bests / Best Efforts */}
-      <motion.div
-        initial={{ opacity: 0, y: 20 }}
-        animate={{ opacity: 1, y: 0 }}
-        transition={{ delay: 0.7 }}
-        className="bg-white dark:bg-gray-800 rounded-xl mb-4 sm:mb-6 p-4 sm:p-6 shadow-sm border border-gray-200 dark:border-gray-700"
-      >
-        <div className="flex items-center space-x-2 mb-4 sm:mb-6">
-          <FiAward className="w-5 h-5 sm:w-6 sm:h-6 text-yellow-500" />
-          <h3 className="text-lg sm:text-xl font-bold text-gray-900 dark:text-white">
-            Marcas Personales
-          </h3>
-        </div>
-
-        {bestEfforts.length > 0 ? (
-          <div className="grid grid-cols-2 lg:grid-cols-4 gap-3 sm:gap-4">
-            {bestEfforts.map((effort, index) => (
-              <motion.div
-                key={effort.name + index}
-                initial={{ opacity: 0, scale: 0.9 }}
-                animate={{ opacity: 1, scale: 1 }}
-                transition={{ delay: 0.1 * index }}
-                className="bg-gradient-to-br from-yellow-50 to-orange-50 dark:from-yellow-900/20 dark:to-orange-900/20 rounded-lg p-4 border-2 border-yellow-200 dark:border-yellow-800 hover:shadow-md transition-shadow"
-              >
-                <div className="flex items-center justify-between mb-2">
-                  <span className="text-lg sm:text-xl font-bold text-gray-900 dark:text-white">
-                    {effort.name}
-                  </span>
-                  <span className="text-xl">
-                    {index === 0 ? '🥇' : index === 1 ? '🥈' : index === 2 ? '🥉' : '🏅'}
-                  </span>
-                </div>
-                <p className="text-2xl sm:text-3xl font-bold text-yellow-600 dark:text-yellow-400 mb-2">
-                  {effort.timeFormatted}
-                </p>
-                {effort.pace && (
-                  <p className="text-sm text-gray-600 dark:text-gray-400 mb-1">
-                    {effort.pace} min/km
-                  </p>
-                )}
-                {effort.date && (
-                  <p className="text-xs text-gray-500 dark:text-gray-500">
-                    {new Date(effort.date).toLocaleDateString('es-ES', {
-                      day: 'numeric',
-                      month: 'short',
-                      year: 'numeric',
-                    })}
-                  </p>
-                )}
-              </motion.div>
-            ))}
-          </div>
-        ) : (
-          <div className="text-center py-8">
-            <FiAward className="w-12 h-12 text-gray-300 dark:text-gray-600 mx-auto mb-3" />
-            <p className="text-gray-500 dark:text-gray-400">
-              No hay suficientes datos para calcular marcas personales
-            </p>
-            <p className="text-sm text-gray-400 dark:text-gray-500 mt-1">
-              Continúa entrenando y registrando actividades en Strava
-            </p>
-          </div>
-        )}
-      </motion.div>
 
       {/* Athlete All-Time Stats */}
       {stravaStats && (

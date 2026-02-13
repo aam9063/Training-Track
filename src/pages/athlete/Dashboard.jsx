@@ -18,9 +18,12 @@ import { supabase } from '../../lib/supabase';
 import { toLocalDateStr } from '../../lib/dateUtils';
 import { getWeekStartDate } from '../../services/weeklyTrainingService';
 import { getAthleteCompetitions } from '../../services/athleteService';
+import WellnessForm from '../../components/athlete/WellnessForm';
+import ReadinessScore from '../../components/athlete/ReadinessScore';
 
 const AthleteDashboard = () => {
   const { user, profile } = useAuth();
+  const [wellnessRefreshKey, setWellnessRefreshKey] = useState(0);
   const [loading, setLoading] = useState(true);
   const [weekStats, setWeekStats] = useState({
     totalKm: 0,
@@ -170,6 +173,12 @@ const AthleteDashboard = () => {
         <p className="text-sm sm:text-base text-gray-600 dark:text-gray-400">
           Aquí está tu resumen de entrenamiento
         </p>
+      </div>
+
+      {/* Wellness + Readiness */}
+      <div className="grid grid-cols-1 lg:grid-cols-2 gap-4 mb-6 sm:mb-8">
+        <WellnessForm compact onSaved={() => setWellnessRefreshKey(k => k + 1)} />
+        <ReadinessScore onRefresh={wellnessRefreshKey} />
       </div>
 
       {/* Stats Cards */}

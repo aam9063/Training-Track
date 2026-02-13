@@ -65,6 +65,9 @@ import {
 import { generatePerformanceReport, getDailyLoads, calculateLoadMetrics } from '../../services/aiReportService';
 import ACWRGauge, { getACWRZone } from '../../components/shared/ACWRGauge';
 import { generateReportPDF } from '../../lib/reportPdfExport';
+import PMCChart from '../../components/athlete/PMCChart';
+import TrainingZonesCard from '../../components/athlete/TrainingZonesCard';
+import PeriodizationManager from '../../components/dashboard/PeriodizationManager';
 
 // Calculate HR training zones using Karvonen formula
 const calculateHRZones = (maxHR, restingHR) => {
@@ -976,6 +979,37 @@ const AthleteMetricsView = () => {
               </div>
             </motion.div>
           )}
+
+          {/* PMC Chart (CTL/ATL/TSB) - Coach view */}
+          {stravaConnected && activities.length > 0 && (
+            <PMCChart
+              activities={activities}
+              athleteProfile={athlete?.athlete}
+              athleteId={athleteId}
+            />
+          )}
+
+          {/* Training Zones - Coach view */}
+          {stravaConnected && (
+            <TrainingZonesCard
+              bestEfforts={
+                activities.flatMap(a => a.best_efforts || []).length > 0
+                  ? activities.flatMap(a => a.best_efforts || [])
+                  : bestEfforts.map(e => ({ name: e.name, distance: e.distance, elapsed_time: e.time }))
+              }
+              athleteId={athleteId}
+            />
+          )}
+
+          {/* Periodization Manager - Coach view */}
+          <motion.div
+            initial={{ opacity: 0, y: 20 }}
+            animate={{ opacity: 1, y: 0 }}
+            transition={{ delay: 0.15 }}
+            className="bg-white dark:bg-gray-800 rounded-xl p-4 sm:p-6 shadow-sm border border-gray-200 dark:border-gray-700"
+          >
+            <PeriodizationManager athleteId={athleteId} />
+          </motion.div>
 
           {/* Two Column Charts */}
           <div className="grid grid-cols-1 lg:grid-cols-2 gap-6">

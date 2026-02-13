@@ -45,6 +45,7 @@ import ACWRGauge, { getACWRZone } from '../../components/shared/ACWRGauge';
 import PMCChart from '../../components/athlete/PMCChart';
 import TrainingZonesCard from '../../components/athlete/TrainingZonesCard';
 import { syncPersonalBests, updateAthleteVdot } from '../../services/trainingLoadService';
+import InfoTooltip from '../../components/common/InfoTooltip';
 
 // Register Chart.js components
 ChartJS.register(
@@ -329,8 +330,9 @@ const TotalActivityTimeChart = ({ activities, selectedPeriod, onPeriodChange }) 
     <div className="bg-white dark:bg-gray-800 rounded-xl p-4 sm:p-6 shadow-sm border border-gray-200 dark:border-gray-700">
       <div className="flex flex-col sm:flex-row sm:items-center sm:justify-between mb-4 gap-3">
         <div className="flex items-center justify-between">
-          <h3 className="text-base sm:text-lg font-bold text-gray-900 dark:text-white">
-            Tiempo total de la actividad
+          <h3 className="text-base sm:text-lg font-bold text-gray-900 dark:text-white flex items-center">
+            Tiempo Total por Actividad
+            <InfoTooltip text="Tiempo de movimiento de cada actividad en el período seleccionado. Permite ver cómo se distribuye el esfuerzo en sesiones cortas vs largas." />
           </h3>
           <button className="sm:hidden text-gray-500 hover:text-gray-700 dark:text-gray-400 dark:hover:text-gray-200">
             <FiDownload className="w-5 h-5" />
@@ -894,8 +896,9 @@ const AthleteMetrics = () => {
         >
           <div className="flex items-center space-x-2 mb-2">
             <FiTarget className="w-5 h-5 sm:w-6 sm:h-6 text-purple-500" />
-            <h3 className="text-lg sm:text-xl font-bold text-gray-900 dark:text-white">
+            <h3 className="text-lg sm:text-xl font-bold text-gray-900 dark:text-white flex items-center">
               Predictor de Tiempos
+              <InfoTooltip text="Estimación de tiempos en diferentes distancias basada en tu mejor marca registrada, usando la fórmula de Riegel. Son aproximaciones teóricas, no objetivos exactos." />
             </h3>
           </div>
           <p className="text-sm text-gray-500 dark:text-gray-400 mb-4 sm:mb-6">
@@ -1071,6 +1074,7 @@ const AthleteMetrics = () => {
           <h3 className="text-base sm:text-lg font-bold text-gray-900 dark:text-white mb-4 flex items-center">
             <FiActivity className="w-5 h-5 mr-2 text-blue-500 flex-shrink-0" />
             <span className="truncate">Distribución de Actividades</span>
+            <InfoTooltip text="Proporción de cada tipo de actividad (carrera, ciclismo, natación, etc.) registrada en Strava durante el período seleccionado." />
           </h3>
           <ActivityTypeDistribution activities={rawActivities} />
         </motion.div>
@@ -1099,7 +1103,8 @@ const AthleteMetrics = () => {
         >
           <h3 className="text-base sm:text-lg font-bold text-gray-900 dark:text-white mb-4 flex items-center">
             <FiShield className="w-5 h-5 mr-2 text-orange-500" />
-            Dashboard de Carga
+            Gestión de Carga de Entrenamiento
+            <InfoTooltip text="Ratio de carga aguda/crónica (ACWR): compara el volumen de la última semana con la media de las 4 anteriores. Zona óptima: 0.8–1.3. Por encima de 1.5 aumenta el riesgo de lesión." />
           </h3>
 
           {/* Alert Banner */}
@@ -1245,6 +1250,7 @@ const AthleteMetrics = () => {
           <h3 className="text-base sm:text-lg font-bold text-gray-900 dark:text-white mb-4 flex items-center">
             <FiTrendingUp className="w-5 h-5 mr-2 text-orange-500" />
             Progresión Semanal (km)
+            <InfoTooltip text="Kilómetros totales recorridos cada semana. Permite ver la progresión del volumen y detectar aumentos bruscos de carga." />
           </h3>
           <div className="h-48 sm:h-64">
             {stravaMetrics?.weeklyStats?.length > 0 ? (
@@ -1266,7 +1272,8 @@ const AthleteMetrics = () => {
         >
           <h3 className="text-base sm:text-lg font-bold text-gray-900 dark:text-white mb-4 flex items-center">
             <FiZap className="w-5 h-5 mr-2 text-blue-500" />
-            Velocidad Media
+            Velocidad Media por Actividad
+            <InfoTooltip text="Velocidad media (km/h) de cada actividad a lo largo del tiempo. La línea punteada indica la media general. Permite ver tendencias de mejora o fatiga." />
           </h3>
           {(() => {
             const speedData = getAverageSpeedData();
@@ -1409,6 +1416,7 @@ const AthleteMetrics = () => {
           <h3 className="text-base sm:text-lg font-bold text-gray-900 dark:text-white mb-4 flex items-center">
             <FiActivity className="w-5 h-5 mr-2 text-orange-500" />
             Estadísticas Totales (Strava)
+            <InfoTooltip text="Estadísticas acumuladas de toda tu historia en Strava: carreras totales, distancia, desnivel y tiempo de movimiento." />
           </h3>
           <div className="grid grid-cols-2 sm:grid-cols-4 gap-3 sm:gap-4">
             <div className="text-center p-3 sm:p-4 bg-gray-50 dark:bg-gray-700/50 rounded-xl">

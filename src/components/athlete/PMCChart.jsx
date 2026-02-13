@@ -6,6 +6,7 @@ import { useAuth } from '../../contexts/AuthContext';
 import { getDailyTrainingLoad, recalculateTrainingLoad, getCurrentPMCStatus } from '../../services/trainingLoadService';
 import { getTsbZone, getAcwrZone, calculateAcwr } from '../../lib/trainingMetrics';
 import { toLocalDateStr } from '../../lib/dateUtils';
+import InfoTooltip from '../common/InfoTooltip';
 
 const PERIOD_OPTIONS = [
   { value: '8weeks', label: '8 semanas', days: 56 },
@@ -191,8 +192,9 @@ export default function PMCChart({ activities, athleteProfile, athleteId: propAt
       <div className="flex items-center justify-between mb-4">
         <div className="flex items-center gap-2">
           <FiTrendingUp className="w-5 h-5 text-blue-500" />
-          <h3 className="text-lg font-semibold text-gray-900 dark:text-white">
-            Performance Management Chart
+          <h3 className="text-lg font-semibold text-gray-900 dark:text-white flex items-center">
+            Curva de Rendimiento (PMC)
+            <InfoTooltip text="Gráfico de gestión del rendimiento. CTL (azul) = fitness acumulado. ATL (rojo) = fatiga reciente. TSB = forma actual (CTL − ATL). Un TSB positivo indica frescura; negativo indica fatiga acumulada." />
           </h3>
         </div>
         <div className="flex items-center gap-2">

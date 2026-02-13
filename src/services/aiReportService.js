@@ -14,6 +14,9 @@ import {
   calculatePace,
 } from './stravaService';
 import { supabase } from '../lib/supabase';
+import { getTrainingPaces, formatPace, getTsbZone } from '../lib/trainingMetrics';
+import { getCurrentPMCStatus, getMesocyclesByAthlete, getDailyTrainingLoad } from './trainingLoadService';
+import { toLocalDateStr } from '../lib/dateUtils';
 
 // ─── Load Calculation Helpers ────────────────────────────────────────────────
 
@@ -79,7 +82,7 @@ export const calculateLoadMetrics = (activities) => {
 /**
  * Aggregate all athlete data into a structured object for the AI prompt
  */
-export const aggregateReportData = (athlete, activities) => {
+export const aggregateReportData = async (athlete, activities) => {
   // Basic profile
   const age = athlete.date_of_birth
     ? Math.floor((new Date() - new Date(athlete.date_of_birth)) / (365.25 * 24 * 60 * 60 * 1000))
@@ -174,6 +177,101 @@ export const aggregateReportData = (athlete, activities) => {
       distanceKm: +(a.distance / 1000).toFixed(1),
     }));
 
+  // ── NEW METRICS ──────────────────────────────────────────────
+
+  // VDOT & Daniels training zones
+  let vdotData = null;
+  const athleteVdot = athlete.vdot;
+  if (athleteVdot) {
+    const paceZones = getTrainingPaces(athleteVdot);
+    vdotData = {
+      vdot: athleteVdot,
+      trainingZones: paceZones ? {
+        easy: `${formatPace(paceZones.easy.min)} - ${formatPace(paceZones.easy.max)}`,
+        marathon: formatPace(paceZones.marathon),
+        threshold: formatPace(paceZones.threshold),
+        interval: formatPace(paceZones.interval),
+        repetition: formatPace(paceZones.repetition),
+      } : null,
+    };
+  }
+
+  // PMC status (TSS-based CTL/ATL/TSB)
+  let pmcData = null;
+  try {
+    const pmcStatus = await getCurrentPMCStatus(athlete.id);
+    if (pmcStatus) {
+      const tsbZone = getTsbZone(pmcStatus.tsb);
+      pmcData = {
+        ctl: pmcStatus.ctl,
+        atl: pmcStatus.atl,
+        tsb: pmcStatus.tsb,
+        tss: pmcStatus.tss,
+        rampRate: pmcStatus.ramp_rate,
+        tsbZone: tsbZone?.label || null,
+        date: pmcStatus.date,
+      };
+    }
+  } catch (err) {
+    console.warn('PMC data not available:', err.message);
+  }
+
+  // PMC trend (last 28 days)
+  let pmcTrend = null;
+  try {
+    const endDate = toLocalDateStr(new Date());
+    const startD = new Date();
+    startD.setDate(startD.getDate() - 28);
+    const startDate = toLocalDateStr(startD);
+    const dailyData = await getDailyTrainingLoad(athlete.id, startDate, endDate);
+    if (dailyData.length > 0) {
+      pmcTrend = dailyData.map(d => ({
+        date: d.date,
+        ctl: d.ctl,
+        atl: d.atl,
+        tsb: d.tsb,
+        tss: d.tss,
+      }));
+    }
+  } catch (err) {
+    console.warn('PMC trend not available:', err.message);
+  }
+
+  // Periodization (active mesocycle)
+  let periodizationData = null;
+  try {
+    const mesocycles = await getMesocyclesByAthlete(athlete.id);
+    if (mesocycles.length > 0) {
+      const today = toLocalDateStr(new Date());
+      const active = mesocycles.find(m => m.start_date <= today && m.end_date >= today) || mesocycles[mesocycles.length - 1];
+      const micros = active.microcycles || [];
+      periodizationData = {
+        mesocycleName: active.name,
+        phase: active.phase,
+        startDate: active.start_date,
+        endDate: active.end_date,
+        focus: active.focus,
+        targetWeeklyKm: active.target_weekly_km,
+        totalWeeks: micros.length,
+        currentWeek: micros.find(m => {
+          const mStart = m.start_date;
+          const mEnd = new Date(m.start_date + 'T12:00:00');
+          mEnd.setDate(mEnd.getDate() + 6);
+          return mStart <= today && toLocalDateStr(mEnd) >= today;
+        })?.week_number || null,
+        weeks: micros.map(m => ({
+          weekNumber: m.week_number,
+          type: m.week_type,
+          plannedKm: m.planned_km,
+          actualKm: m.actual_km,
+          compliance: m.planned_km && m.actual_km ? Math.round((m.actual_km / m.planned_km) * 100) : null,
+        })),
+      };
+    }
+  } catch (err) {
+    console.warn('Periodization data not available:', err.message);
+  }
+
   return {
     profile: {
       name: athleteName,
@@ -230,6 +328,10 @@ export const aggregateReportData = (athlete, activities) => {
     raceEstimates,
     weeklyPaces,
     hrTrend: hrActivities.slice(-20), // last 20 running activities with HR
+    vdot: vdotData,
+    pmc: pmcData,
+    pmcTrend,
+    periodization: periodizationData,
   };
 };
 
@@ -275,8 +377,8 @@ const callEdgeFunction = async (reportData, athleteId, periodWeeks) => {
  * @returns {Object} { reportData, aiAnalysis, reportId }
  */
 export const generatePerformanceReport = async (athlete, activities, periodWeeks = 4) => {
-  // 1. Aggregate all data locally
-  const reportData = aggregateReportData(athlete, activities);
+  // 1. Aggregate all data locally (async - fetches PMC, periodization, etc.)
+  const reportData = await aggregateReportData(athlete, activities);
 
   // 2. Call Edge Function (handles AI call + DB save)
   const { aiAnalysis, reportId, createdAt } = await callEdgeFunction(
@@ -311,6 +413,22 @@ export const generatePerformanceReport = async (athlete, activities, periodWeeks
       areas_foco: [],
       proximos_pasos: [],
       mensaje_motivacional: '',
+    };
+  }
+
+  if (!aiAnalysis.analisis_vdot && reportData.vdot) {
+    aiAnalysis.analisis_vdot = {
+      interpretacion: 'No se pudo generar el análisis VDOT.',
+      zonas_recomendadas: [],
+      progresion_sugerida: '',
+    };
+  }
+
+  if (!aiAnalysis.periodizacion_analisis && reportData.periodization) {
+    aiAnalysis.periodizacion_analisis = {
+      evaluacion_mesociclo: 'No se pudo generar el análisis de periodización.',
+      cumplimiento_plan: '',
+      ajustes_sugeridos: [],
     };
   }
 

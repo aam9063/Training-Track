@@ -6,11 +6,10 @@ import { motion, AnimatePresence } from 'framer-motion';
 import {
   FiSearch,
   FiFilter,
-  FiEdit2,
   FiTrash2,
   FiBarChart2,
   FiUser,
-  FiPlus,
+  FiLink,
   FiCalendar,
   FiUserCheck,
   FiUserX,
@@ -198,10 +197,18 @@ const Athletes = () => {
           </div>
           <button
             className="flex items-center space-x-2 px-4 py-2 bg-blue-600 hover:bg-blue-700 text-white rounded-lg transition-colors"
-            onClick={() => showInfo('Función de añadir atleta próximamente')}
+            onClick={() => {
+              const coachId = profile?.coach_id || profile?.id;
+              const link = `${window.location.origin}/register?invite=${coachId}`;
+              navigator.clipboard.writeText(link).then(() => {
+                showSuccess('Enlace de invitación copiado al portapapeles');
+              }).catch(() => {
+                showInfo(link);
+              });
+            }}
           >
-            <FiPlus className="w-5 h-5" />
-            <span>Añadir Atleta</span>
+            <FiLink className="w-5 h-5" />
+            <span>Copiar Invitación</span>
           </button>
         </div>
 
@@ -338,9 +345,6 @@ const Athletes = () => {
                   <th className="px-6 py-3 text-left text-xs font-medium text-gray-500 dark:text-gray-400 uppercase tracking-wider">
                     Distancias
                   </th>
-                  <th className="px-6 py-3 text-left text-xs font-medium text-gray-500 dark:text-gray-400 uppercase tracking-wider">
-                    VO2 Max
-                  </th>
                   <th className="px-6 py-3 text-right text-xs font-medium text-gray-500 dark:text-gray-400 uppercase tracking-wider">
                     Acciones
                   </th>
@@ -401,11 +405,6 @@ const Athletes = () => {
                             Sin distancias
                           </span>
                         )}
-                      </div>
-                    </td>
-                    <td className="px-6 py-4 whitespace-nowrap">
-                      <div className="text-sm text-gray-900 dark:text-white">
-                        {athlete.vo2Max || '-'}
                       </div>
                     </td>
                     <td className="px-6 py-4 whitespace-nowrap text-right text-sm font-medium">

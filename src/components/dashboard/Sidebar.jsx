@@ -49,7 +49,7 @@ const Sidebar = ({ onCollapse }) => {
   const menuItems = [
     { path: '/dashboard', icon: FiHome, label: 'Dashboard' },
     { path: '/dashboard/athletes', icon: FiUsers, label: 'Mis Atletas' },
-    { path: '/dashboard/metrics', icon: FiBarChart2, label: 'Métricas' },
+    { path: '/dashboard/metrics', icon: FiBarChart2, label: 'Equipo' },
     { path: '/dashboard/calendar', icon: FiCalendar, label: 'Calendario' },
     { path: '/dashboard/messages', icon: FiMessageSquare, label: 'Mensajes', badge: unreadMessages },
   ];

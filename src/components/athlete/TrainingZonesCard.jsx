@@ -6,6 +6,7 @@ import { getTrainingZones, updateAthleteVdot } from '../../services/trainingLoad
 import { getTrainingPaces, generateHrZones, formatPace, DANIELS_ZONES } from '../../lib/trainingMetrics';
 import { showSuccess, showError } from '../../lib/toast';
 import { supabase } from '../../lib/supabase';
+import InfoTooltip from '../common/InfoTooltip';
 
 const ZONE_COLORS = ['#3B82F6', '#10B981', '#F59E0B', '#EF4444', '#8B5CF6'];
 
@@ -118,7 +119,10 @@ export default function TrainingZonesCard({ bestEfforts, athleteId: propAthleteI
       <div className="flex items-center justify-between mb-3">
         <div className="flex items-center gap-2">
           <FiTarget className="w-5 h-5 text-purple-500" />
-          <h3 className="text-lg font-semibold text-gray-900 dark:text-white">Zonas de Entrenamiento</h3>
+          <h3 className="text-lg font-semibold text-gray-900 dark:text-white flex items-center">
+            Zonas de Entrenamiento
+            <InfoTooltip text="Zonas de ritmo basadas en el índice VDOT (Jack Daniels) y zonas de FC con fórmula de Karvonen. El VDOT se calcula automáticamente a partir de tus mejores marcas en Strava." />
+          </h3>
           {vdot && (
             <span className="text-xs px-2 py-0.5 rounded-full bg-purple-100 dark:bg-purple-900/30 text-purple-700 dark:text-purple-300 font-medium">
               VDOT: {vdot}

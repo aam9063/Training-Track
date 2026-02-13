@@ -67,6 +67,7 @@ import ACWRGauge, { getACWRZone } from '../../components/shared/ACWRGauge';
 import { generateReportPDF } from '../../lib/reportPdfExport';
 import PMCChart from '../../components/athlete/PMCChart';
 import TrainingZonesCard from '../../components/athlete/TrainingZonesCard';
+import InfoTooltip from '../../components/common/InfoTooltip';
 // Calculate HR training zones using Karvonen formula
 const calculateHRZones = (maxHR, restingHR) => {
   const zones = [
@@ -643,8 +644,9 @@ const AthleteMetricsView = () => {
             >
               <div className="flex items-center space-x-2 mb-2">
                 <FiTarget className="w-5 h-5 sm:w-6 sm:h-6 text-purple-500" />
-                <h3 className="text-lg sm:text-xl font-bold text-gray-900 dark:text-white">
+                <h3 className="text-lg sm:text-xl font-bold text-gray-900 dark:text-white flex items-center">
                   Predictor de Tiempos
+                  <InfoTooltip text="Estimación de tiempos en diferentes distancias basada en la mejor marca registrada del atleta, usando la fórmula de Riegel. Son aproximaciones teóricas, no objetivos exactos." />
                 </h3>
               </div>
               <p className="text-sm text-gray-500 dark:text-gray-400 mb-4 sm:mb-6">
@@ -682,8 +684,9 @@ const AthleteMetricsView = () => {
             >
               <div className="flex items-center space-x-2 mb-2">
                 <FiHeart className="w-5 h-5 sm:w-6 sm:h-6 text-red-500" />
-                <h3 className="text-lg sm:text-xl font-bold text-gray-900 dark:text-white">
-                  Zonas de Entrenamiento
+                <h3 className="text-lg sm:text-xl font-bold text-gray-900 dark:text-white flex items-center">
+                  Zonas de Frecuencia Cardíaca
+                  <InfoTooltip text="Zonas de entrenamiento basadas en frecuencia cardíaca calculadas con la fórmula de Karvonen (% de la frecuencia cardíaca de reserva). Cada zona trabaja un sistema energético diferente." />
                 </h3>
               </div>
               <p className="text-sm text-gray-500 dark:text-gray-400 mb-4 sm:mb-6">
@@ -787,7 +790,8 @@ const AthleteMetricsView = () => {
             >
               <h3 className="text-lg font-bold text-gray-900 dark:text-white mb-4 flex items-center">
                 <FiShield className="w-5 h-5 mr-2 text-orange-500" />
-                Dashboard de Carga
+                Gestión de Carga de Entrenamiento
+                <InfoTooltip text="Ratio de carga aguda/crónica (ACWR): compara el volumen de la última semana con la media de las 4 anteriores. Zona óptima: 0.8–1.3. Por encima de 1.5 aumenta el riesgo de lesión." />
               </h3>
 
               {/* Alert Banner (coach perspective) */}
@@ -933,6 +937,7 @@ const AthleteMetricsView = () => {
               <h3 className="text-lg font-bold text-gray-900 dark:text-white mb-4 flex items-center">
                 <FiBarChart2 className="w-5 h-5 mr-2 text-orange-500" />
                 Volumen Semanal (km)
+                <InfoTooltip text="Kilómetros totales recorridos cada semana. Permite ver la progresión del volumen y detectar aumentos bruscos de carga." />
               </h3>
               <div className="h-64">
                 <Bar
@@ -1012,6 +1017,7 @@ const AthleteMetricsView = () => {
                 <h3 className="text-lg font-bold text-gray-900 dark:text-white mb-4 flex items-center">
                   <FiClock className="w-5 h-5 mr-2 text-blue-500" />
                   Tiempo Semanal (min)
+                  <InfoTooltip text="Minutos totales de entrenamiento por semana. Complementa el volumen en km ya que incluye todas las actividades independientemente de la distancia." />
                 </h3>
                 <div className="h-48">
                   <Line
@@ -1060,6 +1066,7 @@ const AthleteMetricsView = () => {
                 <h3 className="text-lg font-bold text-gray-900 dark:text-white mb-4 flex items-center">
                   <FiTrendingUp className="w-5 h-5 mr-2 text-green-500" />
                   Desnivel Semanal (m)
+                  <InfoTooltip text="Metros de desnivel positivo acumulado cada semana. Indicador clave para corredores de montaña y trail." />
                 </h3>
                 <div className="h-48">
                   <Bar
@@ -1106,7 +1113,8 @@ const AthleteMetricsView = () => {
             >
               <h3 className="text-lg font-bold text-gray-900 dark:text-white mb-4 flex items-center">
                 <FiZap className="w-5 h-5 mr-2 text-blue-500" />
-                Velocidad Media
+                Velocidad Media por Actividad
+                <InfoTooltip text="Velocidad media (km/h) de cada actividad a lo largo del tiempo. La línea punteada indica la media general. Permite ver tendencias de mejora o fatiga." />
               </h3>
               {/* Average line indicator */}
               <div className="flex items-center justify-end mb-2 text-sm text-gray-500 dark:text-gray-400">
@@ -1193,7 +1201,8 @@ const AthleteMetricsView = () => {
               >
                 <h3 className="text-lg font-bold text-gray-900 dark:text-white mb-4 flex items-center">
                   <FiHeart className="w-5 h-5 mr-2 text-red-500" />
-                  FC Media Semanal (bpm)
+                  FC Media Semanal (ppm)
+                  <InfoTooltip text="Frecuencia cardíaca media de todas las actividades de cada semana. Si baja a mismo ritmo, indica mejora de eficiencia cardíaca. Si sube sin aumentar intensidad, puede indicar fatiga." />
                 </h3>
                 <div className="h-48">
                   <Line
@@ -1244,6 +1253,7 @@ const AthleteMetricsView = () => {
                 <h3 className="text-lg font-bold text-gray-900 dark:text-white mb-4 flex items-center">
                   <FiZap className="w-5 h-5 mr-2 text-purple-500" />
                   Ritmo Medio Semanal (min/km)
+                  <InfoTooltip text="Ritmo medio de carrera (minutos por kilómetro) cada semana. Un descenso indica que se corre más rápido. El eje está invertido: más abajo = más rápido." />
                 </h3>
                 <div className="h-48">
                   <Line
@@ -1312,7 +1322,8 @@ const AthleteMetricsView = () => {
               >
                 <h3 className="text-lg font-bold text-gray-900 dark:text-white mb-4 flex items-center">
                   <FiActivity className="w-5 h-5 mr-2 text-indigo-500" />
-                  Tipos de Actividad
+                  Distribución por Tipo de Actividad
+                  <InfoTooltip text="Proporción de cada tipo de actividad (carrera, ciclismo, natación, etc.) registrada en Strava durante el período seleccionado." />
                 </h3>
                 <div className="h-48 flex items-center justify-center">
                   <Doughnut
@@ -1373,6 +1384,7 @@ const AthleteMetricsView = () => {
                 <h3 className="text-lg font-bold text-gray-900 dark:text-white mb-4 flex items-center">
                   <FiCalendar className="w-5 h-5 mr-2 text-teal-500" />
                   Calendario de Actividad
+                  <InfoTooltip text="Mapa de calor diario del período. El color más intenso indica mayor distancia recorrida ese día. Permite ver patrones de entrenamiento y descanso." />
                 </h3>
                 <div className="grid grid-cols-7 gap-1">
                   {['L', 'M', 'X', 'J', 'V', 'S', 'D'].map((day) => (

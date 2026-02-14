@@ -189,11 +189,12 @@ export default function PMCChart({ activities, athleteProfile, athleteId: propAt
       className="bg-white dark:bg-gray-800 rounded-xl border border-gray-200 dark:border-gray-700 p-4"
     >
       {/* Header */}
-      <div className="flex items-center justify-between mb-4">
+      <div className="flex flex-wrap items-center justify-between gap-2 mb-4">
         <div className="flex items-center gap-2">
-          <FiTrendingUp className="w-5 h-5 text-blue-500" />
-          <h3 className="text-lg font-semibold text-gray-900 dark:text-white flex items-center">
-            Curva de Rendimiento (PMC)
+          <FiTrendingUp className="w-5 h-5 text-blue-500 flex-shrink-0" />
+          <h3 className="text-base sm:text-lg font-semibold text-gray-900 dark:text-white flex items-center">
+            <span className="hidden sm:inline">Curva de Rendimiento (PMC)</span>
+            <span className="sm:hidden">PMC</span>
             <InfoTooltip text="Gráfico de gestión del rendimiento. CTL (azul) = fitness acumulado. ATL (rojo) = fatiga reciente. TSB = forma actual (CTL − ATL). Un TSB positivo indica frescura; negativo indica fatiga acumulada." />
           </h3>
         </div>

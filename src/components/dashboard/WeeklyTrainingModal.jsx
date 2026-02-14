@@ -347,7 +347,7 @@ const WeeklyTrainingModal = ({
         >
           <FiChevronLeft className="w-5 h-5" />
         </button>
-        <span className="text-lg font-semibold text-gray-900 dark:text-white min-w-[200px] text-center">
+        <span className="text-sm sm:text-lg font-semibold text-gray-900 dark:text-white min-w-[140px] sm:min-w-[200px] text-center">
           {getWeekRange()}
         </span>
         <button
@@ -369,7 +369,7 @@ const WeeklyTrainingModal = ({
           ) : (
             <>
               {/* Day Tabs */}
-              <div className="flex space-x-2 mb-6 overflow-x-auto pb-2">
+              <div className="flex space-x-1 sm:space-x-2 mb-6 overflow-x-auto pb-2 -mx-1 px-1">
                 {DAYS_OF_WEEK.map((day, index) => {
                   const dayDate = new Date(weekStartDate);
                   dayDate.setDate(dayDate.getDate() + index);
@@ -380,7 +380,7 @@ const WeeklyTrainingModal = ({
                     <button
                       key={day}
                       onClick={() => setActiveDay(index)}
-                      className={`px-4 py-2 rounded-lg font-medium whitespace-nowrap transition-colors ${
+                      className={`px-2 sm:px-4 py-2 rounded-lg text-sm sm:text-base font-medium whitespace-nowrap transition-colors flex-shrink-0 ${
                         activeDay === index
                           ? 'bg-blue-600 text-white'
                           : hasContent
@@ -388,8 +388,9 @@ const WeeklyTrainingModal = ({
                           : 'bg-gray-100 dark:bg-gray-700 text-gray-700 dark:text-gray-300'
                       }`}
                     >
-                      {day}
-                      <span className="ml-2 text-xs opacity-75">
+                      <span className="hidden sm:inline">{day}</span>
+                      <span className="sm:hidden">{day.slice(0, 3)}</span>
+                      <span className="ml-1 sm:ml-2 text-xs opacity-75">
                         {dayDate.getDate()}
                       </span>
                     </button>
@@ -680,10 +681,11 @@ const DayEditor = ({
                   </div>
 
                   {/* Default values for all selected exercises */}
-                  <div className="grid grid-cols-3 gap-3 mb-4 pb-4 border-b border-purple-200 dark:border-purple-700">
+                  <div className="grid grid-cols-3 gap-2 sm:gap-3 mb-4 pb-4 border-b border-purple-200 dark:border-purple-700">
                     <div>
                       <label className="block text-xs text-purple-600 dark:text-purple-400 mb-1">
-                        Series (para todos)
+                        <span className="hidden sm:inline">Series (para todos)</span>
+                        <span className="sm:hidden">Series</span>
                       </label>
                       <input
                         type="number"
@@ -695,7 +697,8 @@ const DayEditor = ({
                     </div>
                     <div>
                       <label className="block text-xs text-purple-600 dark:text-purple-400 mb-1">
-                        Repeticiones (para todos)
+                        <span className="hidden sm:inline">Repeticiones (para todos)</span>
+                        <span className="sm:hidden">Reps</span>
                       </label>
                       <input
                         type="number"
@@ -707,7 +710,8 @@ const DayEditor = ({
                     </div>
                     <div>
                       <label className="block text-xs text-purple-600 dark:text-purple-400 mb-1">
-                        Descanso seg (para todos)
+                        <span className="hidden sm:inline">Descanso seg (para todos)</span>
+                        <span className="sm:hidden">Desc.</span>
                       </label>
                       <input
                         type="number"

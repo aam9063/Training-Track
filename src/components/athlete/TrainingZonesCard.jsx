@@ -116,15 +116,16 @@ export default function TrainingZonesCard({ bestEfforts, athleteId: propAthleteI
       className="bg-white dark:bg-gray-800 rounded-xl border border-gray-200 dark:border-gray-700 p-4"
     >
       {/* Header */}
-      <div className="flex items-center justify-between mb-3">
-        <div className="flex items-center gap-2">
-          <FiTarget className="w-5 h-5 text-purple-500" />
-          <h3 className="text-lg font-semibold text-gray-900 dark:text-white flex items-center">
-            Zonas de Entrenamiento
+      <div className="flex flex-wrap items-center justify-between gap-2 mb-3">
+        <div className="flex items-center gap-2 min-w-0">
+          <FiTarget className="w-5 h-5 text-purple-500 flex-shrink-0" />
+          <h3 className="text-base sm:text-lg font-semibold text-gray-900 dark:text-white flex items-center truncate">
+            <span className="hidden sm:inline">Zonas de Entrenamiento</span>
+            <span className="sm:hidden">Zonas</span>
             <InfoTooltip text="Zonas de ritmo basadas en el índice VDOT (Jack Daniels) y zonas de FC con fórmula de Karvonen. El VDOT se calcula automáticamente a partir de tus mejores marcas en Strava." />
           </h3>
           {vdot && (
-            <span className="text-xs px-2 py-0.5 rounded-full bg-purple-100 dark:bg-purple-900/30 text-purple-700 dark:text-purple-300 font-medium">
+            <span className="text-xs px-2 py-0.5 rounded-full bg-purple-100 dark:bg-purple-900/30 text-purple-700 dark:text-purple-300 font-medium flex-shrink-0">
               VDOT: {vdot}
             </span>
           )}
@@ -137,7 +138,8 @@ export default function TrainingZonesCard({ bestEfforts, athleteId: propAthleteI
               className="text-xs px-2 py-1 rounded-lg bg-purple-50 dark:bg-purple-900/30 text-purple-600 dark:text-purple-400 hover:bg-purple-100 dark:hover:bg-purple-900/50 transition-colors disabled:opacity-50 flex items-center gap-1"
             >
               <FiRefreshCw className={`w-3 h-3 ${updating ? 'animate-spin' : ''}`} />
-              {updating ? 'Calculando...' : 'Auto VDOT'}
+              <span className="hidden sm:inline">{updating ? 'Calculando...' : 'Auto VDOT'}</span>
+              <span className="sm:hidden">{updating ? '...' : 'VDOT'}</span>
             </button>
           )}
           <button onClick={() => setExpanded(!expanded)} className="text-gray-400 hover:text-gray-600 dark:hover:text-gray-300">

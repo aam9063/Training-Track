@@ -1,5 +1,5 @@
 import { useState, useEffect } from 'react';
-import { motion, AnimatePresence } from 'framer-motion';
+import { motion } from 'framer-motion';
 import { FiSun, FiMoon, FiHeart, FiActivity, FiSmile, FiAlertCircle, FiCheck, FiChevronDown, FiChevronUp } from 'react-icons/fi';
 import { useAuth } from '../../contexts/AuthContext';
 import { saveWellnessEntry, getTodayWellness } from '../../services/trainingLoadService';
@@ -84,8 +84,6 @@ export default function WellnessForm({ compact = false, onSaved }) {
     }
   };
 
-  const allFilled = WELLNESS_FIELDS.every(f => values[f.key]);
-
   if (loading) {
     return (
       <div className="bg-white dark:bg-gray-800 rounded-xl p-4 animate-pulse">
@@ -95,14 +93,43 @@ export default function WellnessForm({ compact = false, onSaved }) {
     );
   }
 
-  // Compact mode: just a summary bar
-  if (compact && saved && !expanded) {
-    const avg = WELLNESS_FIELDS.reduce((sum, f) => {
-      const v = values[f.key] || 0;
-      return sum + (f.inverted ? (11 - v) : v);
-    }, 0) / WELLNESS_FIELDS.length;
-    const avgRound = Math.round(avg * 10) / 10;
+  // Compact mode: collapsed bar
+  if (compact && !expanded) {
+    // Already saved: show summary
+    if (saved) {
+      const avg = WELLNESS_FIELDS.reduce((sum, f) => {
+        const v = values[f.key] || 0;
+        return sum + (f.inverted ? (11 - v) : v);
+      }, 0) / WELLNESS_FIELDS.length;
+      const avgRound = Math.round(avg * 10) / 10;
 
+      return (
+        <motion.div
+          initial={{ opacity: 0, y: 10 }}
+          animate={{ opacity: 1, y: 0 }}
+          className="bg-white dark:bg-gray-800 rounded-xl border border-gray-200 dark:border-gray-700 p-3 cursor-pointer hover:border-green-300 dark:hover:border-green-700 transition-colors"
+          onClick={() => setExpanded(true)}
+        >
+          <div className="flex items-center justify-between">
+            <div className="flex items-center gap-2">
+              <FiHeart className="w-4 h-4 text-green-500" />
+              <span className="text-sm font-medium text-gray-900 dark:text-white">Wellness hoy</span>
+              <span className="text-xs text-gray-500 dark:text-gray-400">({avgRound}/10)</span>
+            </div>
+            <div className="flex items-center gap-2">
+              {WELLNESS_FIELDS.map(f => (
+                <span key={f.key} className="text-lg" title={f.label}>
+                  {f.emoji[(values[f.key] || 5) - 1]}
+                </span>
+              ))}
+              <FiChevronDown className="w-4 h-4 text-gray-400" />
+            </div>
+          </div>
+        </motion.div>
+      );
+    }
+
+    // Not saved: show prompt
     return (
       <motion.div
         initial={{ opacity: 0, y: 10 }}
@@ -113,15 +140,10 @@ export default function WellnessForm({ compact = false, onSaved }) {
         <div className="flex items-center justify-between">
           <div className="flex items-center gap-2">
             <FiHeart className="w-4 h-4 text-green-500" />
-            <span className="text-sm font-medium text-gray-900 dark:text-white">Wellness hoy</span>
-            <span className="text-xs text-gray-500 dark:text-gray-400">({avgRound}/10)</span>
+            <span className="text-sm font-medium text-gray-900 dark:text-white">¿Cómo te encuentras hoy?</span>
           </div>
           <div className="flex items-center gap-2">
-            {WELLNESS_FIELDS.map(f => (
-              <span key={f.key} className="text-lg" title={f.label}>
-                {f.emoji[(values[f.key] || 5) - 1]}
-              </span>
-            ))}
+            <span className="text-xs text-gray-500 dark:text-gray-400">Rellenar wellness</span>
             <FiChevronDown className="w-4 h-4 text-gray-400" />
           </div>
         </div>

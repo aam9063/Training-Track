@@ -22,12 +22,17 @@ import { toLocalDateStr } from '../lib/dateUtils';
 
 /**
  * Calculate daily loads from activities (distance in km as load proxy)
+ * Only uses running activities to avoid mixing sports with different load profiles
  */
+const RUNNING_TYPES = ['Run', 'TrailRun', 'VirtualRun'];
+
 export const getDailyLoads = (activities, days) => {
   const now = new Date();
   const dailyLoads = new Array(days).fill(0);
 
-  activities.forEach(a => {
+  const runningActivities = activities.filter(a => RUNNING_TYPES.includes(a.type));
+
+  runningActivities.forEach(a => {
     const actDate = new Date(a.start_date_local);
     const diffDays = Math.floor((now - actDate) / (1000 * 60 * 60 * 24));
     if (diffDays >= 0 && diffDays < days) {
@@ -138,7 +143,6 @@ export const aggregateReportData = async (athlete, activities) => {
   }
 
   // Weekly pace progression (for running activities)
-  const runningTypes = ['Run', 'TrailRun', 'VirtualRun'];
   const weeklyPaces = [];
   for (let i = 0; i < 12; i++) {
     const weekEnd = new Date(now);
@@ -147,7 +151,7 @@ export const aggregateReportData = async (athlete, activities) => {
     weekStart.setDate(weekStart.getDate() - 7);
 
     const weekRuns = activities.filter(a => {
-      if (!runningTypes.includes(a.type)) return false;
+      if (!RUNNING_TYPES.includes(a.type)) return false;
       const d = new Date(a.start_date_local);
       return d >= weekStart && d < weekEnd;
     });
@@ -168,7 +172,7 @@ export const aggregateReportData = async (athlete, activities) => {
 
   // HR efficiency (average HR over time for similar paces)
   const hrActivities = activities
-    .filter(a => runningTypes.includes(a.type) && a.average_heartrate && a.distance >= 3000)
+    .filter(a => RUNNING_TYPES.includes(a.type) && a.average_heartrate && a.distance >= 3000)
     .map(a => ({
       date: a.start_date_local,
       avgHR: a.average_heartrate,

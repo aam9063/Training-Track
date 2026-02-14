@@ -384,7 +384,7 @@ export default function TrainingPlanningWizard({ isOpen, onClose, athlete, coach
                               type="date"
                               value={newMeso.start_date}
                               onChange={(e) => setNewMeso({ ...newMeso, start_date: e.target.value })}
-                              className="w-full min-w-0 px-2 py-2 text-sm border border-gray-300 dark:border-gray-600 rounded-lg bg-white dark:bg-gray-700 text-gray-900 dark:text-white"
+                              className="w-full min-w-0 px-3 py-2 text-sm border border-gray-300 dark:border-gray-600 rounded-lg bg-white dark:bg-gray-700 text-gray-900 dark:text-white [&::-webkit-calendar-picker-indicator]:dark:invert"
                             />
                           </div>
                           <div>
@@ -393,7 +393,7 @@ export default function TrainingPlanningWizard({ isOpen, onClose, athlete, coach
                               type="date"
                               value={newMeso.end_date}
                               onChange={(e) => setNewMeso({ ...newMeso, end_date: e.target.value })}
-                              className="w-full min-w-0 px-2 py-2 text-sm border border-gray-300 dark:border-gray-600 rounded-lg bg-white dark:bg-gray-700 text-gray-900 dark:text-white"
+                              className="w-full min-w-0 px-3 py-2 text-sm border border-gray-300 dark:border-gray-600 rounded-lg bg-white dark:bg-gray-700 text-gray-900 dark:text-white [&::-webkit-calendar-picker-indicator]:dark:invert"
                             />
                           </div>
                           <div>

@@ -525,8 +525,8 @@ export const calculateStravaMetrics = (activities) => {
     ? calculatePace(runningTime, runningDistance)
     : null;
 
-  // Average heartrate (only activities with HR data)
-  const hrActivities = allActivities.filter(a => a.average_heartrate);
+  // Average heartrate (only running activities with HR data)
+  const hrActivities = runningActivities.filter(a => a.average_heartrate);
   const avgHeartrate = hrActivities.length > 0
     ? Math.round(hrActivities.reduce((sum, a) => sum + a.average_heartrate, 0) / hrActivities.length)
     : null;
@@ -558,13 +558,67 @@ export const calculateStravaMetrics = (activities) => {
     return types;
   }, {});
 
-  // Weekly breakdown (last 4 weeks)
-  const weeklyStats = calculateWeeklyStats(allActivities);
+  // Weekly breakdown (last 4 weeks) - running only
+  const weeklyStats = calculateWeeklyStats(runningActivities);
+
+  // Per-sport distance breakdown
+  const sportBreakdown = {};
+  const cyclingTypes = ['Ride', 'VirtualRide'];
+  const swimTypes = ['Swim'];
+  const gymTypes = ['WeightTraining', 'Workout', 'CrossFit', 'Yoga'];
+
+  const cyclingActivities = allActivities.filter(a => cyclingTypes.includes(a.type));
+  const swimActivities = allActivities.filter(a => swimTypes.includes(a.type));
+  const gymActivitiesArr = allActivities.filter(a => gymTypes.includes(a.type));
+
+  if (runningActivities.length > 0) {
+    sportBreakdown.running = {
+      count: runningActivities.length,
+      distanceKm: (runningDistance / 1000).toFixed(1),
+      time: runningTime,
+      timeFormatted: formatDuration(runningTime),
+      elevation: Math.round(runningActivities.reduce((s, a) => s + (a.total_elevation_gain || 0), 0)),
+    };
+  }
+  if (cyclingActivities.length > 0) {
+    const dist = cyclingActivities.reduce((s, a) => s + (a.distance || 0), 0);
+    const time = cyclingActivities.reduce((s, a) => s + (a.moving_time || 0), 0);
+    sportBreakdown.cycling = {
+      count: cyclingActivities.length,
+      distanceKm: (dist / 1000).toFixed(1),
+      time,
+      timeFormatted: formatDuration(time),
+      elevation: Math.round(cyclingActivities.reduce((s, a) => s + (a.total_elevation_gain || 0), 0)),
+      avgSpeedKmh: dist > 0 ? ((dist / 1000) / (time / 3600)).toFixed(1) : '0',
+    };
+  }
+  if (swimActivities.length > 0) {
+    const dist = swimActivities.reduce((s, a) => s + (a.distance || 0), 0);
+    const time = swimActivities.reduce((s, a) => s + (a.moving_time || 0), 0);
+    sportBreakdown.swimming = {
+      count: swimActivities.length,
+      distanceM: Math.round(dist),
+      distanceKm: (dist / 1000).toFixed(1),
+      time,
+      timeFormatted: formatDuration(time),
+      pacePer100m: dist > 0 ? formatDuration(Math.round(time / (dist / 100))) : '-',
+    };
+  }
+  if (gymActivitiesArr.length > 0) {
+    const time = gymActivitiesArr.reduce((s, a) => s + (a.moving_time || 0), 0);
+    sportBreakdown.gym = {
+      count: gymActivitiesArr.length,
+      time,
+      timeFormatted: formatDuration(time),
+      avgDuration: formatDuration(Math.round(time / gymActivitiesArr.length)),
+    };
+  }
 
   return {
     totalActivities: allActivities.length,
     totalDistance,
     totalDistanceKm: (totalDistance / 1000).toFixed(1),
+    runningDistanceKm: (runningDistance / 1000).toFixed(1),
     totalTime,
     totalTimeFormatted: formatDuration(totalTime),
     totalElevation: Math.round(totalElevation),
@@ -572,6 +626,7 @@ export const calculateStravaMetrics = (activities) => {
     avgHeartrate,
     avgDistance: allActivities.length > 0 ? totalDistance / allActivities.length : 0,
     avgDistanceKm: allActivities.length > 0 ? (totalDistance / allActivities.length / 1000).toFixed(1) : '0',
+    sportBreakdown,
     longestRun: longestRun ? {
       name: longestRun.name,
       distance: longestRun.distance,

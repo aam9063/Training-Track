@@ -28,6 +28,7 @@ import {
   FiDownload,
   FiAlertTriangle,
   FiShield,
+  FiNavigation,
 } from 'react-icons/fi';
 import { useAuth } from '../../contexts/AuthContext';
 import {
@@ -557,6 +558,119 @@ const AthleteMetrics = () => {
     return { zones, maxHR, restingHR, totalHRActivities: hrActivities.length };
   }, [rawActivities, profile]);
 
+  // Per-sport weekly charts data
+  const sportCharts = useMemo(() => {
+    if (!rawActivities?.length) return {};
+
+    const now = new Date();
+    const CYCLING_TYPES = ['Ride', 'VirtualRide'];
+    const SWIM_TYPES = ['Swim'];
+    const GYM_TYPES = ['WeightTraining', 'Workout', 'CrossFit', 'Yoga'];
+
+    const buildWeeklyData = (filterFn, metricFn) => {
+      const weeks = [];
+      for (let w = 7; w >= 0; w--) {
+        const weekEnd = new Date(now);
+        weekEnd.setDate(weekEnd.getDate() - w * 7);
+        const weekStart = new Date(weekEnd);
+        weekStart.setDate(weekStart.getDate() - 6);
+
+        const weekActs = rawActivities.filter(a => {
+          if (!filterFn(a)) return false;
+          const d = new Date(a.start_date_local);
+          return d >= weekStart && d <= weekEnd;
+        });
+
+        weeks.push({
+          label: w === 0 ? 'Esta sem.' : w === 1 ? 'Sem. -1' : `Sem. -${w}`,
+          ...metricFn(weekActs),
+        });
+      }
+      return weeks;
+    };
+
+    const result = {};
+
+    // Cycling
+    const cyclingActs = rawActivities.filter(a => CYCLING_TYPES.includes(a.type));
+    if (cyclingActs.length > 0) {
+      const weeklyKm = buildWeeklyData(
+        a => CYCLING_TYPES.includes(a.type),
+        acts => ({
+          km: +(acts.reduce((s, a) => s + (a.distance || 0), 0) / 1000).toFixed(1),
+          elevation: Math.round(acts.reduce((s, a) => s + (a.total_elevation_gain || 0), 0)),
+          avgSpeed: acts.length > 0
+            ? +((acts.reduce((s, a) => s + (a.average_speed || 0), 0) / acts.length) * 3.6).toFixed(1)
+            : 0,
+          count: acts.length,
+        })
+      );
+
+      const hrActs = cyclingActs.filter(a => a.average_heartrate);
+      result.cycling = {
+        weeklyKm,
+        totalKm: +(cyclingActs.reduce((s, a) => s + (a.distance || 0), 0) / 1000).toFixed(1),
+        totalElevation: Math.round(cyclingActs.reduce((s, a) => s + (a.total_elevation_gain || 0), 0)),
+        avgSpeed: +((cyclingActs.reduce((s, a) => s + (a.average_speed || 0), 0) / cyclingActs.length) * 3.6).toFixed(1),
+        avgHR: hrActs.length > 0 ? Math.round(hrActs.reduce((s, a) => s + a.average_heartrate, 0) / hrActs.length) : null,
+        count: cyclingActs.length,
+      };
+    }
+
+    // Swimming
+    const swimActs = rawActivities.filter(a => SWIM_TYPES.includes(a.type));
+    if (swimActs.length > 0) {
+      const weeklyMeters = buildWeeklyData(
+        a => SWIM_TYPES.includes(a.type),
+        acts => ({
+          meters: Math.round(acts.reduce((s, a) => s + (a.distance || 0), 0)),
+          avgPace100m: acts.length > 0 ? (() => {
+            const totalDist = acts.reduce((s, a) => s + (a.distance || 0), 0);
+            const totalTime = acts.reduce((s, a) => s + (a.moving_time || 0), 0);
+            if (totalDist === 0) return 0;
+            return Math.round(totalTime / (totalDist / 100));
+          })() : 0,
+          count: acts.length,
+        })
+      );
+
+      result.swimming = {
+        weeklyMeters,
+        totalMeters: Math.round(swimActs.reduce((s, a) => s + (a.distance || 0), 0)),
+        avgPace100m: (() => {
+          const d = swimActs.reduce((s, a) => s + (a.distance || 0), 0);
+          const t = swimActs.reduce((s, a) => s + (a.moving_time || 0), 0);
+          if (d === 0) return '-';
+          const secs = Math.round(t / (d / 100));
+          return `${Math.floor(secs / 60)}:${(secs % 60).toString().padStart(2, '0')}`;
+        })(),
+        count: swimActs.length,
+      };
+    }
+
+    // Gym / Strength
+    const gymActs = rawActivities.filter(a => GYM_TYPES.includes(a.type));
+    if (gymActs.length > 0) {
+      const weeklyGym = buildWeeklyData(
+        a => GYM_TYPES.includes(a.type),
+        acts => ({
+          sessions: acts.length,
+          totalMinutes: Math.round(acts.reduce((s, a) => s + (a.moving_time || 0), 0) / 60),
+        })
+      );
+
+      result.gym = {
+        weeklyGym,
+        totalSessions: gymActs.length,
+        avgDurationMin: Math.round(gymActs.reduce((s, a) => s + (a.moving_time || 0), 0) / 60 / gymActs.length),
+        totalMinutes: Math.round(gymActs.reduce((s, a) => s + (a.moving_time || 0), 0) / 60),
+        count: gymActs.length,
+      };
+    }
+
+    return result;
+  }, [rawActivities]);
+
   const loadStravaMetrics = useCallback(async () => {
     if (!profile?.id) return;
 
@@ -805,11 +919,11 @@ const AthleteMetrics = () => {
             className="bg-gradient-to-br from-orange-500 to-orange-600 rounded-xl p-4 sm:p-5 text-white shadow-lg"
           >
             <div className="flex items-center justify-between mb-2">
-              <span className="text-xs sm:text-sm font-medium opacity-90">Distancia</span>
+              <span className="text-xs sm:text-sm font-medium opacity-90">Running</span>
               <FiMapPin className="w-4 h-4 opacity-75" />
             </div>
-            <p className="text-2xl sm:text-3xl font-bold mb-1">{stravaMetrics.totalDistanceKm}</p>
-            <p className="text-xs opacity-75">km totales</p>
+            <p className="text-2xl sm:text-3xl font-bold mb-1">{stravaMetrics.runningDistanceKm}</p>
+            <p className="text-xs opacity-75">km running</p>
           </motion.div>
 
           <motion.div
@@ -1249,8 +1363,8 @@ const AthleteMetrics = () => {
         >
           <h3 className="text-base sm:text-lg font-bold text-gray-900 dark:text-white mb-4 flex items-center">
             <FiTrendingUp className="w-5 h-5 mr-2 text-orange-500" />
-            Progresión Semanal (km)
-            <InfoTooltip text="Kilómetros totales recorridos cada semana. Permite ver la progresión del volumen y detectar aumentos bruscos de carga." />
+            Progresión Semanal Running (km)
+            <InfoTooltip text="Kilómetros de running recorridos cada semana. Solo incluye carrera, trail y carrera virtual. Permite ver la progresión del volumen y detectar aumentos bruscos de carga." />
           </h3>
           <div className="h-48 sm:h-64">
             {stravaMetrics?.weeklyStats?.length > 0 ? (
@@ -1361,6 +1475,307 @@ const AthleteMetrics = () => {
           })()}
         </motion.div>
       </div>
+
+      {/* ── Sport-Specific Sections ── */}
+
+      {/* Cycling Section */}
+      {sportCharts.cycling && (
+        <motion.div
+          initial={{ opacity: 0, y: 20 }}
+          animate={{ opacity: 1, y: 0 }}
+          transition={{ delay: 0.65 }}
+          className="bg-white dark:bg-gray-800 rounded-xl p-4 sm:p-6 shadow-sm border border-gray-200 dark:border-gray-700 mb-6 sm:mb-8"
+        >
+          <h3 className="text-base sm:text-lg font-bold text-gray-900 dark:text-white mb-4 flex items-center">
+            <FiNavigation className="w-5 h-5 mr-2 text-yellow-500" />
+            Ciclismo
+            <InfoTooltip text="Métricas de ciclismo: km semanales, velocidad media y desnivel acumulado. Solo incluye Ride y VirtualRide." />
+          </h3>
+
+          {/* Summary cards */}
+          <div className="grid grid-cols-2 sm:grid-cols-4 gap-3 mb-6">
+            <div className="bg-yellow-50 dark:bg-yellow-900/20 rounded-lg p-3 text-center">
+              <p className="text-xl sm:text-2xl font-bold text-yellow-700 dark:text-yellow-300">{sportCharts.cycling.totalKm}</p>
+              <p className="text-[10px] sm:text-xs text-gray-500 dark:text-gray-400">km totales</p>
+            </div>
+            <div className="bg-yellow-50 dark:bg-yellow-900/20 rounded-lg p-3 text-center">
+              <p className="text-xl sm:text-2xl font-bold text-yellow-700 dark:text-yellow-300">{sportCharts.cycling.avgSpeed}</p>
+              <p className="text-[10px] sm:text-xs text-gray-500 dark:text-gray-400">km/h media</p>
+            </div>
+            <div className="bg-yellow-50 dark:bg-yellow-900/20 rounded-lg p-3 text-center">
+              <p className="text-xl sm:text-2xl font-bold text-yellow-700 dark:text-yellow-300">{sportCharts.cycling.totalElevation}</p>
+              <p className="text-[10px] sm:text-xs text-gray-500 dark:text-gray-400">m desnivel</p>
+            </div>
+            <div className="bg-yellow-50 dark:bg-yellow-900/20 rounded-lg p-3 text-center">
+              <p className="text-xl sm:text-2xl font-bold text-yellow-700 dark:text-yellow-300">{sportCharts.cycling.avgHR || '-'}</p>
+              <p className="text-[10px] sm:text-xs text-gray-500 dark:text-gray-400">bpm media</p>
+            </div>
+          </div>
+
+          {/* Weekly km + speed chart */}
+          <div className="grid grid-cols-1 lg:grid-cols-2 gap-4">
+            <div>
+              <h4 className="text-sm font-semibold text-gray-700 dark:text-gray-300 mb-3">Km semanales</h4>
+              <div className="h-48">
+                <Bar
+                  data={{
+                    labels: sportCharts.cycling.weeklyKm.map(w => w.label),
+                    datasets: [{
+                      label: 'km',
+                      data: sportCharts.cycling.weeklyKm.map(w => w.km),
+                      backgroundColor: 'rgba(245, 158, 11, 0.7)',
+                      borderRadius: 4,
+                      barPercentage: 0.7,
+                    }],
+                  }}
+                  options={{
+                    responsive: true,
+                    maintainAspectRatio: false,
+                    plugins: { legend: { display: false } },
+                    scales: {
+                      x: { grid: { display: false } },
+                      y: { beginAtZero: true, grid: { color: 'rgba(156,163,175,0.1)' }, title: { display: true, text: 'km' } },
+                    },
+                  }}
+                />
+              </div>
+            </div>
+            <div>
+              <h4 className="text-sm font-semibold text-gray-700 dark:text-gray-300 mb-3">Velocidad media semanal</h4>
+              <div className="h-48">
+                <Line
+                  data={{
+                    labels: sportCharts.cycling.weeklyKm.map(w => w.label),
+                    datasets: [{
+                      label: 'km/h',
+                      data: sportCharts.cycling.weeklyKm.map(w => w.avgSpeed),
+                      borderColor: 'rgb(245, 158, 11)',
+                      backgroundColor: 'rgba(245, 158, 11, 0.1)',
+                      fill: true,
+                      tension: 0.4,
+                      pointRadius: 4,
+                      pointBackgroundColor: 'rgb(245, 158, 11)',
+                    }],
+                  }}
+                  options={{
+                    responsive: true,
+                    maintainAspectRatio: false,
+                    plugins: { legend: { display: false } },
+                    scales: {
+                      x: { grid: { display: false } },
+                      y: { beginAtZero: false, grid: { color: 'rgba(156,163,175,0.1)' }, title: { display: true, text: 'km/h' } },
+                    },
+                  }}
+                />
+              </div>
+            </div>
+          </div>
+        </motion.div>
+      )}
+
+      {/* Swimming Section */}
+      {sportCharts.swimming && (
+        <motion.div
+          initial={{ opacity: 0, y: 20 }}
+          animate={{ opacity: 1, y: 0 }}
+          transition={{ delay: 0.7 }}
+          className="bg-white dark:bg-gray-800 rounded-xl p-4 sm:p-6 shadow-sm border border-gray-200 dark:border-gray-700 mb-6 sm:mb-8"
+        >
+          <h3 className="text-base sm:text-lg font-bold text-gray-900 dark:text-white mb-4 flex items-center">
+            <FiActivity className="w-5 h-5 mr-2 text-cyan-500" />
+            Natación
+            <InfoTooltip text="Métricas de natación: metros semanales y ritmo medio por 100m." />
+          </h3>
+
+          {/* Summary cards */}
+          <div className="grid grid-cols-3 gap-3 mb-6">
+            <div className="bg-cyan-50 dark:bg-cyan-900/20 rounded-lg p-3 text-center">
+              <p className="text-xl sm:text-2xl font-bold text-cyan-700 dark:text-cyan-300">{sportCharts.swimming.totalMeters}</p>
+              <p className="text-[10px] sm:text-xs text-gray-500 dark:text-gray-400">metros totales</p>
+            </div>
+            <div className="bg-cyan-50 dark:bg-cyan-900/20 rounded-lg p-3 text-center">
+              <p className="text-xl sm:text-2xl font-bold text-cyan-700 dark:text-cyan-300">{sportCharts.swimming.avgPace100m}</p>
+              <p className="text-[10px] sm:text-xs text-gray-500 dark:text-gray-400">min/100m</p>
+            </div>
+            <div className="bg-cyan-50 dark:bg-cyan-900/20 rounded-lg p-3 text-center">
+              <p className="text-xl sm:text-2xl font-bold text-cyan-700 dark:text-cyan-300">{sportCharts.swimming.count}</p>
+              <p className="text-[10px] sm:text-xs text-gray-500 dark:text-gray-400">sesiones</p>
+            </div>
+          </div>
+
+          {/* Weekly meters chart */}
+          <div className="grid grid-cols-1 lg:grid-cols-2 gap-4">
+            <div>
+              <h4 className="text-sm font-semibold text-gray-700 dark:text-gray-300 mb-3">Metros semanales</h4>
+              <div className="h-48">
+                <Bar
+                  data={{
+                    labels: sportCharts.swimming.weeklyMeters.map(w => w.label),
+                    datasets: [{
+                      label: 'metros',
+                      data: sportCharts.swimming.weeklyMeters.map(w => w.meters),
+                      backgroundColor: 'rgba(14, 165, 233, 0.7)',
+                      borderRadius: 4,
+                      barPercentage: 0.7,
+                    }],
+                  }}
+                  options={{
+                    responsive: true,
+                    maintainAspectRatio: false,
+                    plugins: { legend: { display: false } },
+                    scales: {
+                      x: { grid: { display: false } },
+                      y: { beginAtZero: true, grid: { color: 'rgba(156,163,175,0.1)' }, title: { display: true, text: 'metros' } },
+                    },
+                  }}
+                />
+              </div>
+            </div>
+            <div>
+              <h4 className="text-sm font-semibold text-gray-700 dark:text-gray-300 mb-3">Ritmo medio /100m</h4>
+              <div className="h-48">
+                <Line
+                  data={{
+                    labels: sportCharts.swimming.weeklyMeters.map(w => w.label),
+                    datasets: [{
+                      label: 'seg/100m',
+                      data: sportCharts.swimming.weeklyMeters.map(w => w.avgPace100m),
+                      borderColor: 'rgb(14, 165, 233)',
+                      backgroundColor: 'rgba(14, 165, 233, 0.1)',
+                      fill: true,
+                      tension: 0.4,
+                      pointRadius: 4,
+                      pointBackgroundColor: 'rgb(14, 165, 233)',
+                    }],
+                  }}
+                  options={{
+                    responsive: true,
+                    maintainAspectRatio: false,
+                    plugins: {
+                      legend: { display: false },
+                      tooltip: {
+                        callbacks: {
+                          label: (ctx) => {
+                            const secs = ctx.parsed.y;
+                            if (!secs) return '-';
+                            return `${Math.floor(secs / 60)}:${(secs % 60).toString().padStart(2, '0')} /100m`;
+                          },
+                        },
+                      },
+                    },
+                    scales: {
+                      x: { grid: { display: false } },
+                      y: {
+                        reverse: true,
+                        grid: { color: 'rgba(156,163,175,0.1)' },
+                        title: { display: true, text: 'seg/100m' },
+                        ticks: {
+                          callback: (v) => `${Math.floor(v / 60)}:${(v % 60).toString().padStart(2, '0')}`,
+                        },
+                      },
+                    },
+                  }}
+                />
+              </div>
+            </div>
+          </div>
+        </motion.div>
+      )}
+
+      {/* Gym / Strength Section */}
+      {sportCharts.gym && (
+        <motion.div
+          initial={{ opacity: 0, y: 20 }}
+          animate={{ opacity: 1, y: 0 }}
+          transition={{ delay: 0.75 }}
+          className="bg-white dark:bg-gray-800 rounded-xl p-4 sm:p-6 shadow-sm border border-gray-200 dark:border-gray-700 mb-6 sm:mb-8"
+        >
+          <h3 className="text-base sm:text-lg font-bold text-gray-900 dark:text-white mb-4 flex items-center">
+            <FiZap className="w-5 h-5 mr-2 text-indigo-500" />
+            Fuerza / Gimnasio
+            <InfoTooltip text="Sesiones de fuerza, pesas, CrossFit y yoga. Muestra frecuencia semanal y duración media." />
+          </h3>
+
+          {/* Summary cards */}
+          <div className="grid grid-cols-3 gap-3 mb-6">
+            <div className="bg-indigo-50 dark:bg-indigo-900/20 rounded-lg p-3 text-center">
+              <p className="text-xl sm:text-2xl font-bold text-indigo-700 dark:text-indigo-300">{sportCharts.gym.totalSessions}</p>
+              <p className="text-[10px] sm:text-xs text-gray-500 dark:text-gray-400">sesiones</p>
+            </div>
+            <div className="bg-indigo-50 dark:bg-indigo-900/20 rounded-lg p-3 text-center">
+              <p className="text-xl sm:text-2xl font-bold text-indigo-700 dark:text-indigo-300">{sportCharts.gym.avgDurationMin}</p>
+              <p className="text-[10px] sm:text-xs text-gray-500 dark:text-gray-400">min/sesión</p>
+            </div>
+            <div className="bg-indigo-50 dark:bg-indigo-900/20 rounded-lg p-3 text-center">
+              <p className="text-xl sm:text-2xl font-bold text-indigo-700 dark:text-indigo-300">{sportCharts.gym.totalMinutes}</p>
+              <p className="text-[10px] sm:text-xs text-gray-500 dark:text-gray-400">min totales</p>
+            </div>
+          </div>
+
+          {/* Weekly sessions + duration chart */}
+          <div className="grid grid-cols-1 lg:grid-cols-2 gap-4">
+            <div>
+              <h4 className="text-sm font-semibold text-gray-700 dark:text-gray-300 mb-3">Sesiones semanales</h4>
+              <div className="h-48">
+                <Bar
+                  data={{
+                    labels: sportCharts.gym.weeklyGym.map(w => w.label),
+                    datasets: [{
+                      label: 'sesiones',
+                      data: sportCharts.gym.weeklyGym.map(w => w.sessions),
+                      backgroundColor: 'rgba(99, 102, 241, 0.7)',
+                      borderRadius: 4,
+                      barPercentage: 0.7,
+                    }],
+                  }}
+                  options={{
+                    responsive: true,
+                    maintainAspectRatio: false,
+                    plugins: { legend: { display: false } },
+                    scales: {
+                      x: { grid: { display: false } },
+                      y: {
+                        beginAtZero: true,
+                        grid: { color: 'rgba(156,163,175,0.1)' },
+                        title: { display: true, text: 'sesiones' },
+                        ticks: { stepSize: 1 },
+                      },
+                    },
+                  }}
+                />
+              </div>
+            </div>
+            <div>
+              <h4 className="text-sm font-semibold text-gray-700 dark:text-gray-300 mb-3">Duración semanal</h4>
+              <div className="h-48">
+                <Bar
+                  data={{
+                    labels: sportCharts.gym.weeklyGym.map(w => w.label),
+                    datasets: [{
+                      label: 'minutos',
+                      data: sportCharts.gym.weeklyGym.map(w => w.totalMinutes),
+                      backgroundColor: 'rgba(99, 102, 241, 0.4)',
+                      borderColor: 'rgb(99, 102, 241)',
+                      borderWidth: 1,
+                      borderRadius: 4,
+                      barPercentage: 0.7,
+                    }],
+                  }}
+                  options={{
+                    responsive: true,
+                    maintainAspectRatio: false,
+                    plugins: { legend: { display: false } },
+                    scales: {
+                      x: { grid: { display: false } },
+                      y: { beginAtZero: true, grid: { color: 'rgba(156,163,175,0.1)' }, title: { display: true, text: 'minutos' } },
+                    },
+                  }}
+                />
+              </div>
+            </div>
+          </div>
+        </motion.div>
+      )}
 
       {/* Best Performances Summary */}
       {stravaMetrics && (stravaMetrics.longestRun || stravaMetrics.fastestPace) && (

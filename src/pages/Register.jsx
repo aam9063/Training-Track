@@ -1,10 +1,13 @@
 import { useState, useEffect } from 'react';
 import { Link, useNavigate, useSearchParams } from 'react-router-dom';
 import { motion, AnimatePresence } from 'framer-motion';
-import { HiUser, HiMail, HiLockClosed, HiEye, HiEyeOff, HiUserGroup, HiAcademicCap, HiArrowLeft } from 'react-icons/hi';
+import { HiUser, HiMail, HiLockClosed, HiEye, HiEyeOff, HiUserGroup, HiAcademicCap, HiArrowLeft, HiLockOpen, HiShieldCheck } from 'react-icons/hi';
 import { FcGoogle } from 'react-icons/fc';
 import { useAuth } from '../contexts/AuthContext';
 import { supabase } from '../lib/supabase';
+
+// Toggle: set to false to require invite link for registration
+const OPEN_REGISTRATION = false;
 
 export default function Register() {
   const navigate = useNavigate();
@@ -197,8 +200,51 @@ export default function Register() {
           )}
 
           <AnimatePresence mode="wait">
-            {!loadingInvite && step === 1 ? (
-              /* Step 1: Role Selection */
+            {!loadingInvite && step === 1 && !OPEN_REGISTRATION && !inviteCoachId ? (
+              /* Invite-only gate */
+              <motion.div
+                key="invite-only"
+                initial={{ opacity: 0, y: 20 }}
+                animate={{ opacity: 1, y: 0 }}
+                exit={{ opacity: 0, y: -20 }}
+                transition={{ duration: 0.3 }}
+                className="space-y-6"
+              >
+                <div className="text-center">
+                  <div className="w-16 h-16 mx-auto rounded-2xl bg-amber-100 dark:bg-amber-900/30 flex items-center justify-center mb-4">
+                    <HiShieldCheck className="w-8 h-8 text-amber-600 dark:text-amber-400" />
+                  </div>
+                  <h2 className="text-3xl font-bold text-gray-900 dark:text-white">
+                    Acceso por invitación
+                  </h2>
+                  <p className="mt-3 text-gray-600 dark:text-gray-400 leading-relaxed">
+                    TrainingTrack Pro se encuentra actualmente en fase de desarrollo.
+                    El registro está disponible únicamente mediante enlace de invitación de tu entrenador.
+                  </p>
+                </div>
+
+                <div className="p-4 bg-sky-50 dark:bg-sky-900/20 border border-sky-200 dark:border-sky-800 rounded-xl">
+                  <div className="flex items-start gap-3">
+                    <HiLockOpen className="w-5 h-5 text-sky-600 dark:text-sky-400 flex-shrink-0 mt-0.5" />
+                    <div className="text-sm text-sky-700 dark:text-sky-300">
+                      <p className="font-medium">¿Cómo registrarte?</p>
+                      <p className="mt-1">Solicita a tu entrenador que te envíe un enlace de invitación. Con ese enlace podrás crear tu cuenta directamente.</p>
+                    </div>
+                  </div>
+                </div>
+
+                <p className="text-center text-gray-600 dark:text-gray-400">
+                  ¿Ya tienes cuenta?{' '}
+                  <Link
+                    to="/login"
+                    className="font-semibold text-sky-600 hover:text-sky-500 dark:text-sky-400"
+                  >
+                    Inicia sesión
+                  </Link>
+                </p>
+              </motion.div>
+            ) : !loadingInvite && step === 1 ? (
+              /* Step 1: Role Selection (only when OPEN_REGISTRATION = true) */
               <motion.div
                 key="role-selection"
                 initial={{ opacity: 0, x: -20 }}

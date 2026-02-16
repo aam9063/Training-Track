@@ -41,14 +41,14 @@ const Devices = () => {
     setLoading(false);
   }, [profile?.id]);
 
-  // Handle OAuth callback
+  // Handle OAuth callback (wait for profile to be ready)
   useEffect(() => {
     const code = searchParams.get('code');
-    if (code) {
+    if (code && profile?.id) {
       handleStravaCallback(code);
       setSearchParams({});
     }
-  }, [searchParams, setSearchParams]);
+  }, [searchParams, setSearchParams, profile?.id]);
 
   // Check connection status on mount
   useEffect(() => {

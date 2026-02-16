@@ -6,6 +6,36 @@ import { toLocalDateStr } from '../lib/dateUtils';
  * Optimized queries without complex joins
  */
 
+/**
+ * Refresh Strava token via Edge Function (keeps client_secret server-side)
+ */
+const refreshStravaTokenViaEdge = async (refreshToken, athleteId) => {
+  try {
+    const { data: { session } } = await supabase.auth.getSession();
+    if (!session?.access_token) return null;
+
+    const supabaseUrl = import.meta.env.VITE_SUPABASE_URL;
+    const response = await fetch(`${supabaseUrl}/functions/v1/strava-token-exchange`, {
+      method: 'POST',
+      headers: {
+        'Content-Type': 'application/json',
+        'Authorization': `Bearer ${session.access_token}`,
+        'apikey': import.meta.env.VITE_SUPABASE_ANON_KEY,
+      },
+      body: JSON.stringify({
+        grant_type: 'refresh_token',
+        refresh_token: refreshToken,
+        athlete_id: athleteId,
+      }),
+    });
+
+    if (!response.ok) return null;
+    return response.json();
+  } catch {
+    return null;
+  }
+};
+
 // Get all athletes for the current coach (active relationships)
 export const getAthletes = async (coachId) => {
   if (!coachId) {
@@ -411,37 +441,11 @@ export const getAthleteStravaActivities = async (athleteId, params = {}) => {
     let accessToken = device.access_token;
 
     if (tokenExpiresAt <= now + 300000) { // 5 min buffer
-      // Refresh the token
-      const STRAVA_CLIENT_ID = import.meta.env.VITE_STRAVA_CLIENT_ID;
-      const STRAVA_CLIENT_SECRET = import.meta.env.VITE_STRAVA_CLIENT_SECRET;
-
-      const refreshResponse = await fetch('https://www.strava.com/oauth/token', {
-        method: 'POST',
-        headers: { 'Content-Type': 'application/json' },
-        body: JSON.stringify({
-          client_id: STRAVA_CLIENT_ID,
-          client_secret: STRAVA_CLIENT_SECRET,
-          refresh_token: device.refresh_token,
-          grant_type: 'refresh_token',
-        }),
-      });
-
-      if (!refreshResponse.ok) {
+      const refreshData = await refreshStravaTokenViaEdge(device.refresh_token, athleteId);
+      if (!refreshData) {
         return { data: [], error: new Error('Failed to refresh token'), notConnected: true };
       }
-
-      const refreshData = await refreshResponse.json();
       accessToken = refreshData.access_token;
-
-      // Update tokens in database
-      await supabase
-        .from('devices')
-        .update({
-          access_token: refreshData.access_token,
-          refresh_token: refreshData.refresh_token,
-          token_expires_at: new Date(refreshData.expires_at * 1000).toISOString(),
-        })
-        .eq('id', device.id);
     }
 
     // Fetch activities from Strava
@@ -495,35 +499,11 @@ export const getAthleteStravaActivityDetail = async (athleteId, activityId) => {
     let accessToken = device.access_token;
 
     if (tokenExpiresAt <= now + 300000) {
-      const STRAVA_CLIENT_ID = import.meta.env.VITE_STRAVA_CLIENT_ID;
-      const STRAVA_CLIENT_SECRET = import.meta.env.VITE_STRAVA_CLIENT_SECRET;
-
-      const refreshResponse = await fetch('https://www.strava.com/oauth/token', {
-        method: 'POST',
-        headers: { 'Content-Type': 'application/json' },
-        body: JSON.stringify({
-          client_id: STRAVA_CLIENT_ID,
-          client_secret: STRAVA_CLIENT_SECRET,
-          refresh_token: device.refresh_token,
-          grant_type: 'refresh_token',
-        }),
-      });
-
-      if (!refreshResponse.ok) {
+      const refreshData = await refreshStravaTokenViaEdge(device.refresh_token, athleteId);
+      if (!refreshData) {
         return { data: null, error: new Error('Failed to refresh token') };
       }
-
-      const refreshData = await refreshResponse.json();
       accessToken = refreshData.access_token;
-
-      await supabase
-        .from('devices')
-        .update({
-          access_token: refreshData.access_token,
-          refresh_token: refreshData.refresh_token,
-          token_expires_at: new Date(refreshData.expires_at * 1000).toISOString(),
-        })
-        .eq('id', device.id);
     }
 
     // Fetch detailed activity from Strava

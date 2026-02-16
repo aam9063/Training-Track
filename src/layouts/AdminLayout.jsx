@@ -7,7 +7,8 @@ const AdminLayout = () => {
   const { user, loading, profile } = useAuth();
   const [sidebarCollapsed, setSidebarCollapsed] = useState(false);
 
-  if (loading && !user) {
+  // Show loading while auth or profile is being resolved
+  if (loading || (user && !profile)) {
     return (
       <div className="min-h-screen flex items-center justify-center bg-gray-50 dark:bg-gray-900">
         <div className="text-center">
@@ -24,7 +25,7 @@ const AdminLayout = () => {
   }
 
   // Logged in but not admin — redirect to admin login
-  if (profile && !profile.is_admin) {
+  if (!profile?.is_admin) {
     return <Navigate to="/admin/login" replace />;
   }
 

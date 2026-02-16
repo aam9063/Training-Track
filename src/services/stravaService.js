@@ -7,11 +7,9 @@
 import { supabase } from '../lib/supabase';
 
 const STRAVA_CLIENT_ID = import.meta.env.VITE_STRAVA_CLIENT_ID;
-const STRAVA_CLIENT_SECRET = import.meta.env.VITE_STRAVA_CLIENT_SECRET;
 const STRAVA_REDIRECT_URI = `${window.location.origin}/athlete/devices`;
 
 const STRAVA_AUTH_URL = 'https://www.strava.com/oauth/authorize';
-const STRAVA_TOKEN_URL = 'https://www.strava.com/oauth/token';
 const STRAVA_API_URL = 'https://www.strava.com/api/v3';
 
 // Local cache keys (for quick access, synced with DB)
@@ -31,34 +29,6 @@ export const getStravaAuthUrl = () => {
   });
 
   return `${STRAVA_AUTH_URL}?${params.toString()}`;
-};
-
-/**
- * Save Strava tokens to Supabase devices table
- */
-const saveTokensToDatabase = async (athleteId, tokenData, stravaAthlete) => {
-  try {
-    const { error } = await supabase
-      .from('devices')
-      .upsert({
-        athlete_id: athleteId,
-        device_type: 'strava',
-        device_name: stravaAthlete ? `${stravaAthlete.firstname} ${stravaAthlete.lastname}` : 'Strava',
-        access_token: tokenData.access_token,
-        refresh_token: tokenData.refresh_token,
-        token_expires_at: new Date(tokenData.expires_at * 1000).toISOString(),
-        last_sync: new Date().toISOString(),
-        sync_enabled: true,
-      }, {
-        onConflict: 'athlete_id,device_type',
-      });
-
-    if (error) throw error;
-    return { success: true };
-  } catch (error) {
-    console.error('Error saving tokens to database:', error);
-    return { success: false, error };
-  }
 };
 
 /**
@@ -101,40 +71,53 @@ const deleteTokensFromDatabase = async (athleteId) => {
 };
 
 /**
+ * Call the strava-token-exchange Edge Function (server-side secret)
+ */
+const callStravaTokenEdgeFunction = async (body) => {
+  const { data: { session } } = await supabase.auth.getSession();
+  if (!session?.access_token) {
+    throw new Error('No hay sesión activa. Inicia sesión de nuevo.');
+  }
+
+  const supabaseUrl = import.meta.env.VITE_SUPABASE_URL;
+  const response = await fetch(`${supabaseUrl}/functions/v1/strava-token-exchange`, {
+    method: 'POST',
+    headers: {
+      'Content-Type': 'application/json',
+      'Authorization': `Bearer ${session.access_token}`,
+      'apikey': import.meta.env.VITE_SUPABASE_ANON_KEY,
+    },
+    body: JSON.stringify(body),
+  });
+
+  if (!response.ok) {
+    const errorData = await response.json().catch(() => ({}));
+
+    if (response.status === 403 || errorData.error === 'ATHLETE_LIMIT_EXCEEDED') {
+      const limitError = new Error('ATHLETE_LIMIT_EXCEEDED');
+      limitError.userMessage = 'La aplicación ha alcanzado el límite de usuarios de Strava. Por favor, contacta al administrador para solicitar un aumento del límite.';
+      limitError.isLimitError = true;
+      throw limitError;
+    }
+
+    throw new Error(errorData.error || `Error del servidor: ${response.status}`);
+  }
+
+  return response.json();
+};
+
+/**
  * Exchange authorization code for access token
  * @param {string} code - OAuth authorization code
  * @param {string} athleteId - TrackPro athlete ID to associate tokens with
  */
 export const exchangeStravaCode = async (code, athleteId = null) => {
   try {
-    const response = await fetch(STRAVA_TOKEN_URL, {
-      method: 'POST',
-      headers: {
-        'Content-Type': 'application/json',
-      },
-      body: JSON.stringify({
-        client_id: STRAVA_CLIENT_ID,
-        client_secret: STRAVA_CLIENT_SECRET,
-        code,
-        grant_type: 'authorization_code',
-      }),
+    const data = await callStravaTokenEdgeFunction({
+      grant_type: 'authorization_code',
+      code,
+      athlete_id: athleteId,
     });
-
-    if (!response.ok) {
-      const errorData = await response.json();
-
-      // Handle athlete limit exceeded error
-      if (response.status === 403) {
-        const limitError = new Error('ATHLETE_LIMIT_EXCEEDED');
-        limitError.userMessage = 'La aplicación ha alcanzado el límite de usuarios de Strava. Por favor, contacta al administrador para solicitar un aumento del límite.';
-        limitError.isLimitError = true;
-        throw limitError;
-      }
-
-      throw new Error(errorData.message || 'Failed to exchange code');
-    }
-
-    const data = await response.json();
 
     const tokenData = {
       access_token: data.access_token,
@@ -144,11 +127,8 @@ export const exchangeStravaCode = async (code, athleteId = null) => {
 
     // Save to localStorage for quick access
     localStorage.setItem(STRAVA_TOKEN_KEY, JSON.stringify(tokenData));
-    localStorage.setItem(STRAVA_ATHLETE_KEY, JSON.stringify(data.athlete));
-
-    // Save to database if athleteId provided
-    if (athleteId) {
-      await saveTokensToDatabase(athleteId, tokenData, data.athlete);
+    if (data.athlete) {
+      localStorage.setItem(STRAVA_ATHLETE_KEY, JSON.stringify(data.athlete));
     }
 
     return { data, error: null };
@@ -169,24 +149,11 @@ export const refreshStravaToken = async (athleteId = null) => {
   }
 
   try {
-    const response = await fetch(STRAVA_TOKEN_URL, {
-      method: 'POST',
-      headers: {
-        'Content-Type': 'application/json',
-      },
-      body: JSON.stringify({
-        client_id: STRAVA_CLIENT_ID,
-        client_secret: STRAVA_CLIENT_SECRET,
-        refresh_token: tokenData.refresh_token,
-        grant_type: 'refresh_token',
-      }),
+    const data = await callStravaTokenEdgeFunction({
+      grant_type: 'refresh_token',
+      refresh_token: tokenData.refresh_token,
+      athlete_id: athleteId,
     });
-
-    if (!response.ok) {
-      throw new Error('Failed to refresh token');
-    }
-
-    const data = await response.json();
 
     const newTokenData = {
       access_token: data.access_token,
@@ -196,11 +163,6 @@ export const refreshStravaToken = async (athleteId = null) => {
 
     // Update localStorage
     localStorage.setItem(STRAVA_TOKEN_KEY, JSON.stringify(newTokenData));
-
-    // Update database if athleteId provided
-    if (athleteId) {
-      await saveTokensToDatabase(athleteId, newTokenData, null);
-    }
 
     return { data: newTokenData, error: null };
   } catch (error) {

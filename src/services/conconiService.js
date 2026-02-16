@@ -1,7 +1,6 @@
 import { supabase } from '../lib/supabase';
 import { toLocalDateStr } from '../lib/dateUtils';
 import Papa from 'papaparse';
-import * as XLSX from 'xlsx';
 
 /**
  * Format pace from seconds per km to "m:ss/km" string
@@ -147,29 +146,55 @@ const parseTimeStr = (val) => {
 };
 
 /**
- * Detect and extract Conconi data from a transposed XLSX sheet.
+ * Get the raw value of an ExcelJS cell.
+ * Handles Date objects (Excel day fractions stored as Date by ExcelJS),
+ * rich text, formula results, and plain values.
+ */
+const getCellRaw = (cell) => {
+  if (!cell || cell.value == null) return '';
+  const v = cell.value;
+  // ExcelJS returns Date objects for time-formatted cells
+  if (v instanceof Date) {
+    // Convert back to Excel day fraction for parseTimeStr
+    const totalSeconds = v.getUTCHours() * 3600 + v.getUTCMinutes() * 60 + v.getUTCSeconds();
+    return totalSeconds > 0 ? totalSeconds / 86400 : '';
+  }
+  // Formula result
+  if (typeof v === 'object' && v.result != null) return v.result;
+  // Rich text
+  if (typeof v === 'object' && v.richText) return v.richText.map((r) => r.text).join('');
+  return v;
+};
+
+/**
+ * Get the formatted text of an ExcelJS cell (for label detection).
+ */
+const getCellText = (cell) => {
+  if (!cell || cell.value == null) return '';
+  return String(cell.text ?? cell.value ?? '');
+};
+
+/**
+ * Detect and extract Conconi data from a transposed XLSX worksheet (ExcelJS).
  * Looks for rows containing labels like "1.000m"/"1000m" (time), "Pulso" (HR),
  * and "r: 120p"/"r:120p"/"120" (recovery).
  * Series are in columns; each column = one series.
  * Returns array of series objects or null if format not detected.
  */
-const extractTransposedConconi = (sheet, distanceMeters = 800) => {
-  // Read formatted grid for label detection
-  const fmtGrid = XLSX.utils.sheet_to_json(sheet, { header: 1, defval: '', raw: false });
-  // Read raw grid for numeric values (Excel day fractions, integers)
-  const rawGrid = XLSX.utils.sheet_to_json(sheet, { header: 1, defval: '', raw: true });
-  if (!fmtGrid || fmtGrid.length < 2) return null;
+const extractTransposedConconi = (worksheet, distanceMeters = 800) => {
+  const rowCount = worksheet.rowCount;
+  if (rowCount < 2) return null;
 
-  // Find the key rows by scanning cells for known labels (use formatted grid for text)
   let timeRowIdx = -1;
   let pulsoRowIdx = -1;
   let recoveryRowIdx = -1;
   let maxLabelCol = -1;
 
-  for (let r = 0; r < fmtGrid.length; r++) {
-    const rowLen = fmtGrid[r]?.length || 0;
-    for (let c = 0; c < Math.min(rowLen, 6); c++) {
-      const cell = String(fmtGrid[r][c] ?? '').trim().toLowerCase().replace(/[\s.]+/g, '');
+  // Scan first 6 columns of each row for known labels
+  for (let r = 1; r <= rowCount; r++) {
+    const row = worksheet.getRow(r);
+    for (let c = 1; c <= 6; c++) {
+      const cell = getCellText(row.getCell(c)).trim().toLowerCase().replace(/[\s.]+/g, '');
       if (cell.includes('1000') && timeRowIdx < 0) {
         timeRowIdx = r;
         maxLabelCol = Math.max(maxLabelCol, c);
@@ -186,23 +211,19 @@ const extractTransposedConconi = (sheet, distanceMeters = 800) => {
   }
 
   if (pulsoRowIdx < 0) return null;
-  if (timeRowIdx < 0 && pulsoRowIdx > 0) {
+  if (timeRowIdx < 0 && pulsoRowIdx > 1) {
     timeRowIdx = pulsoRowIdx - 1;
   }
 
   const dataStartCol = maxLabelCol + 1;
-  // Use RAW grid for data extraction (preserves Excel numeric time values)
-  const timeRow = rawGrid[timeRowIdx] || [];
-  const pulsoRow = rawGrid[pulsoRowIdx] || [];
-  const recoveryRow = recoveryRowIdx >= 0 ? (rawGrid[recoveryRowIdx] || []) : [];
-
+  const colCount = worksheet.columnCount;
   const series = [];
-  const maxCol = Math.max(timeRow.length, pulsoRow.length, recoveryRow.length);
-  for (let c = dataStartCol; c < maxCol; c++) {
-    const timeVal = parseTimeStr(timeRow[c]);
-    const pulsoRaw = String(pulsoRow[c] ?? '').trim();
+
+  for (let c = dataStartCol; c <= colCount; c++) {
+    const timeVal = timeRowIdx > 0 ? parseTimeStr(getCellRaw(worksheet.getRow(timeRowIdx).getCell(c))) : null;
+    const pulsoRaw = String(getCellRaw(worksheet.getRow(pulsoRowIdx).getCell(c)) ?? '').trim();
     const hrVal = parseInt(pulsoRaw);
-    const recVal = parseTimeStr(recoveryRow[c]);
+    const recVal = recoveryRowIdx > 0 ? parseTimeStr(getCellRaw(worksheet.getRow(recoveryRowIdx).getCell(c))) : null;
 
     if (pulsoRaw.toUpperCase() === 'X' || pulsoRaw === '') continue;
     if (isNaN(hrVal) || hrVal <= 0 || hrVal > 250) continue;
@@ -234,34 +255,53 @@ const extractTransposedConconi = (sheet, distanceMeters = 800) => {
  *  - Transposed spreadsheet format (XLSX with rows: 1.000m, Pulso, r:120p and series in columns)
  * Returns { data: series[], error }
  */
-export const parseConconiFile = (file, distanceMeters = 800) => {
+export const parseConconiFile = async (file, distanceMeters = 800) => {
   const isXlsx = file.name.match(/\.xlsx?$/i);
 
   if (isXlsx) {
-    return new Promise((resolve) => {
-      const reader = new FileReader();
-      reader.onload = (e) => {
-        try {
-          const wb = XLSX.read(e.target.result, { type: 'array' });
-          const sheet = wb.Sheets[wb.SheetNames[0]];
+    try {
+      const { default: ExcelJS } = await import('exceljs');
+      const arrayBuffer = await file.arrayBuffer();
+      const workbook = new ExcelJS.Workbook();
+      await workbook.xlsx.load(arrayBuffer);
+      const worksheet = workbook.worksheets[0];
 
-          // Try transposed format first (the typical coach spreadsheet)
-          const transposed = extractTransposedConconi(sheet, distanceMeters);
-          if (transposed) {
-            resolve({ data: transposed, error: null });
-            return;
-          }
+      if (!worksheet) {
+        return { data: null, error: new Error('El archivo no contiene hojas') };
+      }
 
-          // Fallback to simple row-per-series format
-          const rows = XLSX.utils.sheet_to_json(sheet, { defval: '' });
-          resolve({ data: processRows(rows, distanceMeters), error: null });
-        } catch (error) {
-          resolve({ data: null, error: error instanceof Error ? error : new Error(String(error)) });
-        }
-      };
-      reader.onerror = () => resolve({ data: null, error: new Error('Error al leer el archivo') });
-      reader.readAsArrayBuffer(file);
-    });
+      // Try transposed format first (the typical coach spreadsheet)
+      const transposed = extractTransposedConconi(worksheet, distanceMeters);
+      if (transposed) {
+        return { data: transposed, error: null };
+      }
+
+      // Fallback to simple row-per-series format
+      // Convert worksheet to array of row objects (similar to sheet_to_json)
+      const headerRow = worksheet.getRow(1);
+      const headers = [];
+      headerRow.eachCell({ includeEmpty: true }, (cell, colNumber) => {
+        headers[colNumber] = getCellText(cell).trim();
+      });
+
+      const rows = [];
+      for (let r = 2; r <= worksheet.rowCount; r++) {
+        const row = worksheet.getRow(r);
+        const obj = {};
+        let hasData = false;
+        row.eachCell({ includeEmpty: true }, (cell, colNumber) => {
+          const key = headers[colNumber] || `col_${colNumber}`;
+          const val = getCellRaw(cell);
+          obj[key] = val;
+          if (val !== '' && val != null) hasData = true;
+        });
+        if (hasData) rows.push(obj);
+      }
+
+      return { data: processRows(rows, distanceMeters), error: null };
+    } catch (error) {
+      return { data: null, error: error instanceof Error ? error : new Error(String(error)) };
+    }
   }
 
   // CSV fallback

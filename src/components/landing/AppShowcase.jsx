@@ -276,10 +276,7 @@ export default function AppShowcase() {
           </p>
           <div className="flex flex-wrap items-center justify-center gap-10 md:gap-16 cursor-pointer">
             {[
-              { name: 'RFEA', logo: '/img/rfea.webp' },
               { name: 'CA Alicante', logo: '/img/LogoAAA.png' },
-              { name: 'CAR Sant Cugat', logo: '/img/CAR.jpg' },
-              { name: 'Playas de Castellón', logo: '/img/playas.webp' },
             ].map((org, i) => (
               <div
                 key={i}

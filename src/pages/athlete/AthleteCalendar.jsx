@@ -1,4 +1,4 @@
-import { useState, useEffect, useCallback } from 'react';
+import { useState, useCallback } from 'react';
 import { useAuth } from '../../contexts/AuthContext';
 import { motion, AnimatePresence } from 'framer-motion';
 import {
@@ -28,6 +28,7 @@ import { supabase } from '../../lib/supabase';
 import { toLocalDateStr } from '../../lib/dateUtils';
 import { RPE_OPTIONS } from '../../services/rpeService';
 import { showSuccess, showError } from '../../lib/toast';
+import useCalendarData from '../../hooks/useCalendarData';
 
 const DAYS_OF_WEEK = ['Dom', 'Lun', 'Mar', 'Mié', 'Jue', 'Vie', 'Sáb'];
 const MONTHS = [
@@ -111,21 +112,35 @@ const DroppableDayCell = ({ dateStr, children }) => {
 
 const AthleteCalendar = () => {
   const { profile } = useAuth();
-  const [currentDate, setCurrentDate] = useState(new Date());
-  const [sessions, setSessions] = useState([]);
-  const [competitions, setCompetitions] = useState([]);
-  const [loading, setLoading] = useState(true);
-  const [activeDragEvent, setActiveDragEvent] = useState(null);
 
-  // Modal states
+  const fetchAthleteCalendar = useCallback(async (athleteId, year, month, startDate, endDate) => {
+    const [sessionsRes, compsRes] = await Promise.all([
+      getAthleteMonthSessions(athleteId, year, month),
+      supabase
+        .from('competitions')
+        .select('*')
+        .eq('athlete_id', athleteId)
+        .gte('event_date', startDate)
+        .lte('event_date', endDate)
+        .order('event_date', { ascending: true }),
+    ]);
+
+    return {
+      sessions: sessionsRes.data || [],
+      competitions: (compsRes.data || []).map(c => ({ ...c, isCompetition: true })),
+    };
+  }, []);
+
+  const {
+    currentDate, sessions, competitions, loading, loadData,
+    goToPreviousMonth, goToNextMonth, goToToday,
+  } = useCalendarData(profile?.id, fetchAthleteCalendar);
+
+  const [activeDragEvent, setActiveDragEvent] = useState(null);
   const [showEventModal, setShowEventModal] = useState(false);
   const [showDayModal, setShowDayModal] = useState(false);
   const [selectedDate, setSelectedDate] = useState(null);
   const [selectedEvent, setSelectedEvent] = useState(null);
-
-  const currentMonth = currentDate.getMonth();
-  const currentYear = currentDate.getFullYear();
-  const athleteId = profile?.id;
 
   // DnD sensors with activation constraint to distinguish click vs drag
   const sensors = useSensors(
@@ -135,50 +150,6 @@ const AthleteCalendar = () => {
       },
     })
   );
-
-  const loadData = useCallback(async () => {
-    if (!athleteId) {
-      setSessions([]);
-      setCompetitions([]);
-      setLoading(false);
-      return;
-    }
-
-    setLoading(true);
-    try {
-      const year = currentYear;
-      const month = currentMonth + 1;
-
-      const startDate = toLocalDateStr(new Date(year, month - 1, 1));
-      const endDate = toLocalDateStr(new Date(year, month, 0));
-
-      const [sessionsRes, compsRes] = await Promise.all([
-        getAthleteMonthSessions(athleteId, year, month),
-        supabase
-          .from('competitions')
-          .select('*')
-          .eq('athlete_id', athleteId)
-          .gte('event_date', startDate)
-          .lte('event_date', endDate)
-          .order('event_date', { ascending: true }),
-      ]);
-
-      if (sessionsRes.data) setSessions(sessionsRes.data);
-      if (compsRes.data) {
-        setCompetitions(compsRes.data.map(c => ({ ...c, isCompetition: true })));
-      }
-    } catch (error) {
-      console.error('Error loading athlete calendar data:', error);
-      setSessions([]);
-      setCompetitions([]);
-    } finally {
-      setLoading(false);
-    }
-  }, [athleteId, currentMonth, currentYear]);
-
-  useEffect(() => {
-    loadData();
-  }, [loadData]);
 
   // DnD handlers
   const handleDragStart = (event) => {
@@ -196,21 +167,13 @@ const AthleteCalendar = () => {
 
     if (!targetDateStr || draggedEvent.date === targetDateStr) return;
 
-    // Optimistic update
-    const originalDate = draggedEvent.date;
-    setSessions(prev => prev.map(s =>
-      s.id === draggedEvent.id ? { ...s, date: targetDateStr } : s
-    ));
-
     const { error } = await rescheduleSession(draggedEvent.id, targetDateStr);
     if (error) {
       showError('Error al reprogramar la sesión');
-      setSessions(prev => prev.map(s =>
-        s.id === draggedEvent.id ? { ...s, date: originalDate } : s
-      ));
     } else {
       showSuccess('Sesión reprogramada');
     }
+    loadData();
   };
 
   const handleDragCancel = () => {
@@ -233,18 +196,6 @@ const AthleteCalendar = () => {
       days.push(new Date(year, month, day));
     }
     return days;
-  };
-
-  const goToPreviousMonth = () => {
-    setCurrentDate(new Date(currentDate.getFullYear(), currentDate.getMonth() - 1));
-  };
-
-  const goToNextMonth = () => {
-    setCurrentDate(new Date(currentDate.getFullYear(), currentDate.getMonth() + 1));
-  };
-
-  const goToToday = () => {
-    setCurrentDate(new Date());
   };
 
   const getEventsForDate = (date) => {

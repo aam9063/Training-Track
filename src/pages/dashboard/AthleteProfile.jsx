@@ -1,4 +1,4 @@
-import { useState, useEffect, useCallback, useRef } from 'react';
+import { useState, useEffect, useCallback } from 'react';
 import { showSuccess, showError } from '../../lib/toast';
 import { useParams, useNavigate } from 'react-router-dom';
 import { motion, AnimatePresence } from 'framer-motion';
@@ -52,9 +52,6 @@ ChartJS.register(
 import { useAuth } from '../../contexts/AuthContext';
 import {
   getAthleteDetails,
-  getAthleteStravaActivities,
-  getAthleteStravaConnection,
-  getAthleteStravaActivityDetail,
   getAthleteMetrics,
   getAthleteCompetitions,
   createAthleteCompetition,
@@ -62,27 +59,20 @@ import {
 } from '../../services/athleteService';
 import {
   getAthleteWeeklyTraining,
-  getWeekStartDate,
   DAYS_OF_WEEK,
 } from '../../services/weeklyTrainingService';
 import {
-  formatStravaActivity,
   formatDuration,
   calculatePace,
   getActivityTypeLabel,
-  calculateStravaMetrics,
-  extractBestEfforts,
 } from '../../services/stravaService';
-import mapboxgl from 'mapbox-gl';
-import polyline from '@mapbox/polyline';
-import 'mapbox-gl/dist/mapbox-gl.css';
-import { getActivitiesRPE, getRPEEmoji, getRPELabel, RPE_OPTIONS } from '../../services/rpeService';
+import { getRPEEmoji, getRPELabel, RPE_OPTIONS } from '../../services/rpeService';
+import useMapbox from '../../hooks/useMapbox';
+import useWeeklyTrainings from '../../hooks/useWeeklyTrainings';
+import useCoachStravaData from '../../hooks/useCoachStravaData';
 import TrainingPlanningWizard from '../../components/dashboard/TrainingPlanningWizard';
 import ConconiTestModal from '../../components/dashboard/ConconiTestModal';
 import VAMTestModal from '../../components/dashboard/VAMTestModal';
-
-// Set Mapbox access token
-mapboxgl.accessToken = import.meta.env.VITE_MAPBOX_ACCESS_TOKEN;
 
 const AthleteProfile = () => {
   const { athleteId } = useParams();
@@ -92,25 +82,58 @@ const AthleteProfile = () => {
   // States
   const [athlete, setAthlete] = useState(null);
   const [loading, setLoading] = useState(true);
-  const [currentWeek, setCurrentWeek] = useState(getWeekStartDate());
-  const [trainings, setTrainings] = useState({});
-  const [trainingsLoading, setTrainingsLoading] = useState(true);
-  const [stravaActivities, setStravaActivities] = useState([]);
-  const [stravaLoading, setStravaLoading] = useState(true);
-  const [stravaConnected, setStravaConnected] = useState(false);
-  const [visibleActivities, setVisibleActivities] = useState(5);
-  const [stravaMetrics, setStravaMetrics] = useState(null);
-  const [stravaBestEfforts, setStravaBestEfforts] = useState([]);
-  const [activitiesRPE, setActivitiesRPE] = useState({});
-  const [rpeDetailActivity, setRpeDetailActivity] = useState(null);
+  const coachTrainingTransform = useCallback((data) => {
+    const trainingsByDay = {};
+    if (data?.length > 0) {
+      data.forEach((session) => {
+        const sessionDate = new Date(session.scheduled_date);
+        const dayIndex = (sessionDate.getDay() + 6) % 7;
+        const exercises = session.exercises?.map((ex) => {
+          const exercise = ex.running_exercise || ex.gym_exercise;
+          return {
+            name: exercise?.name || 'Ejercicio',
+            sets: ex.planned_sets,
+            reps: ex.planned_reps,
+            distance: ex.planned_distance_meters,
+            paceCode: ex.pace_code,
+          };
+        }) || [];
+        trainingsByDay[dayIndex] = {
+          id: session.id,
+          title: session.title || 'Entrenamiento',
+          type: session.training_type,
+          description: session.description,
+          duration: session.estimated_duration_minutes,
+          exercises,
+          status: session.status,
+          rpe_score: session.rpe_score,
+        };
+      });
+    }
+    return trainingsByDay;
+  }, []);
+
+  const {
+    currentWeek, trainings, loading: trainingsLoading,
+    loadTrainings, goToPreviousWeek, goToNextWeek, getWeekDays,
+  } = useWeeklyTrainings({
+    fetchFn: (weekStart) => getAthleteWeeklyTraining(profile?.id, athleteId, weekStart),
+    deps: [profile?.id, athleteId],
+    transformFn: coachTrainingTransform,
+  });
+  const {
+    stravaActivities, stravaLoading, stravaConnected, visibleActivities,
+    stravaMetrics, stravaBestEfforts, activitiesRPE,
+    rpeDetailActivity, setRpeDetailActivity,
+    selectedActivity, setSelectedActivity,
+    loadActivityDetail, showMoreActivities,
+  } = useCoachStravaData(athleteId);
   const [metrics, setMetrics] = useState([]);
   const [events, setEvents] = useState([]);
-  const [selectedActivity, setSelectedActivity] = useState(null);
   const [showEventModal, setShowEventModal] = useState(false);
   const [newEvent, setNewEvent] = useState({ name: '', date: '', distance: '', location: '', notes: '' });
   const [savingEvent, setSavingEvent] = useState(false);
-  const mapContainerRef = useRef(null);
-  const mapRef = useRef(null);
+  const { mapContainerRef } = useMapbox(selectedActivity?.polyline, selectedActivity?.loading);
   const [showTrainingModal, setShowTrainingModal] = useState(false);
   const [showConconiModal, setShowConconiModal] = useState(false);
   const [showVAMModal, setShowVAMModal] = useState(false);
@@ -136,119 +159,6 @@ const AthleteProfile = () => {
     loadAthlete();
   }, [athleteId]);
 
-  // Load weekly trainings
-  const loadTrainings = useCallback(async () => {
-    if (!athleteId || !profile?.id) return;
-
-    setTrainingsLoading(true);
-    try {
-      const { data, error } = await getAthleteWeeklyTraining(profile.id, athleteId, currentWeek);
-      if (error) throw error;
-
-      // Convert to day-indexed object
-      const trainingsByDay = {};
-      if (data?.length > 0) {
-        data.forEach((session) => {
-          const sessionDate = new Date(session.scheduled_date);
-          const dayIndex = (sessionDate.getDay() + 6) % 7;
-
-          const exercises = session.exercises?.map((ex) => {
-            const exercise = ex.running_exercise || ex.gym_exercise;
-            return {
-              name: exercise?.name || 'Ejercicio',
-              sets: ex.planned_sets,
-              reps: ex.planned_reps,
-              distance: ex.planned_distance_meters,
-              paceCode: ex.pace_code,
-            };
-          }) || [];
-
-          trainingsByDay[dayIndex] = {
-            id: session.id,
-            title: session.title || 'Entrenamiento',
-            type: session.training_type,
-            description: session.description,
-            duration: session.estimated_duration_minutes,
-            exercises,
-            status: session.status,
-            rpe_score: session.rpe_score,
-          };
-        });
-      }
-      setTrainings(trainingsByDay);
-    } catch (error) {
-      console.error('Error loading trainings:', error);
-    } finally {
-      setTrainingsLoading(false);
-    }
-  }, [athleteId, profile?.id, currentWeek]);
-
-  useEffect(() => {
-    loadTrainings();
-  }, [loadTrainings]);
-
-  // Load Strava activities - two-phase: fast list first, then metrics
-  useEffect(() => {
-    const loadStravaData = async () => {
-      if (!athleteId) return;
-
-      setStravaLoading(true);
-      try {
-        // Check connection
-        const { data: connection } = await getAthleteStravaConnection(athleteId);
-        setStravaConnected(!!connection);
-
-        if (connection) {
-          // Phase 1: Fetch only 10 activities for the list (fast)
-          const { data: activities } = await getAthleteStravaActivities(athleteId, {
-            per_page: 10,
-          });
-
-          if (activities?.length > 0) {
-            const formatted = activities.map(formatStravaActivity);
-            setStravaActivities(formatted);
-            setStravaLoading(false);
-
-            // Fetch RPE for displayed activities (parallel with phase 2)
-            const rpePromise = getActivitiesRPE(athleteId, formatted.map((a) => String(a.id)));
-
-            // Phase 2: Fetch more activities in background for metrics
-            const { data: allActivities } = await getAthleteStravaActivities(athleteId, {
-              per_page: 30,
-            });
-
-            if (allActivities?.length > 0) {
-              // Update activities list with the full set
-              const allFormatted = allActivities.slice(0, 15).map(formatStravaActivity);
-              setStravaActivities(allFormatted);
-              setStravaMetrics(calculateStravaMetrics(allActivities));
-              setStravaBestEfforts(extractBestEfforts(allActivities));
-
-              // Get RPE for all displayed activities
-              const allIds = allFormatted.map((a) => String(a.id));
-              const { data: rpeMap } = await getActivitiesRPE(athleteId, allIds);
-              setActivitiesRPE(rpeMap || {});
-            } else {
-              const { data: rpeMap } = await rpePromise;
-              setActivitiesRPE(rpeMap || {});
-              setStravaMetrics(calculateStravaMetrics(activities));
-              setStravaBestEfforts(extractBestEfforts(activities));
-            }
-          } else {
-            setStravaActivities([]);
-            setStravaMetrics(null);
-            setStravaBestEfforts([]);
-          }
-        }
-      } catch (error) {
-        console.error('Error loading Strava data:', error);
-      } finally {
-        setStravaLoading(false);
-      }
-    };
-
-    loadStravaData();
-  }, [athleteId]);
 
   // Load competitions
   const loadCompetitions = useCallback(async () => {
@@ -332,163 +242,8 @@ const AthleteProfile = () => {
     }
   };
 
-  // Load activity details when clicked
-  const loadActivityDetail = async (activity) => {
-    setSelectedActivity({ ...activity, loading: true });
-
-    try {
-      const { data, error } = await getAthleteStravaActivityDetail(athleteId, activity.id);
-      if (error) throw error;
-
-      setSelectedActivity({
-        ...activity,
-        loading: false,
-        laps: data.laps || [],
-        splits_metric: data.splits_metric || [],
-        segment_efforts: data.segment_efforts || [],
-        description: data.description,
-        calories: data.calories,
-        device_name: data.device_name,
-        polyline: data.map?.polyline || data.map?.summary_polyline,
-      });
-    } catch (error) {
-      console.error('Error loading activity details:', error);
-      setSelectedActivity({ ...activity, loading: false, error: true });
-    }
-  };
-
-  // Initialize map when activity with polyline is selected
-  useEffect(() => {
-    if (!selectedActivity?.polyline || selectedActivity.loading || !mapContainerRef.current) {
-      return;
-    }
-
-    // Clean up previous map
-    if (mapRef.current) {
-      mapRef.current.remove();
-      mapRef.current = null;
-    }
-
-    try {
-      // Decode polyline to coordinates
-      const coordinates = polyline.decode(selectedActivity.polyline).map(([lat, lng]) => [lng, lat]);
-
-      if (coordinates.length === 0) return;
-
-      // Calculate bounds
-      const bounds = coordinates.reduce(
-        (bounds, coord) => bounds.extend(coord),
-        new mapboxgl.LngLatBounds(coordinates[0], coordinates[0])
-      );
-
-      // Create map
-      const map = new mapboxgl.Map({
-        container: mapContainerRef.current,
-        style: 'mapbox://styles/mapbox/outdoors-v12',
-        bounds: bounds,
-        fitBoundsOptions: { padding: 40 },
-      });
-
-      mapRef.current = map;
-
-      map.on('load', () => {
-        // Add route line
-        map.addSource('route', {
-          type: 'geojson',
-          data: {
-            type: 'Feature',
-            properties: {},
-            geometry: {
-              type: 'LineString',
-              coordinates: coordinates,
-            },
-          },
-        });
-
-        // Route outline (shadow)
-        map.addLayer({
-          id: 'route-outline',
-          type: 'line',
-          source: 'route',
-          layout: {
-            'line-join': 'round',
-            'line-cap': 'round',
-          },
-          paint: {
-            'line-color': '#000',
-            'line-width': 6,
-            'line-opacity': 0.3,
-          },
-        });
-
-        // Main route line
-        map.addLayer({
-          id: 'route',
-          type: 'line',
-          source: 'route',
-          layout: {
-            'line-join': 'round',
-            'line-cap': 'round',
-          },
-          paint: {
-            'line-color': '#f97316',
-            'line-width': 4,
-          },
-        });
-
-        // Start marker
-        new mapboxgl.Marker({ color: '#22c55e' })
-          .setLngLat(coordinates[0])
-          .setPopup(new mapboxgl.Popup().setHTML('<strong>Inicio</strong>'))
-          .addTo(map);
-
-        // End marker
-        new mapboxgl.Marker({ color: '#ef4444' })
-          .setLngLat(coordinates[coordinates.length - 1])
-          .setPopup(new mapboxgl.Popup().setHTML('<strong>Fin</strong>'))
-          .addTo(map);
-      });
-
-      // Add controls
-      map.addControl(new mapboxgl.NavigationControl(), 'top-right');
-      map.addControl(new mapboxgl.FullscreenControl(), 'top-right');
-
-    } catch (error) {
-      console.error('Error initializing map:', error);
-    }
-
-    return () => {
-      if (mapRef.current) {
-        mapRef.current.remove();
-        mapRef.current = null;
-      }
-    };
-  }, [selectedActivity?.polyline, selectedActivity?.loading]);
-
   // Week navigation
-  const getWeekDays = (startDate) => {
-    const week = [];
-    for (let i = 0; i < 7; i++) {
-      const day = new Date(startDate);
-      day.setDate(day.getDate() + i);
-      week.push(day);
-    }
-    return week;
-  };
-
   const weekDays = getWeekDays(currentWeek);
-
-  const nextWeek = () => {
-    const next = new Date(currentWeek);
-    next.setDate(next.getDate() + 7);
-    setCurrentWeek(next);
-  };
-
-  const prevWeek = () => {
-    const prev = new Date(currentWeek);
-    prev.setDate(prev.getDate() - 7);
-    setCurrentWeek(prev);
-  };
 
   const getTypeColor = (type) => {
     const colors = {
@@ -666,7 +421,7 @@ const AthleteProfile = () => {
             </h2>
             <div className="flex items-center space-x-2 sm:space-x-4">
               <button
-                onClick={prevWeek}
+                onClick={goToPreviousWeek}
                 className="p-1.5 sm:p-2 hover:bg-gray-200 dark:hover:bg-gray-700 rounded-lg transition-colors"
               >
                 <FiChevronLeft className="w-4 h-4 sm:w-5 sm:h-5 text-gray-600 dark:text-gray-400" />
@@ -675,7 +430,7 @@ const AthleteProfile = () => {
                 Semana {getWeekNumber(currentWeek)} ({weekDays[0].toLocaleDateString('es-ES', { day: 'numeric', month: 'numeric' })} - {weekDays[6].toLocaleDateString('es-ES', { day: 'numeric', month: 'numeric', year: '2-digit' })})
               </span>
               <button
-                onClick={nextWeek}
+                onClick={goToNextWeek}
                 className="p-1.5 sm:p-2 hover:bg-gray-200 dark:hover:bg-gray-700 rounded-lg transition-colors"
               >
                 <FiChevronRight className="w-4 h-4 sm:w-5 sm:h-5 text-gray-600 dark:text-gray-400" />
@@ -909,7 +664,7 @@ const AthleteProfile = () => {
                 ))}
                 {visibleActivities < stravaActivities.length && (
                   <button
-                    onClick={() => setVisibleActivities(prev => Math.min(prev + 5, stravaActivities.length))}
+                    onClick={showMoreActivities}
                     className="w-full py-3 text-sm font-medium text-orange-600 dark:text-orange-400 bg-orange-50 dark:bg-orange-900/20 hover:bg-orange-100 dark:hover:bg-orange-900/30 rounded-xl transition-colors"
                   >
                     Ver más ({stravaActivities.length - visibleActivities} restantes)

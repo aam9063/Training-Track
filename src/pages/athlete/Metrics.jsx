@@ -31,22 +31,13 @@ import {
   FiNavigation,
 } from 'react-icons/fi';
 import { useAuth } from '../../contexts/AuthContext';
-import {
-  isStravaConnected,
-  getStravaActivities,
-  getStravaAthleteStats,
-  getStoredAthlete,
-  loadStravaTokens,
-  calculateStravaMetrics,
-  extractBestEfforts,
-  estimateRaceTimes,
-} from '../../services/stravaService';
+import { estimateRaceTimes } from '../../services/stravaService';
 import { getDailyLoads, calculateLoadMetrics } from '../../services/aiReportService';
 import ACWRGauge, { getACWRZone } from '../../components/shared/ACWRGauge';
 import PMCChart from '../../components/athlete/PMCChart';
 import TrainingZonesCard from '../../components/athlete/TrainingZonesCard';
-import { syncPersonalBests, updateAthleteVdot } from '../../services/trainingLoadService';
 import InfoTooltip from '../../components/common/InfoTooltip';
+import useStravaMetrics from '../../hooks/useStravaMetrics';
 
 // Register Chart.js components
 ChartJS.register(
@@ -469,14 +460,11 @@ const calculateHRZones = (maxHR, restingHR) => {
 
 const AthleteMetrics = () => {
   const { profile } = useAuth();
-  const [loading, setLoading] = useState(true);
-  const [stravaConnected, setStravaConnected] = useState(false);
-  const [stravaMetrics, setStravaMetrics] = useState(null);
-  const [bestEfforts, setBestEfforts] = useState([]);
-  const [stravaStats, setStravaStats] = useState(null);
-  const [weekFilter, setWeekFilter] = useState(8); // Default 8 weeks
+  const {
+    loading, stravaConnected, stravaMetrics, bestEfforts,
+    stravaStats, weekFilter, setWeekFilter, rawActivities,
+  } = useStravaMetrics(profile?.id);
   const [activityTimePeriod, setActivityTimePeriod] = useState('7days');
-  const [rawActivities, setRawActivities] = useState([]);
 
   // Training load calculations (ACWR, weekly loads)
   const loadData = useMemo(() => {
@@ -670,69 +658,6 @@ const AthleteMetrics = () => {
 
     return result;
   }, [rawActivities]);
-
-  const loadStravaMetrics = useCallback(async () => {
-    if (!profile?.id) return;
-
-    setLoading(true);
-    try {
-      // Check connection
-      const { connected: dbConnected } = await loadStravaTokens(profile.id);
-      const connected = dbConnected || isStravaConnected();
-      setStravaConnected(connected);
-
-      if (connected) {
-        // Get activities for the selected period
-        const weeksAgo = Math.floor(Date.now() / 1000) - weekFilter * 7 * 24 * 60 * 60;
-        const { data: activities } = await getStravaActivities({
-          after: weeksAgo,
-          per_page: 100,
-        });
-
-        if (activities?.length > 0) {
-          setRawActivities(activities);
-
-          // Calculate metrics
-          const metrics = calculateStravaMetrics(activities);
-          setStravaMetrics(metrics);
-
-          // Extract best efforts
-          const efforts = extractBestEfforts(activities);
-          setBestEfforts(efforts);
-
-          // Auto-sync: update VDOT and PBs from Strava best efforts
-          try {
-            const allEfforts = activities.flatMap(a => a.best_efforts || []);
-            if (allEfforts.length > 0) {
-              await Promise.all([
-                updateAthleteVdot(profile.id, allEfforts),
-                syncPersonalBests(profile.id, allEfforts),
-              ]);
-            }
-          } catch (syncErr) {
-            console.error('Auto-sync error (non-critical):', syncErr);
-          }
-        }
-
-        // Get athlete stats
-        const athlete = getStoredAthlete();
-        if (athlete?.id) {
-          const { data: stats } = await getStravaAthleteStats(athlete.id);
-          if (stats) {
-            setStravaStats(stats);
-          }
-        }
-      }
-    } catch (error) {
-      console.error('Error loading Strava metrics:', error);
-    } finally {
-      setLoading(false);
-    }
-  }, [profile?.id, weekFilter]);
-
-  useEffect(() => {
-    loadStravaMetrics();
-  }, [loadStravaMetrics]);
 
   const chartOptions = {
     responsive: true,

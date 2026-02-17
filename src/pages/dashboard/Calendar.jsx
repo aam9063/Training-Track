@@ -1,4 +1,4 @@
-import { useState, useEffect, useCallback } from 'react';
+import { useState, useCallback } from 'react';
 import { useAuth } from '../../contexts/AuthContext';
 import { motion, AnimatePresence } from 'framer-motion';
 import {
@@ -30,6 +30,7 @@ import { supabase } from '../../lib/supabase';
 import { toLocalDateStr } from '../../lib/dateUtils';
 import { RPE_OPTIONS } from '../../services/rpeService';
 import { showSuccess, showError } from '../../lib/toast';
+import useCalendarData from '../../hooks/useCalendarData';
 
 const DAYS_OF_WEEK = ['Dom', 'Lun', 'Mar', 'Mié', 'Jue', 'Vie', 'Sáb'];
 const MONTHS = [
@@ -110,86 +111,52 @@ const DroppableDayCell = ({ dateStr, children }) => {
 
 const Calendar = () => {
   const { profile } = useAuth();
-  const [currentDate, setCurrentDate] = useState(new Date());
-  const [sessions, setSessions] = useState([]);
-  const [competitions, setCompetitions] = useState([]);
-  const [loading, setLoading] = useState(true);
-  const [activeDragEvent, setActiveDragEvent] = useState(null);
 
-  // Modal states
+  const fetchCoachCalendar = useCallback(async (coachId, year, month, startDate, endDate) => {
+    const [sessionsRes, athletesRes] = await Promise.all([
+      getMonthSessions(coachId, year, month),
+      getAthletes(coachId),
+    ]);
+
+    let comps = [];
+    if (athletesRes.data?.length > 0) {
+      const athleteIds = athletesRes.data.map(a => a.id);
+      const { data: compsData, error: compsError } = await supabase
+        .from('competitions')
+        .select('*')
+        .in('athlete_id', athleteIds)
+        .gte('event_date', startDate)
+        .lte('event_date', endDate)
+        .order('event_date', { ascending: true });
+
+      if (!compsError && compsData) {
+        comps = compsData.map(comp => {
+          const athlete = athletesRes.data.find(a => a.id === comp.athlete_id);
+          return {
+            ...comp,
+            athleteName: athlete
+              ? `${athlete.firstName || athlete.first_name || ''} ${athlete.lastName || athlete.last_name || ''}`.trim()
+              : 'Atleta',
+            athleteImage: athlete?.profile_image || athlete?.profileImage || null,
+            isCompetition: true,
+          };
+        });
+      }
+    }
+
+    return { sessions: sessionsRes.data || [], competitions: comps };
+  }, []);
+
+  const {
+    currentDate, sessions, competitions, loading, loadData,
+    goToPreviousMonth, goToNextMonth, goToToday,
+  } = useCalendarData(profile?.id, fetchCoachCalendar);
+
+  const [activeDragEvent, setActiveDragEvent] = useState(null);
   const [showEventModal, setShowEventModal] = useState(false);
   const [showDayModal, setShowDayModal] = useState(false);
   const [selectedDate, setSelectedDate] = useState(null);
   const [selectedEvent, setSelectedEvent] = useState(null);
-
-  // Extract dependencies for useEffect
-  const currentMonth = currentDate.getMonth();
-  const currentYear = currentDate.getFullYear();
-  const coachId = profile?.id;
-
-  const loadData = useCallback(async () => {
-    if (!coachId) {
-      setSessions([]);
-      setCompetitions([]);
-      setLoading(false);
-      return;
-    }
-
-    setLoading(true);
-    try {
-      const year = currentYear;
-      const month = currentMonth + 1;
-
-      const startDate = toLocalDateStr(new Date(year, month - 1, 1));
-      const endDate = toLocalDateStr(new Date(year, month, 0));
-
-      const [sessionsRes, athletesRes] = await Promise.all([
-        getMonthSessions(coachId, year, month),
-        getAthletes(coachId),
-      ]);
-
-      if (sessionsRes.data) setSessions(sessionsRes.data);
-
-      // Fetch competitions for all athletes this month
-      if (athletesRes.data && athletesRes.data.length > 0) {
-        const athleteIds = athletesRes.data.map(a => a.id);
-
-        const { data: comps, error: compsError } = await supabase
-          .from('competitions')
-          .select('*')
-          .in('athlete_id', athleteIds)
-          .gte('event_date', startDate)
-          .lte('event_date', endDate)
-          .order('event_date', { ascending: true });
-
-        if (!compsError && comps) {
-          // Enrich with athlete names
-          const enrichedComps = comps.map(comp => {
-            const athlete = athletesRes.data.find(a => a.id === comp.athlete_id);
-            return {
-              ...comp,
-              athleteName: athlete
-                ? `${athlete.firstName || athlete.first_name || ''} ${athlete.lastName || athlete.last_name || ''}`.trim()
-                : 'Atleta',
-              athleteImage: athlete?.profile_image || athlete?.profileImage || null,
-              isCompetition: true,
-            };
-          });
-          setCompetitions(enrichedComps);
-        }
-      }
-    } catch (error) {
-      console.error('Error loading calendar data:', error);
-      setSessions([]);
-      setCompetitions([]);
-    } finally {
-      setLoading(false);
-    }
-  }, [coachId, currentMonth, currentYear]);
-
-  useEffect(() => {
-    loadData();
-  }, [loadData]);
 
   // DnD sensors with activation constraint to distinguish click vs drag
   const sensors = useSensors(
@@ -216,21 +183,13 @@ const Calendar = () => {
 
     if (!targetDateStr || draggedEvent.date === targetDateStr) return;
 
-    // Optimistic update
-    const originalDate = draggedEvent.date;
-    setSessions(prev => prev.map(s =>
-      s.id === draggedEvent.id ? { ...s, date: targetDateStr } : s
-    ));
-
     const { error } = await rescheduleSession(draggedEvent.id, targetDateStr);
     if (error) {
       showError('Error al reprogramar la sesión');
-      setSessions(prev => prev.map(s =>
-        s.id === draggedEvent.id ? { ...s, date: originalDate } : s
-      ));
     } else {
       showSuccess('Sesión reprogramada');
     }
+    loadData();
   };
 
   const handleDragCancel = () => {
@@ -253,18 +212,6 @@ const Calendar = () => {
       days.push(new Date(year, month, day));
     }
     return days;
-  };
-
-  const goToPreviousMonth = () => {
-    setCurrentDate(new Date(currentDate.getFullYear(), currentDate.getMonth() - 1));
-  };
-
-  const goToNextMonth = () => {
-    setCurrentDate(new Date(currentDate.getFullYear(), currentDate.getMonth() + 1));
-  };
-
-  const goToToday = () => {
-    setCurrentDate(new Date());
   };
 
   const getEventsForDate = (date) => {

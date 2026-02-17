@@ -1,6 +1,6 @@
-import { useState, useEffect, useCallback } from 'react';
+import { useState, useCallback } from 'react';
 import { Link } from 'react-router-dom';
-import { showSuccess, showError, showInfo } from '../../lib/toast';
+import { showInfo, showSuccess } from '../../lib/toast';
 import { useAuth } from '../../contexts/AuthContext';
 import { motion, AnimatePresence } from 'framer-motion';
 import {
@@ -16,32 +16,25 @@ import {
   FiClock,
   FiFileText,
 } from 'react-icons/fi';
-import {
-  getAthletes,
-  removeAthlete,
-  getPendingAthleteRequests,
-  acceptAthleteRequest,
-  rejectAthleteRequest,
-} from '../../services/athleteService';
+import useCoachAthletes from '../../hooks/useCoachAthletes';
 import TrainingPlanningWizard from '../../components/dashboard/TrainingPlanningWizard';
 import ConconiTestModal from '../../components/dashboard/ConconiTestModal';
 import VAMTestModal from '../../components/dashboard/VAMTestModal';
 
 const Athletes = () => {
   const { profile } = useAuth();
-  const [athletes, setAthletes] = useState([]);
-  const [pendingRequests, setPendingRequests] = useState([]);
-  const [filteredAthletes, setFilteredAthletes] = useState([]);
-  const [loading, setLoading] = useState(true);
-  const [searchTerm, setSearchTerm] = useState('');
-  const [selectedSpecialty, setSelectedSpecialty] = useState('all');
+  const {
+    athletes, pendingRequests, filteredAthletes, loading,
+    searchTerm, setSearchTerm, selectedSpecialty, setSelectedSpecialty,
+    raceDistances, processingRequest,
+    handleAcceptRequest, handleRejectRequest, handleDelete: deleteAthlete,
+  } = useCoachAthletes(profile?.coach_id || profile?.id);
   const [deleteModal, setDeleteModal] = useState({ show: false, athlete: null });
   const [trainingModal, setTrainingModal] = useState({ show: false, athlete: null });
   const [conconiModal, setConconiModal] = useState({ show: false, athlete: null });
   const [vamModal, setVamModal] = useState({ show: false, athlete: null });
   const [testMenuAthleteId, setTestMenuAthleteId] = useState(null);
   const [testMenuPos, setTestMenuPos] = useState({ top: 0, left: 0 });
-  const [processingRequest, setProcessingRequest] = useState(null);
 
   const openTestMenu = useCallback((athleteId, e) => {
     if (testMenuAthleteId === athleteId) {
@@ -56,119 +49,10 @@ const Athletes = () => {
     setTestMenuAthleteId(athleteId);
   }, [testMenuAthleteId]);
 
-  // Get unique race distances for filter
-  const raceDistances = ['all', ...new Set(athletes.flatMap(a => a.raceDistances || []))];
-
-  useEffect(() => {
-    loadAthletes();
-  }, [profile]);
-
-  useEffect(() => {
-    filterAthletes();
-  }, [athletes, searchTerm, selectedSpecialty]);
-
-  const loadAthletes = async () => {
-    if (!profile?.id) {
-      setAthletes([]);
-      setPendingRequests([]);
-      setLoading(false);
-      return;
-    }
-
-    setLoading(true);
-
-    try {
-      const coachId = profile.coach_id || profile.id;
-
-      // Cargar atletas activos y solicitudes pendientes en paralelo
-      const [athletesResult, pendingResult] = await Promise.all([
-        getAthletes(coachId),
-        getPendingAthleteRequests(coachId),
-      ]);
-
-      setAthletes(athletesResult.data || []);
-      setPendingRequests(pendingResult.data || []);
-    } catch (error) {
-      console.error('Error cargando atletas:', error.message);
-      setAthletes([]);
-      setPendingRequests([]);
-    } finally {
-      setLoading(false);
-    }
-  };
-
-  const handleAcceptRequest = async (request) => {
-    setProcessingRequest(request.relationshipId);
-    try {
-      const { error } = await acceptAthleteRequest(request.relationshipId);
-      if (error) throw error;
-
-      // Mover de pendientes a activos
-      setPendingRequests(prev => prev.filter(r => r.relationshipId !== request.relationshipId));
-      setAthletes(prev => [...prev, { ...request, status: 'active' }]);
-      showSuccess('Solicitud aceptada correctamente');
-    } catch (error) {
-      console.error('Error aceptando solicitud:', error);
-      showError('Error al aceptar la solicitud');
-    } finally {
-      setProcessingRequest(null);
-    }
-  };
-
-  const handleRejectRequest = async (request) => {
-    setProcessingRequest(request.relationshipId);
-    try {
-      const { error } = await rejectAthleteRequest(request.relationshipId);
-      if (error) throw error;
-
-      setPendingRequests(prev => prev.filter(r => r.relationshipId !== request.relationshipId));
-      showSuccess('Solicitud rechazada');
-    } catch (error) {
-      console.error('Error rechazando solicitud:', error);
-      showError('Error al rechazar la solicitud');
-    } finally {
-      setProcessingRequest(null);
-    }
-  };
-
-  const filterAthletes = () => {
-    let filtered = [...athletes];
-
-    // Search filter
-    if (searchTerm) {
-      const term = searchTerm.toLowerCase();
-      filtered = filtered.filter(
-        (athlete) =>
-          athlete.firstName?.toLowerCase().includes(term) ||
-          athlete.lastName?.toLowerCase().includes(term) ||
-          athlete.email?.toLowerCase().includes(term)
-      );
-    }
-
-    // Race distance filter
-    if (selectedSpecialty !== 'all') {
-      filtered = filtered.filter((athlete) =>
-        athlete.raceDistances?.includes(selectedSpecialty)
-      );
-    }
-
-    setFilteredAthletes(filtered);
-  };
-
   const handleDelete = async () => {
     if (!deleteModal.athlete) return;
-
-    try {
-      const { error } = await removeAthlete(deleteModal.athlete.relationshipId);
-      if (error) throw error;
-
-      setAthletes(athletes.filter(a => a.id !== deleteModal.athlete.id));
-      setDeleteModal({ show: false, athlete: null });
-      showSuccess('Atleta eliminado correctamente');
-    } catch (error) {
-      console.error('Error deleting athlete:', error);
-      showError('Error al eliminar el atleta');
-    }
+    await deleteAthlete(deleteModal.athlete);
+    setDeleteModal({ show: false, athlete: null });
   };
 
   if (loading) {

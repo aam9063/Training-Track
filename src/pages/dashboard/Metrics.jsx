@@ -1,4 +1,4 @@
-import { useState, useEffect, useCallback, useMemo } from 'react';
+import { useState, useMemo } from 'react';
 import { useAuth } from '../../contexts/AuthContext';
 import { motion } from 'framer-motion';
 import {
@@ -25,11 +25,9 @@ import {
   Tooltip,
   Legend,
 } from 'chart.js';
-import { supabase } from '../../lib/supabase';
-import { getAthletes } from '../../services/athleteService';
-import { getCurrentPMCStatus } from '../../services/trainingLoadService';
-import { toLocalDateStr } from '../../lib/dateUtils';
 import InfoTooltip from '../../components/common/InfoTooltip';
+import useCoachMetrics from '../../hooks/useCoachMetrics';
+import { toLocalDateStr } from '../../lib/dateUtils';
 
 ChartJS.register(CategoryScale, LinearScale, BarElement, Title, Tooltip, Legend);
 
@@ -60,117 +58,16 @@ const formatWeekLabel = (weekStart) => {
 
 const Metrics = () => {
   const { profile } = useAuth();
-  const [athletes, setAthletes] = useState([]);
-  const [loading, setLoading] = useState(true);
-  const [dateRange, setDateRange] = useState('30');
-
-  // Data from optimized batch queries
-  const [sessionsByAthlete, setSessionsByAthlete] = useState({});
-  const [pmcByAthlete, setPmcByAthlete] = useState({});
-  const [weeklyVolumeByAthlete, setWeeklyVolumeByAthlete] = useState({});
+  const {
+    athletes, loading, dateRange, setDateRange,
+    sessionsByAthlete, pmcByAthlete, weeklyVolumeByAthlete,
+  } = useCoachMetrics(profile?.id);
 
   // Ranking
   const [sortKey, setSortKey] = useState('totalSessions');
   const [sortDirection, setSortDirection] = useState('desc');
   const [compareMode, setCompareMode] = useState(false);
   const [selectedForCompare, setSelectedForCompare] = useState([]);
-
-  // ─── Data Loading (optimized: Supabase only, no Strava API) ───────────────
-
-  const loadData = useCallback(async () => {
-    if (!profile?.id) {
-      setAthletes([]);
-      setLoading(false);
-      return;
-    }
-
-    setLoading(true);
-    try {
-      // 1. Get athletes (batch: 3 Supabase queries)
-      const { data: athletesData } = await getAthletes(profile.id);
-      setAthletes(athletesData || []);
-
-      if (!athletesData?.length) {
-        setSessionsByAthlete({});
-        setPmcByAthlete({});
-        setWeeklyVolumeByAthlete({});
-        setLoading(false);
-        return;
-      }
-
-      const athleteIds = athletesData.map(a => a.id);
-      const days = parseInt(dateRange);
-      const startDate = new Date();
-      startDate.setDate(startDate.getDate() - days);
-      const startDateStr = toLocalDateStr(startDate);
-      const endDateStr = toLocalDateStr(new Date());
-
-      // 2. Batch: all sessions for all athletes in date range (1 Supabase query)
-      const sessionsPromise = supabase
-        .from('training_sessions')
-        .select('id, athlete_id, scheduled_date, status, training_type, title')
-        .eq('coach_id', profile.id)
-        .gte('scheduled_date', startDateStr)
-        .lte('scheduled_date', endDateStr)
-        .in('athlete_id', athleteIds);
-
-      // 3. Batch: daily_training_load for weekly volume chart (1 Supabase query)
-      const loadPromise = supabase
-        .from('daily_training_load')
-        .select('athlete_id, date, total_distance_m, total_duration_s, tss')
-        .in('athlete_id', athleteIds)
-        .gte('date', startDateStr)
-        .lte('date', endDateStr)
-        .order('date', { ascending: true });
-
-      // 4. PMC status per athlete (N lightweight queries, 1 row each)
-      const pmcPromise = Promise.allSettled(
-        athleteIds.map(async (id) => {
-          const status = await getCurrentPMCStatus(id);
-          return { athleteId: id, status };
-        })
-      );
-
-      const [sessionsRes, loadRes, pmcResults] = await Promise.all([
-        sessionsPromise,
-        loadPromise,
-        pmcPromise,
-      ]);
-
-      // Process sessions → group by athlete
-      const sessMap = {};
-      (sessionsRes.data || []).forEach(s => {
-        if (!sessMap[s.athlete_id]) sessMap[s.athlete_id] = [];
-        sessMap[s.athlete_id].push(s);
-      });
-      setSessionsByAthlete(sessMap);
-
-      // Process daily_training_load → group by athlete
-      const volMap = {};
-      (loadRes.data || []).forEach(d => {
-        if (!volMap[d.athlete_id]) volMap[d.athlete_id] = [];
-        volMap[d.athlete_id].push(d);
-      });
-      setWeeklyVolumeByAthlete(volMap);
-
-      // Process PMC
-      const pmcMap = {};
-      pmcResults.forEach(r => {
-        if (r.status === 'fulfilled') {
-          pmcMap[r.value.athleteId] = r.value.status;
-        }
-      });
-      setPmcByAthlete(pmcMap);
-    } catch (error) {
-      console.error('Error loading team metrics:', error);
-    } finally {
-      setLoading(false);
-    }
-  }, [profile?.id, dateRange]);
-
-  useEffect(() => {
-    loadData();
-  }, [loadData]);
 
   // ─── Computed: Team Summary ───────────────────────────────────────────────
 

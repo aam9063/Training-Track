@@ -4,97 +4,21 @@ import { motion } from 'framer-motion';
 import { HiMail, HiLockClosed, HiEye, HiEyeOff } from 'react-icons/hi';
 import { FcGoogle } from 'react-icons/fc';
 import { useAuth } from '../contexts/AuthContext';
+import useLoginForm from '../hooks/useLoginForm';
 
 export default function Login() {
-  const { user, loading, signIn, signInWithGoogle } = useAuth();
+  const { user, loading } = useAuth();
+  const { form, isLoading, error, onSubmit, handleGoogleLogin } = useLoginForm();
   const [showPassword, setShowPassword] = useState(false);
-  const [formData, setFormData] = useState({
-    email: '',
-    password: '',
-    rememberMe: false,
-  });
-  const [isLoading, setIsLoading] = useState(false);
-  const [error, setError] = useState('');
 
-  // Redirigir si ya está logueado (NO ESPERAR A LOADING)
+  // Redirigir si ya está logueado
   useEffect(() => {
-    console.log('🔍 useEffect Login - user:', !!user, 'loading:', loading);
     if (user) {
-      console.log('✅ Usuario detectado, verificando rol...');
       const userRole = user.user_metadata?.role || 'coach';
       const redirectPath = userRole === 'athlete' ? '/athlete/dashboard' : '/dashboard';
-      console.log(`🚀 Redirigiendo a ${redirectPath}`);
       window.location.replace(redirectPath);
     }
   }, [user, loading]);
-
-  const handleChange = (e) => {
-    const { name, value, type, checked } = e.target;
-    setFormData(prev => ({
-      ...prev,
-      [name]: type === 'checkbox' ? checked : value,
-    }));
-    setError(''); // Clear error when user types
-  };
-
-  const handleSubmit = async (e) => {
-    e.preventDefault();
-    console.log('🚀 EJECUTANDO HANDLESUBMIT');
-    setIsLoading(true);
-    setError('');
-
-    try {
-      console.log('📧 Intentando login con:', formData.email);
-      const result = await signIn({
-        email: formData.email,
-        password: formData.password,
-      });
-
-      console.log('📦 Resultado signIn:', result);
-
-      if (result.error) {
-        console.error('❌ Error en signIn:', result.error);
-        throw result.error;
-      }
-
-      console.log('✅✅✅ SignIn exitoso, verificando rol...');
-      // Detectar rol del usuario
-      const userRole = result.data?.user?.user_metadata?.role || 'coach';
-      const redirectPath = userRole === 'athlete' ? '/athlete/dashboard' : '/dashboard';
-      
-      console.log(`⚡ NAVEGANDO a ${redirectPath}`);
-      // Forzar navegación con window.location.replace
-      setTimeout(() => {
-        window.location.replace(redirectPath);
-      }, 100);
-      
-    } catch (error) {
-      console.error('❌ Login error:', error);
-      
-      let errorMessage = 'Error al iniciar sesión.';
-      
-      if (error.message?.includes('Email not confirmed')) {
-        errorMessage = 'Debes confirmar tu email antes de iniciar sesión. Revisa tu bandeja de entrada.';
-      } else if (error.message?.includes('Invalid login credentials')) {
-        errorMessage = 'Email o contraseña incorrectos.';
-      } else if (error.message) {
-        errorMessage = error.message;
-      }
-      
-      setError(errorMessage);
-      setIsLoading(false);
-    }
-  };
-
-  const handleGoogleLogin = async () => {
-    try {
-      const { error } = await signInWithGoogle();
-      if (error) throw error;
-    } catch (error) {
-      console.error('Google login error:', error);
-      setError('Error al iniciar sesión con Google');
-    }
-  };
 
   return (
     <div className="min-h-screen flex">
@@ -163,7 +87,7 @@ export default function Login() {
           )}
 
           {/* Form */}
-          <form onSubmit={handleSubmit} className="space-y-6">
+          <form onSubmit={onSubmit} className="space-y-6">
             {/* Email */}
             <div>
               <label htmlFor="email" className="block text-sm font-medium text-gray-700 dark:text-gray-300 mb-2">
@@ -173,15 +97,15 @@ export default function Login() {
                 <HiMail className="absolute left-3 top-1/2 transform -translate-y-1/2 w-5 h-5 text-gray-400" />
                 <input
                   id="email"
-                  name="email"
                   type="email"
-                  required
-                  value={formData.email}
-                  onChange={handleChange}
+                  {...form.register('email')}
                   className="w-full pl-10 pr-4 py-3 border-2 border-gray-200 dark:border-gray-700 rounded-xl bg-white dark:bg-gray-800 text-gray-900 dark:text-white placeholder-gray-400 focus:outline-none focus:border-sky-500 dark:focus:border-sky-400 transition-colors"
                   placeholder="tu@email.com"
                 />
               </div>
+              {form.formState.errors.email && (
+                <p className="mt-1 text-sm text-red-500">{form.formState.errors.email.message}</p>
+              )}
             </div>
 
             {/* Password */}
@@ -193,11 +117,8 @@ export default function Login() {
                 <HiLockClosed className="absolute left-3 top-1/2 transform -translate-y-1/2 w-5 h-5 text-gray-400" />
                 <input
                   id="password"
-                  name="password"
                   type={showPassword ? 'text' : 'password'}
-                  required
-                  value={formData.password}
-                  onChange={handleChange}
+                  {...form.register('password')}
                   className="w-full pl-10 pr-12 py-3 border-2 border-gray-200 dark:border-gray-700 rounded-xl bg-white dark:bg-gray-800 text-gray-900 dark:text-white placeholder-gray-400 focus:outline-none focus:border-sky-500 dark:focus:border-sky-400 transition-colors"
                   placeholder="••••••••"
                 />
@@ -209,6 +130,9 @@ export default function Login() {
                   {showPassword ? <HiEyeOff className="w-5 h-5" /> : <HiEye className="w-5 h-5" />}
                 </button>
               </div>
+              {form.formState.errors.password && (
+                <p className="mt-1 text-sm text-red-500">{form.formState.errors.password.message}</p>
+              )}
             </div>
 
             {/* Remember Me & Forgot Password */}
@@ -216,9 +140,7 @@ export default function Login() {
               <label className="flex items-center">
                 <input
                   type="checkbox"
-                  name="rememberMe"
-                  checked={formData.rememberMe}
-                  onChange={handleChange}
+                  {...form.register('rememberMe')}
                   className="w-4 h-4 text-sky-600 border-gray-300 rounded focus:ring-sky-500"
                 />
                 <span className="ml-2 text-sm text-gray-600 dark:text-gray-400">

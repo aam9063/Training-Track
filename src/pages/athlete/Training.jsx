@@ -1,4 +1,4 @@
-import { useState, useEffect, useCallback, useRef } from 'react';
+import { useState } from 'react';
 import { motion, AnimatePresence } from 'framer-motion';
 import {
   FiChevronLeft,
@@ -25,54 +25,45 @@ import { generateWeeklyPDF } from '../../lib/pdfExport';
 import { useAuth } from '../../contexts/AuthContext';
 import {
   getWeeklyTraining,
-  getWeekStartDate,
   DAYS_OF_WEEK,
   completeSession,
   skipSession,
   revertSession,
 } from '../../services/weeklyTrainingService';
+import useWeeklyTrainings from '../../hooks/useWeeklyTrainings';
 import {
-  isStravaConnected,
-  getStravaActivities,
-  getStravaActivityDetail,
-  formatStravaActivity,
   formatDuration,
   calculatePace,
   getActivityTypeLabel,
-  loadStravaTokens,
 } from '../../services/stravaService';
-import { saveActivityRPE, getActivitiesRPE, getRPEEmoji, RPE_OPTIONS } from '../../services/rpeService';
+import { getRPEEmoji, RPE_OPTIONS } from '../../services/rpeService';
 import { showSuccess, showError } from '../../lib/toast';
-import { supabase } from '../../lib/supabase';
 import RPEModal from '../../components/athlete/RPEModal';
-import mapboxgl from 'mapbox-gl';
-import polyline from '@mapbox/polyline';
-import 'mapbox-gl/dist/mapbox-gl.css';
-
-mapboxgl.accessToken = import.meta.env.VITE_MAPBOX_ACCESS_TOKEN;
+import useMapbox from '../../hooks/useMapbox';
+import useAthleteTestData from '../../hooks/useAthleteTestData';
+import useStravaActivities from '../../hooks/useStravaActivities';
 
 const Training = () => {
   const { profile } = useAuth();
-  const [currentWeek, setCurrentWeek] = useState(getWeekStartDate());
-  const [trainings, setTrainings] = useState({});
-  const [loading, setLoading] = useState(true);
+  const {
+    currentWeek, trainings, loading,
+    loadTrainings, goToPreviousWeek, goToNextWeek, getWeekDays,
+  } = useWeeklyTrainings({
+    fetchFn: (weekStart) => getWeeklyTraining(profile?.id, weekStart),
+    deps: [profile?.id],
+  });
   const [selectedDay, setSelectedDay] = useState(null);
   const [selectedDayIndex, setSelectedDayIndex] = useState(null);
 
-  // Paces, VAM & personal bests state
-  const [athletePaces, setAthletePaces] = useState([]);
-  const [latestVam, setLatestVam] = useState(null);
-  const [latestConconiTest, setLatestConconiTest] = useState(null);
-  const [personalBests, setPersonalBests] = useState([]);
+  const { athletePaces, latestVam, latestConconiTest, personalBests } = useAthleteTestData(profile?.id);
 
-  // Strava state
-  const [stravaConnected, setStravaConnected] = useState(false);
-  const [stravaActivities, setStravaActivities] = useState([]);
-  const [loadingStrava, setLoadingStrava] = useState(false);
-  const [selectedActivity, setSelectedActivity] = useState(null);
-  const [visibleActivities, setVisibleActivities] = useState(5);
-  const [activitiesRPE, setActivitiesRPE] = useState({});
-  const [editRpeActivity, setEditRpeActivity] = useState(null);
+  const {
+    stravaConnected, stravaActivities, loadingStrava,
+    selectedActivity, setSelectedActivity, visibleActivities,
+    activitiesRPE, editRpeActivity, setEditRpeActivity,
+    loadActivityDetail, handleEditRPESave, showMoreActivities,
+  } = useStravaActivities(profile?.id);
+
   // Completion flow state
   const [showCompletionFlow, setShowCompletionFlow] = useState(false);
   const [rpeScore, setRpeScore] = useState(null);
@@ -80,235 +71,9 @@ const Training = () => {
   const [athleteNotes, setAthleteNotes] = useState('');
   const [actualDuration, setActualDuration] = useState('');
   const [saving, setSaving] = useState(false);
-  const mapContainerRef = useRef(null);
-  const mapRef = useRef(null);
-
-  // Load paces & VAM data
-  useEffect(() => {
-    const loadTestData = async () => {
-      if (!profile?.id) return;
-      try {
-        const [pacesRes, vamRes, conconiRes, pbRes] = await Promise.all([
-          supabase.from('athlete_paces').select('*').eq('athlete_id', profile.id).is('valid_until', null).order('pace_code', { ascending: true }),
-          supabase.from('vam_tests').select('*').eq('athlete_id', profile.id).order('test_date', { ascending: false }).limit(1),
-          supabase.from('conconi_tests').select('*, conconi_test_series(*)').eq('athlete_id', profile.id).order('test_date', { ascending: false }).limit(1),
-          supabase.from('personal_bests').select('*').eq('athlete_id', profile.id).order('date', { ascending: false }),
-        ]);
-        setAthletePaces(pacesRes.data || []);
-        setLatestVam(vamRes.data?.[0] || null);
-        setLatestConconiTest(conconiRes.data?.[0] || null);
-        setPersonalBests(pbRes.data || []);
-      } catch (err) {
-        console.error('Error loading test data:', err);
-      }
-    };
-    loadTestData();
-  }, [profile?.id]);
-
-  // Load Strava activities
-  useEffect(() => {
-    const checkStrava = async () => {
-      if (!profile?.id) return;
-      const { connected } = await loadStravaTokens(profile.id);
-      const isConnected = connected || isStravaConnected();
-      setStravaConnected(isConnected);
-
-      if (isConnected) {
-        setLoadingStrava(true);
-        try {
-          const thirtyDaysAgo = Math.floor(Date.now() / 1000) - 30 * 24 * 60 * 60;
-          const { data: activities, error: activitiesError } = await getStravaActivities({
-            after: thirtyDaysAgo,
-            per_page: 50,
-          });
-          if (!activitiesError && activities) {
-            const sorted = activities
-              .sort((a, b) => new Date(b.start_date) - new Date(a.start_date))
-              .map(formatStravaActivity);
-            setStravaActivities(sorted);
-
-            // Fetch RPE for all activities
-            const ids = sorted.map((a) => String(a.id));
-            const { data: rpeMap } = await getActivitiesRPE(profile.id, ids);
-            setActivitiesRPE(rpeMap || {});
-          }
-        } catch (err) {
-          console.error('Error loading Strava activities:', err);
-        }
-        setLoadingStrava(false);
-      }
-    };
-    checkStrava();
-  }, [profile?.id]);
-
-  // Load activity detail
-  const loadActivityDetail = async (activity) => {
-    setSelectedActivity({ ...activity, loading: true });
-    try {
-      const { data, error: detailError } = await getStravaActivityDetail(activity.id);
-      if (detailError) throw detailError;
-      setSelectedActivity({
-        ...activity,
-        loading: false,
-        laps: data.laps || [],
-        splits_metric: data.splits_metric || [],
-        segment_efforts: data.segment_efforts || [],
-        description: data.description,
-        calories: data.calories,
-        device_name: data.device_name,
-        polyline: data.map?.polyline || data.map?.summary_polyline,
-      });
-    } catch (err) {
-      console.error('Error loading activity details:', err);
-      setSelectedActivity({ ...activity, loading: false, error: true });
-    }
-  };
-
-  // Initialize map when activity with polyline is selected
-  useEffect(() => {
-    if (!selectedActivity?.polyline || selectedActivity.loading || !mapContainerRef.current) return;
-    if (mapRef.current) { mapRef.current.remove(); mapRef.current = null; }
-    try {
-      const coordinates = polyline.decode(selectedActivity.polyline).map(([lat, lng]) => [lng, lat]);
-      if (coordinates.length === 0) return;
-      const bounds = coordinates.reduce((b, coord) => b.extend(coord), new mapboxgl.LngLatBounds(coordinates[0], coordinates[0]));
-      const map = new mapboxgl.Map({ container: mapContainerRef.current, style: 'mapbox://styles/mapbox/outdoors-v12', bounds, fitBoundsOptions: { padding: 40 } });
-      mapRef.current = map;
-      map.on('load', () => {
-        map.addSource('route', { type: 'geojson', data: { type: 'Feature', properties: {}, geometry: { type: 'LineString', coordinates } } });
-        map.addLayer({ id: 'route-outline', type: 'line', source: 'route', layout: { 'line-join': 'round', 'line-cap': 'round' }, paint: { 'line-color': '#000', 'line-width': 6, 'line-opacity': 0.3 } });
-        map.addLayer({ id: 'route', type: 'line', source: 'route', layout: { 'line-join': 'round', 'line-cap': 'round' }, paint: { 'line-color': '#f97316', 'line-width': 4 } });
-        new mapboxgl.Marker({ color: '#22c55e' }).setLngLat(coordinates[0]).setPopup(new mapboxgl.Popup().setHTML('<strong>Inicio</strong>')).addTo(map);
-        new mapboxgl.Marker({ color: '#ef4444' }).setLngLat(coordinates[coordinates.length - 1]).setPopup(new mapboxgl.Popup().setHTML('<strong>Fin</strong>')).addTo(map);
-      });
-      map.addControl(new mapboxgl.NavigationControl(), 'top-right');
-      map.addControl(new mapboxgl.FullscreenControl(), 'top-right');
-    } catch (err) { console.error('Error initializing map:', err); }
-    return () => { if (mapRef.current) { mapRef.current.remove(); mapRef.current = null; } };
-  }, [selectedActivity?.polyline, selectedActivity?.loading]);
-
-  // RPE handler
-  const handleEditRPESave = async (score, notes) => {
-    if (!editRpeActivity || !profile?.id) return;
-    await saveActivityRPE(profile.id, String(editRpeActivity.id), score, notes);
-    setActivitiesRPE((prev) => ({ ...prev, [String(editRpeActivity.id)]: { score, notes } }));
-    setEditRpeActivity(null);
-  };
-
-  // Load trainings when week changes
-  const loadTrainings = useCallback(async () => {
-    if (!profile?.id) {
-      setTrainings({});
-      setLoading(false);
-      return;
-    }
-
-    setLoading(true);
-    try {
-      const { data, error } = await getWeeklyTraining(profile.id, currentWeek);
-
-      if (error) throw error;
-
-      // Convert sessions array to day-indexed object
-      const trainingsByDay = {};
-
-      if (data?.length > 0) {
-        data.forEach((session) => {
-          const sessionDate = new Date(session.scheduled_date);
-          const dayIndex = (sessionDate.getDay() + 6) % 7; // Convert to Monday=0
-
-          // Format exercises for display
-          const exercises = session.exercises?.map((ex) => {
-            const exercise = ex.running_exercise || ex.gym_exercise;
-            const isGym = !!ex.gym_exercise_id;
-            return {
-              id: ex.id,
-              name: exercise?.name || 'Ejercicio',
-              category: exercise?.category,
-              isGym,
-              sets: ex.planned_sets,
-              reps: ex.planned_reps,
-              distance: ex.planned_distance_meters,
-              durationSeconds: ex.planned_duration_seconds,
-              weight: ex.planned_weight_kg,
-              paceCode: ex.pace_code,
-              paceDescription: ex.pace_description,
-              rest: ex.rest_seconds,
-              notes: ex.notes,
-              completedSets: ex.completed_sets,
-              completedReps: ex.completed_reps,
-              completedDistance: ex.completed_distance_meters,
-              completedDuration: ex.completed_duration_seconds,
-              completedWeight: ex.completed_weight_kg,
-            };
-          }) || [];
-
-          // Calculate total distance from exercises
-          let totalDistance = 0;
-          exercises.forEach((ex) => {
-            if (ex.distance) {
-              totalDistance += (ex.distance * (ex.sets || 1) * (ex.reps || 1));
-            }
-          });
-
-          trainingsByDay[dayIndex] = {
-            id: session.id,
-            title: session.title || 'Entrenamiento',
-            type: session.training_type,
-            description: session.description,
-            notes: session.notes_coach,
-            notesAthlete: session.notes_athlete,
-            duration: session.estimated_duration_minutes,
-            actualDuration: session.actual_duration_minutes,
-            exercises,
-            totalDistance: totalDistance > 0 ? `${(totalDistance / 1000).toFixed(1)} km` : null,
-            totalDistanceMeters: totalDistance,
-            status: session.status,
-            date: session.scheduled_date,
-            rpeScore: session.rpe_score,
-            rpeNotes: session.rpe_notes,
-            completedAt: session.completed_at,
-          };
-        });
-      }
-
-      setTrainings(trainingsByDay);
-    } catch (error) {
-      console.error('Error loading trainings:', error);
-      setTrainings({});
-    } finally {
-      setLoading(false);
-    }
-  }, [profile?.id, currentWeek]);
-
-  useEffect(() => {
-    loadTrainings();
-  }, [loadTrainings]);
-
-  // Get week days array
-  const getWeekDays = (startDate) => {
-    const week = [];
-    for (let i = 0; i < 7; i++) {
-      const day = new Date(startDate);
-      day.setDate(day.getDate() + i);
-      week.push(day);
-    }
-    return week;
-  };
+  const { mapContainerRef } = useMapbox(selectedActivity?.polyline, selectedActivity?.loading);
 
   const weekDays = getWeekDays(currentWeek);
-
-  const nextWeek = () => {
-    const next = new Date(currentWeek);
-    next.setDate(next.getDate() + 7);
-    setCurrentWeek(next);
-  };
-
-  const prevWeek = () => {
-    const prev = new Date(currentWeek);
-    prev.setDate(prev.getDate() - 7);
-    setCurrentWeek(prev);
-  };
 
   const openDayDetail = (training, dayIndex) => {
     if (training) {
@@ -487,7 +252,7 @@ const Training = () => {
       {/* Week Navigator */}
       <div className="flex items-center justify-between mb-4 sm:mb-6 bg-white dark:bg-gray-800 rounded-lg p-3 sm:p-4 shadow-sm border border-gray-200 dark:border-gray-700">
         <button
-          onClick={prevWeek}
+          onClick={goToPreviousWeek}
           className="p-1.5 sm:p-2 hover:bg-gray-100 dark:hover:bg-gray-700 rounded-lg transition-colors"
         >
           <FiChevronLeft className="w-5 h-5 sm:w-6 sm:h-6 text-gray-600 dark:text-gray-400" />
@@ -503,7 +268,7 @@ const Training = () => {
         </div>
 
         <button
-          onClick={nextWeek}
+          onClick={goToNextWeek}
           className="p-1.5 sm:p-2 hover:bg-gray-100 dark:hover:bg-gray-700 rounded-lg transition-colors"
         >
           <FiChevronRight className="w-5 h-5 sm:w-6 sm:h-6 text-gray-600 dark:text-gray-400" />
@@ -1059,7 +824,7 @@ const Training = () => {
               {visibleActivities < stravaActivities.length && (
                 <div className="text-center pt-2">
                   <button
-                    onClick={(e) => { e.stopPropagation(); setVisibleActivities(prev => prev + 5); }}
+                    onClick={(e) => { e.stopPropagation(); showMoreActivities(); }}
                     className="px-6 py-2.5 bg-[#FC4C02] hover:bg-[#E34402] text-white rounded-lg transition-colors text-sm font-medium"
                   >
                     Cargar más ({stravaActivities.length - visibleActivities} restantes)

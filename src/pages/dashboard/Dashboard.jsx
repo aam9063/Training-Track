@@ -1,4 +1,4 @@
-import { useState, useEffect, useCallback, useRef } from 'react';
+import { useState } from 'react';
 import { Link } from 'react-router-dom';
 import { useAuth } from '../../contexts/AuthContext';
 import { motion, AnimatePresence } from 'framer-motion';
@@ -16,95 +16,20 @@ import {
   FiChevronRight,
 } from 'react-icons/fi';
 import StatCard from '../../components/dashboard/StatCard';
-import {
-  getCoachStats,
-  getCoachWeekSessions,
-  getRecentAthletes,
-} from '../../services/dashboardService';
-import { getWeekStartDate } from '../../services/weeklyTrainingService';
 import { toLocalDateStr } from '../../lib/dateUtils';
+import useCoachDashboard from '../../hooks/useCoachDashboard';
+import { getWeekStartDate } from '../../services/weeklyTrainingService';
 
 const Dashboard = () => {
   const { user, profile } = useAuth();
-  const [stats, setStats] = useState(null);
-  const [recentAthletes, setRecentAthletes] = useState([]);
-  const [loading, setLoading] = useState(true);
-  const [error, setError] = useState(null);
+  const {
+    stats, recentAthletes, loading, error,
+    currentWeekStart, weekSessions, weekLoading,
+    goToPreviousWeek, goToNextWeek, goToCurrentWeek,
+  } = useCoachDashboard(profile?.id);
   const [selectedSession, setSelectedSession] = useState(null);
-  const [currentWeekStart, setCurrentWeekStart] = useState(() => getWeekStartDate(new Date()));
-  const [weekSessions, setWeekSessions] = useState([]);
-  const [weekLoading, setWeekLoading] = useState(false);
 
-  // Ref to prevent double fetching
-  const hasFetched = useRef(false);
-  const currentProfileId = useRef(null);
-
-  // Get display name
   const displayName = profile?.first_name || user?.user_metadata?.first_name || 'Usuario';
-
-  // Memoized load function
-  const loadDashboardData = useCallback(async (profileId) => {
-    if (!profileId) {
-      console.log('Dashboard: No profileId, showing empty state');
-      setStats({ totalAthletes: 0, weekSessions: 0, completedSessions: 0, completionRate: 0 });
-      setRecentAthletes([]);
-      setLoading(false);
-      return;
-    }
-
-    // Prevent duplicate fetches for same profile
-    if (hasFetched.current && currentProfileId.current === profileId) {
-      console.log('Dashboard: Already fetched for this profile, skipping');
-      return;
-    }
-
-    console.log('Dashboard: Loading data for profile:', profileId);
-    setLoading(true);
-    setError(null);
-    hasFetched.current = true;
-    currentProfileId.current = profileId;
-
-    try {
-      // Fetch all data in parallel
-      const [statsRes, athletesRes] = await Promise.all([
-        getCoachStats(profileId),
-        getRecentAthletes(profileId, 5),
-      ]);
-
-      console.log('Dashboard: Data loaded successfully');
-
-      setStats(statsRes.data || { totalAthletes: 0, weekSessions: 0, completedSessions: 0, completionRate: 0 });
-      setRecentAthletes(athletesRes.data || []);
-    } catch (err) {
-      console.error('Dashboard: Error loading data:', err);
-      setError(err.message);
-      // Set empty state on error
-      setStats({ totalAthletes: 0, weekSessions: 0, completedSessions: 0, completionRate: 0 });
-      setRecentAthletes([]);
-    } finally {
-      setLoading(false);
-    }
-  }, []);
-
-  // Effect to load data when profile.id changes
-  useEffect(() => {
-    const profileId = profile?.id;
-
-    // Only fetch if we have a profile ID and it's different from last fetch
-    if (profileId && profileId !== currentProfileId.current) {
-      hasFetched.current = false;
-      loadDashboardData(profileId);
-    } else if (!profileId && !hasFetched.current) {
-      // No profile yet, show loading briefly then empty state
-      const timer = setTimeout(() => {
-        if (!profile?.id) {
-          setLoading(false);
-          setStats({ totalAthletes: 0, weekSessions: 0, completedSessions: 0, completionRate: 0 });
-        }
-      }, 1000);
-      return () => clearTimeout(timer);
-    }
-  }, [profile?.id, loadDashboardData]);
 
   const getStatusColor = (status) => {
     const colors = {
@@ -164,44 +89,6 @@ const Dashboard = () => {
       cross_training: 'bg-orange-50 dark:bg-orange-900/20',
     };
     return colors[type] || 'bg-gray-50 dark:bg-gray-900/20';
-  };
-
-  // Load week sessions
-  const loadWeekSessions = useCallback(async (weekStart) => {
-    if (!profile?.id) return;
-    setWeekLoading(true);
-    try {
-      const res = await getCoachWeekSessions(profile.id, weekStart);
-      setWeekSessions(res.data || []);
-    } catch (err) {
-      console.error('Error loading week sessions:', err);
-      setWeekSessions([]);
-    } finally {
-      setWeekLoading(false);
-    }
-  }, [profile?.id]);
-
-  useEffect(() => {
-    if (profile?.id) {
-      loadWeekSessions(currentWeekStart);
-    }
-  }, [currentWeekStart, profile?.id, loadWeekSessions]);
-
-  // Week navigation
-  const goToPreviousWeek = () => {
-    const prev = new Date(currentWeekStart);
-    prev.setDate(prev.getDate() - 7);
-    setCurrentWeekStart(prev);
-  };
-
-  const goToNextWeek = () => {
-    const next = new Date(currentWeekStart);
-    next.setDate(next.getDate() + 7);
-    setCurrentWeekStart(next);
-  };
-
-  const goToCurrentWeek = () => {
-    setCurrentWeekStart(getWeekStartDate(new Date()));
   };
 
   const getWeekDays = () => {

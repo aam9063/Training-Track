@@ -1,69 +1,13 @@
-import { useState, useEffect } from 'react';
-import { Link, useNavigate } from 'react-router-dom';
+import { useState } from 'react';
+import { Link } from 'react-router-dom';
 import { motion } from 'framer-motion';
 import { HiLockClosed, HiEye, HiEyeOff, HiCheckCircle } from 'react-icons/hi';
-import { useAuth } from '../contexts/AuthContext';
-import { supabase } from '../lib/supabase';
+import useResetPasswordForm from '../hooks/useResetPasswordForm';
 
 export default function ResetPassword() {
-  const navigate = useNavigate();
-  const { updatePassword } = useAuth();
-  const [password, setPassword] = useState('');
-  const [confirmPassword, setConfirmPassword] = useState('');
+  const { form, isLoading, success, sessionReady, onSubmit } = useResetPasswordForm();
   const [showPassword, setShowPassword] = useState(false);
   const [showConfirmPassword, setShowConfirmPassword] = useState(false);
-  const [isLoading, setIsLoading] = useState(false);
-  const [error, setError] = useState('');
-  const [success, setSuccess] = useState(false);
-  const [sessionReady, setSessionReady] = useState(false);
-
-  // Supabase handles the token from the URL automatically via onAuthStateChange
-  useEffect(() => {
-    const { data: { subscription } } = supabase.auth.onAuthStateChange(
-      (event) => {
-        if (event === 'PASSWORD_RECOVERY') {
-          setSessionReady(true);
-        }
-      }
-    );
-
-    // Also check if we already have a session (user clicked link and session was set)
-    supabase.auth.getSession().then(({ data: { session } }) => {
-      if (session) {
-        setSessionReady(true);
-      }
-    });
-
-    return () => subscription.unsubscribe();
-  }, []);
-
-  const handleSubmit = async (e) => {
-    e.preventDefault();
-    setError('');
-
-    if (password.length < 6) {
-      setError('La contraseña debe tener al menos 6 caracteres.');
-      return;
-    }
-
-    if (password !== confirmPassword) {
-      setError('Las contraseñas no coinciden.');
-      return;
-    }
-
-    setIsLoading(true);
-
-    try {
-      const { error } = await updatePassword(password);
-      if (error) throw error;
-      setSuccess(true);
-      setTimeout(() => navigate('/login'), 3000);
-    } catch (err) {
-      setError(err.message || 'Error al actualizar la contraseña.');
-    } finally {
-      setIsLoading(false);
-    }
-  };
 
   return (
     <div className="min-h-screen flex items-center justify-center px-4 sm:px-6 lg:px-8 bg-white dark:bg-gray-900">
@@ -141,17 +85,17 @@ export default function ResetPassword() {
               </p>
             </div>
 
-            {error && (
+            {form.formState.errors.root && (
               <motion.div
                 initial={{ opacity: 0, y: -10 }}
                 animate={{ opacity: 1, y: 0 }}
                 className="p-4 bg-red-50 dark:bg-red-900/20 border border-red-200 dark:border-red-800 rounded-xl"
               >
-                <p className="text-sm text-red-600 dark:text-red-400">{error}</p>
+                <p className="text-sm text-red-600 dark:text-red-400">{form.formState.errors.root.message}</p>
               </motion.div>
             )}
 
-            <form onSubmit={handleSubmit} className="space-y-6">
+            <form onSubmit={onSubmit} className="space-y-6">
               {/* New Password */}
               <div>
                 <label htmlFor="password" className="block text-sm font-medium text-gray-700 dark:text-gray-300 mb-2">
@@ -162,10 +106,7 @@ export default function ResetPassword() {
                   <input
                     id="password"
                     type={showPassword ? 'text' : 'password'}
-                    required
-                    minLength={6}
-                    value={password}
-                    onChange={(e) => { setPassword(e.target.value); setError(''); }}
+                    {...form.register('password')}
                     className="w-full pl-10 pr-12 py-3 border-2 border-gray-200 dark:border-gray-700 rounded-xl bg-white dark:bg-gray-800 text-gray-900 dark:text-white placeholder-gray-400 focus:outline-none focus:border-sky-500 dark:focus:border-sky-400 transition-colors"
                     placeholder="Mínimo 6 caracteres"
                   />
@@ -177,6 +118,9 @@ export default function ResetPassword() {
                     {showPassword ? <HiEyeOff className="w-5 h-5" /> : <HiEye className="w-5 h-5" />}
                   </button>
                 </div>
+                {form.formState.errors.password && (
+                  <p className="mt-1 text-sm text-red-500">{form.formState.errors.password.message}</p>
+                )}
               </div>
 
               {/* Confirm Password */}
@@ -189,10 +133,7 @@ export default function ResetPassword() {
                   <input
                     id="confirmPassword"
                     type={showConfirmPassword ? 'text' : 'password'}
-                    required
-                    minLength={6}
-                    value={confirmPassword}
-                    onChange={(e) => { setConfirmPassword(e.target.value); setError(''); }}
+                    {...form.register('confirmPassword')}
                     className="w-full pl-10 pr-12 py-3 border-2 border-gray-200 dark:border-gray-700 rounded-xl bg-white dark:bg-gray-800 text-gray-900 dark:text-white placeholder-gray-400 focus:outline-none focus:border-sky-500 dark:focus:border-sky-400 transition-colors"
                     placeholder="Repite la contraseña"
                   />
@@ -204,6 +145,9 @@ export default function ResetPassword() {
                     {showConfirmPassword ? <HiEyeOff className="w-5 h-5" /> : <HiEye className="w-5 h-5" />}
                   </button>
                 </div>
+                {form.formState.errors.confirmPassword && (
+                  <p className="mt-1 text-sm text-red-500">{form.formState.errors.confirmPassword.message}</p>
+                )}
               </div>
 
               <motion.button

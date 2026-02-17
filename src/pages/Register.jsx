@@ -1,174 +1,22 @@
-import { useState, useEffect } from 'react';
-import { Link, useNavigate, useSearchParams } from 'react-router-dom';
+import { useState } from 'react';
+import { Link } from 'react-router-dom';
 import { motion, AnimatePresence } from 'framer-motion';
 import { HiUser, HiMail, HiLockClosed, HiEye, HiEyeOff, HiUserGroup, HiAcademicCap, HiArrowLeft, HiLockOpen, HiShieldCheck } from 'react-icons/hi';
 import { FcGoogle } from 'react-icons/fc';
-import { useAuth } from '../contexts/AuthContext';
-import { supabase } from '../lib/supabase';
+import useRegisterForm from '../hooks/useRegisterForm';
 
 // Toggle: set to false to require invite link for registration
 const OPEN_REGISTRATION = false;
 
 export default function Register() {
-  const navigate = useNavigate();
-  const [searchParams] = useSearchParams();
-  const { signUp, signInWithGoogle } = useAuth();
-  const [step, setStep] = useState(1); // 1: role selection, 2: form
-  const [role, setRole] = useState(null); // 'coach' or 'athlete'
+  const {
+    form, step, role, isLoading, successMessage,
+    inviteCoachId, inviteCoachName, loadingInvite,
+    onSubmit, handleGoogleRegister, selectRole, goBack,
+  } = useRegisterForm();
   const [showPassword, setShowPassword] = useState(false);
   const [showConfirmPassword, setShowConfirmPassword] = useState(false);
-  const [isLoading, setIsLoading] = useState(false);
-  const [successMessage, setSuccessMessage] = useState('');
-  const [inviteCoachId, setInviteCoachId] = useState(null);
-  const [inviteCoachName, setInviteCoachName] = useState(null);
-  const [loadingInvite, setLoadingInvite] = useState(false);
-
-  // Detect invite link and fetch coach info
-  useEffect(() => {
-    const inviteId = searchParams.get('invite');
-    if (inviteId) {
-      setLoadingInvite(true);
-      supabase.rpc('get_coach_public_info', { coach_uuid: inviteId })
-        .then(({ data, error }) => {
-          if (!error && data?.length > 0) {
-            setInviteCoachId(inviteId);
-            setInviteCoachName(`${data[0].first_name} ${data[0].last_name}`);
-            setRole('athlete');
-            setStep(2);
-          }
-          setLoadingInvite(false);
-        });
-    }
-  }, [searchParams]);
-
-  const [formData, setFormData] = useState({
-    firstName: '',
-    lastName: '',
-    email: '',
-    password: '',
-    confirmPassword: '',
-    coachEmail: '', // Only for athletes
-    acceptTerms: false,
-  });
-
-  const [errors, setErrors] = useState({});
-
-  const handleChange = (e) => {
-    const { name, value, type, checked } = e.target;
-    setFormData(prev => ({
-      ...prev,
-      [name]: type === 'checkbox' ? checked : value,
-    }));
-    // Clear error when user starts typing
-    if (errors[name]) {
-      setErrors(prev => ({ ...prev, [name]: '' }));
-    }
-  };
-
-  const validateForm = () => {
-    const newErrors = {};
-
-    if (!formData.firstName.trim()) {
-      newErrors.firstName = 'El nombre es requerido';
-    }
-
-    if (!formData.lastName.trim()) {
-      newErrors.lastName = 'El apellido es requerido';
-    }
-
-    if (!formData.email.trim()) {
-      newErrors.email = 'El email es requerido';
-    } else if (!/^[^\s@]+@[^\s@]+/.test(formData.email)) {
-      // Validación más permisiva para desarrollo - solo requiere algo@algo
-      newErrors.email = 'El email debe contener @';
-    }
-
-    if (!formData.password) {
-      newErrors.password = 'La contraseña es requerida';
-    } else if (formData.password.length < 8) {
-      newErrors.password = 'La contraseña debe tener al menos 8 caracteres';
-    }
-
-    if (formData.password !== formData.confirmPassword) {
-      newErrors.confirmPassword = 'Las contraseñas no coinciden';
-    }
-
-    if (role === 'athlete' && !inviteCoachId && !formData.coachEmail.trim()) {
-      newErrors.coachEmail = 'El email de tu entrenador es requerido';
-    } else if (role === 'athlete' && !inviteCoachId && !/^[^\s@]+@[^\s@]+\.[^\s@]+$/.test(formData.coachEmail)) {
-      newErrors.coachEmail = 'Email del entrenador inválido';
-    }
-
-    if (!formData.acceptTerms) {
-      newErrors.acceptTerms = 'Debes aceptar los términos y condiciones';
-    }
-
-    setErrors(newErrors);
-    return Object.keys(newErrors).length === 0;
-  };
-
-  const handleSubmit = async (e) => {
-    e.preventDefault();
-
-    if (!validateForm()) return;
-
-    setIsLoading(true);
-    setErrors({});
-
-    try {
-      const { error } = await signUp({
-        email: formData.email,
-        password: formData.password,
-        role: role,
-        firstName: formData.firstName,
-        lastName: formData.lastName,
-        coachEmail: role === 'athlete' && !inviteCoachId ? formData.coachEmail : null,
-        coachId: inviteCoachId || null,
-      });
-
-      if (error) throw error;
-
-      // Show success message
-      setSuccessMessage('¡Cuenta creada exitosamente! Redirigiendo al login...');
-
-      // Redirect to login after 2 seconds
-      setTimeout(() => {
-        navigate('/login');
-      }, 2000);
-    } catch (error) {
-      console.error('Registration error:', error);
-      setErrors({
-        general: error.message || 'Error al crear la cuenta. Intenta de nuevo.'
-      });
-    } finally {
-      setIsLoading(false);
-    }
-  };
-
-  const handleGoogleRegister = async () => {
-    if (!role) {
-      setErrors({ general: 'Por favor selecciona tu rol primero' });
-      return;
-    }
-
-    try {
-      const { error } = await signInWithGoogle();
-      if (error) throw error;
-    } catch (error) {
-      console.error('Google register error:', error);
-      setErrors({ general: 'Error al registrar con Google' });
-    }
-  };
-
-  const selectRole = (selectedRole) => {
-    setRole(selectedRole);
-    setStep(2);
-  };
-
-  const goBack = () => {
-    setStep(1);
-    setRole(null);
-  };
+  const { errors } = form.formState;
 
   return (
     <div className="min-h-screen flex">
@@ -392,18 +240,18 @@ export default function Register() {
                 )}
 
                 {/* Error Message */}
-                {errors.general && (
+                {errors.root && (
                   <motion.div
                     initial={{ opacity: 0, y: -10 }}
                     animate={{ opacity: 1, y: 0 }}
                     className="p-4 bg-red-50 dark:bg-red-900/20 border border-red-200 dark:border-red-800 rounded-xl"
                   >
-                    <p className="text-sm text-red-600 dark:text-red-400">{errors.general}</p>
+                    <p className="text-sm text-red-600 dark:text-red-400">{errors.root.message}</p>
                   </motion.div>
                 )}
 
                 {/* Form */}
-                <form onSubmit={handleSubmit} className="space-y-4">
+                <form onSubmit={onSubmit} className="space-y-4">
                   {/* Name Fields */}
                   <div className="grid grid-cols-2 gap-4">
                     <div>
@@ -414,10 +262,8 @@ export default function Register() {
                         <HiUser className="absolute left-3 top-1/2 transform -translate-y-1/2 w-5 h-5 text-gray-400" />
                         <input
                           id="firstName"
-                          name="firstName"
                           type="text"
-                          value={formData.firstName}
-                          onChange={handleChange}
+                          {...form.register('firstName')}
                           className={`w-full pl-10 pr-4 py-3 border-2 rounded-xl bg-white dark:bg-gray-800 text-gray-900 dark:text-white placeholder-gray-400 focus:outline-none transition-colors ${errors.firstName
                               ? 'border-red-500 focus:border-red-500'
                               : 'border-gray-200 dark:border-gray-700 focus:border-sky-500 dark:focus:border-sky-400'
@@ -426,7 +272,7 @@ export default function Register() {
                         />
                       </div>
                       {errors.firstName && (
-                        <p className="mt-1 text-sm text-red-500">{errors.firstName}</p>
+                        <p className="mt-1 text-sm text-red-500">{errors.firstName.message}</p>
                       )}
                     </div>
 
@@ -436,10 +282,8 @@ export default function Register() {
                       </label>
                       <input
                         id="lastName"
-                        name="lastName"
                         type="text"
-                        value={formData.lastName}
-                        onChange={handleChange}
+                        {...form.register('lastName')}
                         className={`w-full px-4 py-3 border-2 rounded-xl bg-white dark:bg-gray-800 text-gray-900 dark:text-white placeholder-gray-400 focus:outline-none transition-colors ${errors.lastName
                             ? 'border-red-500 focus:border-red-500'
                             : 'border-gray-200 dark:border-gray-700 focus:border-sky-500 dark:focus:border-sky-400'
@@ -447,7 +291,7 @@ export default function Register() {
                         placeholder="Pérez"
                       />
                       {errors.lastName && (
-                        <p className="mt-1 text-sm text-red-500">{errors.lastName}</p>
+                        <p className="mt-1 text-sm text-red-500">{errors.lastName.message}</p>
                       )}
                     </div>
                   </div>
@@ -461,10 +305,8 @@ export default function Register() {
                       <HiMail className="absolute left-3 top-1/2 transform -translate-y-1/2 w-5 h-5 text-gray-400" />
                       <input
                         id="email"
-                        name="email"
                         type="email"
-                        value={formData.email}
-                        onChange={handleChange}
+                        {...form.register('email')}
                         className={`w-full pl-10 pr-4 py-3 border-2 rounded-xl bg-white dark:bg-gray-800 text-gray-900 dark:text-white placeholder-gray-400 focus:outline-none transition-colors ${errors.email
                             ? 'border-red-500 focus:border-red-500'
                             : 'border-gray-200 dark:border-gray-700 focus:border-sky-500 dark:focus:border-sky-400'
@@ -473,7 +315,7 @@ export default function Register() {
                       />
                     </div>
                     {errors.email && (
-                      <p className="mt-1 text-sm text-red-500">{errors.email}</p>
+                      <p className="mt-1 text-sm text-red-500">{errors.email.message}</p>
                     )}
                   </div>
 
@@ -512,10 +354,8 @@ export default function Register() {
                         <HiAcademicCap className="absolute left-3 top-1/2 transform -translate-y-1/2 w-5 h-5 text-gray-400" />
                         <input
                           id="coachEmail"
-                          name="coachEmail"
                           type="email"
-                          value={formData.coachEmail}
-                          onChange={handleChange}
+                          {...form.register('coachEmail')}
                           className={`w-full pl-10 pr-4 py-3 border-2 rounded-xl bg-white dark:bg-gray-800 text-gray-900 dark:text-white placeholder-gray-400 focus:outline-none transition-colors ${errors.coachEmail
                               ? 'border-red-500 focus:border-red-500'
                               : 'border-gray-200 dark:border-gray-700 focus:border-sky-500 dark:focus:border-sky-400'
@@ -524,7 +364,7 @@ export default function Register() {
                         />
                       </div>
                       {errors.coachEmail && (
-                        <p className="mt-1 text-sm text-red-500">{errors.coachEmail}</p>
+                        <p className="mt-1 text-sm text-red-500">{errors.coachEmail.message}</p>
                       )}
                       <p className="mt-1 text-xs text-gray-500 dark:text-gray-400">
                         Tu entrenador recibirá una notificación para aceptarte en su equipo
@@ -541,10 +381,8 @@ export default function Register() {
                       <HiLockClosed className="absolute left-3 top-1/2 transform -translate-y-1/2 w-5 h-5 text-gray-400" />
                       <input
                         id="password"
-                        name="password"
                         type={showPassword ? 'text' : 'password'}
-                        value={formData.password}
-                        onChange={handleChange}
+                        {...form.register('password')}
                         className={`w-full pl-10 pr-12 py-3 border-2 rounded-xl bg-white dark:bg-gray-800 text-gray-900 dark:text-white placeholder-gray-400 focus:outline-none transition-colors ${errors.password
                             ? 'border-red-500 focus:border-red-500'
                             : 'border-gray-200 dark:border-gray-700 focus:border-sky-500 dark:focus:border-sky-400'
@@ -560,7 +398,7 @@ export default function Register() {
                       </button>
                     </div>
                     {errors.password && (
-                      <p className="mt-1 text-sm text-red-500">{errors.password}</p>
+                      <p className="mt-1 text-sm text-red-500">{errors.password.message}</p>
                     )}
                   </div>
 
@@ -573,10 +411,8 @@ export default function Register() {
                       <HiLockClosed className="absolute left-3 top-1/2 transform -translate-y-1/2 w-5 h-5 text-gray-400" />
                       <input
                         id="confirmPassword"
-                        name="confirmPassword"
                         type={showConfirmPassword ? 'text' : 'password'}
-                        value={formData.confirmPassword}
-                        onChange={handleChange}
+                        {...form.register('confirmPassword')}
                         className={`w-full pl-10 pr-12 py-3 border-2 rounded-xl bg-white dark:bg-gray-800 text-gray-900 dark:text-white placeholder-gray-400 focus:outline-none transition-colors ${errors.confirmPassword
                             ? 'border-red-500 focus:border-red-500'
                             : 'border-gray-200 dark:border-gray-700 focus:border-sky-500 dark:focus:border-sky-400'
@@ -592,7 +428,7 @@ export default function Register() {
                       </button>
                     </div>
                     {errors.confirmPassword && (
-                      <p className="mt-1 text-sm text-red-500">{errors.confirmPassword}</p>
+                      <p className="mt-1 text-sm text-red-500">{errors.confirmPassword.message}</p>
                     )}
                   </div>
 
@@ -601,9 +437,7 @@ export default function Register() {
                     <label className="flex items-start">
                       <input
                         type="checkbox"
-                        name="acceptTerms"
-                        checked={formData.acceptTerms}
-                        onChange={handleChange}
+                        {...form.register('acceptTerms')}
                         className="w-4 h-4 mt-1 text-sky-600 border-gray-300 rounded focus:ring-sky-500"
                       />
                       <span className="ml-2 text-sm text-gray-600 dark:text-gray-400">
@@ -618,7 +452,7 @@ export default function Register() {
                       </span>
                     </label>
                     {errors.acceptTerms && (
-                      <p className="mt-1 text-sm text-red-500">{errors.acceptTerms}</p>
+                      <p className="mt-1 text-sm text-red-500">{errors.acceptTerms.message}</p>
                     )}
                   </div>
 

@@ -8,6 +8,7 @@ import AIReports from '../components/landing/AIReports';
 import Testimonials from '../components/landing/Testimonials';
 import Pricing from '../components/landing/Pricing';
 import FAQ from '../components/landing/FAQ';
+import BlogPreview from '../components/landing/BlogPreview';
 import FinalCTA from '../components/landing/FinalCTA';
 import Footer from '../components/landing/Footer';
 import ScrollToTop from '../components/landing/ScrollToTop';
@@ -36,6 +37,7 @@ export default function Landing() {
       <Testimonials />
       <Pricing />
       <FAQ />
+      <BlogPreview />
       <FinalCTA />
       <Footer />
       <ScrollToTop />

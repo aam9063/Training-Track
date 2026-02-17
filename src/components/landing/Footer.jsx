@@ -15,7 +15,7 @@ export default function Footer() {
     ],
     company: [
       { name: 'Sobre Nosotros', href: '#conocenos' },
-      { name: 'Blog', href: '/not-found' },
+      { name: 'Blog', href: '/blog' },
       { name: 'Carreras', href: '/not-found' },
       { name: 'Prensa', href: '/not-found' },
     ],

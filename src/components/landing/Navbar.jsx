@@ -12,6 +12,7 @@ export default function Navbar() {
   const navigate = useNavigate();
 
   const isLanding = location.pathname === '/';
+  const hasDarkHero = location.pathname.startsWith('/blog') || location.pathname === '/casos-de-uso';
 
   useEffect(() => {
     const handleScroll = () => {
@@ -28,9 +29,17 @@ export default function Navbar() {
     { name: 'Informes IA', href: '#informes-ia' },
     { name: 'Pricing', href: '#pricing' },
     { name: 'FAQ', href: '#faq' },
+    { name: 'Blog', href: '/blog' },
   ];
 
   const scrollToSection = (href, fromMobile = false) => {
+    // Route links (e.g. /blog) → navigate directly
+    if (href.startsWith('/')) {
+      navigate(href);
+      if (fromMobile) setIsMobileMenuOpen(false);
+      return;
+    }
+
     if (!isLanding) {
       // Navigate to landing with the hash
       navigate('/' + href);
@@ -80,8 +89,8 @@ export default function Navbar() {
               <div className="w-10 h-10 bg-sky-600 rounded-lg flex items-center justify-center overflow-hidden">
                 <img src="/img/logo.png" alt="TrainingTrackPro" className="w-16 h-16 object-contain" />
               </div>
-              <span className="text-2xl font-bold text-gray-900 dark:text-white">
-                TrainingTrack<span className="text-sky-600 dark:text-sky-400">Pro</span>
+              <span className={`text-2xl font-bold ${!isScrolled && hasDarkHero ? 'text-white' : 'text-gray-900 dark:text-white'}`}>
+                TrainingTrack<span className={!isScrolled && hasDarkHero ? 'text-sky-400' : 'text-sky-600 dark:text-sky-400'}>Pro</span>
               </span>
             </a>
           </motion.div>
@@ -99,7 +108,11 @@ export default function Navbar() {
                   e.preventDefault();
                   scrollToSection(link.href);
                 }}
-                className="text-gray-700 dark:text-gray-300 hover:text-sky-600 dark:hover:text-sky-400 transition-colors duration-200 font-medium"
+                className={`${
+                  !isScrolled && hasDarkHero
+                    ? 'text-white/90 hover:text-white'
+                    : 'text-gray-700 dark:text-gray-300 hover:text-sky-600 dark:hover:text-sky-400'
+                } transition-colors duration-200 font-medium`}
               >
                 {link.name}
               </motion.a>
@@ -114,11 +127,15 @@ export default function Navbar() {
               animate={{ opacity: 1, scale: 1 }}
               transition={{ delay: 0.3 }}
               onClick={toggleTheme}
-              className="p-2 rounded-lg bg-gray-200 dark:bg-gray-700 hover:bg-gray-300 dark:hover:bg-gray-600 transition-colors duration-200"
+              className={`p-2 rounded-lg transition-colors duration-200 ${
+                !isScrolled && hasDarkHero
+                  ? 'bg-white/20 hover:bg-white/30'
+                  : 'bg-gray-200 dark:bg-gray-700 hover:bg-gray-300 dark:hover:bg-gray-600'
+              }`}
               aria-label="Toggle theme"
             >
               {theme === 'light' ? (
-                <HiMoon className="w-5 h-5 text-gray-700" />
+                <HiMoon className={`w-5 h-5 ${!isScrolled && hasDarkHero ? 'text-white' : 'text-gray-700'}`} />
               ) : (
                 <HiSun className="w-5 h-5 text-yellow-400" />
               )}
@@ -130,7 +147,11 @@ export default function Navbar() {
                 initial={{ opacity: 0, x: 20 }}
                 animate={{ opacity: 1, x: 0 }}
                 transition={{ delay: 0.4 }}
-                className="px-6 py-2.5 text-gray-700 dark:text-gray-300 hover:text-sky-600 dark:hover:text-sky-400 font-medium transition-colors duration-200"
+                className={`px-6 py-2.5 ${
+                  !isScrolled && hasDarkHero
+                    ? 'text-white/90 hover:text-white'
+                    : 'text-gray-700 dark:text-gray-300 hover:text-sky-600 dark:hover:text-sky-400'
+                } font-medium transition-colors duration-200`}
               >
                 Iniciar Sesión
               </motion.button>
@@ -153,11 +174,15 @@ export default function Navbar() {
           <div className="md:hidden flex items-center space-x-3">
             <button
               onClick={toggleTheme}
-              className="p-2 rounded-lg bg-gray-200 dark:bg-gray-700"
+              className={`p-2 rounded-lg ${
+                !isScrolled && hasDarkHero
+                  ? 'bg-white/20'
+                  : 'bg-gray-200 dark:bg-gray-700'
+              }`}
               aria-label="Toggle theme"
             >
               {theme === 'light' ? (
-                <HiMoon className="w-5 h-5 text-gray-700" />
+                <HiMoon className={`w-5 h-5 ${!isScrolled && hasDarkHero ? 'text-white' : 'text-gray-700'}`} />
               ) : (
                 <HiSun className="w-5 h-5 text-yellow-400" />
               )}
@@ -165,13 +190,17 @@ export default function Navbar() {
 
             <button
               onClick={() => setIsMobileMenuOpen(!isMobileMenuOpen)}
-              className="p-2 rounded-lg bg-gray-200 dark:bg-gray-700"
+              className={`p-2 rounded-lg ${
+                !isScrolled && hasDarkHero
+                  ? 'bg-white/20'
+                  : 'bg-gray-200 dark:bg-gray-700'
+              }`}
               aria-label="Toggle menu"
             >
               {isMobileMenuOpen ? (
-                <HiX className="w-6 h-6 text-gray-700 dark:text-gray-300" />
+                <HiX className={`w-6 h-6 ${!isScrolled && hasDarkHero ? 'text-white' : 'text-gray-700 dark:text-gray-300'}`} />
               ) : (
-                <HiMenu className="w-6 h-6 text-gray-700 dark:text-gray-300" />
+                <HiMenu className={`w-6 h-6 ${!isScrolled && hasDarkHero ? 'text-white' : 'text-gray-700 dark:text-gray-300'}`} />
               )}
             </button>
           </div>

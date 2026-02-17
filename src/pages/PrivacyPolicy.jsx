@@ -38,10 +38,10 @@ export default function PrivacyPolicy() {
                 1. Responsable del tratamiento
               </h2>
               <ul className="list-none space-y-1 pl-0">
-                <li><strong>Titular:</strong> TrainingTrack Pro</li>
-                <li><strong>Correo electronico:</strong> contacto@trainingtrackpro.com</li>
+                <li><strong>Titular:</strong> Training Track</li>
+                <li><strong>Correo electronico:</strong> contacto@trainingtrack.com</li>
                 <li><strong>Domicilio:</strong> Alicante, Espana</li>
-                <li><strong>Sitio web:</strong> https://trainingtrackpro.com</li>
+                <li><strong>Sitio web:</strong> https://trainingtrack.com</li>
               </ul>
             </section>
 
@@ -221,7 +221,7 @@ export default function PrivacyPolicy() {
                 6. Integraciones con terceros
               </h2>
               <p>
-                TrainingTrack Pro se integra con los siguientes servicios de terceros para la sincronizacion
+                Training Track se integra con los siguientes servicios de terceros para la sincronizacion
                 de datos de actividad deportiva:
               </p>
 
@@ -229,7 +229,7 @@ export default function PrivacyPolicy() {
                 6.1. Strava
               </h3>
               <p>
-                Al conectar tu cuenta de Strava, autorizas a TrainingTrack Pro a acceder a tus datos de actividad
+                Al conectar tu cuenta de Strava, autorizas a Training Track a acceder a tus datos de actividad
                 a traves de la API de Strava. Puedes revocar este acceso en cualquier momento desde la configuracion
                 de tu cuenta de Strava (<a href="https://www.strava.com/settings/apps" className="text-sky-600 dark:text-sky-400 underline" target="_blank" rel="noopener noreferrer">strava.com/settings/apps</a>)
                 o desde la seccion de Dispositivos de tu perfil.
@@ -239,7 +239,7 @@ export default function PrivacyPolicy() {
                 6.2. COROS
               </h3>
               <p>
-                Al conectar tu cuenta de COROS, autorizas a TrainingTrack Pro a acceder a tus datos de entrenamiento
+                Al conectar tu cuenta de COROS, autorizas a Training Track a acceder a tus datos de entrenamiento
                 a traves de la API de COROS. Puedes revocar este acceso en cualquier momento desde la configuracion de
                 tu cuenta de COROS o desde la plataforma.
               </p>
@@ -248,7 +248,7 @@ export default function PrivacyPolicy() {
                 6.3. Garmin Connect
               </h3>
               <p>
-                Al conectar tu cuenta de Garmin, autorizas a TrainingTrack Pro a acceder a tus datos de actividad
+                Al conectar tu cuenta de Garmin, autorizas a Training Track a acceder a tus datos de actividad
                 a traves de la API de Garmin Connect. Puedes revocar este acceso desde
                 la configuracion de aplicaciones de tu cuenta de Garmin o desde la plataforma.
               </p>
@@ -266,7 +266,7 @@ export default function PrivacyPolicy() {
                 7. Uso de inteligencia artificial
               </h2>
               <p>
-                TrainingTrack Pro utiliza modelos de inteligencia artificial para generar informes de rendimiento
+                Training Track utiliza modelos de inteligencia artificial para generar informes de rendimiento
                 deportivo. Este procesamiento:
               </p>
               <ul className="list-disc pl-6 space-y-1">
@@ -357,8 +357,8 @@ export default function PrivacyPolicy() {
               </ul>
               <p className="mt-3">
                 Para ejercer cualquiera de estos derechos, puedes contactar con nosotros en{' '}
-                <a href="mailto:contacto@trainingtrackpro.com" className="text-sky-600 dark:text-sky-400 underline">
-                  contacto@trainingtrackpro.com
+                <a href="mailto:contacto@trainingtrack.com" className="text-sky-600 dark:text-sky-400 underline">
+                  contacto@trainingtrack.com
                 </a>
                 , indicando tu nombre completo, correo electronico asociado a tu cuenta y el derecho que deseas ejercer.
                 Responderemos en un plazo maximo de 30 dias.
@@ -398,7 +398,7 @@ export default function PrivacyPolicy() {
                 13. Politica de cookies
               </h2>
               <p>
-                TrainingTrack Pro utiliza cookies para el funcionamiento del servicio. Para mas informacion,
+                Training Track utiliza cookies para el funcionamiento del servicio. Para mas informacion,
                 consulta el banner de consentimiento de cookies que se muestra al acceder a la plataforma.
               </p>
               <p className="mt-2">Tipos de cookies utilizadas:</p>
@@ -420,7 +420,7 @@ export default function PrivacyPolicy() {
               </h2>
               <p>
                 Conforme al articulo 7 de la LOPD-GDD, el tratamiento de datos de menores de 14 anos requiere
-                el consentimiento de sus padres o tutores legales. TrainingTrack Pro no recopila deliberadamente
+                el consentimiento de sus padres o tutores legales. Training Track no recopila deliberadamente
                 datos de menores de 14 anos sin dicho consentimiento. Si eres menor de 14 anos, debes contar con
                 la autorizacion de tu padre, madre o tutor legal para registrarte.
               </p>
@@ -449,7 +449,7 @@ export default function PrivacyPolicy() {
                 personales, puedes contactar con nosotros en:
               </p>
               <ul className="list-none pl-0 space-y-1 mt-2">
-                <li><strong>Email:</strong> contacto@trainingtrackpro.com</li>
+                <li><strong>Email:</strong> contacto@trainingtrack.com</li>
                 <li><strong>Direccion:</strong> Alicante, Espana</li>
               </ul>
             </section>

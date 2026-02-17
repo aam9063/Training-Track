@@ -119,10 +119,10 @@ const AthleteSidebar = ({ onCollapse }) => {
         {/* Logo & Toggle */}
         <div className={`h-16 flex items-center border-b border-gray-200 dark:border-gray-700 ${collapsed ? 'justify-center px-2' : 'justify-between px-4'}`}>
           <Link to="/athlete/dashboard" className={`flex items-center ${collapsed ? '' : 'space-x-2'}`}>
-            <img src="/img/logo.png" alt="TrainingTrackPro" className="w-8 h-8 object-contain flex-shrink-0" />
+            <img src="/img/logo.png" alt="trainingtrack" className="w-8 h-8 object-contain flex-shrink-0" />
             {!collapsed && (
               <span className="text-xl font-bold text-gray-900 dark:text-white">
-                TrainingTrack<span className="text-green-600">Pro</span>
+                Training<span className="text-green-600">Track</span>
               </span>
             )}
           </Link>

@@ -240,7 +240,7 @@ export default function UseCases() {
               </span>
             </h1>
             <p className="text-lg sm:text-xl text-gray-600 dark:text-gray-400 max-w-3xl mx-auto leading-relaxed">
-              Descubre todas las funcionalidades que TrainingTrack Pro pone a disposición
+              Descubre todas las funcionalidades que Training Track pone a disposición
               de entrenadores y atletas para llevar el rendimiento al siguiente nivel.
             </p>
           </motion.div>

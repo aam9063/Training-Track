@@ -86,7 +86,7 @@ export default function Article() {
         caption="El punto de deflexión en la gráfica velocidad-FC indica el umbral anaeróbico."
       />
 
-      <H2>Automatización del test con TrainingTrack Pro</H2>
+      <H2>Automatización del test con Training Track</H2>
       <P>
         Nuestra plataforma permite subir los datos del test de Conconi directamente desde un archivo
         Excel. El sistema calcula automáticamente los 11 ritmos de entrenamiento (RR, R1-R10) con

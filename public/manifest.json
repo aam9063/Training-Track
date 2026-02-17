@@ -1,6 +1,6 @@
 {
-  "name": "TrainingTrack Pro",
-  "short_name": "TrainingTrack",
+  "name": "Training Track",
+  "short_name": "Training Track",
   "description": "Plataforma de gestión de entrenamientos de atletismo para entrenadores y atletas",
   "start_url": "/",
   "display": "standalone",

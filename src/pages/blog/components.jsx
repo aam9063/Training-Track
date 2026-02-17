@@ -82,7 +82,7 @@ export function InternalLink({ to, children }) {
   );
 }
 
-export function CTA({ text = 'Prueba TrainingTrack Pro gratis', href = '/register' }) {
+export function CTA({ text = 'Prueba Training Track gratis', href = '/register' }) {
   return (
     <div className="my-10 p-6 bg-sky-50 dark:bg-sky-900/20 rounded-2xl border border-sky-200 dark:border-sky-800 text-center">
       <p className="text-gray-700 dark:text-gray-300 mb-4 text-lg">{text}</p>

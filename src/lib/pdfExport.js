@@ -508,7 +508,7 @@ export const generateWeeklyPDF = ({
   doc.setFont('helvetica', 'normal');
   doc.setTextColor(150, 150, 150);
   doc.text(
-    `Generado el ${new Date().toLocaleDateString('es-ES')} | TrainingTrack Pro`,
+    `Generado el ${new Date().toLocaleDateString('es-ES')} | Training Track`,
     PAGE_W / 2,
     207,
     { align: 'center' }

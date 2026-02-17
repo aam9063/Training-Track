@@ -40,7 +40,7 @@ export default function FinalCTA() {
             </h2>
 
             <p className="text-xl text-sky-100 mb-8 leading-relaxed">
-              Únete a miles de atletas que ya han mejorado sus marcas con TrainingTrack Pro.
+              Únete a miles de atletas que ya han mejorado sus marcas con Training Track.
               Prueba gratis durante 14 días, sin compromiso.
             </p>
 

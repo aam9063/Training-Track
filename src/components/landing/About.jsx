@@ -110,7 +110,7 @@ export default function About() {
               <span className="animate-ping absolute inline-flex h-full w-full rounded-full bg-sky-400 opacity-75"></span>
               <span className="relative inline-flex rounded-full h-2 w-2 bg-sky-500"></span>
             </span>
-            CONOCE TRAINING TRACK PRO
+            CONOCE TRAINING TRACK
           </motion.span>
 
           <h2 className="text-4xl sm:text-5xl lg:text-6xl font-bold text-gray-900 dark:text-white mb-6 leading-tight">
@@ -212,7 +212,7 @@ export default function About() {
                     </div>
                     <div>
                       <p className="text-gray-900 dark:text-white font-medium">Envío de entrenamientos</p>
-                      <p className="text-gray-500 dark:text-gray-400 text-sm">Planifica en TrainingTrack Pro y aparece en tu dispositivo</p>
+                      <p className="text-gray-500 dark:text-gray-400 text-sm">Planifica en Training Track y aparece en tu dispositivo</p>
                     </div>
                   </div>
 
@@ -253,7 +253,7 @@ export default function About() {
                     transition={{ duration: 0.5, delay: 0.3 }}
                     className="absolute top-1/2 left-1/2 transform -translate-x-1/2 -translate-y-1/2 w-24 h-24 bg-sky-600 rounded-2xl flex items-center justify-center shadow-2xl z-10"
                   >
-                    <img src="/img/logo.png" alt="TrainingTrackPro" className="w-full h-full object-contain" />
+                    <img src="/img/logo.png" alt="Training Track" className="w-full h-full object-contain" />
                   </motion.div>
 
                   {/* Integration logos positioned in a circle */}

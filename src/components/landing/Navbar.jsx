@@ -87,10 +87,10 @@ export default function Navbar() {
               }
             }} className="flex items-center space-x-2">
               <div className="w-10 h-10 bg-sky-600 rounded-lg flex items-center justify-center overflow-hidden">
-                <img src="/img/logo.png" alt="TrainingTrackPro" className="w-16 h-16 object-contain" />
+                <img src="/img/logo.png" alt="trainingtrack" className="w-16 h-16 object-contain" />
               </div>
               <span className={`text-2xl font-bold ${!isScrolled && hasDarkHero ? 'text-white' : 'text-gray-900 dark:text-white'}`}>
-                TrainingTrack<span className={!isScrolled && hasDarkHero ? 'text-sky-400' : 'text-sky-600 dark:text-sky-400'}>Pro</span>
+                Training<span className={!isScrolled && hasDarkHero ? 'text-sky-400' : 'text-sky-600 dark:text-sky-400'}>Track</span>
               </span>
             </a>
           </motion.div>

@@ -1,7 +1,7 @@
 import { useEffect } from 'react';
 
-const SITE_NAME = 'TrainingTrack Pro';
-const BASE_URL = 'https://trainingtrackpro.com';
+const SITE_NAME = 'Training Track';
+const BASE_URL = 'https://trainingtrack.com';
 const DEFAULT_IMAGE = `${BASE_URL}/img/og-image.png`;
 
 /**

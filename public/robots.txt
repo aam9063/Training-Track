@@ -3,4 +3,4 @@ Allow: /
 Disallow: /dashboard/
 Disallow: /athlete/
 
-Sitemap: https://trainingtrackpro.com/sitemap.xml
+Sitemap: https://trainingtrack.com/sitemap.xml

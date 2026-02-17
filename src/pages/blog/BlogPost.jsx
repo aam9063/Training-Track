@@ -41,20 +41,20 @@ export default function BlogPost() {
       author: {
         '@type': 'Organization',
         name: article.author,
-        url: 'https://trainingtrackpro.com',
+        url: 'https://trainingtrack.com',
       },
       publisher: {
         '@type': 'Organization',
-        name: 'TrainingTrack Pro',
-        url: 'https://trainingtrackpro.com',
+        name: 'Training Track',
+        url: 'https://trainingtrack.com',
         logo: {
           '@type': 'ImageObject',
-          url: 'https://trainingtrackpro.com/img/logo.png',
+          url: 'https://trainingtrack.com/img/logo.png',
         },
       },
       mainEntityOfPage: {
         '@type': 'WebPage',
-        '@id': `https://trainingtrackpro.com/blog/${article.slug}`,
+        '@id': `https://trainingtrack.com/blog/${article.slug}`,
       },
     },
   });

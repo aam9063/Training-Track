@@ -109,9 +109,9 @@ export default function Login() {
           {/* Logo */}
           <div className="text-center">
             <Link to="/" className="inline-flex items-center space-x-2">
-              <img src="/img/logo.png" alt="TrainingTrackPro" className="w-12 h-12 object-contain" />
+              <img src="/img/logo.png" alt="TrainingTrack" className="w-12 h-12 object-contain" />
               <span className="text-3xl font-bold text-sky-600 dark:text-sky-400">
-                TrainingTrack Pro
+                Training Track
               </span>
             </Link>
           </div>
@@ -287,7 +287,7 @@ export default function Login() {
               Gestiona tus entrenamientos como un profesional
             </h2>
             <p className="text-xl text-sky-100 mb-8">
-              Únete a cientos de entrenadores y atletas que ya confían en TrainingTrack Pro para alcanzar sus metas.
+              Únete a cientos de entrenadores y atletas que ya confían en Training Track para alcanzar sus metas.
             </p>
 
             {/* Stats */}

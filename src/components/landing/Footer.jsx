@@ -63,10 +63,10 @@ export default function Footer() {
             >
               <div className="flex items-center space-x-2 mb-4">
                 <div className="w-10 h-10 bg-sky-600 rounded-lg flex items-center justify-center">
-                <img src="/img/logo.png" alt="TrainingTrackPro" className="w-16 h-16 object-contain" />
+                <img src="/img/logo.png" alt="TrainingTrack" className="w-16 h-16 object-contain" />
 
                 </div>
-                <span className="text-2xl font-bold text-gray-900 dark:text-white">TrainingTrackPro</span>
+                <span className="text-2xl font-bold text-gray-900 dark:text-white">TrainingTrack</span>
               </div>
 
               <p className="text-gray-500 dark:text-gray-400 mb-6 leading-relaxed">
@@ -78,7 +78,7 @@ export default function Footer() {
               <div className="space-y-3 text-gray-500 dark:text-gray-300">
                 <div className="flex items-center space-x-3 text-sm">
                   <HiMail className="w-5 h-5 text-sky-500" />
-                  <span>contacto@trainingtrackpro.com</span>
+                  <span>contacto@trainingtrack.com</span>
                 </div>
                 <div className="flex items-center space-x-3 text-sm">
                   <HiPhone className="w-5 h-5 text-sky-500" />

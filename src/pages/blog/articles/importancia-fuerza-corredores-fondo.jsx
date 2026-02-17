@@ -115,7 +115,7 @@ export default function Article() {
 
       <H2>Planificación integrada de carrera y fuerza</H2>
       <P>
-        Con TrainingTrack Pro, los entrenadores pueden incluir sesiones de gimnasio dentro del plan
+        Con Training Track, los entrenadores pueden incluir sesiones de gimnasio dentro del plan
         semanal, seleccionando ejercicios del banco de ejercicios con series, repeticiones y carga
         definidos. Todo integrado en el mismo flujo de planificación junto con las sesiones de
         carrera.

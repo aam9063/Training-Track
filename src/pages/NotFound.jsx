@@ -100,7 +100,7 @@ export default function NotFound() {
           className="mt-12 text-sm text-gray-400 dark:text-gray-500 flex items-center justify-center gap-2"
         >
           <HiMail className="w-4 h-4" />
-          ¿Necesitas ayuda? Escríbenos a contacto@trainingtrackpro.com
+          ¿Necesitas ayuda? Escríbenos a contacto@trainingtrack.com
         </motion.p>
       </div>
     </div>

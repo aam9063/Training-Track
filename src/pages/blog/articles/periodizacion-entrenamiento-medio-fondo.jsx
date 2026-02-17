@@ -90,7 +90,7 @@ export default function Article() {
 
       <H2>Herramientas para planificar el entrenamiento</H2>
       <P>
-        Con TrainingTrack Pro, los entrenadores pueden crear mesociclos, asignar tipos de semana
+        Con Training Track, los entrenadores pueden crear mesociclos, asignar tipos de semana
         (carga, descarga, competición) y planificar cada sesión con ejercicios específicos del banco
         de ejercicios. Todo desde una interfaz visual e intuitiva que permite ver el panorama
         completo del entrenamiento.
@@ -101,7 +101,7 @@ export default function Article() {
         reales.
       </P>
 
-      <CTA text="Planifica mesociclos y microciclos para tus atletas con TrainingTrack Pro" />
+      <CTA text="Planifica mesociclos y microciclos para tus atletas con Training Track" />
     </>
   );
 }

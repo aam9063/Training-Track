@@ -76,7 +76,7 @@ export default function AdminLogin() {
             <FiShield className="w-8 h-8 text-white" />
           </div>
           <h1 className="text-2xl font-bold text-white">Admin Panel</h1>
-          <p className="text-gray-500 text-sm mt-1">TrainingTrack Pro</p>
+          <p className="text-gray-500 text-sm mt-1">Training Track</p>
         </div>
 
         {/* Form */}

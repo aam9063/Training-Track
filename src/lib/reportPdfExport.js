@@ -66,7 +66,7 @@ const drawPageHeader = (doc, athleteName, pageNum, totalPages, genDate) => {
   doc.setFont('helvetica', 'bold');
   doc.setFontSize(11);
   setColor(doc, C.white, 'text');
-  doc.text('TRAININGTRACK PRO', M, 7.5);
+  doc.text('TRAINING TRACK', M, 7.5);
 
   // Athlete name
   doc.setFontSize(8);
@@ -84,7 +84,7 @@ const drawPageFooter = (doc, genDate) => {
   setColor(doc, C.grayL, 'text');
   doc.setFontSize(6.5);
   doc.setFont('helvetica', 'normal');
-  doc.text(`Generado el ${fmtDate(genDate)} | TrainingTrack Pro | Informe generado con IA`, PW / 2, y, { align: 'center' });
+  doc.text(`Generado el ${fmtDate(genDate)} | Training Track | Informe generado con IA`, PW / 2, y, { align: 'center' });
 };
 
 // ─── Reusable Drawing Functions ──────────────────────────────────────────────

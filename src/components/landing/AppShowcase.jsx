@@ -138,7 +138,7 @@ export default function AppShowcase() {
                   </div>
                   <div className="flex-1 mx-4">
                     <div className="bg-gray-200 rounded-lg px-4 py-1.5 text-gray-400 text-sm text-center">
-                      app.trainingtrackpro.es
+                      app.trainingtrack.es
                     </div>
                   </div>
                 </div>

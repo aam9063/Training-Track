@@ -119,7 +119,7 @@ export default function AIReports() {
                     Informe de Rendimiento
                   </p>
                   <p className="text-xs text-gray-500">
-                    TrainingTrack Pro - Generado con IA
+                    Training Track - Generado con IA
                   </p>
                 </div>
               </div>

@@ -183,9 +183,9 @@ export default function Register() {
           {/* Logo */}
           <div className="text-center">
             <Link to="/" className="inline-flex items-center space-x-2">
-              <img src="/img/logo.png" alt="TrainingTrackPro" className="w-12 h-12 object-contain" />
+              <img src="/img/logo.png" alt="TrainingTrack" className="w-12 h-12 object-contain" />
               <span className="text-3xl font-bold text-sky-600 dark:text-sky-400">
-                TrainingTrack Pro
+                Training Track
               </span>
             </Link>
           </div>
@@ -218,7 +218,7 @@ export default function Register() {
                     Acceso por invitación
                   </h2>
                   <p className="mt-3 text-gray-600 dark:text-gray-400 leading-relaxed">
-                    TrainingTrack Pro se encuentra actualmente en fase de desarrollo.
+                    Training Track se encuentra actualmente en fase de desarrollo.
                     El registro está disponible únicamente mediante enlace de invitación de tu entrenador.
                   </p>
                 </div>
@@ -258,7 +258,7 @@ export default function Register() {
                     Crear cuenta
                   </h2>
                   <p className="mt-2 text-gray-600 dark:text-gray-400">
-                    ¿Cómo quieres usar TrainingTrack Pro?
+                    ¿Cómo quieres usar Training Track?
                   </p>
                 </div>
 
@@ -676,7 +676,7 @@ export default function Register() {
             className="text-center max-w-lg"
           >
             <h2 className="text-4xl font-bold mb-6">
-              Únete a la comunidad TrainingTrack Pro
+              Únete a la comunidad Training Track
             </h2>
             <p className="text-xl text-sky-100 mb-8">
               La plataforma líder en gestión de entrenamientos para medio fondo y fondo. Desde 400m hasta maratón.

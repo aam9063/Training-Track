@@ -38,9 +38,9 @@ export default function ForgotPassword() {
         {/* Logo */}
         <div className="text-center">
           <Link to="/" className="inline-flex items-center space-x-2">
-            <img src="/img/logo.png" alt="TrainingTrackPro" className="w-12 h-12 object-contain" />
+            <img src="/img/logo.png" alt="TrainingTrack" className="w-12 h-12 object-contain" />
             <span className="text-3xl font-bold text-sky-600 dark:text-sky-400">
-              TrainingTrack Pro
+              Training Track
             </span>
           </Link>
         </div>

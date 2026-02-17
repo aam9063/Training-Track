@@ -9,8 +9,8 @@ export default function FAQ() {
 
   const faqs = [
     {
-      question: '¿Qué distancias de atletismo cubre TrainingTrack Pro?',
-      answer: 'TrainingTrack Pro está diseñado específicamente para medio fondo y fondo, cubriendo desde 400m hasta maratón completo. Incluye: 400m, 800m, 1500m, 3000m, 5000m, 10000m, 5K, 10K, 21K (media maratón) y Maratón (42K).',
+      question: '¿Qué distancias de atletismo cubre Training Track?',
+      answer: 'Training Track está diseñado específicamente para medio fondo y fondo, cubriendo desde 400m hasta maratón completo. Incluye: 400m, 800m, 1500m, 3000m, 5000m, 10000m, 5K, 10K, 21K (media maratón) y Maratón (42K).',
     },
     {
       question: '¿Cómo funciona la prueba gratuita?',
@@ -34,14 +34,14 @@ export default function FAQ() {
     },
     {
       question: '¿Está disponible en móvil?',
-      answer: 'Sí, TrainingTrack Pro está completamente optimizado para dispositivos móviles a través del navegador web. Próximamente lanzaremos apps nativas para iOS y Android.',
+      answer: 'Sí, Training Track está completamente optimizado para dispositivos móviles a través del navegador web. Próximamente lanzaremos apps nativas para iOS y Android.',
     },
     {
       question: '¿Qué tipo de soporte ofrecen?',
       answer: 'El plan Starter incluye soporte por email con respuesta en 24-48 horas. Professional incluye soporte prioritario 24/7 por email y chat. Enterprise incluye un gestor de cuenta dedicado y soporte telefónico.',
     },
     {
-      question: '¿Puedo usar TrainingTrack Pro para un equipo o club?',
+      question: '¿Puedo usar Training Track para un equipo o club?',
       answer: 'Absolutamente. El plan Enterprise está diseñado específicamente para clubes y organizaciones. Permite múltiples entrenadores, atletas ilimitados, y personalización completa con tu marca.',
     },
     {
@@ -91,7 +91,7 @@ export default function FAQ() {
           </h2>
 
           <p className="text-xl text-gray-600 dark:text-gray-300">
-            Encuentra respuestas a las preguntas más comunes sobre TrainingTrack Pro
+            Encuentra respuestas a las preguntas más comunes sobre Training Track
           </p>
         </motion.div>
 

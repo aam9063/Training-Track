@@ -89,13 +89,13 @@ export default function Blog() {
     schema: {
       '@context': 'https://schema.org',
       '@type': 'Blog',
-      name: 'Blog TrainingTrack Pro',
+      name: 'Blog Training Track',
       description: 'Artículos sobre entrenamiento de atletismo, fisiología deportiva y rendimiento.',
-      url: 'https://trainingtrackpro.com/blog',
+      url: 'https://trainingtrack.com/blog',
       publisher: {
         '@type': 'Organization',
-        name: 'TrainingTrack Pro',
-        url: 'https://trainingtrackpro.com',
+        name: 'Training Track',
+        url: 'https://trainingtrack.com',
       },
     },
   });

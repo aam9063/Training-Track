@@ -41,7 +41,7 @@ export default function PrivacyPolicy() {
                 <li><strong>Titular:</strong> Training Track</li>
                 <li><strong>Correo electronico:</strong> contacto@trainingtrack.com</li>
                 <li><strong>Domicilio:</strong> Alicante, Espana</li>
-                <li><strong>Sitio web:</strong> https://trainingtrack.com</li>
+                <li><strong>Sitio web:</strong> https://trainingtrack.es</li>
               </ul>
             </section>
 

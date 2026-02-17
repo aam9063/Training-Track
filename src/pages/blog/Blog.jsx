@@ -91,11 +91,11 @@ export default function Blog() {
       '@type': 'Blog',
       name: 'Blog Training Track',
       description: 'Artículos sobre entrenamiento de atletismo, fisiología deportiva y rendimiento.',
-      url: 'https://trainingtrack.com/blog',
+      url: 'https://trainingtrack.es/blog',
       publisher: {
         '@type': 'Organization',
         name: 'Training Track',
-        url: 'https://trainingtrack.com',
+        url: 'https://trainingtrack.es',
       },
     },
   });

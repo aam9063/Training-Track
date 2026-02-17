@@ -3,8 +3,7 @@ import { BrowserRouter as Router, Routes, Route } from 'react-router-dom';
 import { ThemeProvider } from './contexts/ThemeContext';
 import { AuthProvider } from './contexts/AuthContext';
 import { NotificationProvider } from './contexts/NotificationContext';
-import { ToastContainer } from 'react-toastify';
-import 'react-toastify/dist/ReactToastify.css';
+import { Toaster } from 'sileo';
 import DashboardLayout from './layouts/DashboardLayout';
 import AthleteDashboardLayout from './layouts/AthleteDashboardLayout';
 import './index.css';
@@ -113,17 +112,7 @@ function App() {
               </Routes>
             </Suspense>
           </Router>
-          <ToastContainer
-            position="top-right"
-            autoClose={4000}
-            hideProgressBar={false}
-            newestOnTop
-            closeOnClick
-            pauseOnFocusLoss
-            draggable
-            pauseOnHover
-            theme="colored"
-          />
+          <Toaster position="top-right" />
         </NotificationProvider>
       </AuthProvider>
     </ThemeProvider>

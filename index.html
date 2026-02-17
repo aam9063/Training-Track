@@ -1,48 +1,63 @@
 <!doctype html>
 <html lang="es">
-  <head>
-    <meta charset="UTF-8" />
-    <meta name="viewport" content="width=device-width, initial-scale=1.0" />
 
-    <!-- SEO Basico -->
-    <title>TrainingTrack - Plataforma de Gestión de Entrenamiento de Atletismo</title>
-    <meta name="description" content="Plataforma de gestión de entrenamientos de atletismo para entrenadores y atletas. Planificación semanal, métricas de Strava, informes de rendimiento con IA, tests fisiológicos y más.">
-    <meta name="keywords" content="entrenamiento atletismo, planificación deportiva, entrenador personal, métricas Strava, informes IA, rendimiento deportivo, running, trail, maratón, gestión atletas">
-    <meta name="author" content="TrainingTrack">
-    <meta name="robots" content="index, follow">
-    <meta name="google-site-verification" content="yGm-gqsWlA9MHvm4zjpV4cndlFSf8amlLu3FMUdgZV8" />
-    <link rel="canonical" href="https://trainingtrack.es/" />
+<head>
+  <meta charset="UTF-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1.0" />
 
-    <!-- Favicon -->
-    <link rel="icon" type="image/png" sizes="32x32" href="/img/logo.png" />
-    <link rel="apple-touch-icon" href="/img/logo.png" />
+  <!-- Google tag (gtag.js) -->
+  <script async src="https://www.googletagmanager.com/gtag/js?id=G-EF0NGFCNJD"></script>
+  <script>
+    window.dataLayer = window.dataLayer || [];
+    function gtag() { dataLayer.push(arguments); }
+    gtag('js', new Date());
 
-    <!-- Open Graph (Facebook, LinkedIn, WhatsApp) -->
-    <meta property="og:type" content="website" />
-    <meta property="og:url" content="https://trainingtrack.es/" />
-    <meta property="og:title" content="TrainingTrack - Gestión de Entrenamiento de Atletismo" />
-    <meta property="og:description" content="Planifica entrenamientos, analiza métricas de Strava y genera informes de rendimiento con IA. La plataforma para entrenadores y atletas." />
-    <meta property="og:image" content="https://training-pro.netlify.app/img/og-image.png" />
-    <meta property="og:image:width" content="1200" />
-    <meta property="og:image:height" content="630" />
-    <meta property="og:locale" content="es_ES" />
-    <meta property="og:site_name" content="TrainingTrack" />
+    gtag('config', 'G-EF0NGFCNJD');
+  </script>
 
-    <!-- Twitter Card -->
-    <meta name="twitter:card" content="summary_large_image" />
-    <meta name="twitter:title" content="TrainingTrack - Gestión de Entrenamiento de Atletismo" />
-    <meta name="twitter:description" content="Planifica entrenamientos, analiza métricas de Strava y genera informes de rendimiento con IA." />
-    <meta name="twitter:image" content="https://training-pro.netlify.app/img/og-image.png" />
+  <!-- SEO Basico -->
+  <title>TrainingTrack - Plataforma de Gestión de Entrenamiento de Atletismo</title>
+  <meta name="description"
+    content="Plataforma de gestión de entrenamientos de atletismo para entrenadores y atletas. Planificación semanal, métricas de Strava, informes de rendimiento con IA, tests fisiológicos y más.">
+  <meta name="keywords"
+    content="entrenamiento atletismo, planificación deportiva, entrenador personal, métricas Strava, informes IA, rendimiento deportivo, running, trail, maratón, gestión atletas">
+  <meta name="author" content="TrainingTrack">
+  <meta name="robots" content="index, follow">
+  <meta name="google-site-verification" content="yGm-gqsWlA9MHvm4zjpV4cndlFSf8amlLu3FMUdgZV8" />
+  <link rel="canonical" href="https://trainingtrack.es/" />
 
-    <!-- PWA / Movil -->
-    <meta name="theme-color" content="#0284c7" />
-    <meta name="mobile-web-app-capable" content="yes" />
-    <meta name="apple-mobile-web-app-status-bar-style" content="default" />
-    <meta name="apple-mobile-web-app-title" content="TrainingTrack" />
-    <link rel="manifest" href="/manifest.json" />
+  <!-- Favicon -->
+  <link rel="icon" type="image/png" sizes="32x32" href="/img/logo.png" />
+  <link rel="apple-touch-icon" href="/img/logo.png" />
 
-    <!-- Structured Data: Organization -->
-    <script type="application/ld+json">
+  <!-- Open Graph (Facebook, LinkedIn, WhatsApp) -->
+  <meta property="og:type" content="website" />
+  <meta property="og:url" content="https://trainingtrack.es/" />
+  <meta property="og:title" content="TrainingTrack - Gestión de Entrenamiento de Atletismo" />
+  <meta property="og:description"
+    content="Planifica entrenamientos, analiza métricas de Strava y genera informes de rendimiento con IA. La plataforma para entrenadores y atletas." />
+  <meta property="og:image" content="https://training-pro.netlify.app/img/og-image.png" />
+  <meta property="og:image:width" content="1200" />
+  <meta property="og:image:height" content="630" />
+  <meta property="og:locale" content="es_ES" />
+  <meta property="og:site_name" content="TrainingTrack" />
+
+  <!-- Twitter Card -->
+  <meta name="twitter:card" content="summary_large_image" />
+  <meta name="twitter:title" content="TrainingTrack - Gestión de Entrenamiento de Atletismo" />
+  <meta name="twitter:description"
+    content="Planifica entrenamientos, analiza métricas de Strava y genera informes de rendimiento con IA." />
+  <meta name="twitter:image" content="https://training-pro.netlify.app/img/og-image.png" />
+
+  <!-- PWA / Movil -->
+  <meta name="theme-color" content="#0284c7" />
+  <meta name="mobile-web-app-capable" content="yes" />
+  <meta name="apple-mobile-web-app-status-bar-style" content="default" />
+  <meta name="apple-mobile-web-app-title" content="TrainingTrack" />
+  <link rel="manifest" href="/manifest.json" />
+
+  <!-- Structured Data: Organization -->
+  <script type="application/ld+json">
     {
       "@context": "https://schema.org",
       "@type": "SoftwareApplication",
@@ -77,8 +92,8 @@
     }
     </script>
 
-    <!-- Structured Data: FAQ (para Google Rich Results) -->
-    <script type="application/ld+json">
+  <!-- Structured Data: FAQ (para Google Rich Results) -->
+  <script type="application/ld+json">
     {
       "@context": "https://schema.org",
       "@type": "FAQPage",
@@ -118,9 +133,11 @@
       ]
     }
     </script>
-  </head>
-  <body>
-    <div id="root"></div>
-    <script type="module" src="/src/main.jsx"></script>
-  </body>
+</head>
+
+<body>
+  <div id="root"></div>
+  <script type="module" src="/src/main.jsx"></script>
+</body>
+
 </html>

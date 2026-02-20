@@ -439,7 +439,7 @@ const Planning = () => {
         <div className="flex items-center gap-2">
           <button
             onClick={() => setShowMesoForm(true)}
-            className="flex items-center gap-2 px-4 py-2.5 bg-white dark:bg-gray-800 border border-gray-200 dark:border-gray-700 text-gray-700 dark:text-gray-300 rounded-xl hover:bg-gray-50 dark:hover:bg-gray-750 transition-colors font-medium text-sm"
+            className="flex items-center gap-2 px-4 py-2.5 bg-white dark:bg-gray-800 border border-gray-200 dark:border-gray-700 text-gray-700 dark:text-gray-300 rounded-xl hover:bg-gray-50 dark:hover:bg-gray-700 transition-colors font-medium text-sm"
           >
             <FiPlus className="w-4 h-4" />
             Añadir Mesociclo
@@ -466,7 +466,7 @@ const Planning = () => {
           >
             {/* Mesocycle Header */}
             <div
-              className="flex items-center justify-between p-4 cursor-pointer hover:bg-gray-50 dark:hover:bg-gray-750 transition-colors"
+              className="flex items-center justify-between p-4 cursor-pointer hover:bg-gray-50 dark:hover:bg-gray-700 transition-colors"
               onClick={() => setExpandedMeso(expandedMeso === meso.id ? null : meso.id)}
             >
               <div className="flex items-center gap-3">
@@ -521,7 +521,7 @@ const Planning = () => {
                             className={`flex items-center justify-between px-4 py-3 cursor-pointer transition-colors ${
                               isEditing
                                 ? 'bg-blue-50 dark:bg-blue-900/10'
-                                : 'hover:bg-gray-50 dark:hover:bg-gray-750'
+                                : 'hover:bg-gray-50 dark:hover:bg-gray-700'
                             }`}
                             onClick={() => setEditingWeek(isEditing ? null : micro)}
                           >

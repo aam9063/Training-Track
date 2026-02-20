@@ -70,7 +70,6 @@ import { getRPEEmoji, getRPELabel, RPE_OPTIONS } from '../../services/rpeService
 import useMapbox from '../../hooks/useMapbox';
 import useWeeklyTrainings from '../../hooks/useWeeklyTrainings';
 import useCoachStravaData from '../../hooks/useCoachStravaData';
-import TrainingPlanningWizard from '../../components/dashboard/TrainingPlanningWizard';
 import ConconiTestModal from '../../components/dashboard/ConconiTestModal';
 import VAMTestModal from '../../components/dashboard/VAMTestModal';
 
@@ -134,7 +133,6 @@ const AthleteProfile = () => {
   const [newEvent, setNewEvent] = useState({ name: '', date: '', distance: '', location: '', notes: '' });
   const [savingEvent, setSavingEvent] = useState(false);
   const { mapContainerRef } = useMapbox(selectedActivity?.polyline, selectedActivity?.loading);
-  const [showTrainingModal, setShowTrainingModal] = useState(false);
   const [showConconiModal, setShowConconiModal] = useState(false);
   const [showVAMModal, setShowVAMModal] = useState(false);
   const [showTestMenu, setShowTestMenu] = useState(false);
@@ -353,9 +351,9 @@ const AthleteProfile = () => {
             <FiSearch className="w-5 h-5 text-gray-600 dark:text-gray-400 group-hover:text-blue-600" />
           </button>
           <button
-            onClick={() => setShowTrainingModal(true)}
+            onClick={() => navigate('/dashboard/planning')}
             className="p-2.5 sm:p-3 bg-white dark:bg-gray-800 rounded-xl shadow-sm hover:shadow-md transition-all border border-gray-200 dark:border-gray-700 group"
-            title="Crear entrenamiento"
+            title="Planificación"
           >
             <FiPlus className="w-5 h-5 text-gray-600 dark:text-gray-400 group-hover:text-green-600" />
           </button>
@@ -1756,17 +1754,6 @@ const AthleteProfile = () => {
           </div>
         )}
       </AnimatePresence>
-
-      {/* Training Planning Wizard */}
-      <TrainingPlanningWizard
-        isOpen={showTrainingModal}
-        onClose={() => setShowTrainingModal(false)}
-        athlete={athlete}
-        coachId={profile?.coach_id || profile?.id}
-        onSuccess={() => {
-          loadTrainings();
-        }}
-      />
 
       {/* Conconi Test Modal */}
       <ConconiTestModal

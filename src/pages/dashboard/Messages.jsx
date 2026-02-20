@@ -27,7 +27,7 @@ import { supabase } from '../../lib/supabase';
 
 const CoachMessages = () => {
   const { profile } = useAuth();
-  const { refreshUnreadCount, decrementUnread } = useNotifications();
+  const { refreshUnreadCount, decrementUnread, setActiveConversationPartnerId } = useNotifications();
   const location = useLocation();
 
   const [conversations, setConversations] = useState([]);
@@ -107,9 +107,15 @@ const CoachMessages = () => {
     }
   }, [conversations, location.state]);
 
+  // Clear active partner on unmount
+  useEffect(() => {
+    return () => setActiveConversationPartnerId(null);
+  }, [setActiveConversationPartnerId]);
+
   // Select a conversation
   const handleSelectConversation = useCallback(async (conv) => {
     setSelectedConversation(conv);
+    setActiveConversationPartnerId(conv.otherUserId);
     setLoadingMessages(true);
     setMessages([]);
 
@@ -403,6 +409,7 @@ const CoachMessages = () => {
               <button
                 onClick={() => {
                   setSelectedConversation(null);
+                  setActiveConversationPartnerId(null);
                   if (channelRef.current) {
                     supabase.removeChannel(channelRef.current);
                     channelRef.current = null;

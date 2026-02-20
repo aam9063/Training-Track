@@ -1,4 +1,4 @@
-import { createContext, useContext, useState, useEffect, useCallback, useMemo } from 'react';
+import { createContext, useContext, useState, useEffect, useCallback, useMemo, useRef } from 'react';
 import { supabase } from '../lib/supabase';
 import { useAuth } from './AuthContext';
 import { showInfo } from '../lib/toast';
@@ -8,6 +8,8 @@ const NotificationContext = createContext(undefined);
 export function NotificationProvider({ children }) {
   const { user, profile } = useAuth();
   const [unreadMessages, setUnreadMessages] = useState(0);
+  const [activeConversationPartnerId, setActiveConversationPartnerId] = useState(null);
+  const activePartnerRef = useRef(null);
 
   // Fetch initial unread count — unified chat_messages table
   const fetchUnreadCount = useCallback(async () => {
@@ -31,6 +33,11 @@ export function NotificationProvider({ children }) {
     fetchUnreadCount();
   }, [fetchUnreadCount]);
 
+  // Keep ref in sync for use inside realtime callback
+  useEffect(() => {
+    activePartnerRef.current = activeConversationPartnerId;
+  }, [activeConversationPartnerId]);
+
   // Set up Realtime subscriptions
   useEffect(() => {
     if (!user?.id) return;
@@ -49,12 +56,17 @@ export function NotificationProvider({ children }) {
           filter: `receiver_id=eq.${user.id}`,
         },
         async (payload) => {
+          const senderId = payload.new.sender_id;
+
+          // Skip toast if the user is already viewing this conversation
+          if (activePartnerRef.current === senderId) return;
+
           setUnreadMessages((prev) => prev + 1);
 
           const { data: sender } = await supabase
             .from('users')
             .select('first_name, last_name')
-            .eq('id', payload.new.sender_id)
+            .eq('id', senderId)
             .single();
 
           const name = sender
@@ -107,6 +119,7 @@ export function NotificationProvider({ children }) {
       unreadMessages,
       decrementUnread,
       refreshUnreadCount,
+      setActiveConversationPartnerId,
     }),
     [unreadMessages, decrementUnread, refreshUnreadCount]
   );

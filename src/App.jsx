@@ -29,6 +29,7 @@ const Metrics = lazy(() => import('./pages/dashboard/Metrics'));
 const Calendar = lazy(() => import('./pages/dashboard/Calendar'));
 const Profile = lazy(() => import('./pages/dashboard/Profile'));
 const CoachMessages = lazy(() => import('./pages/dashboard/Messages'));
+const Planning = lazy(() => import('./pages/dashboard/Planning'));
 
 // Admin pages
 const AdminLayout = lazy(() => import('./layouts/AdminLayout'));
@@ -80,6 +81,7 @@ function App() {
                   <Route path="athletes" element={<Athletes />} />
                   <Route path="athletes/:athleteId" element={<AthleteProfile />} />
                   <Route path="athletes/:athleteId/metrics" element={<AthleteMetricsView />} />
+                  <Route path="planning" element={<Planning />} />
                   <Route path="metrics" element={<Metrics />} />
                   <Route path="calendar" element={<Calendar />} />
                   <Route path="profile" element={<Profile />} />
@@ -112,7 +114,7 @@ function App() {
               </Routes>
             </Suspense>
           </Router>
-          <Toaster position="top-right" />
+          <Toaster position="bottom-right" />
         </NotificationProvider>
       </AuthProvider>
     </ThemeProvider>

@@ -20,6 +20,7 @@ import {
   FiCheckCircle,
   FiSkipForward,
   FiRotateCcw,
+  FiChevronDown,
 } from 'react-icons/fi';
 import { generateWeeklyPDF } from '../../lib/pdfExport';
 import { useAuth } from '../../contexts/AuthContext';
@@ -553,168 +554,277 @@ const Training = () => {
           </div>
         </div>
       ) : (
-        /* Weekly Grid */
-        <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-7 gap-3 sm:gap-4">
-          {weekDays.map((day, index) => {
-            const training = trainings[index];
-            const isRest = training?.type === 'rest';
-            const isToday = day.toDateString() === new Date().toDateString();
-            const hasTraining = !!training;
-            const isCompleted = training?.status === 'completed';
-            const isSkipped = training?.status === 'skipped';
-            const canComplete = hasTraining && !isRest && training?.status === 'planned' && isPastOrToday(training.date);
+        <>
+          {/* ===== MOBILE: Compact week list (< lg) ===== */}
+          <div className="lg:hidden bg-white dark:bg-gray-800 rounded-xl shadow-sm border border-gray-200 dark:border-gray-700 overflow-hidden">
+            <div className="divide-y divide-gray-100 dark:divide-gray-700">
+              {weekDays.map((day, index) => {
+                const training = trainings[index];
+                const isRest = training?.type === 'rest';
+                const isToday = day.toDateString() === new Date().toDateString();
+                const hasTraining = !!training;
+                const isCompleted = training?.status === 'completed';
+                const isSkipped = training?.status === 'skipped';
+                const canComplete = hasTraining && !isRest && training?.status === 'planned' && isPastOrToday(training.date);
 
-            return (
-              <motion.div
-                key={index}
-                initial={{ opacity: 0, y: 20 }}
-                animate={{ opacity: 1, y: 0 }}
-                transition={{ delay: index * 0.05 }}
-                onClick={() => openDayDetail(training, index)}
-                className={`
-                  bg-white dark:bg-gray-800 rounded-xl p-4 shadow-sm border-2 relative
-                  ${isCompleted
-                    ? 'border-green-500 dark:border-green-400'
-                    : isSkipped
-                      ? 'border-gray-400 dark:border-gray-500'
-                      : isToday
-                        ? 'border-blue-500 dark:border-blue-400'
-                        : 'border-gray-200 dark:border-gray-700'}
-                  ${isRest ? 'bg-gray-50 dark:bg-gray-800/50' : ''}
-                  ${hasTraining ? 'cursor-pointer hover:shadow-md transition-all' : ''}
-                  min-h-[250px] sm:min-h-[280px] lg:min-h-[300px]
-                `}
-              >
-                {/* Day Header */}
-                <div className="mb-3 sm:mb-4 pb-2 sm:pb-3 border-b border-gray-200 dark:border-gray-700">
-                  <p className="text-xs font-semibold text-gray-500 dark:text-gray-400 uppercase mb-1">
-                    {DAYS_OF_WEEK[index]}
-                  </p>
-                  <p className="text-base sm:text-lg font-bold text-gray-900 dark:text-white">
-                    {day.getDate()}
-                  </p>
-                  {isToday && (
-                    <span className="inline-block mt-1 text-xs px-2 py-0.5 bg-blue-100 dark:bg-blue-900/30 text-blue-700 dark:text-blue-400 rounded-full">
-                      Hoy
-                    </span>
-                  )}
-                </div>
-
-                {/* Status indicator */}
-                {isCompleted && (
-                  <div className="absolute top-3 right-3 flex items-center space-x-1">
-                    {training.rpeScore && <span className="text-lg">{getRPEEmoji(training.rpeScore)}</span>}
-                    <FiCheckCircle className="w-5 h-5 text-green-500" />
-                  </div>
-                )}
-                {isSkipped && (
-                  <div className="absolute top-3 right-3">
-                    <FiSkipForward className="w-5 h-5 text-gray-400" />
-                  </div>
-                )}
-
-                {/* Training Content */}
-                {training ? (
-                  <div className="space-y-2 sm:space-y-3">
-                    {/* Type Badge + Status */}
-                    <div className="flex items-center gap-2 flex-wrap">
-                      <span className={`inline-block text-xs px-2 py-1 rounded-full ${getTypeColor(training.type)}`}>
-                        {getTypeLabel(training.type)}
+                return (
+                  <motion.button
+                    key={index}
+                    type="button"
+                    initial={{ opacity: 0 }}
+                    animate={{ opacity: 1 }}
+                    transition={{ delay: index * 0.03 }}
+                    onClick={() => openDayDetail(training, index)}
+                    className={`w-full flex items-center gap-3 px-4 py-3 text-left transition-colors ${
+                      hasTraining ? 'hover:bg-gray-50 dark:hover:bg-gray-750' : ''
+                    } ${isToday ? 'bg-blue-50/50 dark:bg-blue-900/10' : ''}`}
+                  >
+                    {/* Day number + name */}
+                    <div className={`w-10 h-10 rounded-xl flex flex-col items-center justify-center flex-shrink-0 ${
+                      isCompleted
+                        ? 'bg-green-100 dark:bg-green-900/30'
+                        : isToday
+                          ? 'bg-blue-100 dark:bg-blue-900/30'
+                          : 'bg-gray-100 dark:bg-gray-700'
+                    }`}>
+                      <span className={`text-[10px] font-bold uppercase leading-none ${
+                        isCompleted
+                          ? 'text-green-600 dark:text-green-400'
+                          : isToday
+                            ? 'text-blue-600 dark:text-blue-400'
+                            : 'text-gray-500 dark:text-gray-400'
+                      }`}>
+                        {DAYS_OF_WEEK[index].slice(0, 3)}
                       </span>
-                      {isCompleted && (
-                        <span className="inline-block text-xs px-2 py-1 rounded-full bg-green-100 text-green-700 dark:bg-green-900/30 dark:text-green-400">
-                          Completado
-                        </span>
-                      )}
-                      {isSkipped && (
-                        <span className="inline-block text-xs px-2 py-1 rounded-full bg-gray-200 text-gray-600 dark:bg-gray-700 dark:text-gray-400">
-                          Omitido
-                        </span>
+                      <span className={`text-sm font-bold leading-tight ${
+                        isCompleted
+                          ? 'text-green-700 dark:text-green-300'
+                          : isToday
+                            ? 'text-blue-700 dark:text-blue-300'
+                            : 'text-gray-900 dark:text-white'
+                      }`}>
+                        {day.getDate()}
+                      </span>
+                    </div>
+
+                    {/* Status bar */}
+                    <div className={`w-1 h-8 rounded-full flex-shrink-0 ${
+                      isCompleted
+                        ? 'bg-green-500'
+                        : isSkipped
+                          ? 'bg-gray-300 dark:bg-gray-600'
+                          : hasTraining
+                            ? isRest
+                              ? 'bg-gray-200 dark:bg-gray-600'
+                              : 'bg-blue-500'
+                            : 'bg-transparent'
+                    }`} />
+
+                    {/* Content */}
+                    <div className="flex-1 min-w-0">
+                      {training ? (
+                        <>
+                          <div className="flex items-center gap-2">
+                            <span className="text-sm font-semibold text-gray-900 dark:text-white truncate">
+                              {isRest ? 'Descanso' : training.title}
+                            </span>
+                            {isToday && (
+                              <span className="px-1.5 py-0.5 text-[10px] font-bold bg-blue-100 dark:bg-blue-900/30 text-blue-600 dark:text-blue-400 rounded">
+                                HOY
+                              </span>
+                            )}
+                          </div>
+                          <div className="flex items-center gap-2 mt-0.5">
+                            {!isRest && (
+                              <span className={`text-[11px] px-1.5 py-0.5 rounded ${getTypeColor(training.type)}`}>
+                                {getTypeLabel(training.type)}
+                              </span>
+                            )}
+                            {training.totalDistance && (
+                              <span className="text-[11px] text-gray-500 dark:text-gray-400">{training.totalDistance}</span>
+                            )}
+                            {training.duration && (
+                              <span className="text-[11px] text-gray-500 dark:text-gray-400">{training.duration} min</span>
+                            )}
+                            {training.description && !training.totalDistance && !training.duration && !isRest && (
+                              <span className="text-[11px] text-gray-400 dark:text-gray-500 truncate">{training.description}</span>
+                            )}
+                          </div>
+                        </>
+                      ) : (
+                        <span className="text-xs text-gray-300 dark:text-gray-600">Sin entrenamiento</span>
                       )}
                     </div>
 
-                    <h3 className={`font-bold text-base sm:text-lg ${
-                      isRest
-                        ? 'text-gray-500 dark:text-gray-400'
-                        : 'text-gray-900 dark:text-white'
-                    }`}>
-                      {training.title}
-                    </h3>
+                    {/* Right side: status icons */}
+                    <div className="flex items-center gap-1 flex-shrink-0">
+                      {isCompleted && training.rpeScore && (
+                        <span className="text-sm">{getRPEEmoji(training.rpeScore)}</span>
+                      )}
+                      {isCompleted && <FiCheckCircle className="w-4 h-4 text-green-500" />}
+                      {isSkipped && <FiSkipForward className="w-4 h-4 text-gray-400" />}
+                      {canComplete && <FiCheck className="w-4 h-4 text-green-500" />}
+                      {hasTraining && !isCompleted && !isSkipped && !canComplete && (
+                        <FiChevronRight className="w-4 h-4 text-gray-300 dark:text-gray-600" />
+                      )}
+                    </div>
+                  </motion.button>
+                );
+              })}
+            </div>
+          </div>
 
-                    {!isRest && (
-                      <>
-                        {training.totalDistance && (
-                          <div className="flex items-start space-x-2">
-                            <span className="text-xs sm:text-sm">📏</span>
-                            <p className="text-xs sm:text-sm text-gray-700 dark:text-gray-300">
-                              {training.totalDistance}
-                            </p>
-                          </div>
-                        )}
+          {/* ===== DESKTOP: 7-column grid (lg+) ===== */}
+          <div className="hidden lg:grid grid-cols-7 gap-4">
+            {weekDays.map((day, index) => {
+              const training = trainings[index];
+              const isRest = training?.type === 'rest';
+              const isToday = day.toDateString() === new Date().toDateString();
+              const hasTraining = !!training;
+              const isCompleted = training?.status === 'completed';
+              const isSkipped = training?.status === 'skipped';
+              const canComplete = hasTraining && !isRest && training?.status === 'planned' && isPastOrToday(training.date);
 
-                        {training.duration && (
-                          <div className="flex items-start space-x-2">
-                            <span className="text-xs sm:text-sm">⏰</span>
-                            <p className="text-xs sm:text-sm text-gray-700 dark:text-gray-300">
-                              {training.duration} min
-                            </p>
-                          </div>
-                        )}
-
-                        {/* Exercises Summary */}
-                        {training.exercises?.length > 0 && (
-                          <div className="mt-2 pt-2 border-t border-gray-200 dark:border-gray-700">
-                            <p className="text-xs text-gray-500 dark:text-gray-400 mb-1">Ejercicios:</p>
-                            <ul className="space-y-1">
-                              {training.exercises.slice(0, 3).map((ex, i) => (
-                                <li key={i} className="text-xs text-gray-700 dark:text-gray-300 truncate">
-                                  • {ex.name}
-                                  {ex.sets && <span className="text-gray-500"> ({ex.sets}x{ex.reps || ''})</span>}
-                                </li>
-                              ))}
-                              {training.exercises.length > 3 && (
-                                <li className="text-xs text-gray-500 dark:text-gray-400">
-                                  +{training.exercises.length - 3} más
-                                </li>
-                              )}
-                            </ul>
-                          </div>
-                        )}
-
-                        {/* Click indicator / Complete button */}
-                        <div className="mt-2 pt-2 text-center">
-                          {canComplete ? (
-                            <span className="inline-flex items-center space-x-1 text-xs font-medium text-green-600 dark:text-green-400">
-                              <FiCheck className="w-3.5 h-3.5" />
-                              <span>Completar sesión</span>
-                            </span>
-                          ) : (
-                            <span className="text-xs text-blue-500 dark:text-blue-400">
-                              {isCompleted ? 'Ver resultado →' : 'Ver detalles →'}
-                            </span>
-                          )}
-                        </div>
-                      </>
+              return (
+                <motion.div
+                  key={index}
+                  initial={{ opacity: 0, y: 20 }}
+                  animate={{ opacity: 1, y: 0 }}
+                  transition={{ delay: index * 0.05 }}
+                  onClick={() => openDayDetail(training, index)}
+                  className={`
+                    bg-white dark:bg-gray-800 rounded-xl p-4 shadow-sm border-2 relative
+                    ${isCompleted
+                      ? 'border-green-500 dark:border-green-400'
+                      : isSkipped
+                        ? 'border-gray-400 dark:border-gray-500'
+                        : isToday
+                          ? 'border-blue-500 dark:border-blue-400'
+                          : 'border-gray-200 dark:border-gray-700'}
+                    ${isRest ? 'bg-gray-50 dark:bg-gray-800/50' : ''}
+                    ${hasTraining ? 'cursor-pointer hover:shadow-md transition-all' : ''}
+                    min-h-[300px]
+                  `}
+                >
+                  {/* Day Header */}
+                  <div className="mb-4 pb-3 border-b border-gray-200 dark:border-gray-700">
+                    <p className="text-xs font-semibold text-gray-500 dark:text-gray-400 uppercase mb-1">
+                      {DAYS_OF_WEEK[index]}
+                    </p>
+                    <p className="text-lg font-bold text-gray-900 dark:text-white">
+                      {day.getDate()}
+                    </p>
+                    {isToday && (
+                      <span className="inline-block mt-1 text-xs px-2 py-0.5 bg-blue-100 dark:bg-blue-900/30 text-blue-700 dark:text-blue-400 rounded-full">
+                        Hoy
+                      </span>
                     )}
+                  </div>
 
-                    {isRest && (
-                      <div className="text-center py-4 sm:py-6">
-                        <span className="text-3xl sm:text-4xl">💤</span>
-                        <p className="text-xs sm:text-sm text-gray-500 dark:text-gray-400 mt-2">
-                          Día de recuperación
-                        </p>
+                  {/* Status indicator */}
+                  {isCompleted && (
+                    <div className="absolute top-3 right-3 flex items-center space-x-1">
+                      {training.rpeScore && <span className="text-lg">{getRPEEmoji(training.rpeScore)}</span>}
+                      <FiCheckCircle className="w-5 h-5 text-green-500" />
+                    </div>
+                  )}
+                  {isSkipped && (
+                    <div className="absolute top-3 right-3">
+                      <FiSkipForward className="w-5 h-5 text-gray-400" />
+                    </div>
+                  )}
+
+                  {/* Training Content */}
+                  {training ? (
+                    <div className="space-y-3">
+                      <div className="flex items-center gap-2 flex-wrap">
+                        <span className={`inline-block text-xs px-2 py-1 rounded-full ${getTypeColor(training.type)}`}>
+                          {getTypeLabel(training.type)}
+                        </span>
+                        {isCompleted && (
+                          <span className="inline-block text-xs px-2 py-1 rounded-full bg-green-100 text-green-700 dark:bg-green-900/30 dark:text-green-400">
+                            Completado
+                          </span>
+                        )}
+                        {isSkipped && (
+                          <span className="inline-block text-xs px-2 py-1 rounded-full bg-gray-200 text-gray-600 dark:bg-gray-700 dark:text-gray-400">
+                            Omitido
+                          </span>
+                        )}
                       </div>
-                    )}
-                  </div>
-                ) : (
-                  <div className="text-center py-8 sm:py-12 text-gray-400">
-                    <p className="text-xs sm:text-sm">Sin entrenamiento</p>
-                  </div>
-                )}
-              </motion.div>
-            );
-          })}
-        </div>
+
+                      <h3 className={`font-bold text-lg ${
+                        isRest ? 'text-gray-500 dark:text-gray-400' : 'text-gray-900 dark:text-white'
+                      }`}>
+                        {training.title}
+                      </h3>
+
+                      {!isRest && (
+                        <>
+                          {training.totalDistance && (
+                            <div className="flex items-start space-x-2">
+                              <span className="text-sm">📏</span>
+                              <p className="text-sm text-gray-700 dark:text-gray-300">{training.totalDistance}</p>
+                            </div>
+                          )}
+                          {training.duration && (
+                            <div className="flex items-start space-x-2">
+                              <span className="text-sm">⏰</span>
+                              <p className="text-sm text-gray-700 dark:text-gray-300">{training.duration} min</p>
+                            </div>
+                          )}
+                          {training.exercises?.length > 0 && (
+                            <div className="mt-2 pt-2 border-t border-gray-200 dark:border-gray-700">
+                              <p className="text-xs text-gray-500 dark:text-gray-400 mb-1">Ejercicios:</p>
+                              <ul className="space-y-1">
+                                {training.exercises.slice(0, 3).map((ex, i) => (
+                                  <li key={i} className="text-xs text-gray-700 dark:text-gray-300 truncate">
+                                    • {ex.name}
+                                    {ex.sets && <span className="text-gray-500"> ({ex.sets}x{ex.reps || ''})</span>}
+                                  </li>
+                                ))}
+                                {training.exercises.length > 3 && (
+                                  <li className="text-xs text-gray-500 dark:text-gray-400">
+                                    +{training.exercises.length - 3} más
+                                  </li>
+                                )}
+                              </ul>
+                            </div>
+                          )}
+                          {training.description && !training.exercises?.length && (
+                            <p className="text-xs text-gray-500 dark:text-gray-400 line-clamp-3">{training.description}</p>
+                          )}
+                          <div className="mt-2 pt-2 text-center">
+                            {canComplete ? (
+                              <span className="inline-flex items-center space-x-1 text-xs font-medium text-green-600 dark:text-green-400">
+                                <FiCheck className="w-3.5 h-3.5" />
+                                <span>Completar sesión</span>
+                              </span>
+                            ) : (
+                              <span className="text-xs text-blue-500 dark:text-blue-400">
+                                {isCompleted ? 'Ver resultado →' : 'Ver detalles →'}
+                              </span>
+                            )}
+                          </div>
+                        </>
+                      )}
+                      {isRest && (
+                        <div className="text-center py-6">
+                          <span className="text-4xl">💤</span>
+                          <p className="text-sm text-gray-500 dark:text-gray-400 mt-2">Día de recuperación</p>
+                        </div>
+                      )}
+                    </div>
+                  ) : (
+                    <div className="text-center py-12 text-gray-400">
+                      <p className="text-sm">Sin entrenamiento</p>
+                    </div>
+                  )}
+                </motion.div>
+              );
+            })}
+          </div>
+        </>
       )}
 
       {/* Mis Últimos Entrenamientos (Strava) */}
@@ -1252,8 +1362,8 @@ const Training = () => {
                       </div>
                     )}
 
-                    {/* Coach Notes */}
-                    {selectedDay.notes && (
+                    {/* Coach Notes — only show if different from description */}
+                    {selectedDay.notes && selectedDay.notes !== selectedDay.description && (
                       <div className="bg-yellow-50 dark:bg-yellow-900/20 rounded-lg p-4 border border-yellow-200 dark:border-yellow-800">
                         <h4 className="text-sm font-semibold text-yellow-700 dark:text-yellow-400 mb-2 flex items-center">
                           💬 Notas del Entrenador

@@ -17,7 +17,6 @@ import {
   FiFileText,
 } from 'react-icons/fi';
 import useCoachAthletes from '../../hooks/useCoachAthletes';
-import TrainingPlanningWizard from '../../components/dashboard/TrainingPlanningWizard';
 import ConconiTestModal from '../../components/dashboard/ConconiTestModal';
 import VAMTestModal from '../../components/dashboard/VAMTestModal';
 
@@ -30,7 +29,6 @@ const Athletes = () => {
     handleAcceptRequest, handleRejectRequest, handleDelete: deleteAthlete,
   } = useCoachAthletes(profile?.coach_id || profile?.id);
   const [deleteModal, setDeleteModal] = useState({ show: false, athlete: null });
-  const [trainingModal, setTrainingModal] = useState({ show: false, athlete: null });
   const [conconiModal, setConconiModal] = useState({ show: false, athlete: null });
   const [vamModal, setVamModal] = useState({ show: false, athlete: null });
   const [testMenuAthleteId, setTestMenuAthleteId] = useState(null);
@@ -293,13 +291,13 @@ const Athletes = () => {
                     </td>
                     <td className="px-6 py-4 whitespace-nowrap text-right text-sm font-medium">
                       <div className="flex items-center justify-end space-x-2">
-                        <button
-                          onClick={() => setTrainingModal({ show: true, athlete })}
+                        <Link
+                          to="/dashboard/planning"
                           className="p-2 text-orange-600 hover:bg-orange-50 dark:hover:bg-orange-900/20 rounded-lg transition-colors"
-                          title="Crear Entrenamiento Semanal"
+                          title="Planificación"
                         >
                           <FiCalendar className="w-5 h-5" />
-                        </button>
+                        </Link>
                         <Link
                           to={`/dashboard/athletes/${athlete.id}/metrics`}
                           className="p-2 text-purple-600 hover:bg-purple-50 dark:hover:bg-purple-900/20 rounded-lg transition-colors"
@@ -406,16 +404,6 @@ const Athletes = () => {
         )}
       </AnimatePresence>
 
-      {/* Training Planning Wizard */}
-      <TrainingPlanningWizard
-        isOpen={trainingModal.show}
-        onClose={() => setTrainingModal({ show: false, athlete: null })}
-        athlete={trainingModal.athlete}
-        coachId={profile?.coach_id || profile?.id}
-        onSuccess={() => {
-          console.log('Entrenamiento guardado exitosamente');
-        }}
-      />
 
       {/* Conconi Test Modal */}
       <ConconiTestModal

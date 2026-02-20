@@ -20,7 +20,7 @@ import { supabase } from '../../lib/supabase';
 
 const AthleteMessages = () => {
   const { profile, getMyCoach } = useAuth();
-  const { refreshUnreadCount, decrementUnread } = useNotifications();
+  const { refreshUnreadCount, decrementUnread, setActiveConversationPartnerId } = useNotifications();
 
   const [coachInfo, setCoachInfo] = useState(null);
   const [messages, setMessages] = useState([]);
@@ -47,6 +47,7 @@ const AthleteMessages = () => {
         last_name: coach.last_name,
         profile_image: coach.profile_image,
       });
+      setActiveConversationPartnerId(coach.id);
 
       const key = getConversationKey(profile.id, coach.id);
 
@@ -85,8 +86,9 @@ const AthleteMessages = () => {
     loadData();
     return () => {
       if (channelRef.current) supabase.removeChannel(channelRef.current);
+      setActiveConversationPartnerId(null);
     };
-  }, [loadData]);
+  }, [loadData, setActiveConversationPartnerId]);
 
   // Auto-scroll
   const scrollToBottom = useCallback((smooth = true) => {

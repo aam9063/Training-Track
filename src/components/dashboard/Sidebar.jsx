@@ -15,6 +15,7 @@ import {
   FiMenu,
   FiX,
   FiMessageSquare,
+  FiClipboard,
   FiSun,
   FiMoon,
 } from 'react-icons/fi';
@@ -49,6 +50,7 @@ const Sidebar = ({ onCollapse }) => {
   const menuItems = [
     { path: '/dashboard', icon: FiHome, label: 'Dashboard' },
     { path: '/dashboard/athletes', icon: FiUsers, label: 'Mis Atletas' },
+    { path: '/dashboard/planning', icon: FiClipboard, label: 'Planificación' },
     { path: '/dashboard/metrics', icon: FiBarChart2, label: 'Equipo' },
     { path: '/dashboard/calendar', icon: FiCalendar, label: 'Calendario' },
     { path: '/dashboard/messages', icon: FiMessageSquare, label: 'Mensajes', badge: unreadMessages },

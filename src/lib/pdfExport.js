@@ -379,6 +379,15 @@ const buildWeekRow = (trainings, weekDays) => {
 
       // Each exercise on its own line for readability
       lines.push(...exLines);
+    } else if (training.description) {
+      // No exercises but has description (e.g. from the planning tool)
+      // Only show title if it adds info beyond the description
+      const titleIsPrefix = training.title && training.description.startsWith(training.title.replace('...', ''));
+      if (training.title && training.title !== 'Entrenamiento' && !titleIsPrefix) {
+        lines.push(training.title);
+        lines.push('');
+      }
+      lines.push(training.description);
     }
 
     // Total distance

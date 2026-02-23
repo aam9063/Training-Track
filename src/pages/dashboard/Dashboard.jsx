@@ -5,6 +5,7 @@ import { motion, AnimatePresence } from 'framer-motion';
 import {
   FiUsers,
   FiActivity,
+  FiCheck,
   FiCheckCircle,
   FiTrendingUp,
   FiArrowRight,
@@ -23,6 +24,9 @@ import CreateCompetitionModal from '../../components/dashboard/CreateCompetition
 import { toLocalDateStr } from '../../lib/dateUtils';
 import useCoachDashboard from '../../hooks/useCoachDashboard';
 import { getWeekStartDate } from '../../services/weeklyTrainingService';
+import { addAthletesToCompetition } from '../../services/athleteService';
+import { getCoachAthletesList } from '../../services/planningService';
+import { showSuccess, showError } from '../../lib/toast';
 
 const Dashboard = () => {
   const { user, profile } = useAuth();
@@ -33,6 +37,10 @@ const Dashboard = () => {
   } = useCoachDashboard(profile?.id);
   const [selectedSession, setSelectedSession] = useState(null);
   const [showCreateCompetition, setShowCreateCompetition] = useState(false);
+  const [showAddAthletes, setShowAddAthletes] = useState(false);
+  const [allAthletes, setAllAthletes] = useState([]);
+  const [addingAthleteIds, setAddingAthleteIds] = useState([]);
+  const [savingAdd, setSavingAdd] = useState(false);
 
   const displayName = profile?.first_name || user?.user_metadata?.first_name || 'Usuario';
 
@@ -189,6 +197,41 @@ const Dashboard = () => {
     return toLocalDateStr(now) === toLocalDateStr(currentWeekStart);
   };
 
+  const handleOpenAddAthletes = async (comp) => {
+    setShowAddAthletes(true);
+    setAddingAthleteIds([]);
+    const { data } = await getCoachAthletesList(profile?.id);
+    const assignedIds = new Set((comp.athletes || []).map(a => a.id));
+    setAllAthletes((data || []).filter(a => !assignedIds.has(a.id)));
+  };
+
+  const handleConfirmAddAthletes = async () => {
+    if (!addingAthleteIds.length || !selectedSession) return;
+    setSavingAdd(true);
+    const { error } = await addAthletesToCompetition(profile?.id, addingAthleteIds, {
+      name: selectedSession.name,
+      event_date: selectedSession.event_date,
+      location: selectedSession.location,
+      distance_km: selectedSession.distance_km,
+      distance_name: selectedSession.distance_name,
+      event_type: selectedSession.event_type,
+      surface: selectedSession.surface,
+      target_time_seconds: selectedSession.target_time_seconds,
+      target_pace_seconds: selectedSession.target_pace_seconds,
+      priority: selectedSession.priority,
+      notes: selectedSession.notes,
+    });
+    setSavingAdd(false);
+    if (error) {
+      showError('Error al añadir atletas');
+    } else {
+      showSuccess(`${addingAthleteIds.length} atleta${addingAthleteIds.length > 1 ? 's' : ''} añadido${addingAthleteIds.length > 1 ? 's' : ''}`);
+      setShowAddAthletes(false);
+      setSelectedSession(null);
+      refreshCompetitions();
+    }
+  };
+
   if (loading) {
     return (
       <div className="flex items-center justify-center min-h-screen">
@@ -201,7 +244,7 @@ const Dashboard = () => {
   }
 
   return (
-    <div className="p-4 sm:p-6 lg:p-8 max-w-7xl mx-auto">
+    <div className="p-4 sm:p-6 lg:p-8">
       {/* Header */}
       <div className="mb-6 sm:mb-8">
         <h1 className="text-2xl sm:text-3xl font-bold text-gray-900 dark:text-white mb-2">
@@ -737,11 +780,22 @@ const Dashboard = () => {
 
                   {/* Athletes */}
                   <div>
-                    <p className="text-sm text-gray-500 dark:text-gray-400 mb-2">
-                      {selectedSession.athletes?.length > 1
-                        ? `Asignado a ${selectedSession.athletes.length} atletas`
-                        : 'Atleta'}
-                    </p>
+                    <div className="flex items-center justify-between mb-2">
+                      <p className="text-sm text-gray-500 dark:text-gray-400">
+                        {selectedSession.athletes?.length > 1
+                          ? `Asignado a ${selectedSession.athletes.length} atletas`
+                          : 'Atleta'}
+                      </p>
+                      {selectedSession.isCompetition && (
+                        <button
+                          onClick={() => handleOpenAddAthletes(selectedSession)}
+                          className="flex items-center gap-1 text-xs text-red-600 dark:text-red-400 hover:underline"
+                        >
+                          <FiPlus className="w-3 h-3" />
+                          Añadir atletas
+                        </button>
+                      )}
+                    </div>
                     <div className="space-y-2">
                       {(selectedSession.athletes || [{ id: selectedSession.athlete_id, name: selectedSession.athleteName, image: selectedSession.athleteImage, status: selectedSession.status }]).map((athlete) => (
                         <Link
@@ -766,6 +820,69 @@ const Dashboard = () => {
                         </Link>
                       ))}
                     </div>
+
+                    {/* Add athletes panel */}
+                    {selectedSession.isCompetition && showAddAthletes && (
+                      <div className="mt-3 p-3 bg-red-50 dark:bg-red-900/20 rounded-xl border border-red-200 dark:border-red-700">
+                        <p className="text-xs font-medium text-gray-700 dark:text-gray-300 mb-2">
+                          Selecciona atletas a añadir:
+                        </p>
+                        {allAthletes.length === 0 ? (
+                          <p className="text-xs text-gray-400 dark:text-gray-500 text-center py-2">
+                            Todos los atletas ya están asignados
+                          </p>
+                        ) : (
+                          <div className="space-y-1 max-h-40 overflow-y-auto mb-3">
+                            {allAthletes.map(a => {
+                              const selected = addingAthleteIds.includes(a.id);
+                              return (
+                                <button
+                                  key={a.id}
+                                  type="button"
+                                  onClick={() => setAddingAthleteIds(prev =>
+                                    prev.includes(a.id) ? prev.filter(x => x !== a.id) : [...prev, a.id]
+                                  )}
+                                  className={`w-full flex items-center gap-2 px-3 py-2 rounded-lg text-left text-sm transition-colors ${
+                                    selected
+                                      ? 'bg-red-100 dark:bg-red-900/40 border border-red-300 dark:border-red-600'
+                                      : 'hover:bg-red-100/50 dark:hover:bg-red-900/30 border border-transparent'
+                                  }`}
+                                >
+                                  <div className={`w-4 h-4 rounded flex items-center justify-center flex-shrink-0 ${
+                                    selected ? 'bg-red-600 text-white' : 'border-2 border-gray-300 dark:border-gray-600'
+                                  }`}>
+                                    {selected && <FiCheck className="w-2.5 h-2.5" />}
+                                  </div>
+                                  <img
+                                    src={a.profile_image || `https://ui-avatars.com/api/?name=${encodeURIComponent(`${a.first_name} ${a.last_name}`)}&background=random&size=32`}
+                                    alt=""
+                                    className="w-7 h-7 rounded-full"
+                                  />
+                                  <span className="text-gray-900 dark:text-white font-medium">{a.first_name} {a.last_name}</span>
+                                </button>
+                              );
+                            })}
+                          </div>
+                        )}
+                        <div className="flex gap-2 justify-end">
+                          <button
+                            onClick={() => setShowAddAthletes(false)}
+                            className="text-xs px-3 py-1.5 text-gray-600 dark:text-gray-400 hover:bg-gray-100 dark:hover:bg-gray-700 rounded-lg transition-colors"
+                          >
+                            Cancelar
+                          </button>
+                          {allAthletes.length > 0 && (
+                            <button
+                              onClick={handleConfirmAddAthletes}
+                              disabled={savingAdd || addingAthleteIds.length === 0}
+                              className="text-xs px-3 py-1.5 bg-red-600 text-white rounded-lg hover:bg-red-700 transition-colors disabled:opacity-50 font-medium"
+                            >
+                              {savingAdd ? 'Guardando...' : `Añadir${addingAthleteIds.length > 0 ? ` (${addingAthleteIds.length})` : ''}`}
+                            </button>
+                          )}
+                        </div>
+                      </div>
+                    )}
                   </div>
 
                   {/* Competition-specific fields */}

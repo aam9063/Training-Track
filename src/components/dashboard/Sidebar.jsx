@@ -129,7 +129,7 @@ const Sidebar = ({ onCollapse }) => {
         {!collapsed && (
           <button
             onClick={() => setCollapsed(!collapsed)}
-            className="p-1.5 rounded-lg hover:bg-gray-100 dark:hover:bg-gray-700 text-gray-500 dark:text-gray-400 transition-colors"
+            className="hidden lg:block p-1.5 rounded-lg hover:bg-gray-100 dark:hover:bg-gray-700 text-gray-500 dark:text-gray-400 transition-colors"
             aria-label="Colapsar sidebar"
           >
             <FiChevronLeft className="w-5 h-5" />
@@ -138,7 +138,7 @@ const Sidebar = ({ onCollapse }) => {
         {collapsed && (
           <button
             onClick={() => setCollapsed(!collapsed)}
-            className="absolute top-16 left-1/2 -translate-x-1/2 -translate-y-1/2 p-1 rounded-full bg-white dark:bg-gray-800 border border-gray-200 dark:border-gray-700 shadow-sm hover:bg-gray-100 dark:hover:bg-gray-700 text-gray-500 dark:text-gray-400 transition-colors z-10"
+            className="hidden lg:block absolute top-16 left-1/2 -translate-x-1/2 -translate-y-1/2 p-1 rounded-full bg-white dark:bg-gray-800 border border-gray-200 dark:border-gray-700 shadow-sm hover:bg-gray-100 dark:hover:bg-gray-700 text-gray-500 dark:text-gray-400 transition-colors z-10"
             aria-label="Expandir sidebar"
           >
             <FiChevronRight className="w-4 h-4" />

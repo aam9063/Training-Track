@@ -122,7 +122,8 @@ const CreateCompetitionModal = ({ coachId, onCreated, onClose }) => {
               type="date"
               value={eventDate}
               onChange={(e) => setEventDate(e.target.value)}
-              className="w-full px-3 py-2.5 bg-gray-50 dark:bg-gray-700 border border-gray-200 dark:border-gray-600 rounded-xl text-sm text-gray-900 dark:text-white focus:ring-2 focus:ring-red-500 focus:border-transparent outline-none"
+              style={{ WebkitAppearance: 'none', MozAppearance: 'none', appearance: 'none' }}
+              className="w-full px-3 py-2.5 bg-gray-50 dark:bg-gray-700 border border-gray-200 dark:border-gray-600 rounded-xl text-sm text-gray-900 dark:text-white focus:ring-2 focus:ring-red-500 focus:border-transparent outline-none min-h-[42px] box-border"
             />
           </div>
 

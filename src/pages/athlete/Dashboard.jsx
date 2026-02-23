@@ -12,7 +12,8 @@ import {
   FiFlag,
   FiBarChart2,
   FiMapPin,
-  FiAward,
+  FiSmartphone,
+  FiMessageSquare,
 } from 'react-icons/fi';
 import { supabase } from '../../lib/supabase';
 import { toLocalDateStr } from '../../lib/dateUtils';
@@ -477,25 +478,25 @@ const AthleteDashboard = () => {
             </Link>
 
             <Link
-              to="/athlete/metrics"
+              to="/athlete/devices"
               className="p-4 bg-gradient-to-br from-green-50 to-emerald-50 dark:from-green-900/20 dark:to-emerald-900/20 rounded-xl border border-green-100 dark:border-green-800/30 hover:shadow-md transition-all group"
             >
               <div className="w-10 h-10 bg-green-500 rounded-lg flex items-center justify-center mb-3 group-hover:scale-110 transition-transform">
-                <FiTrendingUp className="w-5 h-5 text-white" />
+                <FiSmartphone className="w-5 h-5 text-white" />
               </div>
-              <p className="font-semibold text-gray-900 dark:text-white text-sm">Progresión</p>
-              <p className="text-xs text-gray-500 dark:text-gray-400 mt-1">Evolución semanal</p>
+              <p className="font-semibold text-gray-900 dark:text-white text-sm">Dispositivos</p>
+              <p className="text-xs text-gray-500 dark:text-gray-400 mt-1">Conecta tus dispositivos</p>
             </Link>
 
             <Link
-              to="/athlete/metrics"
+              to="/athlete/messages"
               className="p-4 bg-gradient-to-br from-yellow-50 to-orange-50 dark:from-yellow-900/20 dark:to-orange-900/20 rounded-xl border border-yellow-100 dark:border-yellow-800/30 hover:shadow-md transition-all group"
             >
               <div className="w-10 h-10 bg-yellow-500 rounded-lg flex items-center justify-center mb-3 group-hover:scale-110 transition-transform">
-                <FiAward className="w-5 h-5 text-white" />
+                <FiMessageSquare className="w-5 h-5 text-white" />
               </div>
-              <p className="font-semibold text-gray-900 dark:text-white text-sm">Marcas</p>
-              <p className="text-xs text-gray-500 dark:text-gray-400 mt-1">Récords personales</p>
+              <p className="font-semibold text-gray-900 dark:text-white text-sm">Mensajes</p>
+              <p className="text-xs text-gray-500 dark:text-gray-400 mt-1">Chat con tu entrenador</p>
             </Link>
 
             <Link

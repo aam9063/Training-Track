@@ -403,6 +403,198 @@ const AthleteProfile = () => {
         </div>
       </div>
 
+      {/* Test Tables: Conconi + VAM side by side */}
+      <div className="grid grid-cols-1 lg:grid-cols-2 gap-4 lg:gap-6 mb-4 lg:mb-6">
+        {/* Conconi Paces */}
+        <motion.div
+          initial={{ opacity: 0, y: 20 }}
+          animate={{ opacity: 1, y: 0 }}
+          transition={{ delay: 0.1 }}
+          className="bg-white dark:bg-gray-800 rounded-2xl shadow-sm border border-gray-200 dark:border-gray-700 overflow-hidden"
+        >
+          <div className="p-3 sm:p-4 border-b border-gray-200 dark:border-gray-700">
+            <h2 className="text-base sm:text-lg font-bold text-gray-900 dark:text-white flex items-center">
+              <FiZap className="w-4 h-4 sm:w-5 sm:h-5 mr-2 text-amber-500" />
+              Test de Conconi
+            </h2>
+          </div>
+          {!athlete.athlete_paces?.length ? (
+            <div className="text-center py-6 px-4">
+              <FiZap className="w-8 h-8 text-gray-300 dark:text-gray-600 mx-auto mb-2" />
+              <p className="text-sm text-gray-500 dark:text-gray-400">Sin test de Conconi</p>
+              <p className="text-xs text-gray-400 dark:text-gray-500 mt-1">Sube un CSV desde el icono de tests</p>
+            </div>
+          ) : (() => {
+            const paceOrder = ['RM', 'R10', 'R9', 'R8', 'R7', 'R6', 'R5', 'R4', 'R3', 'R2', 'R1', 'RR'];
+            const sorted = paceOrder
+              .map(code => athlete.athlete_paces.find(p => p.pace_code === code))
+              .filter(Boolean);
+            const bgColors = {
+              RM: 'bg-red-600', R10: 'bg-red-500', R9: 'bg-red-400', R8: 'bg-orange-500',
+              R7: 'bg-orange-400', R6: 'bg-yellow-500', R5: 'bg-yellow-400', R4: 'bg-lime-400',
+              R3: 'bg-lime-500', R2: 'bg-green-400', R1: 'bg-green-500', RR: 'bg-emerald-600',
+            };
+            const pctLabels = {
+              RM: '100%', R10: '92%', R9: '90%', R8: '88%', R7: '86%', R6: '84%',
+              R5: '82%', R4: '78%', R3: '72%', R2: '62%', R1: '50%', RR: '42%',
+            };
+            const seriesRecovery = {};
+            if (athlete.latest_conconi?.conconi_test_series) {
+              const series = [...athlete.latest_conconi.conconi_test_series].sort((a, b) => a.series_number - b.series_number);
+              const totalSeries = series.length;
+              const totalPaces = sorted.length;
+              sorted.forEach((pace, i) => {
+                if (pace.pace_code === 'RR') return;
+                const seriesIdx = Math.round((i / (totalPaces - 1)) * (totalSeries - 1));
+                const s = series[Math.min(seriesIdx, totalSeries - 1)];
+                if (s?.recovery_time_seconds) seriesRecovery[pace.pace_code] = s.recovery_time_seconds;
+              });
+            }
+            const maxHr = athlete.latest_conconi?.max_hr_reached;
+            const fmtPace = (secs) => { const m = Math.floor(secs / 60); const s = Math.round(secs % 60); return `${m}'${String(s).padStart(2, '0')}"`; };
+            const fmtRecu = (secs) => { if (!secs) return ''; const m = Math.floor(secs / 60); const s = secs % 60; return s > 0 ? `${m}'${String(s).padStart(2, '0')}"` : `${m}'`; };
+
+            return (
+              <div className="overflow-x-auto">
+                <table className="w-full text-[11px] sm:text-xs min-w-[500px]">
+                  <thead>
+                    <tr>
+                      <th className="text-left py-1.5 px-2 text-gray-500 dark:text-gray-400 font-medium whitespace-nowrap sticky left-0 bg-white dark:bg-gray-800 z-10 w-24"></th>
+                      {sorted.map(pace => (
+                        <th key={pace.pace_code} className={`px-1 py-1.5 text-center text-white font-bold whitespace-nowrap ${bgColors[pace.pace_code] || 'bg-gray-500'}`}>
+                          {pace.pace_code}
+                        </th>
+                      ))}
+                    </tr>
+                  </thead>
+                  <tbody>
+                    <tr className="bg-gray-50 dark:bg-gray-700/30">
+                      <td className="py-1 px-2 sticky left-0 bg-gray-50 dark:bg-gray-700/30 z-10"></td>
+                      {sorted.map(pace => (
+                        <td key={pace.pace_code} className="px-1 py-1 text-center text-gray-500 dark:text-gray-400 whitespace-nowrap">{pctLabels[pace.pace_code] || ''}</td>
+                      ))}
+                    </tr>
+                    <tr className="border-t border-gray-200 dark:border-gray-700">
+                      <td className="py-1.5 px-2 text-gray-600 dark:text-gray-300 font-semibold whitespace-nowrap sticky left-0 bg-white dark:bg-gray-800 z-10">Ritmo/1.000m</td>
+                      {sorted.map(pace => (
+                        <td key={pace.pace_code} className="px-1 py-1.5 text-center font-mono font-semibold text-gray-900 dark:text-white whitespace-nowrap">{fmtPace(pace.pace_seconds_per_km)}</td>
+                      ))}
+                    </tr>
+                    <tr className="border-t border-gray-200 dark:border-gray-700 bg-gray-50 dark:bg-gray-700/30">
+                      <td className="py-1.5 px-2 text-gray-600 dark:text-gray-300 font-semibold whitespace-nowrap sticky left-0 bg-gray-50 dark:bg-gray-700/30 z-10">Pulso</td>
+                      {sorted.map(pace => (
+                        <td key={pace.pace_code} className="px-1 py-1.5 text-center font-mono text-gray-700 dark:text-gray-300 whitespace-nowrap">
+                          {pace.heart_rate_min && pace.heart_rate_max ? `${pace.heart_rate_max}` : ''}
+                        </td>
+                      ))}
+                    </tr>
+                    {Object.keys(seriesRecovery).length > 0 && (
+                      <tr className="border-t border-gray-200 dark:border-gray-700">
+                        <td className="py-1.5 px-2 text-gray-600 dark:text-gray-300 font-semibold whitespace-nowrap sticky left-0 bg-white dark:bg-gray-800 z-10">Recu. a 120p</td>
+                        {sorted.map(pace => (
+                          <td key={pace.pace_code} className="px-1 py-1.5 text-center font-mono text-gray-700 dark:text-gray-300 whitespace-nowrap">{seriesRecovery[pace.pace_code] ? fmtRecu(seriesRecovery[pace.pace_code]) : ''}</td>
+                        ))}
+                      </tr>
+                    )}
+                  </tbody>
+                </table>
+                {maxHr && (
+                  <div className="px-3 py-1.5 text-[10px] text-gray-500 dark:text-gray-400 border-t border-gray-100 dark:border-gray-700">
+                    FC máx: <span className="font-semibold text-gray-700 dark:text-gray-300">{maxHr} ppm</span>
+                    {athlete.latest_conconi?.test_date && (
+                      <span> &middot; {new Date(athlete.latest_conconi.test_date + 'T12:00:00').toLocaleDateString('es-ES')}</span>
+                    )}
+                  </div>
+                )}
+              </div>
+            );
+          })()}
+        </motion.div>
+
+        {/* VAM Test Results */}
+        <motion.div
+          initial={{ opacity: 0, y: 20 }}
+          animate={{ opacity: 1, y: 0 }}
+          transition={{ delay: 0.2 }}
+          className="bg-white dark:bg-gray-800 rounded-2xl shadow-sm border border-gray-200 dark:border-gray-700 overflow-hidden"
+        >
+          <div className="p-3 sm:p-4 border-b border-gray-200 dark:border-gray-700">
+            <h2 className="text-base sm:text-lg font-bold text-gray-900 dark:text-white flex items-center">
+              <FiActivity className="w-4 h-4 sm:w-5 sm:h-5 mr-2 text-purple-500" />
+              Test VAM
+            </h2>
+          </div>
+          {!athlete.latest_vam ? (
+            <div className="text-center py-6 px-4">
+              <FiActivity className="w-8 h-8 text-gray-300 dark:text-gray-600 mx-auto mb-2" />
+              <p className="text-sm text-gray-500 dark:text-gray-400">Sin test de VAM</p>
+              <p className="text-xs text-gray-400 dark:text-gray-500 mt-1">Registra un test desde el icono de tests</p>
+            </div>
+          ) : (() => {
+            const vam = athlete.latest_vam;
+            const vamKmh = parseFloat(vam.vam_kmh);
+            const paceSecsKm = vam.pace_seconds_per_km;
+            const vo2max = (vamKmh * 3.5).toFixed(1);
+            const mlssKmh = (vamKmh * 0.88).toFixed(1);
+            const mlssPace = Math.round(3600 / (vamKmh * 0.88));
+            const vt2Kmh = (vamKmh * 0.875).toFixed(1);
+            const vt2Pace = Math.round(3600 / (vamKmh * 0.875));
+            const vt1Kmh = (vamKmh * 0.775).toFixed(1);
+            const vt1Pace = Math.round(3600 / (vamKmh * 0.775));
+            const maxHr = athlete.latest_conconi?.max_hr_reached;
+            const fmtP = (secs) => { const m = Math.floor(secs / 60); const s = Math.round(secs % 60); return `${m}'${String(s).padStart(2, '0')}"`; };
+
+            return (
+              <div className="overflow-x-auto">
+                <table className="w-full text-[11px] sm:text-xs min-w-[400px]">
+                  <thead>
+                    <tr>
+                      {[
+                        { label: 'FCmax', color: 'bg-red-500' },
+                        { label: 'VAM', color: 'bg-purple-500' },
+                        { label: 'VO2max', color: 'bg-blue-500' },
+                        { label: 'MLSS', color: 'bg-orange-500' },
+                        { label: 'VT2', color: 'bg-yellow-500' },
+                        { label: 'VT1', color: 'bg-green-500' },
+                      ].map(col => (
+                        <th key={col.label} className={`px-2 py-1.5 text-center text-white font-bold whitespace-nowrap ${col.color}`}>{col.label}</th>
+                      ))}
+                    </tr>
+                  </thead>
+                  <tbody>
+                    <tr className="border-t border-gray-200 dark:border-gray-700">
+                      {[maxHr ? `${maxHr}` : '-', `${vamKmh.toFixed(1)}`, vo2max, mlssKmh, vt2Kmh, vt1Kmh].map((val, i) => (
+                        <td key={i} className="px-2 py-1.5 text-center font-mono font-semibold text-gray-900 dark:text-white whitespace-nowrap">{val}</td>
+                      ))}
+                    </tr>
+                    <tr className="bg-gray-50 dark:bg-gray-700/30">
+                      {[maxHr ? 'ppm' : '', 'km/h', 'ml/kg/min', 'km/h', 'km/h', 'km/h'].map((unit, i) => (
+                        <td key={i} className="px-2 py-1 text-center text-[10px] text-gray-500 dark:text-gray-400 whitespace-nowrap">{unit}</td>
+                      ))}
+                    </tr>
+                    <tr className="border-t border-gray-200 dark:border-gray-700">
+                      {['', fmtP(paceSecsKm), '', fmtP(mlssPace), fmtP(vt2Pace), fmtP(vt1Pace)].map((val, i) => (
+                        <td key={i} className="px-2 py-1.5 text-center font-mono text-gray-700 dark:text-gray-300 whitespace-nowrap">{val}</td>
+                      ))}
+                    </tr>
+                    <tr className="bg-gray-50 dark:bg-gray-700/30">
+                      {['', 'min/km', '', 'min/km', 'min/km', 'min/km'].map((unit, i) => (
+                        <td key={i} className="px-2 py-1 text-center text-[10px] text-gray-500 dark:text-gray-400 whitespace-nowrap">{unit}</td>
+                      ))}
+                    </tr>
+                  </tbody>
+                </table>
+                <div className="px-3 py-1.5 text-[10px] text-gray-500 dark:text-gray-400 border-t border-gray-100 dark:border-gray-700">
+                  {vam.distance_meters}m en {Math.floor(vam.duration_seconds / 60)}:{String(vam.duration_seconds % 60).padStart(2, '0')}
+                  {vam.location ? ` · ${vam.location}` : ''}
+                  {' · '}{new Date(vam.test_date + 'T12:00:00').toLocaleDateString('es-ES')}
+                </div>
+              </div>
+            );
+          })()}
+        </motion.div>
+      </div>
+
       {/* Main Content - Collage Layout */}
       <div className="grid grid-cols-12 gap-4 lg:gap-6">
         {/* Weekly Training Grid - Spans full width */}
@@ -946,7 +1138,7 @@ const AthleteProfile = () => {
           initial={{ opacity: 0, y: 20 }}
           animate={{ opacity: 1, y: 0 }}
           transition={{ delay: 0.3 }}
-          className="col-span-12 lg:col-span-4 bg-white dark:bg-gray-800 rounded-2xl shadow-sm border border-gray-200 dark:border-gray-700 overflow-hidden"
+          className="col-span-12 lg:col-span-6 bg-white dark:bg-gray-800 rounded-2xl shadow-sm border border-gray-200 dark:border-gray-700 overflow-hidden"
         >
           <div className="p-4 border-b border-gray-200 dark:border-gray-700 bg-gradient-to-r from-red-500 to-pink-500 flex items-center justify-between">
             <h2 className="text-lg font-bold text-white flex items-center">
@@ -1022,7 +1214,7 @@ const AthleteProfile = () => {
           initial={{ opacity: 0, y: 20 }}
           animate={{ opacity: 1, y: 0 }}
           transition={{ delay: 0.4 }}
-          className="col-span-12 lg:col-span-4 bg-white dark:bg-gray-800 rounded-2xl shadow-sm border border-gray-200 dark:border-gray-700 overflow-hidden"
+          className="col-span-12 lg:col-span-6 bg-white dark:bg-gray-800 rounded-2xl shadow-sm border border-gray-200 dark:border-gray-700 overflow-hidden"
         >
           <div className="p-4 border-b border-gray-200 dark:border-gray-700 bg-gradient-to-r from-yellow-500 to-amber-500">
             <h2 className="text-lg font-bold text-white flex items-center">
@@ -1094,192 +1286,6 @@ const AthleteProfile = () => {
           </div>
         </motion.div>
 
-        {/* Training Zones / Paces + VAM */}
-        <motion.div
-          initial={{ opacity: 0, y: 20 }}
-          animate={{ opacity: 1, y: 0 }}
-          transition={{ delay: 0.5 }}
-          className="col-span-12 lg:col-span-4 space-y-4"
-        >
-          {/* Conconi Paces */}
-          <div className="bg-white dark:bg-gray-800 rounded-2xl shadow-sm border border-gray-200 dark:border-gray-700 overflow-hidden">
-            <div className="p-3 sm:p-4 border-b border-gray-200 dark:border-gray-700">
-              <h2 className="text-base sm:text-lg font-bold text-gray-900 dark:text-white flex items-center">
-                <FiZap className="w-4 h-4 sm:w-5 sm:h-5 mr-2 text-amber-500" />
-                Test de Conconi
-              </h2>
-            </div>
-            {!athlete.athlete_paces?.length ? (
-              <div className="text-center py-6 px-4">
-                <FiZap className="w-8 h-8 text-gray-300 dark:text-gray-600 mx-auto mb-2" />
-                <p className="text-sm text-gray-500 dark:text-gray-400">Sin test de Conconi</p>
-                <p className="text-xs text-gray-400 dark:text-gray-500 mt-1">Sube un CSV desde el icono de tests</p>
-              </div>
-            ) : (() => {
-              const paceOrder = ['RM', 'R10', 'R9', 'R8', 'R7', 'R6', 'R5', 'R4', 'R3', 'R2', 'R1', 'RR'];
-              const sorted = paceOrder
-                .map(code => athlete.athlete_paces.find(p => p.pace_code === code))
-                .filter(Boolean);
-              const bgColors = {
-                RM: 'bg-red-600', R10: 'bg-red-500', R9: 'bg-red-400', R8: 'bg-orange-500',
-                R7: 'bg-orange-400', R6: 'bg-yellow-500', R5: 'bg-yellow-400', R4: 'bg-lime-400',
-                R3: 'bg-lime-500', R2: 'bg-green-400', R1: 'bg-green-500', RR: 'bg-emerald-600',
-              };
-              const pctLabels = {
-                RM: '100%', R10: '92%', R9: '90%', R8: '88%', R7: '86%', R6: '84%',
-                R5: '82%', R4: '78%', R3: '72%', R2: '62%', R1: '50%', RR: '42%',
-              };
-              const seriesRecovery = {};
-              if (athlete.latest_conconi?.conconi_test_series) {
-                const series = [...athlete.latest_conconi.conconi_test_series].sort((a, b) => a.series_number - b.series_number);
-                const totalSeries = series.length;
-                const totalPaces = sorted.length;
-                sorted.forEach((pace, i) => {
-                  if (pace.pace_code === 'RR') return;
-                  const seriesIdx = Math.round((i / (totalPaces - 1)) * (totalSeries - 1));
-                  const s = series[Math.min(seriesIdx, totalSeries - 1)];
-                  if (s?.recovery_time_seconds) seriesRecovery[pace.pace_code] = s.recovery_time_seconds;
-                });
-              }
-              const maxHr = athlete.latest_conconi?.max_hr_reached;
-              const fmtPace = (secs) => { const m = Math.floor(secs / 60); const s = Math.round(secs % 60); return `${m}'${String(s).padStart(2, '0')}"`; };
-              const fmtRecu = (secs) => { if (!secs) return ''; const m = Math.floor(secs / 60); const s = secs % 60; return s > 0 ? `${m}'${String(s).padStart(2, '0')}"` : `${m}'`; };
-
-              return (
-                <div className="overflow-x-auto">
-                  <table className="w-full text-[11px] sm:text-xs min-w-[500px]">
-                    <thead>
-                      <tr>
-                        <th className="text-left py-1.5 px-2 text-gray-500 dark:text-gray-400 font-medium whitespace-nowrap sticky left-0 bg-white dark:bg-gray-800 z-10 w-24"></th>
-                        {sorted.map(pace => (
-                          <th key={pace.pace_code} className={`px-1 py-1.5 text-center text-white font-bold whitespace-nowrap ${bgColors[pace.pace_code] || 'bg-gray-500'}`}>
-                            {pace.pace_code}
-                          </th>
-                        ))}
-                      </tr>
-                    </thead>
-                    <tbody>
-                      <tr className="bg-gray-50 dark:bg-gray-700/30">
-                        <td className="py-1 px-2 sticky left-0 bg-gray-50 dark:bg-gray-700/30 z-10"></td>
-                        {sorted.map(pace => (
-                          <td key={pace.pace_code} className="px-1 py-1 text-center text-gray-500 dark:text-gray-400 whitespace-nowrap">{pctLabels[pace.pace_code] || ''}</td>
-                        ))}
-                      </tr>
-                      <tr className="border-t border-gray-200 dark:border-gray-700">
-                        <td className="py-1.5 px-2 text-gray-600 dark:text-gray-300 font-semibold whitespace-nowrap sticky left-0 bg-white dark:bg-gray-800 z-10">Ritmo/1.000m</td>
-                        {sorted.map(pace => (
-                          <td key={pace.pace_code} className="px-1 py-1.5 text-center font-mono font-semibold text-gray-900 dark:text-white whitespace-nowrap">{fmtPace(pace.pace_seconds_per_km)}</td>
-                        ))}
-                      </tr>
-                      <tr className="border-t border-gray-200 dark:border-gray-700 bg-gray-50 dark:bg-gray-700/30">
-                        <td className="py-1.5 px-2 text-gray-600 dark:text-gray-300 font-semibold whitespace-nowrap sticky left-0 bg-gray-50 dark:bg-gray-700/30 z-10">Pulso</td>
-                        {sorted.map(pace => (
-                          <td key={pace.pace_code} className="px-1 py-1.5 text-center font-mono text-gray-700 dark:text-gray-300 whitespace-nowrap">
-                            {pace.heart_rate_min && pace.heart_rate_max ? `${pace.heart_rate_max}` : ''}
-                          </td>
-                        ))}
-                      </tr>
-                      {Object.keys(seriesRecovery).length > 0 && (
-                        <tr className="border-t border-gray-200 dark:border-gray-700">
-                          <td className="py-1.5 px-2 text-gray-600 dark:text-gray-300 font-semibold whitespace-nowrap sticky left-0 bg-white dark:bg-gray-800 z-10">Recu. a 120p</td>
-                          {sorted.map(pace => (
-                            <td key={pace.pace_code} className="px-1 py-1.5 text-center font-mono text-gray-700 dark:text-gray-300 whitespace-nowrap">{seriesRecovery[pace.pace_code] ? fmtRecu(seriesRecovery[pace.pace_code]) : ''}</td>
-                          ))}
-                        </tr>
-                      )}
-                    </tbody>
-                  </table>
-                  {maxHr && (
-                    <div className="px-3 py-1.5 text-[10px] text-gray-500 dark:text-gray-400 border-t border-gray-100 dark:border-gray-700">
-                      FC máx: <span className="font-semibold text-gray-700 dark:text-gray-300">{maxHr} ppm</span>
-                      {athlete.latest_conconi?.test_date && (
-                        <span> &middot; {new Date(athlete.latest_conconi.test_date + 'T12:00:00').toLocaleDateString('es-ES')}</span>
-                      )}
-                    </div>
-                  )}
-                </div>
-              );
-            })()}
-          </div>
-
-          {/* VAM Test Results */}
-          <div className="bg-white dark:bg-gray-800 rounded-2xl shadow-sm border border-gray-200 dark:border-gray-700 overflow-hidden">
-            <div className="p-3 sm:p-4 border-b border-gray-200 dark:border-gray-700">
-              <h2 className="text-base sm:text-lg font-bold text-gray-900 dark:text-white flex items-center">
-                <FiActivity className="w-4 h-4 sm:w-5 sm:h-5 mr-2 text-purple-500" />
-                Test VAM
-              </h2>
-            </div>
-            {!athlete.latest_vam ? (
-              <div className="text-center py-6 px-4">
-                <FiActivity className="w-8 h-8 text-gray-300 dark:text-gray-600 mx-auto mb-2" />
-                <p className="text-sm text-gray-500 dark:text-gray-400">Sin test de VAM</p>
-                <p className="text-xs text-gray-400 dark:text-gray-500 mt-1">Registra un test desde el icono de tests</p>
-              </div>
-            ) : (() => {
-              const vam = athlete.latest_vam;
-              const vamKmh = parseFloat(vam.vam_kmh);
-              const paceSecsKm = vam.pace_seconds_per_km;
-              const vo2max = (vamKmh * 3.5).toFixed(1);
-              const mlssKmh = (vamKmh * 0.88).toFixed(1);
-              const mlssPace = Math.round(3600 / (vamKmh * 0.88));
-              const vt2Kmh = (vamKmh * 0.875).toFixed(1);
-              const vt2Pace = Math.round(3600 / (vamKmh * 0.875));
-              const vt1Kmh = (vamKmh * 0.775).toFixed(1);
-              const vt1Pace = Math.round(3600 / (vamKmh * 0.775));
-              const maxHr = athlete.latest_conconi?.max_hr_reached;
-              const fmtP = (secs) => { const m = Math.floor(secs / 60); const s = Math.round(secs % 60); return `${m}'${String(s).padStart(2, '0')}"`; };
-
-              return (
-                <div className="overflow-x-auto">
-                  <table className="w-full text-[11px] sm:text-xs min-w-[400px]">
-                    <thead>
-                      <tr>
-                        {[
-                          { label: 'FCmax', color: 'bg-red-500' },
-                          { label: 'VAM', color: 'bg-purple-500' },
-                          { label: 'VO2max', color: 'bg-blue-500' },
-                          { label: 'MLSS', color: 'bg-orange-500' },
-                          { label: 'VT2', color: 'bg-yellow-500' },
-                          { label: 'VT1', color: 'bg-green-500' },
-                        ].map(col => (
-                          <th key={col.label} className={`px-2 py-1.5 text-center text-white font-bold whitespace-nowrap ${col.color}`}>{col.label}</th>
-                        ))}
-                      </tr>
-                    </thead>
-                    <tbody>
-                      <tr className="border-t border-gray-200 dark:border-gray-700">
-                        {[maxHr ? `${maxHr}` : '-', `${vamKmh.toFixed(1)}`, vo2max, mlssKmh, vt2Kmh, vt1Kmh].map((val, i) => (
-                          <td key={i} className="px-2 py-1.5 text-center font-mono font-semibold text-gray-900 dark:text-white whitespace-nowrap">{val}</td>
-                        ))}
-                      </tr>
-                      <tr className="bg-gray-50 dark:bg-gray-700/30">
-                        {[maxHr ? 'ppm' : '', 'km/h', 'ml/kg/min', 'km/h', 'km/h', 'km/h'].map((unit, i) => (
-                          <td key={i} className="px-2 py-1 text-center text-[10px] text-gray-500 dark:text-gray-400 whitespace-nowrap">{unit}</td>
-                        ))}
-                      </tr>
-                      <tr className="border-t border-gray-200 dark:border-gray-700">
-                        {['', fmtP(paceSecsKm), '', fmtP(mlssPace), fmtP(vt2Pace), fmtP(vt1Pace)].map((val, i) => (
-                          <td key={i} className="px-2 py-1.5 text-center font-mono text-gray-700 dark:text-gray-300 whitespace-nowrap">{val}</td>
-                        ))}
-                      </tr>
-                      <tr className="bg-gray-50 dark:bg-gray-700/30">
-                        {['', 'min/km', '', 'min/km', 'min/km', 'min/km'].map((unit, i) => (
-                          <td key={i} className="px-2 py-1 text-center text-[10px] text-gray-500 dark:text-gray-400 whitespace-nowrap">{unit}</td>
-                        ))}
-                      </tr>
-                    </tbody>
-                  </table>
-                  <div className="px-3 py-1.5 text-[10px] text-gray-500 dark:text-gray-400 border-t border-gray-100 dark:border-gray-700">
-                    {vam.distance_meters}m en {Math.floor(vam.duration_seconds / 60)}:{String(vam.duration_seconds % 60).padStart(2, '0')}
-                    {vam.location ? ` · ${vam.location}` : ''}
-                    {' · '}{new Date(vam.test_date + 'T12:00:00').toLocaleDateString('es-ES')}
-                  </div>
-                </div>
-              );
-            })()}
-          </div>
-        </motion.div>
       </div>
 
       {/* Activity Detail Modal */}

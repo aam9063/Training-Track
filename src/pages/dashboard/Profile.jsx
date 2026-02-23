@@ -204,46 +204,42 @@ const Profile = () => {
   };
 
   return (
-    <div className="p-6 lg:p-8 max-w-4xl mx-auto">
+    <div className="p-6 lg:p-8">
       {/* Header */}
       <div className="mb-8">
-        <div className="flex items-center justify-between">
-          <div>
-            <h1 className="text-3xl font-bold text-gray-900 dark:text-white mb-2">
-              Mi Perfil
-            </h1>
-            <p className="text-gray-600 dark:text-gray-400">
-              Gestiona tu información personal
-            </p>
-          </div>
-          {!editing ? (
+        <h1 className="text-3xl font-bold text-gray-900 dark:text-white mb-2">
+          Mi Perfil
+        </h1>
+        <p className="text-gray-600 dark:text-gray-400 mb-4">
+          Gestiona tu información personal
+        </p>
+        {!editing ? (
+          <button
+            onClick={() => setEditing(true)}
+            className="flex items-center space-x-2 px-4 py-2 bg-blue-600 hover:bg-blue-700 text-white rounded-lg transition-colors"
+          >
+            <FiEdit2 className="w-5 h-5" />
+            <span>Editar</span>
+          </button>
+        ) : (
+          <div className="flex space-x-2">
             <button
-              onClick={() => setEditing(true)}
-              className="flex items-center space-x-2 px-4 py-2 bg-blue-600 hover:bg-blue-700 text-white rounded-lg transition-colors"
+              onClick={handleCancel}
+              className="flex items-center space-x-2 px-4 py-2 border border-gray-300 dark:border-gray-600 text-gray-700 dark:text-gray-300 hover:bg-gray-100 dark:hover:bg-gray-700 rounded-lg transition-colors"
             >
-              <FiEdit2 className="w-5 h-5" />
-              <span>Editar</span>
+              <FiX className="w-5 h-5" />
+              <span>Cancelar</span>
             </button>
-          ) : (
-            <div className="flex space-x-2">
-              <button
-                onClick={handleCancel}
-                className="flex items-center space-x-2 px-4 py-2 border border-gray-300 dark:border-gray-600 text-gray-700 dark:text-gray-300 hover:bg-gray-100 dark:hover:bg-gray-700 rounded-lg transition-colors"
-              >
-                <FiX className="w-5 h-5" />
-                <span>Cancelar</span>
-              </button>
-              <button
-                onClick={handleSave}
-                disabled={loading}
-                className="flex items-center space-x-2 px-4 py-2 bg-green-600 hover:bg-green-700 text-white rounded-lg transition-colors disabled:opacity-50"
-              >
-                <FiSave className="w-5 h-5" />
-                <span>{loading ? 'Guardando...' : 'Guardar'}</span>
-              </button>
-            </div>
-          )}
-        </div>
+            <button
+              onClick={handleSave}
+              disabled={loading}
+              className="flex items-center space-x-2 px-4 py-2 bg-green-600 hover:bg-green-700 text-white rounded-lg transition-colors disabled:opacity-50"
+            >
+              <FiSave className="w-5 h-5" />
+              <span>{loading ? 'Guardando...' : 'Guardar'}</span>
+            </button>
+          </div>
+        )}
       </div>
 
       {/* Profile Card */}
@@ -255,7 +251,7 @@ const Profile = () => {
         <div className="p-6">
           {/* Avatar Section */}
           <div className="flex items-center space-x-6 mb-8 pb-8 border-b border-gray-200 dark:border-gray-700">
-            <div className="relative">
+            <div className="relative flex-shrink-0">
               {displayProfile.profile_image ? (
                 <img
                   src={displayProfile.profile_image}
@@ -394,49 +390,6 @@ const Profile = () => {
             </div>
 
             {/* Coach-specific fields */}
-            {displayProfile.role === 'coach' && (
-              <div>
-                <h3 className="text-lg font-semibold text-gray-900 dark:text-white mb-4">
-                  Información Profesional
-                </h3>
-                <div className="space-y-4">
-                  <div>
-                    <label className="block text-sm font-medium text-gray-700 dark:text-gray-300 mb-2">
-                      Biografía
-                    </label>
-                    <textarea
-                      value={formData.bio}
-                      onChange={(e) =>
-                        setFormData({ ...formData, bio: e.target.value })
-                      }
-                      disabled={!editing}
-                      rows={4}
-                      placeholder="Cuéntanos sobre tu experiencia como entrenador..."
-                      className="w-full px-4 py-2 border border-gray-300 dark:border-gray-600 rounded-lg bg-white dark:bg-gray-700 text-gray-900 dark:text-white focus:ring-2 focus:ring-blue-500 focus:border-transparent disabled:bg-gray-100 dark:disabled:bg-gray-800 disabled:cursor-not-allowed resize-none"
-                    />
-                  </div>
-                  <div>
-                    <label className="block text-sm font-medium text-gray-700 dark:text-gray-300 mb-2">
-                      Años de Experiencia
-                    </label>
-                    <input
-                      type="number"
-                      value={formData.years_experience}
-                      onChange={(e) =>
-                        setFormData({
-                          ...formData,
-                          years_experience: parseInt(e.target.value) || 0,
-                        })
-                      }
-                      disabled={!editing}
-                      min="0"
-                      className="w-full px-4 py-2 border border-gray-300 dark:border-gray-600 rounded-lg bg-white dark:bg-gray-700 text-gray-900 dark:text-white focus:ring-2 focus:ring-blue-500 focus:border-transparent disabled:bg-gray-100 dark:disabled:bg-gray-800 disabled:cursor-not-allowed"
-                    />
-                  </div>
-                </div>
-              </div>
-            )}
-
             {/* Invite Link - only for coaches */}
             {displayProfile.role === 'coach' && (
               <div>
@@ -448,14 +401,14 @@ const Profile = () => {
                   Comparte este enlace con tus atletas para que se registren directamente como parte de tu equipo.
                 </p>
                 <div className="flex items-center gap-3">
-                  <div className="flex-1 px-4 py-2.5 bg-gray-50 dark:bg-gray-700/50 border border-gray-200 dark:border-gray-600 rounded-lg">
+                  <div className="hidden sm:block flex-1 px-4 py-2.5 bg-gray-50 dark:bg-gray-700/50 border border-gray-200 dark:border-gray-600 rounded-lg">
                     <p className="text-sm font-mono text-gray-700 dark:text-gray-300 break-all">
                       https://training-pro.netlify.app/register?invite={profile?.id || user?.id}
                     </p>
                   </div>
                   <button
                     onClick={handleCopyInviteLink}
-                    className={`flex items-center gap-2 px-4 py-2.5 rounded-lg text-sm font-medium transition-colors whitespace-nowrap ${
+                    className={`flex items-center justify-center gap-2 w-full sm:w-auto px-4 py-2.5 rounded-lg text-sm font-medium transition-colors whitespace-nowrap ${
                       copiedInvite
                         ? 'bg-green-100 dark:bg-green-900/30 text-green-700 dark:text-green-300'
                         : 'bg-blue-600 hover:bg-blue-700 text-white'

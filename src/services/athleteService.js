@@ -612,6 +612,43 @@ export const createAthleteCompetition = async (coachId, athleteId, competitionDa
   }
 };
 
+// Create a competition for multiple athletes at once
+export const createCompetitionForAthletes = async (coachId, athleteIds, competitionData) => {
+  if (!coachId || !athleteIds?.length) {
+    return { data: null, error: new Error('Missing coachId or athleteIds') };
+  }
+
+  try {
+    const rows = athleteIds.map(athleteId => ({
+      coach_id: coachId,
+      athlete_id: athleteId,
+      name: competitionData.name,
+      event_date: competitionData.event_date,
+      location: competitionData.location || null,
+      distance_km: competitionData.distance_km || null,
+      distance_name: competitionData.distance_name || null,
+      event_type: competitionData.event_type || 'race',
+      surface: competitionData.surface || null,
+      target_time_seconds: competitionData.target_time_seconds || null,
+      target_pace_seconds: competitionData.target_pace_seconds || null,
+      priority: competitionData.priority || 'A',
+      notes: competitionData.notes || null,
+      status: 'upcoming',
+    }));
+
+    const { data, error } = await supabase
+      .from('competitions')
+      .insert(rows)
+      .select();
+
+    if (error) throw error;
+    return { data, error: null };
+  } catch (error) {
+    console.error('Error creating competitions for athletes:', error);
+    return { data: null, error };
+  }
+};
+
 // Update a competition
 export const updateAthleteCompetition = async (competitionId, updates) => {
   if (!competitionId) {

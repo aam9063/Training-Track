@@ -2,6 +2,8 @@ import { useState, useEffect, useCallback, useRef } from 'react';
 import {
   getCoachStats,
   getCoachWeekSessions,
+  getCoachUpcomingCompetitions,
+  getCoachWeekCompetitions,
   getRecentAthletes,
 } from '../services/dashboardService';
 import { getWeekStartDate } from '../services/weeklyTrainingService';
@@ -15,6 +17,8 @@ export default function useCoachDashboard(profileId) {
   const [error, setError] = useState(null);
   const [currentWeekStart, setCurrentWeekStart] = useState(() => getWeekStartDate(new Date()));
   const [weekSessions, setWeekSessions] = useState([]);
+  const [weekCompetitions, setWeekCompetitions] = useState([]);
+  const [upcomingCompetitions, setUpcomingCompetitions] = useState([]);
   const [weekLoading, setWeekLoading] = useState(false);
 
   const hasFetched = useRef(false);
@@ -36,13 +40,15 @@ export default function useCoachDashboard(profileId) {
     currentProfileId.current = id;
 
     try {
-      const [statsRes, athletesRes] = await Promise.all([
+      const [statsRes, athletesRes, compsRes] = await Promise.all([
         getCoachStats(id),
         getRecentAthletes(id, 5),
+        getCoachUpcomingCompetitions(id),
       ]);
 
       setStats(statsRes.data || EMPTY_STATS);
       setRecentAthletes(athletesRes.data || []);
+      setUpcomingCompetitions(compsRes.data || []);
     } catch (err) {
       console.error('Dashboard: Error loading data:', err);
       setError(err.message);
@@ -72,11 +78,16 @@ export default function useCoachDashboard(profileId) {
     if (!profileId) return;
     setWeekLoading(true);
     try {
-      const res = await getCoachWeekSessions(profileId, weekStart);
-      setWeekSessions(res.data || []);
+      const [sessionsRes, compsRes] = await Promise.all([
+        getCoachWeekSessions(profileId, weekStart),
+        getCoachWeekCompetitions(profileId, weekStart),
+      ]);
+      setWeekSessions(sessionsRes.data || []);
+      setWeekCompetitions(compsRes.data || []);
     } catch (err) {
       console.error('Error loading week sessions:', err);
       setWeekSessions([]);
+      setWeekCompetitions([]);
     } finally {
       setWeekLoading(false);
     }
@@ -108,6 +119,16 @@ export default function useCoachDashboard(profileId) {
     setCurrentWeekStart(getWeekStartDate(new Date()));
   }, []);
 
+  const refreshCompetitions = useCallback(async () => {
+    if (!profileId) return;
+    const [upRes, weekRes] = await Promise.all([
+      getCoachUpcomingCompetitions(profileId),
+      getCoachWeekCompetitions(profileId, currentWeekStart),
+    ]);
+    setUpcomingCompetitions(upRes.data || []);
+    setWeekCompetitions(weekRes.data || []);
+  }, [profileId, currentWeekStart]);
+
   return {
     stats,
     recentAthletes,
@@ -115,9 +136,12 @@ export default function useCoachDashboard(profileId) {
     error,
     currentWeekStart,
     weekSessions,
+    weekCompetitions,
+    upcomingCompetitions,
     weekLoading,
     goToPreviousWeek,
     goToNextWeek,
     goToCurrentWeek,
+    refreshCompetitions,
   };
 }

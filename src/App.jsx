@@ -6,6 +6,7 @@ import { NotificationProvider } from './contexts/NotificationContext';
 import { Toaster } from 'sileo';
 import DashboardLayout from './layouts/DashboardLayout';
 import AthleteDashboardLayout from './layouts/AthleteDashboardLayout';
+import PWAInstallPrompt from './components/common/PWAInstallPrompt';
 import './index.css';
 
 // Lazy-loaded pages for code splitting
@@ -62,6 +63,7 @@ function App() {
       <AuthProvider>
         <NotificationProvider>
           <Router>
+            <PWAInstallPrompt />
             <Suspense fallback={<PageLoader />}>
               <Routes>
                 {/* Public Routes */}

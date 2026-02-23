@@ -1,5 +1,6 @@
 import { useState, useEffect } from 'react';
 import { FiDownload, FiX, FiShare } from 'react-icons/fi';
+import { useAuth } from '../../contexts/AuthContext';
 
 function isIos() {
   return /iphone|ipad|ipod/i.test(navigator.userAgent);
@@ -10,11 +11,13 @@ function isInStandaloneMode() {
 }
 
 export default function PWAInstallPrompt() {
+  const { user } = useAuth();
   const [deferredPrompt, setDeferredPrompt] = useState(null);
   const [show, setShow] = useState(false);
   const [ios, setIos] = useState(false);
 
   useEffect(() => {
+    if (!user) return; // solo mostrar si está autenticado
     const dismissed = localStorage.getItem('pwa-prompt-dismissed');
     if (dismissed || isInStandaloneMode()) return;
 

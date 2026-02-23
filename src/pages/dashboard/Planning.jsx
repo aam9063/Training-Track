@@ -149,7 +149,7 @@ const Planning = () => {
     return (
       <div className="p-4 sm:p-6 space-y-6">
         {/* Header */}
-        <div className="flex items-center justify-between">
+        <div className="flex flex-col sm:flex-row sm:items-center sm:justify-between gap-3">
           <div>
             <h1 className="text-2xl font-bold text-gray-900 dark:text-white">Planificación</h1>
             <p className="mt-1 text-sm text-gray-500 dark:text-gray-400">
@@ -158,7 +158,7 @@ const Planning = () => {
           </div>
           <button
             onClick={() => setShowCreateModal(true)}
-            className="flex items-center gap-2 px-4 py-2.5 bg-blue-600 text-white rounded-xl hover:bg-blue-700 transition-colors font-medium text-sm shadow-sm"
+            className="flex items-center justify-center gap-2 px-4 py-2.5 bg-blue-600 text-white rounded-xl hover:bg-blue-700 transition-colors font-medium text-sm shadow-sm w-full sm:w-auto"
           >
             <FiPlus className="w-4 h-4" />
             Nuevo Plan

@@ -126,6 +126,17 @@
   scrollbar-color: #f97316 transparent;
 }
 
+/* Fix date input on iOS Safari */
+input[type="date"] {
+  -webkit-appearance: none;
+  -moz-appearance: none;
+  appearance: none;
+  min-height: 42px;
+  box-sizing: border-box;
+  display: block;
+  width: 100%;
+}
+
 /* Mapbox GL styles */
 .mapboxgl-map {
   border-radius: 0.75rem;

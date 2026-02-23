@@ -273,6 +273,108 @@ export const getCoachWeekSessions = async (coachId, weekStartDate) => {
   }
 };
 
+// Get upcoming competitions for coach's athletes
+export const getCoachUpcomingCompetitions = async (coachId) => {
+  if (!coachId) return { data: [], error: null };
+
+  try {
+    const { data: rels, error: relError } = await supabase
+      .from('coach_athlete_relationship')
+      .select('athlete_id')
+      .eq('coach_id', coachId)
+      .eq('status', 'active');
+
+    if (relError) throw relError;
+    if (!rels || rels.length === 0) return { data: [], error: null };
+
+    const athleteIds = rels.map(r => r.athlete_id);
+    const today = toLocalDateStr(new Date());
+
+    const { data: comps, error: compsError } = await supabase
+      .from('competitions')
+      .select('*')
+      .in('athlete_id', athleteIds)
+      .gte('event_date', today)
+      .order('event_date', { ascending: true });
+
+    if (compsError) throw compsError;
+    if (!comps || comps.length === 0) return { data: [], error: null };
+
+    const uniqueIds = [...new Set(comps.map(c => c.athlete_id))];
+    const { data: users } = await supabase
+      .from('users')
+      .select('id, first_name, last_name, profile_image')
+      .in('id', uniqueIds);
+
+    const enriched = comps.map(c => {
+      const u = users?.find(u => u.id === c.athlete_id) || {};
+      return {
+        ...c,
+        athleteName: `${u.first_name || ''} ${u.last_name || ''}`.trim() || 'Atleta',
+        athleteImage: u.profile_image || null,
+      };
+    });
+
+    return { data: enriched, error: null };
+  } catch (error) {
+    console.error('Error fetching coach upcoming competitions:', error);
+    return { data: [], error };
+  }
+};
+
+// Get week competitions for coach's athletes
+export const getCoachWeekCompetitions = async (coachId, weekStartDate) => {
+  if (!coachId) return { data: [], error: null };
+
+  try {
+    const { data: rels, error: relError } = await supabase
+      .from('coach_athlete_relationship')
+      .select('athlete_id')
+      .eq('coach_id', coachId)
+      .eq('status', 'active');
+
+    if (relError) throw relError;
+    if (!rels || rels.length === 0) return { data: [], error: null };
+
+    const athleteIds = rels.map(r => r.athlete_id);
+    const startDateStr = toLocalDateStr(weekStartDate);
+    const endDate = new Date(weekStartDate);
+    endDate.setDate(endDate.getDate() + 6);
+    const endDateStr = toLocalDateStr(endDate);
+
+    const { data: comps, error: compsError } = await supabase
+      .from('competitions')
+      .select('*')
+      .in('athlete_id', athleteIds)
+      .gte('event_date', startDateStr)
+      .lte('event_date', endDateStr)
+      .order('event_date', { ascending: true });
+
+    if (compsError) throw compsError;
+    if (!comps || comps.length === 0) return { data: [], error: null };
+
+    const uniqueIds = [...new Set(comps.map(c => c.athlete_id))];
+    const { data: users } = await supabase
+      .from('users')
+      .select('id, first_name, last_name, profile_image')
+      .in('id', uniqueIds);
+
+    const enriched = comps.map(c => {
+      const u = users?.find(u => u.id === c.athlete_id) || {};
+      return {
+        ...c,
+        athleteName: `${u.first_name || ''} ${u.last_name || ''}`.trim() || 'Atleta',
+        athleteImage: u.profile_image || null,
+      };
+    });
+
+    return { data: enriched, error: null };
+  } catch (error) {
+    console.error('Error fetching coach week competitions:', error);
+    return { data: [], error };
+  }
+};
+
 // Get weekly training summary for all athletes
 export const getWeeklySummary = async (coachId) => {
   if (!coachId) {

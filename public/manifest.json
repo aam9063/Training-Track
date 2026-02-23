@@ -1,21 +1,33 @@
 {
-  "name": "Training Track",
-  "short_name": "Training Track",
+  "name": "TrainingTrack",
+  "short_name": "TrainingTrack",
   "description": "Plataforma de gestión de entrenamientos de atletismo para entrenadores y atletas",
-  "start_url": "/",
+  "start_url": "/login",
+  "scope": "/",
   "display": "standalone",
+  "orientation": "portrait-primary",
   "background_color": "#ffffff",
   "theme_color": "#0284c7",
+  "lang": "es",
+  "categories": ["sports", "health", "fitness"],
   "icons": [
     {
-      "src": "/img/logo.png",
+      "src": "/img/logo_192.png",
       "sizes": "192x192",
-      "type": "image/png"
+      "type": "image/png",
+      "purpose": "any"
     },
     {
-      "src": "/img/logo.png",
+      "src": "/img/logo_512.png",
       "sizes": "512x512",
-      "type": "image/png"
+      "type": "image/png",
+      "purpose": "any"
+    },
+    {
+      "src": "/img/logo_512.png",
+      "sizes": "512x512",
+      "type": "image/png",
+      "purpose": "maskable"
     }
   ]
 }

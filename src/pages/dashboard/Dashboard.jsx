@@ -14,8 +14,12 @@ import {
   FiUser,
   FiChevronLeft,
   FiChevronRight,
+  FiFlag,
+  FiMapPin,
+  FiPlus,
 } from 'react-icons/fi';
 import StatCard from '../../components/dashboard/StatCard';
+import CreateCompetitionModal from '../../components/dashboard/CreateCompetitionModal';
 import { toLocalDateStr } from '../../lib/dateUtils';
 import useCoachDashboard from '../../hooks/useCoachDashboard';
 import { getWeekStartDate } from '../../services/weeklyTrainingService';
@@ -24,10 +28,11 @@ const Dashboard = () => {
   const { user, profile } = useAuth();
   const {
     stats, recentAthletes, loading, error,
-    currentWeekStart, weekSessions, weekLoading,
-    goToPreviousWeek, goToNextWeek, goToCurrentWeek,
+    currentWeekStart, weekSessions, weekCompetitions, upcomingCompetitions, weekLoading,
+    goToPreviousWeek, goToNextWeek, goToCurrentWeek, refreshCompetitions,
   } = useCoachDashboard(profile?.id);
   const [selectedSession, setSelectedSession] = useState(null);
+  const [showCreateCompetition, setShowCreateCompetition] = useState(false);
 
   const displayName = profile?.first_name || user?.user_metadata?.first_name || 'Usuario';
 
@@ -109,8 +114,59 @@ const Dashboard = () => {
     return days;
   };
 
-  const getSessionsForDate = (dateStr) => {
-    return weekSessions.filter(s => s.scheduled_date === dateStr);
+  // Group sessions with same title+date+type into one entry with multiple athletes
+  const getGroupedSessionsForDate = (dateStr) => {
+    const daySessions = weekSessions.filter(s => s.scheduled_date === dateStr);
+    const groups = {};
+    daySessions.forEach(s => {
+      const key = `${s.title}||${s.training_type}||${s.description || ''}`;
+      if (!groups[key]) {
+        groups[key] = { ...s, athletes: [] };
+      }
+      groups[key].athletes.push({
+        id: s.athlete_id,
+        name: s.athleteName,
+        image: s.athleteImage,
+        status: s.status,
+        sessionId: s.id,
+      });
+    });
+    return Object.values(groups);
+  };
+
+  // Group week competitions by name+date+distance+location
+  const getGroupedCompetitionsForDate = (dateStr) => {
+    const dayComps = weekCompetitions.filter(c => c.event_date === dateStr);
+    const groups = {};
+    dayComps.forEach(c => {
+      const key = `${c.name}||${c.event_date}||${c.distance_km || ''}||${c.location || ''}`;
+      if (!groups[key]) {
+        groups[key] = { ...c, isCompetition: true, athletes: [] };
+      }
+      groups[key].athletes.push({
+        id: c.athlete_id,
+        name: c.athleteName,
+        image: c.athleteImage,
+      });
+    });
+    return Object.values(groups);
+  };
+
+  // Group upcoming competitions by name+date+distance+location
+  const getGroupedUpcomingCompetitions = () => {
+    const groups = {};
+    upcomingCompetitions.forEach(c => {
+      const key = `${c.name}||${c.event_date}||${c.distance_km || ''}||${c.location || ''}`;
+      if (!groups[key]) {
+        groups[key] = { ...c, athletes: [] };
+      }
+      groups[key].athletes.push({
+        id: c.athlete_id,
+        name: c.athleteName,
+        image: c.athleteImage,
+      });
+    });
+    return Object.values(groups);
   };
 
   const getWeekRangeLabel = () => {
@@ -251,11 +307,11 @@ const Dashboard = () => {
               <div className="flex items-center justify-center py-12">
                 <div className="animate-spin rounded-full h-8 w-8 border-b-2 border-blue-600"></div>
               </div>
-            ) : weekSessions.length === 0 ? (
+            ) : weekSessions.length === 0 && weekCompetitions.length === 0 ? (
               <div className="text-center py-12">
                 <FiCalendar className="w-12 h-12 text-gray-300 dark:text-gray-600 mx-auto mb-3" />
                 <p className="text-gray-500 dark:text-gray-400">
-                  No hay sesiones programadas esta semana
+                  No hay eventos programados esta semana
                 </p>
               </div>
             ) : (
@@ -279,9 +335,10 @@ const Dashboard = () => {
                       </div>
                     </div>
                   ))}
-                  {/* Day columns with sessions */}
+                  {/* Day columns with sessions + competitions */}
                   {getWeekDays().map((day) => {
-                    const daySessions = getSessionsForDate(day.dateStr);
+                    const grouped = getGroupedSessionsForDate(day.dateStr);
+                    const comps = getGroupedCompetitionsForDate(day.dateStr);
                     return (
                       <div
                         key={`col-${day.dateStr}`}
@@ -289,19 +346,40 @@ const Dashboard = () => {
                           day.isToday ? 'bg-blue-50/50 dark:bg-blue-900/10 rounded-b-lg' : ''
                         }`}
                       >
-                        {daySessions.map((session) => (
+                        {grouped.map((group, gi) => (
                           <motion.div
-                            key={session.id}
+                            key={`s-${group.id}-${gi}`}
                             initial={{ opacity: 0, y: 4 }}
                             animate={{ opacity: 1, y: 0 }}
-                            onClick={() => setSelectedSession(session)}
-                            className={`mb-1 p-1.5 rounded-md border-l-3 cursor-pointer transition-all hover:shadow-md ${getTypeBorderColor(session.training_type)} ${getTypeBgColor(session.training_type)}`}
+                            onClick={() => setSelectedSession(group)}
+                            className={`mb-1 p-1.5 rounded-md border-l-3 cursor-pointer transition-all hover:shadow-md ${getTypeBorderColor(group.training_type)} ${getTypeBgColor(group.training_type)}`}
                           >
                             <p className="text-[11px] font-medium text-gray-900 dark:text-white truncate leading-tight">
-                              {session.title}
+                              {group.title}
                             </p>
                             <p className="text-[10px] text-gray-500 dark:text-gray-400 truncate">
-                              {session.scheduled_time ? session.scheduled_time.slice(0, 5) : ''} {session.athleteName?.split(' ')[0]}
+                              {group.athletes.length > 1
+                                ? `${group.athletes.length} atletas`
+                                : group.athletes[0]?.name?.split(' ')[0] || ''}
+                            </p>
+                          </motion.div>
+                        ))}
+                        {comps.map((comp, ci) => (
+                          <motion.div
+                            key={`c-${comp.id}-${ci}`}
+                            initial={{ opacity: 0, y: 4 }}
+                            animate={{ opacity: 1, y: 0 }}
+                            onClick={() => setSelectedSession(comp)}
+                            className="mb-1 p-1.5 rounded-md border-l-3 border-l-red-500 bg-red-50 dark:bg-red-900/20 cursor-pointer transition-all hover:shadow-md"
+                          >
+                            <p className="text-[11px] font-medium text-gray-900 dark:text-white truncate leading-tight flex items-center">
+                              <FiFlag className="w-3 h-3 mr-0.5 text-red-500 flex-shrink-0" />
+                              {comp.name}
+                            </p>
+                            <p className="text-[10px] text-gray-500 dark:text-gray-400 truncate">
+                              {comp.athletes.length > 1
+                                ? `${comp.athletes.length} atletas`
+                                : comp.athletes[0]?.name?.split(' ')[0] || ''}
                             </p>
                           </motion.div>
                         ))}
@@ -314,11 +392,13 @@ const Dashboard = () => {
                 <div className="sm:hidden space-y-3">
                   {getWeekDays()
                     .filter((day) => {
-                      const daySessions = getSessionsForDate(day.dateStr);
-                      return daySessions.length > 0 || day.isToday;
+                      const grouped = getGroupedSessionsForDate(day.dateStr);
+                      const comps = getGroupedCompetitionsForDate(day.dateStr);
+                      return grouped.length > 0 || comps.length > 0 || day.isToday;
                     })
                     .map((day) => {
-                      const daySessions = getSessionsForDate(day.dateStr);
+                      const grouped = getGroupedSessionsForDate(day.dateStr);
+                      const comps = getGroupedCompetitionsForDate(day.dateStr);
                       return (
                         <div key={day.dateStr}>
                           <div className="flex items-center space-x-2 mb-2">
@@ -340,30 +420,60 @@ const Dashboard = () => {
                               </span>
                             )}
                           </div>
-                          {daySessions.length === 0 ? (
+                          {grouped.length === 0 && comps.length === 0 ? (
                             <p className="text-xs text-gray-400 dark:text-gray-500 ml-9">
-                              Sin sesiones
+                              Sin eventos
                             </p>
                           ) : (
                             <div className="space-y-1.5 ml-9">
-                              {daySessions.map((session) => (
+                              {grouped.map((group, gi) => (
                                 <motion.div
-                                  key={session.id}
+                                  key={`s-${group.id}-${gi}`}
                                   initial={{ opacity: 0, x: -10 }}
                                   animate={{ opacity: 1, x: 0 }}
-                                  onClick={() => setSelectedSession(session)}
-                                  className={`p-3 rounded-lg border-l-4 cursor-pointer transition-all hover:shadow-md ${getTypeBorderColor(session.training_type)} ${getTypeBgColor(session.training_type)}`}
+                                  onClick={() => setSelectedSession(group)}
+                                  className={`p-3 rounded-lg border-l-4 cursor-pointer transition-all hover:shadow-md ${getTypeBorderColor(group.training_type)} ${getTypeBgColor(group.training_type)}`}
                                 >
                                   <div className="flex items-center justify-between">
                                     <p className="text-sm font-medium text-gray-900 dark:text-white truncate flex-1">
-                                      {session.title}
+                                      {group.title}
                                     </p>
-                                    <span className={`text-[10px] px-1.5 py-0.5 rounded-full ml-2 ${getStatusColor(session.status)}`}>
-                                      {getStatusLabel(session.status)}
+                                    <span className="text-[10px] px-1.5 py-0.5 rounded-full ml-2 bg-blue-100 text-blue-700 dark:bg-blue-900/30 dark:text-blue-400">
+                                      {group.athletes.length > 1
+                                        ? `${group.athletes.length} atletas`
+                                        : getStatusLabel(group.athletes[0]?.status || group.status)}
                                     </span>
                                   </div>
                                   <p className="text-xs text-gray-500 dark:text-gray-400 mt-0.5">
-                                    {session.athleteName} {session.scheduled_time ? `• ${session.scheduled_time.slice(0, 5)}` : ''}
+                                    {group.athletes.length > 1
+                                      ? group.athletes.map(a => a.name?.split(' ')[0]).join(', ')
+                                      : group.athletes[0]?.name || ''}
+                                  </p>
+                                </motion.div>
+                              ))}
+                              {comps.map((comp, ci) => (
+                                <motion.div
+                                  key={`c-${comp.id}-${ci}`}
+                                  initial={{ opacity: 0, x: -10 }}
+                                  animate={{ opacity: 1, x: 0 }}
+                                  onClick={() => setSelectedSession(comp)}
+                                  className="p-3 rounded-lg border-l-4 border-l-red-500 bg-red-50 dark:bg-red-900/20 cursor-pointer transition-all hover:shadow-md"
+                                >
+                                  <div className="flex items-center justify-between">
+                                    <p className="text-sm font-medium text-gray-900 dark:text-white truncate flex-1 flex items-center">
+                                      <FiFlag className="w-3.5 h-3.5 mr-1 text-red-500 flex-shrink-0" />
+                                      {comp.name}
+                                    </p>
+                                    <span className="text-[10px] px-1.5 py-0.5 rounded-full ml-2 bg-red-100 text-red-700 dark:bg-red-900/30 dark:text-red-400">
+                                      {comp.athletes.length > 1
+                                        ? `${comp.athletes.length} atletas`
+                                        : 'Competición'}
+                                    </span>
+                                  </div>
+                                  <p className="text-xs text-gray-500 dark:text-gray-400 mt-0.5">
+                                    {comp.athletes.length > 1
+                                      ? comp.athletes.map(a => a.name?.split(' ')[0]).join(', ')
+                                      : comp.athletes[0]?.name || ''}
                                   </p>
                                 </motion.div>
                               ))}
@@ -375,6 +485,106 @@ const Dashboard = () => {
                 </div>
               </>
             )}
+          </div>
+
+          {/* Próximos Eventos (Competitions) */}
+          <div className="bg-white dark:bg-gray-800 rounded-xl shadow-sm border border-gray-200 dark:border-gray-700 p-4 sm:p-6 mt-4">
+            <div className="flex items-center justify-between mb-4">
+              <h2 className="text-base sm:text-xl font-bold text-gray-900 dark:text-white flex items-center">
+                <FiFlag className="w-5 h-5 mr-2 text-red-500 flex-shrink-0" />
+                <span className="truncate">Próximos Eventos</span>
+              </h2>
+              <button
+                onClick={() => setShowCreateCompetition(true)}
+                className="flex items-center gap-1.5 text-xs sm:text-sm px-3 py-1.5 bg-red-100 dark:bg-red-900/30 text-red-700 dark:text-red-400 rounded-full font-medium hover:bg-red-200 dark:hover:bg-red-900/50 transition-colors"
+              >
+                <FiPlus className="w-3.5 h-3.5" />
+                <span className="hidden sm:inline">Nueva competición</span>
+                <span className="sm:hidden">Nueva</span>
+              </button>
+            </div>
+
+            {(() => {
+              const grouped = getGroupedUpcomingCompetitions();
+              if (grouped.length === 0) {
+                return (
+                  <div className="text-center py-8">
+                    <FiFlag className="w-12 h-12 text-gray-300 dark:text-gray-600 mx-auto mb-3" />
+                    <p className="text-gray-500 dark:text-gray-400 text-sm">
+                      No hay competiciones próximas
+                    </p>
+                    <button
+                      onClick={() => setShowCreateCompetition(true)}
+                      className="mt-3 text-sm text-red-600 dark:text-red-400 hover:underline"
+                    >
+                      Crear una competición
+                    </button>
+                  </div>
+                );
+              }
+              return (
+                <div className="grid grid-cols-1 sm:grid-cols-2 gap-3">
+                  {grouped.slice(0, 6).map((comp, i) => {
+                    const eventDate = new Date(comp.event_date + 'T00:00:00');
+                    const today = new Date();
+                    today.setHours(0, 0, 0, 0);
+                    const diffDays = Math.ceil((eventDate - today) / (1000 * 60 * 60 * 24));
+                    return (
+                      <motion.div
+                        key={`${comp.id}-${i}`}
+                        initial={{ opacity: 0, y: 4 }}
+                        animate={{ opacity: 1, y: 0 }}
+                        onClick={() => setSelectedSession({ ...comp, isCompetition: true })}
+                        className="p-4 rounded-xl border border-gray-200 dark:border-gray-600 hover:border-red-300 dark:hover:border-red-700 hover:shadow-md transition-all cursor-pointer"
+                      >
+                        <div className="flex items-start justify-between mb-2">
+                          <h3 className="font-semibold text-gray-900 dark:text-white text-sm truncate flex-1 mr-2">
+                            {comp.name}
+                          </h3>
+                          <span className={`text-[10px] px-2 py-0.5 rounded-full whitespace-nowrap font-medium ${
+                            diffDays <= 7
+                              ? 'bg-red-100 text-red-700 dark:bg-red-900/30 dark:text-red-400'
+                              : diffDays <= 30
+                                ? 'bg-yellow-100 text-yellow-700 dark:bg-yellow-900/30 dark:text-yellow-400'
+                                : 'bg-gray-100 text-gray-600 dark:bg-gray-700 dark:text-gray-400'
+                          }`}>
+                            {diffDays === 0 ? 'Hoy' : diffDays === 1 ? 'Mañana' : `${diffDays}d`}
+                          </span>
+                        </div>
+                        <p className="text-xs text-gray-500 dark:text-gray-400 mb-2">
+                          {eventDate.toLocaleDateString('es-ES', { day: 'numeric', month: 'short', year: 'numeric' })}
+                          {comp.location && (
+                            <span className="inline-flex items-center ml-2">
+                              <FiMapPin className="w-3 h-3 mr-0.5" />
+                              {comp.location}
+                            </span>
+                          )}
+                        </p>
+                        {comp.distance_km && (
+                          <p className="text-xs text-gray-500 dark:text-gray-400 mb-2">{comp.distance_km} km</p>
+                        )}
+                        <div className="flex items-center -space-x-2">
+                          {comp.athletes.slice(0, 5).map((a) => (
+                            <img
+                              key={a.id}
+                              src={a.image || `https://ui-avatars.com/api/?name=${encodeURIComponent(a.name || 'A')}&background=random&size=32`}
+                              alt={a.name}
+                              title={a.name}
+                              className="w-7 h-7 rounded-full border-2 border-white dark:border-gray-800"
+                            />
+                          ))}
+                          {comp.athletes.length > 5 && (
+                            <div className="w-7 h-7 rounded-full border-2 border-white dark:border-gray-800 bg-gray-200 dark:bg-gray-600 flex items-center justify-center text-[10px] font-medium text-gray-600 dark:text-gray-300">
+                              +{comp.athletes.length - 5}
+                            </div>
+                          )}
+                        </div>
+                      </motion.div>
+                    );
+                  })}
+                </div>
+              );
+            })()}
           </div>
         </div>
 
@@ -431,7 +641,18 @@ const Dashboard = () => {
         </div>
       </div>
 
-      {/* Session Detail Modal */}
+      {/* Create Competition Modal */}
+      <AnimatePresence>
+        {showCreateCompetition && (
+          <CreateCompetitionModal
+            coachId={profile?.id}
+            onCreated={refreshCompetitions}
+            onClose={() => setShowCreateCompetition(false)}
+          />
+        )}
+      </AnimatePresence>
+
+      {/* Session/Competition Detail Modal */}
       <AnimatePresence>
         {selectedSession && (
           <div className="fixed inset-0 z-50 flex items-center justify-center p-4 bg-black/50">
@@ -444,7 +665,7 @@ const Dashboard = () => {
               <div className="p-6">
                 <div className="flex items-center justify-between mb-6">
                   <h3 className="text-xl font-bold text-gray-900 dark:text-white">
-                    Detalles del Entrenamiento
+                    {selectedSession.isCompetition ? 'Detalles de Competición' : 'Detalles del Entrenamiento'}
                   </h3>
                   <button
                     onClick={() => setSelectedSession(null)}
@@ -455,19 +676,33 @@ const Dashboard = () => {
                 </div>
 
                 <div className="space-y-4">
-                  {/* Date & Time */}
-                  <div className="p-3 bg-blue-50 dark:bg-blue-900/20 rounded-lg flex items-center space-x-3">
-                    <FiCalendar className="w-5 h-5 text-blue-600 dark:text-blue-400 flex-shrink-0" />
+                  {/* Date */}
+                  <div className={`p-3 rounded-lg flex items-center space-x-3 ${
+                    selectedSession.isCompetition
+                      ? 'bg-red-50 dark:bg-red-900/20'
+                      : 'bg-blue-50 dark:bg-blue-900/20'
+                  }`}>
+                    <FiCalendar className={`w-5 h-5 flex-shrink-0 ${
+                      selectedSession.isCompetition
+                        ? 'text-red-600 dark:text-red-400'
+                        : 'text-blue-600 dark:text-blue-400'
+                    }`} />
                     <div>
-                      <p className="text-sm font-medium text-blue-700 dark:text-blue-300">
-                        {new Date(selectedSession.scheduled_date).toLocaleDateString('es-ES', {
+                      <p className={`text-sm font-medium ${
+                        selectedSession.isCompetition
+                          ? 'text-red-700 dark:text-red-300'
+                          : 'text-blue-700 dark:text-blue-300'
+                      }`}>
+                        {new Date(
+                          (selectedSession.isCompetition ? selectedSession.event_date : selectedSession.scheduled_date) + 'T00:00:00'
+                        ).toLocaleDateString('es-ES', {
                           weekday: 'long',
                           year: 'numeric',
                           month: 'long',
                           day: 'numeric',
                         })}
                       </p>
-                      {selectedSession.scheduled_time && (
+                      {!selectedSession.isCompetition && selectedSession.scheduled_time && (
                         <p className="text-sm text-blue-600 dark:text-blue-400 flex items-center mt-1">
                           <FiClock className="w-3 h-3 mr-1" />
                           {selectedSession.scheduled_time.slice(0, 5)}
@@ -478,76 +713,131 @@ const Dashboard = () => {
 
                   {/* Title */}
                   <h4 className="text-lg font-semibold text-gray-900 dark:text-white">
-                    {selectedSession.title}
+                    {selectedSession.isCompetition ? selectedSession.name : selectedSession.title}
                   </h4>
 
-                  {/* Type & Status */}
-                  <div className="flex flex-wrap gap-2">
-                    <span className={`px-3 py-1 rounded-full text-sm text-white ${getTypeColor(selectedSession.training_type)}`}>
-                      {getTrainingTypeLabel(selectedSession.training_type)}
-                    </span>
-                    <span className={`px-3 py-1 rounded-full text-sm ${getStatusColor(selectedSession.status)}`}>
-                      {getStatusLabel(selectedSession.status)}
-                    </span>
+                  {/* Type & Status / Competition badge */}
+                  {selectedSession.isCompetition ? (
+                    <div className="flex flex-wrap gap-2">
+                      <span className="px-3 py-1 rounded-full text-sm bg-red-500 text-white flex items-center space-x-1">
+                        <FiFlag className="w-3 h-3" />
+                        <span>Competición</span>
+                      </span>
+                    </div>
+                  ) : (
+                    <div className="flex flex-wrap gap-2">
+                      <span className={`px-3 py-1 rounded-full text-sm text-white ${getTypeColor(selectedSession.training_type)}`}>
+                        {getTrainingTypeLabel(selectedSession.training_type)}
+                      </span>
+                      <span className={`px-3 py-1 rounded-full text-sm ${getStatusColor(selectedSession.status)}`}>
+                        {getStatusLabel(selectedSession.status)}
+                      </span>
+                    </div>
+                  )}
+
+                  {/* Athletes */}
+                  <div>
+                    <p className="text-sm text-gray-500 dark:text-gray-400 mb-2">
+                      {selectedSession.athletes?.length > 1
+                        ? `Asignado a ${selectedSession.athletes.length} atletas`
+                        : 'Atleta'}
+                    </p>
+                    <div className="space-y-2">
+                      {(selectedSession.athletes || [{ id: selectedSession.athlete_id, name: selectedSession.athleteName, image: selectedSession.athleteImage, status: selectedSession.status }]).map((athlete) => (
+                        <Link
+                          key={athlete.id}
+                          to={`/dashboard/athletes/${athlete.id}`}
+                          onClick={() => setSelectedSession(null)}
+                          className="flex items-center space-x-3 p-3 bg-gray-50 dark:bg-gray-700/50 rounded-lg hover:bg-gray-100 dark:hover:bg-gray-700 transition-colors"
+                        >
+                          <img
+                            src={athlete.image || `https://ui-avatars.com/api/?name=${encodeURIComponent(athlete.name || 'A')}&background=random`}
+                            alt={athlete.name}
+                            className="w-9 h-9 rounded-full"
+                          />
+                          <div className="flex-1 min-w-0">
+                            <p className="font-medium text-gray-900 dark:text-white text-sm truncate">{athlete.name}</p>
+                          </div>
+                          {!selectedSession.isCompetition && (
+                            <span className={`text-[10px] px-2 py-0.5 rounded-full ${getStatusColor(athlete.status)}`}>
+                              {getStatusLabel(athlete.status)}
+                            </span>
+                          )}
+                        </Link>
+                      ))}
+                    </div>
                   </div>
 
-                  {/* Athlete */}
-                  <div className="flex items-center space-x-3 p-3 bg-gray-50 dark:bg-gray-700/50 rounded-lg">
-                    <img
-                      src={selectedSession.athleteImage || `https://ui-avatars.com/api/?name=${encodeURIComponent(selectedSession.athleteName || 'A')}&background=random`}
-                      alt={selectedSession.athleteName}
-                      className="w-10 h-10 rounded-full"
-                    />
-                    <div>
-                      <p className="text-sm text-gray-500 dark:text-gray-400">Atleta</p>
-                      <p className="font-medium text-gray-900 dark:text-white">{selectedSession.athleteName}</p>
-                    </div>
-                  </div>
-
-                  {/* Duration */}
-                  {selectedSession.estimated_duration_minutes && (
-                    <div className="flex items-center space-x-3 p-3 bg-gray-50 dark:bg-gray-700/50 rounded-lg">
-                      <FiClock className="w-5 h-5 text-gray-500 flex-shrink-0" />
-                      <div>
-                        <p className="text-sm text-gray-500 dark:text-gray-400">Duración estimada</p>
-                        <p className="font-medium text-gray-900 dark:text-white">{selectedSession.estimated_duration_minutes} min</p>
-                      </div>
-                    </div>
+                  {/* Competition-specific fields */}
+                  {selectedSession.isCompetition && (
+                    <>
+                      {selectedSession.distance_km && (
+                        <div className="flex items-center space-x-3 p-3 bg-gray-50 dark:bg-gray-700/50 rounded-lg">
+                          <FiActivity className="w-5 h-5 text-gray-500 flex-shrink-0" />
+                          <div>
+                            <p className="text-sm text-gray-500 dark:text-gray-400">Distancia</p>
+                            <p className="font-medium text-gray-900 dark:text-white">{selectedSession.distance_km} km</p>
+                          </div>
+                        </div>
+                      )}
+                      {selectedSession.location && (
+                        <div className="flex items-center space-x-3 p-3 bg-gray-50 dark:bg-gray-700/50 rounded-lg">
+                          <FiMapPin className="w-5 h-5 text-gray-500 flex-shrink-0" />
+                          <div>
+                            <p className="text-sm text-gray-500 dark:text-gray-400">Ubicación</p>
+                            <p className="font-medium text-gray-900 dark:text-white">{selectedSession.location}</p>
+                          </div>
+                        </div>
+                      )}
+                      {selectedSession.notes && (
+                        <div>
+                          <p className="text-sm text-gray-500 dark:text-gray-400 mb-1">Notas</p>
+                          <p className="text-gray-900 dark:text-white whitespace-pre-wrap">{selectedSession.notes}</p>
+                        </div>
+                      )}
+                    </>
                   )}
 
-                  {/* Description */}
-                  {selectedSession.description && (
-                    <div>
-                      <p className="text-sm text-gray-500 dark:text-gray-400 mb-1">Descripción</p>
-                      <p className="text-gray-900 dark:text-white whitespace-pre-wrap">{selectedSession.description}</p>
-                    </div>
+                  {/* Training-specific fields */}
+                  {!selectedSession.isCompetition && (
+                    <>
+                      {selectedSession.estimated_duration_minutes && (
+                        <div className="flex items-center space-x-3 p-3 bg-gray-50 dark:bg-gray-700/50 rounded-lg">
+                          <FiClock className="w-5 h-5 text-gray-500 flex-shrink-0" />
+                          <div>
+                            <p className="text-sm text-gray-500 dark:text-gray-400">Duración estimada</p>
+                            <p className="font-medium text-gray-900 dark:text-white">{selectedSession.estimated_duration_minutes} min</p>
+                          </div>
+                        </div>
+                      )}
+                      {selectedSession.description && (
+                        <div>
+                          <p className="text-sm text-gray-500 dark:text-gray-400 mb-1">Descripción</p>
+                          <p className="text-gray-900 dark:text-white whitespace-pre-wrap">{selectedSession.description}</p>
+                        </div>
+                      )}
+                      {selectedSession.notes_coach && (
+                        <div>
+                          <p className="text-sm text-gray-500 dark:text-gray-400 mb-1">Notas del entrenador</p>
+                          <p className="text-gray-900 dark:text-white whitespace-pre-wrap">{selectedSession.notes_coach}</p>
+                        </div>
+                      )}
+                      {selectedSession.notes_athlete && (
+                        <div>
+                          <p className="text-sm text-gray-500 dark:text-gray-400 mb-1">Notas del atleta</p>
+                          <p className="text-gray-900 dark:text-white whitespace-pre-wrap">{selectedSession.notes_athlete}</p>
+                        </div>
+                      )}
+                    </>
                   )}
 
-                  {/* Coach notes */}
-                  {selectedSession.notes_coach && (
-                    <div>
-                      <p className="text-sm text-gray-500 dark:text-gray-400 mb-1">Notas del entrenador</p>
-                      <p className="text-gray-900 dark:text-white whitespace-pre-wrap">{selectedSession.notes_coach}</p>
-                    </div>
-                  )}
-
-                  {/* Athlete notes */}
-                  {selectedSession.notes_athlete && (
-                    <div>
-                      <p className="text-sm text-gray-500 dark:text-gray-400 mb-1">Notas del atleta</p>
-                      <p className="text-gray-900 dark:text-white whitespace-pre-wrap">{selectedSession.notes_athlete}</p>
-                    </div>
-                  )}
-
-                  {/* Link to athlete profile */}
-                  <Link
-                    to={`/dashboard/athletes/${selectedSession.athlete_id}`}
+                  {/* Close button */}
+                  <button
                     onClick={() => setSelectedSession(null)}
-                    className="flex items-center justify-center space-x-2 w-full py-3 bg-blue-600 hover:bg-blue-700 text-white rounded-xl transition-colors text-sm font-medium"
+                    className="w-full py-2.5 bg-gray-100 dark:bg-gray-700 text-gray-700 dark:text-gray-300 rounded-xl hover:bg-gray-200 dark:hover:bg-gray-600 transition-colors text-sm font-medium"
                   >
-                    <FiUser className="w-4 h-4" />
-                    <span>Ver perfil del atleta</span>
-                  </Link>
+                    Cerrar
+                  </button>
                 </div>
               </div>
             </motion.div>

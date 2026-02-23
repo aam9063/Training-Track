@@ -1,4 +1,5 @@
 import { useState, useCallback } from 'react';
+import { Link } from 'react-router-dom';
 import { useAuth } from '../../contexts/AuthContext';
 import { motion, AnimatePresence } from 'framer-motion';
 import {
@@ -40,12 +41,17 @@ const MONTHS = [
 
 // Draggable event pill sub-component
 const DraggableEventPill = ({ event, onClick, getTypeColor }) => {
-  const canDrag = !event.isCompetition && event.status === 'planned';
+  const isGrouped = event.athletes?.length > 1;
+  const canDrag = !event.isCompetition && !isGrouped && event.status === 'planned';
   const { attributes, listeners, setNodeRef, isDragging } = useDraggable({
     id: `event-${event.id}`,
     data: { event },
     disabled: !canDrag,
   });
+
+  const athleteLabel = isGrouped
+    ? `${event.athletes.length} atletas`
+    : event.athletes?.[0]?.name || event.athleteName;
 
   return (
     <div
@@ -66,8 +72,8 @@ const DraggableEventPill = ({ event, onClick, getTypeColor }) => {
               : `${getTypeColor(event.type)} text-white`
         }`}
       title={event.isCompetition
-        ? `${event.name} - ${event.athleteName}`
-        : `${event.title} - ${event.athleteName}${event.status === 'completed' ? ' ✓' : event.status === 'skipped' ? ' (Omitido)' : ''}`
+        ? `${event.name} - ${athleteLabel}`
+        : `${event.title} - ${athleteLabel}`
       }
     >
       {event.isCompetition ? (
@@ -218,15 +224,41 @@ const Calendar = () => {
     if (!date) return [];
     const dateStr = toLocalDateStr(date);
 
-    const daySessions = sessions
-      .filter((session) => session.date === dateStr)
-      .map(s => ({ ...s, isCompetition: false }));
+    // Group sessions with same title+type+description into one entry
+    const daySessions = sessions.filter((session) => session.date === dateStr);
+    const groups = {};
+    daySessions.forEach(s => {
+      const key = `${s.title}||${s.training_type}||${s.description || ''}`;
+      if (!groups[key]) {
+        groups[key] = { ...s, isCompetition: false, athletes: [] };
+      }
+      groups[key].athletes.push({
+        id: s.athlete_id,
+        name: s.athleteName,
+        image: s.athleteImage,
+        status: s.status,
+        sessionId: s.id,
+      });
+    });
+    const groupedSessions = Object.values(groups);
 
-    const dayComps = competitions
-      .filter((comp) => comp.event_date === dateStr)
-      .map(c => ({ ...c, isCompetition: true }));
+    // Group competitions by name+date+distance+location
+    const dayComps = competitions.filter((comp) => comp.event_date === dateStr);
+    const compGroups = {};
+    dayComps.forEach(c => {
+      const key = `${c.name}||${c.event_date}||${c.distance_km || ''}||${c.location || ''}`;
+      if (!compGroups[key]) {
+        compGroups[key] = { ...c, isCompetition: true, athletes: [] };
+      }
+      compGroups[key].athletes.push({
+        id: c.athlete_id,
+        name: c.athleteName,
+        image: c.athleteImage,
+      });
+    });
+    const groupedComps = Object.values(compGroups);
 
-    return [...daySessions, ...dayComps];
+    return [...groupedSessions, ...groupedComps];
   };
 
   const isToday = (date) => {
@@ -525,7 +557,11 @@ const Calendar = () => {
 
                           <div className="flex items-center space-x-2 text-sm text-gray-500 dark:text-gray-400">
                             <FiUser className="w-3 h-3" />
-                            <span className="truncate">{event.athleteName}</span>
+                            <span className="truncate">
+                              {event.athletes?.length > 1
+                                ? `${event.athletes.length} atletas`
+                                : event.athletes?.[0]?.name || event.athleteName}
+                            </span>
                           </div>
 
                           {!event.isCompetition && (
@@ -644,16 +680,34 @@ const Calendar = () => {
                     </div>
                   )}
 
-                  {/* Athlete */}
-                  <div className="flex items-center space-x-3 p-3 bg-gray-50 dark:bg-gray-700/50 rounded-lg">
-                    <img
-                      src={selectedEvent.athleteImage || `https://ui-avatars.com/api/?name=${encodeURIComponent(selectedEvent.athleteName || 'A')}&background=random`}
-                      alt={selectedEvent.athleteName}
-                      className="w-10 h-10 rounded-full"
-                    />
-                    <div>
-                      <p className="text-sm text-gray-500 dark:text-gray-400">Atleta</p>
-                      <p className="font-medium text-gray-900 dark:text-white">{selectedEvent.athleteName}</p>
+                  {/* Athletes */}
+                  <div>
+                    <p className="text-sm text-gray-500 dark:text-gray-400 mb-2">
+                      {selectedEvent.athletes?.length > 1
+                        ? `Asignado a ${selectedEvent.athletes.length} atletas`
+                        : 'Atleta'}
+                    </p>
+                    <div className="space-y-2">
+                      {(selectedEvent.athletes || [{ id: selectedEvent.athlete_id, name: selectedEvent.athleteName, image: selectedEvent.athleteImage, status: selectedEvent.status }]).map((athlete) => (
+                        <Link
+                          key={athlete.id}
+                          to={`/dashboard/athletes/${athlete.id}`}
+                          onClick={() => { setShowEventModal(false); setSelectedEvent(null); }}
+                          className="flex items-center space-x-3 p-3 bg-gray-50 dark:bg-gray-700/50 rounded-lg hover:bg-gray-100 dark:hover:bg-gray-700 transition-colors"
+                        >
+                          <img
+                            src={athlete.image || `https://ui-avatars.com/api/?name=${encodeURIComponent(athlete.name || 'A')}&background=random`}
+                            alt={athlete.name}
+                            className="w-9 h-9 rounded-full"
+                          />
+                          <div className="flex-1 min-w-0">
+                            <p className="font-medium text-gray-900 dark:text-white text-sm truncate">{athlete.name}</p>
+                          </div>
+                          <span className={`text-[10px] px-2 py-0.5 rounded-full ${getStatusColor(athlete.status)}`}>
+                            {getStatusLabel(athlete.status)}
+                          </span>
+                        </Link>
+                      ))}
                     </div>
                   </div>
 

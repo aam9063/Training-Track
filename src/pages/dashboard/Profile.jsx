@@ -55,7 +55,7 @@ const Profile = () => {
   const [copiedInvite, setCopiedInvite] = useState(false);
 
   const handleCopyInviteLink = async () => {
-    const url = `https://training-pro.netlify.app/register?invite=${profile?.id || user?.id}`;
+    const url = `https://www.trainingtrack.es/register?invite=${profile?.id || user?.id}`;
     try {
       await navigator.clipboard.writeText(url);
       setCopiedInvite(true);
@@ -403,7 +403,7 @@ const Profile = () => {
                 <div className="flex items-center gap-3">
                   <div className="hidden sm:block flex-1 px-4 py-2.5 bg-gray-50 dark:bg-gray-700/50 border border-gray-200 dark:border-gray-600 rounded-lg">
                     <p className="text-sm font-mono text-gray-700 dark:text-gray-300 break-all">
-                      https://training-pro.netlify.app/register?invite={profile?.id || user?.id}
+                      https://www.trainingtrack.es/register?invite={profile?.id || user?.id}
                     </p>
                   </div>
                   <button

@@ -803,7 +803,7 @@ const Calendar = () => {
               initial={{ opacity: 0, scale: 0.95 }}
               animate={{ opacity: 1, scale: 1 }}
               exit={{ opacity: 0, scale: 0.95 }}
-              className="hidden md:block fixed inset-0 z-50 flex items-center justify-center p-4"
+              className="hidden md:flex fixed inset-0 z-50 items-center justify-center p-4"
               style={{ pointerEvents: 'none' }}
             >
               <div

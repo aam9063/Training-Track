@@ -296,7 +296,15 @@ export const getTodayWellness = async (athleteId) => {
 export const saveTrainingZones = async (athleteId, zoneType, zones) => {
   const today = toLocalDateStr(new Date());
 
-  // Expire old zones of this type
+  // Delete zones created today (allows re-running on the same day)
+  await supabase
+    .from('training_zones')
+    .delete()
+    .eq('athlete_id', athleteId)
+    .eq('zone_type', zoneType)
+    .eq('valid_from', today);
+
+  // Expire older zones of this type
   await supabase
     .from('training_zones')
     .update({ valid_until: today })
@@ -370,12 +378,13 @@ export const updateAthleteVdot = async (athleteId, bestEfforts) => {
 
   bestEfforts.forEach((effort) => {
     const distanceM = distanceMap[effort.name] || effort.distance;
-    if (!distanceM || !effort.elapsed_time) return;
-    const timeMin = effort.elapsed_time / 60;
+    const time = effort.moving_time || effort.elapsed_time;
+    if (!distanceM || !time) return;
+    const timeMin = time / 60;
     const vdot = calculateVdot(distanceM, timeMin);
     if (vdot && vdot > bestVdot) {
       bestVdot = vdot;
-      bestSource = { distance: effort.name, time: effort.elapsed_time };
+      bestSource = { distance: effort.name, time };
     }
   });
 

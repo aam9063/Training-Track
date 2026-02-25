@@ -1,4 +1,4 @@
-import { useState } from 'react';
+import { useState, useEffect } from 'react';
 import { motion, AnimatePresence } from 'framer-motion';
 import {
   FiChevronLeft,
@@ -22,6 +22,7 @@ import {
   FiRotateCcw,
   FiChevronDown,
 } from 'react-icons/fi';
+import { SiStrava } from 'react-icons/si';
 import { generateWeeklyPDF } from '../../lib/pdfExport';
 import { useAuth } from '../../contexts/AuthContext';
 import {
@@ -30,13 +31,16 @@ import {
   completeSession,
   skipSession,
   revertSession,
+  updateTrainingSession,
 } from '../../services/weeklyTrainingService';
 import useWeeklyTrainings from '../../hooks/useWeeklyTrainings';
 import {
   formatDuration,
   calculatePace,
   getActivityTypeLabel,
+  formatStravaActivity,
 } from '../../services/stravaService';
+import { getCachedActivityByStravaId } from '../../services/stravaCacheService';
 import { getRPEEmoji, RPE_OPTIONS } from '../../services/rpeService';
 import { showSuccess, showError } from '../../lib/toast';
 import RPEModal from '../../components/athlete/RPEModal';
@@ -65,6 +69,37 @@ const Training = () => {
     loadActivityDetail, handleEditRPESave, showMoreActivities,
   } = useStravaActivities(profile?.id);
 
+  // Strava-linked activities for auto-completed sessions
+  const [linkedActivities, setLinkedActivities] = useState({});
+  const [showStravaRpeFlow, setShowStravaRpeFlow] = useState(false);
+
+  // Fetch linked Strava activities for sessions that have strava_activity_id
+  useEffect(() => {
+    if (!profile?.id) return;
+    const entries = Object.entries(trainings);
+    const stravaLinked = entries.filter(([, t]) => t.stravaActivityId);
+    if (stravaLinked.length === 0) {
+      setLinkedActivities({});
+      return;
+    }
+    (async () => {
+      const result = {};
+      await Promise.all(
+        stravaLinked.map(async ([dayIdx, t]) => {
+          try {
+            const activity = await getCachedActivityByStravaId(profile.id, t.stravaActivityId);
+            if (activity) {
+              result[dayIdx] = formatStravaActivity(activity);
+            }
+          } catch (err) {
+            console.error('Error fetching linked activity:', err);
+          }
+        })
+      );
+      setLinkedActivities(result);
+    })();
+  }, [profile?.id, trainings]);
+
   // Completion flow state
   const [showCompletionFlow, setShowCompletionFlow] = useState(false);
   const [rpeScore, setRpeScore] = useState(null);
@@ -81,6 +116,7 @@ const Training = () => {
       setSelectedDay(training);
       setSelectedDayIndex(dayIndex);
       setShowCompletionFlow(false);
+      setShowStravaRpeFlow(false);
       setRpeScore(training.rpeScore || null);
       setRpeNotes(training.rpeNotes || '');
       setAthleteNotes(training.notesAthlete || '');
@@ -92,6 +128,7 @@ const Training = () => {
     setSelectedDay(null);
     setSelectedDayIndex(null);
     setShowCompletionFlow(false);
+    setShowStravaRpeFlow(false);
     setSaving(false);
   };
 
@@ -154,6 +191,28 @@ const Training = () => {
     } catch (error) {
       console.error('Error reverting session:', error);
       showError('Error al revertir la sesión');
+    } finally {
+      setSaving(false);
+    }
+  };
+
+  const handleStravaRpeSave = async () => {
+    if (!selectedDay?.id) return;
+    setSaving(true);
+    try {
+      const { error } = await updateTrainingSession(selectedDay.id, {
+        rpe_score: rpeScore || null,
+        rpe_notes: rpeNotes || null,
+        notes_athlete: athleteNotes || null,
+      });
+      if (error) throw error;
+      showSuccess('RPE guardado correctamente');
+      setShowStravaRpeFlow(false);
+      closeDayDetail();
+      loadTrainings();
+    } catch (error) {
+      console.error('Error saving RPE:', error);
+      showError('Error al guardar el RPE');
     } finally {
       setSaving(false);
     }
@@ -658,8 +717,17 @@ const Training = () => {
 
                     {/* Right side: status icons */}
                     <div className="flex items-center gap-1 flex-shrink-0">
+                      {isCompleted && training.stravaActivityId && !training.rpeScore && (
+                        <span className="relative flex h-2.5 w-2.5 mr-1">
+                          <span className="animate-ping absolute inline-flex h-full w-full rounded-full bg-[#FC4C02] opacity-75" />
+                          <span className="relative inline-flex rounded-full h-2.5 w-2.5 bg-[#FC4C02]" />
+                        </span>
+                      )}
                       {isCompleted && training.rpeScore && (
                         <span className="text-sm">{getRPEEmoji(training.rpeScore)}</span>
+                      )}
+                      {isCompleted && training.stravaActivityId && (
+                        <SiStrava className="w-4 h-4 text-[#FC4C02]" />
                       )}
                       {isCompleted && <FiCheckCircle className="w-4 h-4 text-green-500" />}
                       {isSkipped && <FiSkipForward className="w-4 h-4 text-gray-400" />}
@@ -724,7 +792,14 @@ const Training = () => {
                   {/* Status indicator */}
                   {isCompleted && (
                     <div className="absolute top-3 right-3 flex items-center space-x-1">
+                      {training.stravaActivityId && !training.rpeScore && (
+                        <span className="relative flex h-2.5 w-2.5">
+                          <span className="animate-ping absolute inline-flex h-full w-full rounded-full bg-[#FC4C02] opacity-75" />
+                          <span className="relative inline-flex rounded-full h-2.5 w-2.5 bg-[#FC4C02]" />
+                        </span>
+                      )}
                       {training.rpeScore && <span className="text-lg">{getRPEEmoji(training.rpeScore)}</span>}
+                      {training.stravaActivityId && <SiStrava className="w-4 h-4 text-[#FC4C02]" />}
                       <FiCheckCircle className="w-5 h-5 text-green-500" />
                     </div>
                   )}
@@ -1236,6 +1311,36 @@ const Training = () => {
                       </div>
                     )}
 
+                    {/* Strava Auto-completed Banner */}
+                    {selectedDay.status === 'completed' && selectedDay.stravaActivityId && linkedActivities[selectedDayIndex] && (
+                      <div className="bg-[#FC4C02]/10 dark:bg-[#FC4C02]/20 rounded-lg p-4 border border-[#FC4C02]/30">
+                        <div className="flex items-center space-x-2 mb-3">
+                          <SiStrava className="w-5 h-5 text-[#FC4C02]" />
+                          <p className="font-semibold text-[#FC4C02]">Completado automáticamente vía Strava</p>
+                        </div>
+                        <div className="grid grid-cols-3 gap-3">
+                          <div className="text-center">
+                            <p className="text-xs text-gray-500 dark:text-gray-400">Distancia</p>
+                            <p className="text-lg font-bold text-gray-900 dark:text-white">{linkedActivities[selectedDayIndex].distanceKm} km</p>
+                          </div>
+                          <div className="text-center">
+                            <p className="text-xs text-gray-500 dark:text-gray-400">Tiempo</p>
+                            <p className="text-lg font-bold text-gray-900 dark:text-white">{linkedActivities[selectedDayIndex].formattedTime}</p>
+                          </div>
+                          <div className="text-center">
+                            <p className="text-xs text-gray-500 dark:text-gray-400">Ritmo</p>
+                            <p className="text-lg font-bold text-gray-900 dark:text-white">{linkedActivities[selectedDayIndex].pace} min/km</p>
+                          </div>
+                        </div>
+                        {linkedActivities[selectedDayIndex].average_heartrate && (
+                          <div className="mt-2 flex items-center justify-center space-x-1 text-sm text-gray-600 dark:text-gray-400">
+                            <FiHeart className="w-3.5 h-3.5 text-red-500" />
+                            <span>FC media: <strong>{Math.round(linkedActivities[selectedDayIndex].average_heartrate)} bpm</strong></span>
+                          </div>
+                        )}
+                      </div>
+                    )}
+
                     {/* Skipped Session Info */}
                     {selectedDay.status === 'skipped' && (
                       <div className="bg-gray-100 dark:bg-gray-700/50 rounded-lg p-4 border border-gray-300 dark:border-gray-600">
@@ -1374,6 +1479,70 @@ const Training = () => {
                       </div>
                     )}
 
+                    {/* Strava RPE Section (for auto-completed sessions missing RPE) */}
+                    {showStravaRpeFlow && selectedDay.status === 'completed' && selectedDay.stravaActivityId && !selectedDay.rpeScore && (
+                      <div className="bg-gradient-to-br from-orange-50 to-amber-50 dark:from-orange-900/20 dark:to-amber-900/20 rounded-xl p-5 border border-orange-200 dark:border-orange-800">
+                        <h4 className="text-base font-bold text-orange-800 dark:text-orange-300 mb-1">
+                          ¿Cómo te has sentido?
+                        </h4>
+                        <p className="text-sm text-orange-600 dark:text-orange-400 mb-4">
+                          Indica tu percepción de esfuerzo
+                        </p>
+
+                        <div className="flex justify-center gap-2 sm:gap-3 mb-5">
+                          {RPE_OPTIONS.map((option) => (
+                            <button
+                              key={option.score}
+                              onClick={() => setRpeScore(option.score)}
+                              className={`flex flex-col items-center p-2 sm:p-3 rounded-xl transition-all duration-200 ${
+                                rpeScore === option.score
+                                  ? 'bg-orange-200 dark:bg-orange-800/50 ring-2 ring-orange-500 scale-110'
+                                  : 'hover:bg-orange-100 dark:hover:bg-orange-800/30 hover:scale-105'
+                              }`}
+                            >
+                              <span className="text-2xl sm:text-3xl mb-1">{option.emoji}</span>
+                              <span className={`text-[10px] sm:text-xs font-medium ${
+                                rpeScore === option.score
+                                  ? 'text-orange-700 dark:text-orange-300'
+                                  : 'text-gray-500 dark:text-gray-400'
+                              }`}>
+                                {option.label}
+                              </span>
+                            </button>
+                          ))}
+                        </div>
+
+                        <div className="mb-3">
+                          <label className="block text-sm font-medium text-orange-700 dark:text-orange-400 mb-1">
+                            Sensaciones / Comentarios (opcional)
+                          </label>
+                          <textarea
+                            value={athleteNotes}
+                            onChange={(e) => setAthleteNotes(e.target.value)}
+                            placeholder="¿Cómo te has sentido? Describe tus sensaciones..."
+                            rows={2}
+                            className="w-full px-3 py-2 rounded-lg border border-orange-300 dark:border-orange-700 bg-white dark:bg-gray-800 text-gray-900 dark:text-white placeholder-gray-400 text-sm focus:ring-2 focus:ring-orange-500 focus:border-transparent resize-none"
+                          />
+                        </div>
+
+                        <div className="flex items-center gap-3">
+                          <button
+                            onClick={handleStravaRpeSave}
+                            disabled={saving}
+                            className="flex-1 py-2.5 bg-[#FC4C02] hover:bg-[#E34402] disabled:bg-orange-300 text-white rounded-lg font-semibold transition-colors text-sm"
+                          >
+                            {saving ? 'Guardando...' : 'Guardar RPE'}
+                          </button>
+                          <button
+                            onClick={() => setShowStravaRpeFlow(false)}
+                            className="px-4 py-2.5 text-sm text-orange-700 dark:text-orange-400 hover:bg-orange-100 dark:hover:bg-orange-800/30 rounded-lg transition-colors"
+                          >
+                            Cancelar
+                          </button>
+                        </div>
+                      </div>
+                    )}
+
                     {/* RPE Section (inline, shown when completing) */}
                     {showCompletionFlow && selectedDay.status === 'planned' && (
                       <div className="bg-gradient-to-br from-green-50 to-emerald-50 dark:from-green-900/20 dark:to-emerald-900/20 rounded-xl p-5 border border-green-200 dark:border-green-800">
@@ -1458,7 +1627,7 @@ const Training = () => {
               </div>
 
               {/* Modal Footer */}
-              {selectedDay.type !== 'rest' && !showCompletionFlow && (
+              {selectedDay.type !== 'rest' && !showCompletionFlow && !showStravaRpeFlow && (
                 <div className="p-4 border-t border-gray-200 dark:border-gray-700 flex-shrink-0">
                   {selectedDay.status === 'planned' && isPastOrToday(selectedDay.date) ? (
                     <div className="flex items-center gap-3">
@@ -1477,6 +1646,24 @@ const Training = () => {
                       >
                         <FiSkipForward className="w-4 h-4" />
                         <span>Omitir</span>
+                      </button>
+                    </div>
+                  ) : selectedDay.status === 'completed' && selectedDay.stravaActivityId && !selectedDay.rpeScore ? (
+                    <div className="flex items-center gap-3">
+                      <button
+                        onClick={() => setShowStravaRpeFlow(true)}
+                        className="flex-1 flex items-center justify-center space-x-2 py-2.5 bg-[#FC4C02] hover:bg-[#E34402] text-white rounded-lg font-semibold transition-colors text-sm"
+                      >
+                        <SiStrava className="w-4 h-4" />
+                        <span>Indicar RPE</span>
+                      </button>
+                      <button
+                        onClick={handleRevertSession}
+                        disabled={saving}
+                        className="flex items-center space-x-1 px-4 py-2.5 text-sm text-gray-500 hover:bg-gray-100 dark:hover:bg-gray-700 rounded-lg transition-colors"
+                      >
+                        <FiRotateCcw className="w-4 h-4" />
+                        <span>Revertir</span>
                       </button>
                     </div>
                   ) : selectedDay.status === 'completed' ? (

@@ -1,8 +1,8 @@
 import { useState, useEffect, useMemo } from 'react';
 import { motion } from 'framer-motion';
-import { FiTarget, FiRefreshCw, FiChevronDown, FiChevronUp } from 'react-icons/fi';
+import { FiTarget, FiRefreshCw, FiChevronDown, FiChevronUp, FiEdit2, FiCheck, FiX } from 'react-icons/fi';
 import { useAuth } from '../../contexts/AuthContext';
-import { getTrainingZones, updateAthleteVdot } from '../../services/trainingLoadService';
+import { getTrainingZones, updateAthleteVdot, saveTrainingZones } from '../../services/trainingLoadService';
 import { getTrainingPaces, generateHrZones, formatPace, DANIELS_ZONES } from '../../lib/trainingMetrics';
 import { showSuccess, showError } from '../../lib/toast';
 import { supabase } from '../../lib/supabase';
@@ -23,8 +23,10 @@ export default function TrainingZonesCard({ bestEfforts, athleteId: propAthleteI
   const [expanded, setExpanded] = useState(true);
   const [activeTab, setActiveTab] = useState('pace');
   const [remoteAthleteData, setRemoteAthleteData] = useState(null);
+  const [editingVdot, setEditingVdot] = useState(false);
+  const [manualVdot, setManualVdot] = useState('');
 
-  const athleteData = isOwnProfile ? profile?.athlete : remoteAthleteData;
+  const athleteData = remoteAthleteData || (isOwnProfile ? profile?.athlete : null);
   const vdot = athleteData?.vdot;
   const maxHR = athleteData?.max_heart_rate;
 
@@ -97,6 +99,54 @@ export default function TrainingZonesCard({ bestEfforts, athleteId: propAthleteI
     }
   };
 
+  const handleManualVdot = async () => {
+    const val = parseFloat(manualVdot);
+    if (!val || val < 15 || val > 85) {
+      showError('VDOT debe estar entre 15 y 85');
+      return;
+    }
+    setUpdating(true);
+    try {
+      await supabase
+        .from('athletes')
+        .update({ vdot: val })
+        .eq('id', athleteId);
+
+      const paces = getTrainingPaces(val);
+      if (paces) {
+        const zones = [
+          { zone: 1, name: 'Easy (E)', min: paces.easy.max, max: paces.easy.min, unit: 's/km', description: 'Ritmo fácil, conversacional' },
+          { zone: 2, name: 'Marathon (M)', min: paces.marathon, max: paces.marathon, unit: 's/km', description: 'Ritmo maratón' },
+          { zone: 3, name: 'Threshold (T)', min: paces.threshold, max: paces.threshold, unit: 's/km', description: 'Umbral de lactato' },
+          { zone: 4, name: 'Interval (I)', min: paces.interval, max: paces.interval, unit: 's/km', description: 'Desarrollo VO2max' },
+          { zone: 5, name: 'Repetition (R)', min: paces.repetition, max: paces.repetition, unit: 's/km', description: 'Velocidad y economía' },
+        ];
+        await saveTrainingZones(athleteId, 'pace_daniels', zones);
+        const dbZones = await getTrainingZones(athleteId);
+        setPaceZones(dbZones.filter(z => z.zone_type === 'pace_daniels'));
+      }
+
+      if (isOwnProfile) {
+        // Refresh local profile
+        const { data } = await supabase.from('athletes').select('vdot').eq('id', athleteId).single();
+        if (data) {
+          // Force re-render by updating remote data (profile.athlete.vdot will update on next load)
+          setRemoteAthleteData(prev => ({ ...(prev || profile?.athlete), vdot: data.vdot }));
+        }
+      } else {
+        setRemoteAthleteData(prev => ({ ...prev, vdot: val }));
+      }
+
+      showSuccess(`VDOT actualizado: ${val}`);
+      setEditingVdot(false);
+    } catch (err) {
+      console.error('Error saving manual VDOT:', err);
+      showError('Error al guardar VDOT');
+    } finally {
+      setUpdating(false);
+    }
+  };
+
   if (loading) {
     return (
       <div className="bg-white dark:bg-gray-800 rounded-xl p-4 animate-pulse">
@@ -124,10 +174,44 @@ export default function TrainingZonesCard({ bestEfforts, athleteId: propAthleteI
             <span className="sm:hidden">Zonas</span>
             <InfoTooltip text="Zonas de ritmo basadas en el índice VDOT (Jack Daniels) y zonas de FC con fórmula de Karvonen. El VDOT se calcula automáticamente a partir de tus mejores marcas en Strava." />
           </h3>
-          {vdot && (
-            <span className="text-xs px-2 py-0.5 rounded-full bg-purple-100 dark:bg-purple-900/30 text-purple-700 dark:text-purple-300 font-medium flex-shrink-0">
-              VDOT: {vdot}
-            </span>
+          {vdot && !editingVdot && (
+            <button
+              onClick={() => { setEditingVdot(true); setManualVdot(String(vdot)); }}
+              className="text-xs px-2 py-0.5 rounded-full bg-purple-100 dark:bg-purple-900/30 text-purple-700 dark:text-purple-300 font-medium flex-shrink-0 hover:bg-purple-200 dark:hover:bg-purple-900/50 transition-colors flex items-center gap-1"
+              title="Editar VDOT manualmente"
+            >
+              VDOT: {vdot} <FiEdit2 className="w-3 h-3" />
+            </button>
+          )}
+          {editingVdot && (
+            <div className="flex items-center gap-1 flex-shrink-0">
+              <span className="text-xs text-purple-700 dark:text-purple-300 font-medium">VDOT:</span>
+              <input
+                type="number"
+                value={manualVdot}
+                onChange={(e) => setManualVdot(e.target.value)}
+                onKeyDown={(e) => { if (e.key === 'Enter') handleManualVdot(); if (e.key === 'Escape') setEditingVdot(false); }}
+                className="w-14 text-xs px-1.5 py-0.5 rounded border border-purple-300 dark:border-purple-600 bg-white dark:bg-gray-700 text-gray-900 dark:text-white focus:outline-none focus:ring-1 focus:ring-purple-500"
+                min="15"
+                max="85"
+                step="0.1"
+                autoFocus
+              />
+              <button onClick={handleManualVdot} disabled={updating} className="p-0.5 text-green-600 hover:text-green-700 disabled:opacity-50">
+                <FiCheck className="w-3.5 h-3.5" />
+              </button>
+              <button onClick={() => setEditingVdot(false)} className="p-0.5 text-gray-400 hover:text-gray-600">
+                <FiX className="w-3.5 h-3.5" />
+              </button>
+            </div>
+          )}
+          {!vdot && !editingVdot && (
+            <button
+              onClick={() => { setEditingVdot(true); setManualVdot(''); }}
+              className="text-xs px-2 py-0.5 rounded-full bg-gray-100 dark:bg-gray-700 text-gray-500 dark:text-gray-400 hover:bg-purple-100 dark:hover:bg-purple-900/30 transition-colors flex items-center gap-1"
+            >
+              <FiEdit2 className="w-3 h-3" /> VDOT
+            </button>
           )}
         </div>
         <div className="flex items-center gap-2">
@@ -210,7 +294,9 @@ export default function TrainingZonesCard({ bestEfforts, athleteId: propAthleteI
               })}
               {!hasPaceData && (
                 <p className="text-sm text-gray-500 dark:text-gray-400 text-center py-4">
-                  Conecta Strava y haz clic en "Auto VDOT" para calcular tus zonas automáticamente
+                  {isOwnProfile
+                    ? 'Conecta Strava y haz clic en "Auto VDOT" para calcular tus zonas automáticamente'
+                    : 'El atleta necesita sincronizar Strava para generar zonas de ritmo'}
                 </p>
               )}
             </div>
@@ -242,7 +328,9 @@ export default function TrainingZonesCard({ bestEfforts, athleteId: propAthleteI
               })}
               {!hasHrData && (
                 <p className="text-sm text-gray-500 dark:text-gray-400 text-center py-4">
-                  Configura tu FC máxima en el perfil para ver tus zonas de frecuencia cardíaca
+                  {isOwnProfile
+                    ? 'Sincroniza actividades con Strava para calcular automáticamente tus zonas de FC'
+                    : 'El atleta necesita sincronizar actividades con Strava para generar zonas de FC'}
                 </p>
               )}
             </div>

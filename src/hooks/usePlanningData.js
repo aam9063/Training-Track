@@ -10,6 +10,7 @@ import {
   updateMicrocycleContent,
   assignPlanToAthletes,
 } from '../services/planningService';
+import { sendPushNotification } from '../lib/pushNotifications';
 
 export default function usePlanningData(coachId) {
   const [plans, setPlans] = useState([]);
@@ -188,6 +189,16 @@ export default function usePlanningData(coachId) {
     try {
       const result = await assignPlanToAthletes(selectedPlan.id, coachId, athleteIds, startDate);
       if (result.error) throw result.error;
+
+      // Send a single push notification to all assigned athletes
+      sendPushNotification(
+        athleteIds,
+        'Nuevo plan de entrenamiento',
+        `Se te ha asignado el plan "${selectedPlan.name}"`,
+        '/athlete/training',
+        'tt-training'
+      );
+
       // Reload plans to get updated assignments
       await loadPlans();
       return result;

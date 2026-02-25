@@ -18,7 +18,9 @@ import {
 import { supabase } from '../../lib/supabase';
 import { toLocalDateStr } from '../../lib/dateUtils';
 import { getWeekStartDate } from '../../services/weeklyTrainingService';
+import { parseKmFromDescription } from '../../hooks/useWeeklyTrainings';
 import { getAthleteCompetitions } from '../../services/athleteService';
+import { getCachedActivities } from '../../services/stravaCacheService';
 import WellnessForm from '../../components/athlete/WellnessForm';
 import ReadinessScore from '../../components/athlete/ReadinessScore';
 
@@ -89,25 +91,53 @@ const AthleteDashboard = () => {
         }));
       }
 
-      // Calculate week stats
-      let totalDistanceMeters = 0;
-      let totalDurationMinutes = 0;
+      // Fetch Strava activities for this week (real data)
+      const stravaActivities = await getCachedActivities(profile.id, {
+        after: weekStart,
+        before: new Date(weekEnd.getTime() + 24 * 60 * 60 * 1000), // end of Sunday
+      });
 
+      // Calculate week stats: prefer Strava real data, fallback to planned
+      let stravaDistanceMeters = 0;
+      let stravaMovingTimeSeconds = 0;
+      stravaActivities.forEach((a) => {
+        stravaDistanceMeters += a.distance || 0;
+        stravaMovingTimeSeconds += a.moving_time || 0;
+      });
+
+      // Planned distance (fallback for sessions without Strava data)
+      let plannedDistanceMeters = 0;
+      let plannedDurationMinutes = 0;
       weekSessionsWithExercises.forEach((session) => {
         if (session.training_type !== 'rest') {
           if (session.estimated_duration_minutes) {
-            totalDurationMinutes += session.estimated_duration_minutes;
+            plannedDurationMinutes += session.estimated_duration_minutes;
           }
 
+          let sessionDistance = 0;
           session.exercises?.forEach((ex) => {
             if (ex.planned_distance_meters) {
               const sets = ex.planned_sets || 1;
               const reps = ex.planned_reps || 1;
-              totalDistanceMeters += ex.planned_distance_meters * sets * reps;
+              sessionDistance += ex.planned_distance_meters * sets * reps;
             }
           });
+
+          if (sessionDistance === 0 && session.description) {
+            const parsedKm = parseKmFromDescription(session.description);
+            if (parsedKm > 0) sessionDistance = parsedKm * 1000;
+          }
+
+          plannedDistanceMeters += sessionDistance;
         }
       });
+
+      // Use Strava when available, otherwise planned
+      const hasStrava = stravaActivities.length > 0;
+      const totalDistanceMeters = hasStrava ? stravaDistanceMeters : plannedDistanceMeters;
+      const totalDurationMinutes = hasStrava
+        ? Math.round(stravaMovingTimeSeconds / 60)
+        : plannedDurationMinutes;
 
       // Format stats
       const totalKm = (totalDistanceMeters / 1000).toFixed(1);
@@ -115,9 +145,14 @@ const AthleteDashboard = () => {
       const minutes = totalDurationMinutes % 60;
       const totalTime = `${hours}h ${minutes}m`;
 
-      // Calculate avg pace
+      // Calculate avg pace (only from Strava when available — real pace)
       let avgPace = '-';
-      if (totalDistanceMeters > 0 && totalDurationMinutes > 0) {
+      if (hasStrava && stravaDistanceMeters > 0 && stravaMovingTimeSeconds > 0) {
+        const paceMinPerKm = (stravaMovingTimeSeconds / 60) / (stravaDistanceMeters / 1000);
+        const paceMin = Math.floor(paceMinPerKm);
+        const paceSec = Math.round((paceMinPerKm - paceMin) * 60);
+        avgPace = `${paceMin}:${paceSec.toString().padStart(2, '0')}`;
+      } else if (!hasStrava && totalDistanceMeters > 0 && totalDurationMinutes > 0) {
         const paceMinPerKm = totalDurationMinutes / (totalDistanceMeters / 1000);
         const paceMin = Math.floor(paceMinPerKm);
         const paceSec = Math.round((paceMinPerKm - paceMin) * 60);

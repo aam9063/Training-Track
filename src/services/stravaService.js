@@ -709,15 +709,32 @@ export const extractBestEfforts = (activities) => {
 
   const bestEfforts = {};
 
+  // Map Strava effort names to standard distances and display names
+  const effortNameMap = {
+    '1k': { display: '1 km', meters: 1000 },
+    '1 mile': { display: '1 Milla', meters: 1609 },
+    '2 mile': { display: '2 Millas', meters: 3219 },
+    '5k': { display: '5 km', meters: 5000 },
+    '10k': { display: '10 km', meters: 10000 },
+    '15k': { display: '15 km', meters: 15000 },
+    '10 mile': { display: '10 Millas', meters: 16093 },
+    '20k': { display: '20 km', meters: 20000 },
+    'Half-Marathon': { display: 'Media Maratón', meters: 21097 },
+    'Marathon': { display: 'Maratón', meters: 42195 },
+  };
+
   // First, check if activities have best_efforts from Strava (detailed activity)
   activities.forEach(activity => {
     if (activity.best_efforts) {
       activity.best_efforts.forEach(effort => {
-        const key = effort.name;
+        const mapped = effortNameMap[effort.name];
+        const displayName = mapped ? mapped.display : effort.name;
+        const normalizedDistance = mapped ? mapped.meters : effort.distance;
+        const key = displayName;
         if (!bestEfforts[key] || effort.moving_time < bestEfforts[key].time) {
           bestEfforts[key] = {
-            name: effort.name,
-            distance: effort.distance,
+            name: displayName,
+            distance: normalizedDistance,
             time: effort.moving_time,
             timeFormatted: formatDuration(effort.moving_time),
             date: activity.start_date_local,
@@ -750,7 +767,7 @@ export const extractBestEfforts = (activities) => {
 
         bestEfforts[target.name] = {
           name: target.name,
-          distance: fastest.distance,
+          distance: target.meters,
           time: fastest.moving_time,
           timeFormatted: formatDuration(fastest.moving_time),
           pace: calculatePace(fastest.moving_time, fastest.distance),
@@ -784,7 +801,9 @@ export const estimateRaceTimes = (referenceDistance, referenceTime) => {
   const estimates = {};
 
   distances.forEach(d => {
-    if (d.meters !== referenceDistance) {
+    // Skip if reference distance matches this target (within 5% tolerance)
+    const ratio = Math.abs(d.meters - referenceDistance) / d.meters;
+    if (ratio > 0.05) {
       const estimatedTime = referenceTime * Math.pow(d.meters / referenceDistance, 1.06);
       estimates[d.name] = {
         time: Math.round(estimatedTime),

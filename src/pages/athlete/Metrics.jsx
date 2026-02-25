@@ -31,7 +31,8 @@ import {
   FiNavigation,
 } from 'react-icons/fi';
 import { useAuth } from '../../contexts/AuthContext';
-import { estimateRaceTimes } from '../../services/stravaService';
+import { supabase } from '../../lib/supabase';
+import { calculateVdot, predictAllRaceTimes } from '../../lib/trainingMetrics';
 import { getDailyLoads, calculateLoadMetrics } from '../../services/aiReportService';
 import ACWRGauge, { getACWRZone } from '../../components/shared/ACWRGauge';
 import PMCChart from '../../components/athlete/PMCChart';
@@ -465,6 +466,18 @@ const AthleteMetrics = () => {
     stravaStats, weekFilter, setWeekFilter, rawActivities,
   } = useStravaMetrics(profile?.id);
   const [activityTimePeriod, setActivityTimePeriod] = useState('7days');
+  const [dbPersonalBests, setDbPersonalBests] = useState([]);
+
+  // Fetch personal bests from DB for race predictions
+  useEffect(() => {
+    if (!profile?.id) return;
+    supabase
+      .from('personal_bests')
+      .select('distance, time_seconds, date')
+      .eq('athlete_id', profile.id)
+      .order('time_seconds', { ascending: true })
+      .then(({ data }) => setDbPersonalBests(data || []));
+  }, [profile?.id]);
 
   // Training load calculations (ACWR, weekly loads)
   const loadData = useMemo(() => {
@@ -511,17 +524,73 @@ const AthleteMetrics = () => {
     };
   }, [rawActivities]);
 
-  // Race time predictions based on best efforts (Riegel formula)
+  // Race time predictions using Daniels-Gilbert VDOT model
   const racePredictions = useMemo(() => {
-    if (!bestEfforts?.length) return null;
-    const priority = ['10 km', '5 km', 'Media Maratón', '1 Milla', '1 km'];
-    const ref = priority.map(n => bestEfforts.find(e => e.name === n)).find(Boolean);
-    if (!ref) return null;
-    return {
-      reference: ref,
-      predictions: estimateRaceTimes(ref.distance, ref.time),
-    };
-  }, [bestEfforts]);
+    // 1. Try stored VDOT from athlete profile
+    let vdot = profile?.athlete?.vdot;
+
+    // 2. If no stored VDOT, calculate from best effort or DB personal best
+    if (!vdot) {
+      const allEfforts = [...(bestEfforts || [])];
+
+      // Merge DB personal bests
+      const pbDistanceMap = {
+        '1 km': { name: '1 km', meters: 1000 },
+        '1k': { name: '1 km', meters: 1000 },
+        '1 Milla': { name: '1 Milla', meters: 1609 },
+        '1 mile': { name: '1 Milla', meters: 1609 },
+        '5 km': { name: '5 km', meters: 5000 },
+        '5k': { name: '5 km', meters: 5000 },
+        '10 km': { name: '10 km', meters: 10000 },
+        '10k': { name: '10 km', meters: 10000 },
+        'Media Maratón': { name: 'Media Maratón', meters: 21097 },
+        'Half-Marathon': { name: 'Media Maratón', meters: 21097 },
+        'Maratón': { name: 'Maratón', meters: 42195 },
+        'Marathon': { name: 'Maratón', meters: 42195 },
+      };
+
+      if (dbPersonalBests?.length) {
+        dbPersonalBests.forEach((pb) => {
+          const mapped = pbDistanceMap[pb.distance];
+          if (!mapped) return;
+          const existing = allEfforts.find((e) => e.name === mapped.name);
+          if (!existing || pb.time_seconds < existing.time) {
+            const idx = allEfforts.findIndex((e) => e.name === mapped.name);
+            const entry = {
+              name: mapped.name,
+              distance: mapped.meters,
+              time: pb.time_seconds,
+              date: pb.date,
+            };
+            if (idx >= 0) allEfforts[idx] = entry;
+            else allEfforts.push(entry);
+          }
+        });
+      }
+
+      if (!allEfforts.length) return null;
+
+      // Find best VDOT from all available efforts
+      let bestVdot = 0;
+      let bestRef = null;
+      for (const e of allEfforts) {
+        if (!e.distance || !e.time) continue;
+        const v = calculateVdot(e.distance, e.time / 60);
+        if (v && v > bestVdot) {
+          bestVdot = v;
+          bestRef = e;
+        }
+      }
+
+      if (!bestVdot || !bestRef) return null;
+      vdot = bestVdot;
+    }
+
+    const predictions = predictAllRaceTimes(vdot);
+    if (!predictions) return null;
+
+    return { vdot: Math.round(vdot * 10) / 10, predictions };
+  }, [bestEfforts, dbPersonalBests, profile?.athlete?.vdot]);
 
   // HR training zones (Karvonen formula)
   const hrZoneData = useMemo(() => {
@@ -937,11 +1006,11 @@ const AthleteMetrics = () => {
             <FiTarget className="w-5 h-5 sm:w-6 sm:h-6 text-purple-500" />
             <h3 className="text-lg sm:text-xl font-bold text-gray-900 dark:text-white flex items-center">
               Predictor de Tiempos
-              <InfoTooltip text="Estimación de tiempos en diferentes distancias basada en tu mejor marca registrada, usando la fórmula de Riegel. Son aproximaciones teóricas, no objetivos exactos." />
+              <InfoTooltip text="Estimación de tiempos usando el modelo VDOT de Jack Daniels, el mismo sistema que usan relojes deportivos como COROS y Garmin. Basado en tu mejor marca registrada." />
             </h3>
           </div>
           <p className="text-sm text-gray-500 dark:text-gray-400 mb-4 sm:mb-6">
-            Basado en tu marca de {racePredictions.reference.name}: {racePredictions.reference.timeFormatted} (Fórmula de Riegel)
+            VDOT: {racePredictions.vdot} — Modelo Daniels-Gilbert
           </p>
 
           <div className="grid grid-cols-2 lg:grid-cols-4 gap-3 sm:gap-4">

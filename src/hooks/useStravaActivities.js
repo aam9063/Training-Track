@@ -1,12 +1,13 @@
 import { useState, useEffect } from 'react';
 import {
   isStravaConnected,
-  getStravaActivities,
   getStravaActivityDetail,
   formatStravaActivity,
   loadStravaTokens,
 } from '../services/stravaService';
 import { getActivitiesRPE, saveActivityRPE } from '../services/rpeService';
+import { getCachedActivities } from '../services/stravaCacheService';
+import { incrementalSync } from '../services/stravaSyncService';
 
 export default function useStravaActivities(profileId) {
   const [stravaConnected, setStravaConnected] = useState(false);
@@ -27,13 +28,27 @@ export default function useStravaActivities(profileId) {
       if (isConnected) {
         setLoadingStrava(true);
         try {
-          const thirtyDaysAgo = Math.floor(Date.now() / 1000) - 30 * 24 * 60 * 60;
-          const { data: activities, error: activitiesError } = await getStravaActivities({
-            after: thirtyDaysAgo,
-            per_page: 50,
-          });
-          if (!activitiesError && activities) {
-            const sorted = activities
+          // Step 1: Load from cache immediately (fast, no API call)
+          const cached = await getCachedActivities(profileId, { limit: 50 });
+          if (cached.length > 0) {
+            const sorted = cached
+              .sort((a, b) => new Date(b.start_date) - new Date(a.start_date))
+              .map(formatStravaActivity);
+            setStravaActivities(sorted);
+
+            const ids = sorted.map((a) => String(a.id));
+            const { data: rpeMap } = await getActivitiesRPE(profileId, ids);
+            setActivitiesRPE(rpeMap || {});
+            setLoadingStrava(false);
+          }
+
+          // Step 2: Incremental sync in background (fetch only new)
+          const { newCount } = await incrementalSync(profileId);
+
+          // Step 3: If new activities or empty cache, refresh from cache
+          if (newCount > 0 || cached.length === 0) {
+            const fresh = await getCachedActivities(profileId, { limit: 50 });
+            const sorted = fresh
               .sort((a, b) => new Date(b.start_date) - new Date(a.start_date))
               .map(formatStravaActivity);
             setStravaActivities(sorted);

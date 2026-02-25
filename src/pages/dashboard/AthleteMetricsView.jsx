@@ -61,8 +61,8 @@ import {
   calculateStravaMetrics,
   calculatePeriodComparison,
   extractBestEfforts,
-  estimateRaceTimes,
 } from '../../services/stravaService';
+import { calculateVdot, predictAllRaceTimes } from '../../lib/trainingMetrics';
 import { generatePerformanceReport, getDailyLoads, calculateLoadMetrics } from '../../services/aiReportService';
 import ACWRGauge, { getACWRZone } from '../../components/shared/ACWRGauge';
 import { generateReportPDF } from '../../lib/reportPdfExport';
@@ -149,17 +149,29 @@ const AthleteMetricsView = () => {
     return extractBestEfforts(activities);
   }, [activities]);
 
-  // Race time predictions based on best efforts (Riegel formula)
+  // Race time predictions using Daniels-Gilbert VDOT model
   const racePredictions = useMemo(() => {
-    if (!bestEfforts?.length) return null;
-    const priority = ['10 km', '5 km', 'Media Maratón', '1 Milla', '1 km'];
-    const ref = priority.map(n => bestEfforts.find(e => e.name === n)).find(Boolean);
-    if (!ref) return null;
-    return {
-      reference: ref,
-      predictions: estimateRaceTimes(ref.distance, ref.time),
-    };
-  }, [bestEfforts]);
+    // 1. Try stored VDOT from athlete profile
+    let vdot = athlete?.vdot;
+
+    // 2. If no stored VDOT, calculate from best effort
+    if (!vdot && bestEfforts?.length) {
+      let bestVdot = 0;
+      for (const e of bestEfforts) {
+        if (!e.distance || !e.time) continue;
+        const v = calculateVdot(e.distance, e.time / 60);
+        if (v && v > bestVdot) bestVdot = v;
+      }
+      if (bestVdot > 0) vdot = bestVdot;
+    }
+
+    if (!vdot) return null;
+
+    const predictions = predictAllRaceTimes(vdot);
+    if (!predictions) return null;
+
+    return { vdot: Math.round(vdot * 10) / 10, predictions };
+  }, [bestEfforts, athlete?.vdot]);
 
   // HR training zones (Karvonen formula)
   const hrZoneData = useMemo(() => {
@@ -760,11 +772,11 @@ const AthleteMetricsView = () => {
                 <FiTarget className="w-5 h-5 sm:w-6 sm:h-6 text-purple-500" />
                 <h3 className="text-lg sm:text-xl font-bold text-gray-900 dark:text-white flex items-center">
                   Predictor de Tiempos
-                  <InfoTooltip text="Estimación de tiempos en diferentes distancias basada en la mejor marca registrada del atleta, usando la fórmula de Riegel. Son aproximaciones teóricas, no objetivos exactos." />
+                  <InfoTooltip text="Estimación de tiempos usando el modelo VDOT de Jack Daniels, el mismo sistema que usan relojes deportivos como COROS y Garmin. Basado en la mejor marca registrada del atleta." />
                 </h3>
               </div>
               <p className="text-sm text-gray-500 dark:text-gray-400 mb-4 sm:mb-6">
-                Basado en marca de {racePredictions.reference.name}: {racePredictions.reference.timeFormatted} (Fórmula de Riegel)
+                VDOT: {racePredictions.vdot} — Modelo Daniels-Gilbert
               </p>
 
               <div className="grid grid-cols-2 lg:grid-cols-4 gap-3 sm:gap-4">

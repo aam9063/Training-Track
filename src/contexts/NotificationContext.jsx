@@ -8,6 +8,7 @@ import {
   getPermissionState,
   hasActiveSubscription,
   subscribeToPush,
+  ensureSubscriptionForUser,
 } from '../lib/pushNotifications';
 
 const NotificationContext = createContext(undefined);
@@ -140,7 +141,14 @@ export function NotificationProvider({ children }) {
       }
       if (permission === 'granted') {
         const active = await hasActiveSubscription();
-        setPushState(active ? 'subscribed' : 'prompt');
+        if (active) {
+          // Ensure this device's subscription is linked to the current user
+          // (handles account switching on the same device)
+          await ensureSubscriptionForUser(user.id);
+          setPushState('subscribed');
+        } else {
+          setPushState('prompt');
+        }
         return;
       }
       // permission === 'default'

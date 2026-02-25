@@ -9,12 +9,11 @@ import {
   calculateStravaMetrics,
   extractBestEfforts,
   calculatePeriodComparison,
-  estimateRaceTimes,
   formatDuration,
   calculatePace,
 } from './stravaService';
 import { supabase } from '../lib/supabase';
-import { getTrainingPaces, formatPace, getTsbZone } from '../lib/trainingMetrics';
+import { getTrainingPaces, formatPace, getTsbZone, calculateVdot, predictAllRaceTimes } from '../lib/trainingMetrics';
 import { getCurrentPMCStatus, getMesocyclesByAthlete, getDailyTrainingLoad } from './trainingLoadService';
 import { toLocalDateStr } from '../lib/dateUtils';
 
@@ -116,11 +115,20 @@ export const aggregateReportData = async (athlete, activities) => {
   // Load metrics
   const loadMetrics = calculateLoadMetrics(activities);
 
-  // Race estimates from best effort
+  // Race estimates from VDOT (Daniels-Gilbert model)
   let raceEstimates = null;
-  if (bestEfforts.length > 0) {
-    const ref = bestEfforts[0];
-    raceEstimates = estimateRaceTimes(ref.distance, ref.time);
+  let raceVdot = athlete.vdot;
+  if (!raceVdot && bestEfforts.length > 0) {
+    let bestV = 0;
+    for (const e of bestEfforts) {
+      if (!e.distance || !e.time) continue;
+      const v = calculateVdot(e.distance, e.time / 60);
+      if (v && v > bestV) bestV = v;
+    }
+    if (bestV > 0) raceVdot = bestV;
+  }
+  if (raceVdot) {
+    raceEstimates = predictAllRaceTimes(raceVdot);
   }
 
   // Physiological data

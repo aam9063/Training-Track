@@ -66,17 +66,18 @@ export const getTrainingPaces = (vdot) => {
  */
 export const predictRaceTime = (vdot, targetDistanceM) => {
   if (!vdot || !targetDistanceM) return null;
-  // Binary search for the time that produces this VDOT at this distance
+  // Binary search for the time (in minutes) that produces this VDOT at this distance
+  // Faster time → higher VDOT, so if testVdot > vdot → time too fast → increase time
   let low = 1; // 1 minute
-  let high = 300; // 5 hours
-  for (let i = 0; i < 50; i++) {
+  let high = 600; // 10 hours (covers slow marathon)
+  for (let i = 0; i < 100; i++) {
     const mid = (low + high) / 2;
     const testVdot = calculateVdot(targetDistanceM, mid);
     if (testVdot === null) return null;
-    if (testVdot > vdot) high = mid;
-    else low = mid;
+    if (testVdot > vdot) low = mid;  // time too fast → search slower
+    else high = mid;                  // time too slow → search faster
   }
-  return Math.round((low + high) / 2 * 60); // seconds
+  return Math.round((low + high) / 2 * 60); // convert minutes → seconds
 };
 
 // ============================================================
@@ -339,6 +340,48 @@ export const STANDARD_DISTANCES = [
   { key: 'half_marathon', meters: 21097, label: 'Media Maratón' },
   { key: 'marathon', meters: 42195, label: 'Maratón' },
 ];
+
+/**
+ * Predict race times for all standard distances from VDOT.
+ * Uses Daniels-Gilbert model (same as COROS/Garmin watches).
+ * @param {number} vdot - VDOT value
+ * @returns {Object} Map of distance label → { time (s), timeFormatted, pace }
+ */
+export const predictAllRaceTimes = (vdot) => {
+  if (!vdot || vdot <= 0) return null;
+
+  const targets = [
+    { label: '5 km', meters: 5000 },
+    { label: '10 km', meters: 10000 },
+    { label: 'Media Maratón', meters: 21097 },
+    { label: 'Maratón', meters: 42195 },
+  ];
+
+  const predictions = {};
+  for (const t of targets) {
+    const timeSec = predictRaceTime(vdot, t.meters);
+    if (!timeSec) continue;
+
+    const paceSecPerKm = timeSec / (t.meters / 1000);
+    const pMin = Math.floor(paceSecPerKm / 60);
+    const pSec = Math.round(paceSecPerKm % 60);
+
+    const h = Math.floor(timeSec / 3600);
+    const m = Math.floor((timeSec % 3600) / 60);
+    const s = timeSec % 60;
+    const timeFormatted = h > 0
+      ? `${h}h ${m}m ${s}s`
+      : `${m}m ${s}s`;
+
+    predictions[t.label] = {
+      time: timeSec,
+      timeFormatted,
+      pace: `${pMin}:${String(pSec).padStart(2, '0')}`,
+    };
+  }
+
+  return Object.keys(predictions).length > 0 ? predictions : null;
+};
 
 /**
  * Find best VDOT from an array of race results

@@ -10,6 +10,7 @@ import {
   extractBestEfforts,
 } from '../services/stravaService';
 import { getActivitiesRPE } from '../services/rpeService';
+import { getCachedActivities } from '../services/stravaCacheService';
 
 export default function useCoachStravaData(athleteId) {
   const [stravaActivities, setStravaActivities] = useState([]);
@@ -32,39 +33,26 @@ export default function useCoachStravaData(athleteId) {
         setStravaConnected(!!connection);
 
         if (connection) {
-          // Phase 1: Fetch only 10 activities for the list (fast)
-          const { data: activities } = await getAthleteStravaActivities(athleteId, {
-            per_page: 10,
-          });
+          // Try cached activities first (fast, from Supabase)
+          let activities = await getCachedActivities(athleteId, { limit: 30 });
 
-          if (activities?.length > 0) {
-            const formatted = activities.map(formatStravaActivity);
-            setStravaActivities(formatted);
-            setStravaLoading(false);
-
-            // Fetch RPE for displayed activities (parallel with phase 2)
-            const rpePromise = getActivitiesRPE(athleteId, formatted.map((a) => String(a.id)));
-
-            // Phase 2: Fetch more activities in background for metrics
-            const { data: allActivities } = await getAthleteStravaActivities(athleteId, {
+          // Fallback: if cache is empty, fetch from Strava API via athlete's tokens
+          if (activities.length === 0) {
+            const { data: apiActivities } = await getAthleteStravaActivities(athleteId, {
               per_page: 30,
             });
+            activities = apiActivities || [];
+          }
 
-            if (allActivities?.length > 0) {
-              const allFormatted = allActivities.slice(0, 15).map(formatStravaActivity);
-              setStravaActivities(allFormatted);
-              setStravaMetrics(calculateStravaMetrics(allActivities));
-              setStravaBestEfforts(extractBestEfforts(allActivities));
+          if (activities.length > 0) {
+            const formatted = activities.slice(0, 15).map(formatStravaActivity);
+            setStravaActivities(formatted);
+            setStravaMetrics(calculateStravaMetrics(activities));
+            setStravaBestEfforts(extractBestEfforts(activities));
 
-              const allIds = allFormatted.map((a) => String(a.id));
-              const { data: rpeMap } = await getActivitiesRPE(athleteId, allIds);
-              setActivitiesRPE(rpeMap || {});
-            } else {
-              const { data: rpeMap } = await rpePromise;
-              setActivitiesRPE(rpeMap || {});
-              setStravaMetrics(calculateStravaMetrics(activities));
-              setStravaBestEfforts(extractBestEfforts(activities));
-            }
+            const ids = formatted.map((a) => String(a.id));
+            const { data: rpeMap } = await getActivitiesRPE(athleteId, ids);
+            setActivitiesRPE(rpeMap || {});
           } else {
             setStravaActivities([]);
             setStravaMetrics(null);

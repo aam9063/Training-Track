@@ -466,6 +466,7 @@ export const revertSession = async (sessionId) => {
         rpe_notes: null,
         notes_athlete: null,
         actual_duration_minutes: null,
+        strava_activity_id: null,
       })
       .eq('id', sessionId)
       .select()

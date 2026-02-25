@@ -123,6 +123,7 @@ export default function useWeeklyTrainings({ fetchFn, deps = [], transformFn }) 
           rpeScore: session.rpe_score,
           rpeNotes: session.rpe_notes,
           completedAt: session.completed_at,
+          stravaActivityId: session.strava_activity_id,
         };
       });
     }

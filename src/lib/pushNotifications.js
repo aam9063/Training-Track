@@ -45,6 +45,49 @@ export async function hasActiveSubscription() {
 }
 
 /**
+ * Ensure the existing browser push subscription is linked to the current user.
+ * This handles the case where a user logs in on a device that already has
+ * a push subscription from a different account.
+ */
+export async function ensureSubscriptionForUser(userId) {
+  if (!('serviceWorker' in navigator)) return false;
+
+  try {
+    const registration = await navigator.serviceWorker.ready;
+    const subscription = await registration.pushManager.getSubscription();
+    if (!subscription) return false;
+
+    const keys = subscription.toJSON();
+    const p256dh = keys.keys?.p256dh;
+    const auth = keys.keys?.auth;
+    if (!p256dh || !auth) return false;
+
+    // Upsert: if this endpoint already exists for this user, just update.
+    // If endpoint exists for a different user, we need to insert a new row.
+    const { error } = await supabase.from('push_subscriptions').upsert(
+      {
+        user_id: userId,
+        endpoint: subscription.endpoint,
+        p256dh,
+        auth,
+        last_used_at: new Date().toISOString(),
+      },
+      { onConflict: 'user_id,endpoint' }
+    );
+
+    if (error) {
+      console.error('Error ensuring push subscription for user:', error);
+      return false;
+    }
+
+    return true;
+  } catch (err) {
+    console.error('ensureSubscriptionForUser error:', err);
+    return false;
+  }
+}
+
+/**
  * Subscribe to push notifications and save to Supabase.
  */
 export async function subscribeToPush(userId) {

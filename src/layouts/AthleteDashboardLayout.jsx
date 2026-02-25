@@ -2,6 +2,7 @@ import { useState } from 'react';
 import { Navigate, Outlet } from 'react-router-dom';
 import { useAuth } from '../contexts/AuthContext';
 import AthleteSidebar from '../components/athlete/AthleteSidebar';
+import PushNotificationBanner from '../components/common/PushNotificationBanner';
 
 const AthleteDashboardLayout = () => {
   const { user, loading, profile } = useAuth();
@@ -41,6 +42,7 @@ const AthleteDashboardLayout = () => {
         ${sidebarCollapsed ? 'lg:pl-20' : 'lg:pl-64'}
       `}>
         <main className="min-h-screen overflow-x-hidden">
+          <PushNotificationBanner />
           <Outlet />
         </main>
       </div>

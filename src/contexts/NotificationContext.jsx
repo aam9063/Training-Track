@@ -2,6 +2,13 @@ import { createContext, useContext, useState, useEffect, useCallback, useMemo, u
 import { supabase } from '../lib/supabase';
 import { useAuth } from './AuthContext';
 import { showInfo } from '../lib/toast';
+import {
+  isStandaloneMode,
+  isPushSupported,
+  getPermissionState,
+  hasActiveSubscription,
+  subscribeToPush,
+} from '../lib/pushNotifications';
 
 const NotificationContext = createContext(undefined);
 
@@ -10,6 +17,9 @@ export function NotificationProvider({ children }) {
   const [unreadMessages, setUnreadMessages] = useState(0);
   const [activeConversationPartnerId, setActiveConversationPartnerId] = useState(null);
   const activePartnerRef = useRef(null);
+
+  // Push notification state: 'loading' | 'not-standalone' | 'unsupported' | 'prompt' | 'subscribed' | 'denied'
+  const [pushState, setPushState] = useState('loading');
 
   // Fetch initial unread count — unified chat_messages table
   const fetchUnreadCount = useCallback(async () => {
@@ -106,6 +116,44 @@ export function NotificationProvider({ children }) {
     };
   }, [user?.id, profile?.role]);
 
+  // Detect push notification state
+  useEffect(() => {
+    if (!user?.id) {
+      setPushState('loading');
+      return;
+    }
+
+    (async () => {
+      if (!isStandaloneMode()) {
+        setPushState('not-standalone');
+        return;
+      }
+      if (!isPushSupported()) {
+        setPushState('unsupported');
+        return;
+      }
+
+      const permission = getPermissionState();
+      if (permission === 'denied') {
+        setPushState('denied');
+        return;
+      }
+      if (permission === 'granted') {
+        const active = await hasActiveSubscription();
+        setPushState(active ? 'subscribed' : 'prompt');
+        return;
+      }
+      // permission === 'default'
+      setPushState('prompt');
+    })();
+  }, [user?.id]);
+
+  const requestPushPermission = useCallback(async () => {
+    if (!user?.id) return;
+    const success = await subscribeToPush(user.id);
+    setPushState(success ? 'subscribed' : 'denied');
+  }, [user?.id]);
+
   const decrementUnread = useCallback((count = 1) => {
     setUnreadMessages((prev) => Math.max(0, prev - count));
   }, []);
@@ -120,8 +168,10 @@ export function NotificationProvider({ children }) {
       decrementUnread,
       refreshUnreadCount,
       setActiveConversationPartnerId,
+      pushState,
+      requestPushPermission,
     }),
-    [unreadMessages, decrementUnread, refreshUnreadCount]
+    [unreadMessages, decrementUnread, refreshUnreadCount, pushState, requestPushPermission]
   );
 
   return (

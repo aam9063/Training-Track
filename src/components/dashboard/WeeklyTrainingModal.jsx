@@ -21,6 +21,7 @@ import {
   GYM_CATEGORIES,
   DAYS_OF_WEEK,
 } from '../../services/weeklyTrainingService';
+import { sendPushNotification } from '../../lib/pushNotifications';
 
 const WeeklyTrainingModal = ({
   isOpen,
@@ -266,6 +267,15 @@ const WeeklyTrainingModal = ({
       const { error } = await createWeeklyTraining(weeklyPlan);
 
       if (error) throw error;
+
+      // Send a single push notification to the athlete
+      sendPushNotification(
+        [athlete.id],
+        'Nuevo entrenamiento asignado',
+        'Tu entrenador ha publicado el plan semanal',
+        '/athlete/training',
+        'tt-training'
+      );
 
       showSuccess('Entrenamiento semanal guardado');
       onSuccess?.();

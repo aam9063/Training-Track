@@ -88,6 +88,26 @@ export async function ensureSubscriptionForUser(userId) {
 }
 
 /**
+ * Send a push notification via the DB send_push_notification function (RPC).
+ * Called from the frontend after batch operations (e.g. weekly training creation)
+ * so we send ONE notification instead of one per row.
+ */
+export async function sendPushNotification(userIds, title, body, url = '/', tag = 'tt-default') {
+  try {
+    await supabase.rpc('send_push_notification', {
+      p_user_ids: userIds,
+      p_title: title,
+      p_body: body,
+      p_url: url,
+      p_tag: tag,
+    });
+  } catch (err) {
+    // Non-critical — don't break the main flow
+    console.error('sendPushNotification error:', err);
+  }
+}
+
+/**
  * Subscribe to push notifications and save to Supabase.
  */
 export async function subscribeToPush(userId) {

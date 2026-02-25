@@ -94,13 +94,16 @@ export async function ensureSubscriptionForUser(userId) {
  */
 export async function sendPushNotification(userIds, title, body, url = '/', tag = 'tt-default') {
   try {
-    await supabase.rpc('send_push_notification', {
+    const { error } = await supabase.rpc('send_push_notification', {
       p_user_ids: userIds,
       p_title: title,
       p_body: body,
       p_url: url,
       p_tag: tag,
     });
+    if (error) {
+      console.error('sendPushNotification RPC error:', error);
+    }
   } catch (err) {
     // Non-critical — don't break the main flow
     console.error('sendPushNotification error:', err);

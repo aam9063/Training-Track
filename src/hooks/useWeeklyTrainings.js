@@ -5,7 +5,7 @@ import { getWeekStartDate } from '../services/weeklyTrainingService';
  * Parses km from free-text training descriptions.
  * Recognizes: "8km", "10x400m", "2km + 6x1000m", standalone "1500m", etc.
  */
-function parseKmFromDescription(text) {
+export function parseKmFromDescription(text) {
   if (!text || !text.trim()) return 0;
   const normalized = text.toLowerCase().replace(/,/g, '.');
   let totalKm = 0;

@@ -2,6 +2,7 @@ import { useState } from 'react';
 import { Navigate, Outlet } from 'react-router-dom';
 import { useAuth } from '../contexts/AuthContext';
 import Sidebar from '../components/dashboard/Sidebar';
+import PushNotificationBanner from '../components/common/PushNotificationBanner';
 
 const DashboardLayout = () => {
   const { user, loading, profile } = useAuth();
@@ -44,6 +45,7 @@ const DashboardLayout = () => {
         `}
       >
         <main className="min-h-screen overflow-x-hidden">
+          <PushNotificationBanner />
           <Outlet />
         </main>
       </div>

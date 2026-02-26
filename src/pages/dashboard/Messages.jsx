@@ -298,7 +298,7 @@ const CoachMessages = () => {
   }
 
   return (
-    <div className="flex h-[calc(100vh-4rem)] lg:h-screen overflow-hidden">
+    <div className="flex h-[calc(100vh-62px-72px)] lg:h-screen overflow-hidden -mb-[72px] lg:mb-0">
       {/* Left Panel — Conversation List */}
       <div
         className={`

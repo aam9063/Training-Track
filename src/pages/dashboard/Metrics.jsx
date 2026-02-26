@@ -630,7 +630,73 @@ const Metrics = () => {
             </p>
           )}
 
-          <div className="overflow-x-auto">
+          {/* Mobile: cards */}
+          <div className="sm:hidden space-y-2">
+            {sortedRanking.map((athlete, index) => {
+              const isSelected = selectedForCompare.includes(athlete.id);
+              const medalClass = index === 0 ? 'bg-gradient-to-br from-yellow-400 to-yellow-600' :
+                index === 1 ? 'bg-gradient-to-br from-gray-300 to-gray-500' :
+                index === 2 ? 'bg-gradient-to-br from-amber-600 to-amber-800' :
+                'bg-gradient-to-br from-blue-500 to-purple-600';
+              return (
+                <div
+                  key={athlete.id}
+                  onClick={compareMode ? () => toggleCompareAthlete(athlete.id) : undefined}
+                  className={`rounded-xl border p-3 transition-colors ${
+                    isSelected
+                      ? 'bg-purple-50 dark:bg-purple-900/20 border-purple-300 dark:border-purple-700'
+                      : 'bg-gray-50 dark:bg-gray-700/30 border-gray-200 dark:border-gray-700'
+                  } ${compareMode ? 'cursor-pointer' : ''}`}
+                >
+                  <div className="flex items-center gap-3">
+                    {compareMode && (
+                      <input
+                        type="checkbox"
+                        checked={isSelected}
+                        readOnly
+                        disabled={!isSelected && selectedForCompare.length >= 3}
+                        className="w-4 h-4 rounded border-gray-300 text-purple-600 flex-shrink-0"
+                      />
+                    )}
+                    <div className={`w-7 h-7 rounded-full flex items-center justify-center text-white font-bold text-xs flex-shrink-0 ${medalClass}`}>
+                      {index + 1}
+                    </div>
+                    <p className="font-semibold text-gray-900 dark:text-white flex-1 truncate">{athlete.name}</p>
+                    {athlete.complianceRate != null && (
+                      <span className={`text-xs font-semibold px-2 py-0.5 rounded-full flex-shrink-0 ${
+                        athlete.complianceRate >= 80 ? 'bg-green-100 text-green-700 dark:bg-green-900/30 dark:text-green-300' :
+                        athlete.complianceRate >= 50 ? 'bg-yellow-100 text-yellow-700 dark:bg-yellow-900/30 dark:text-yellow-300' :
+                        'bg-red-100 text-red-700 dark:bg-red-900/30 dark:text-red-300'
+                      }`}>
+                        {athlete.complianceRate}%
+                      </span>
+                    )}
+                  </div>
+                  <div className="mt-2.5 grid grid-cols-4 gap-2 text-center">
+                    <div>
+                      <p className="text-[11px] text-gray-400 dark:text-gray-500">Km</p>
+                      <p className="text-sm font-bold text-gray-900 dark:text-white">{athlete.totalKm}</p>
+                    </div>
+                    <div>
+                      <p className="text-[11px] text-gray-400 dark:text-gray-500">Tiempo</p>
+                      <p className="text-sm font-medium text-gray-700 dark:text-gray-300">{athlete.totalTimeFormatted || '-'}</p>
+                    </div>
+                    <div>
+                      <p className="text-[11px] text-gray-400 dark:text-gray-500">Sesiones</p>
+                      <p className="text-sm font-medium text-gray-700 dark:text-gray-300">{athlete.completedSessions}/{athlete.totalSessions}</p>
+                    </div>
+                    <div>
+                      <p className="text-[11px] text-gray-400 dark:text-gray-500">TSS</p>
+                      <p className="text-sm font-medium text-gray-700 dark:text-gray-300">{athlete.totalTss || '-'}</p>
+                    </div>
+                  </div>
+                </div>
+              );
+            })}
+          </div>
+
+          {/* Desktop: table */}
+          <div className="hidden sm:block overflow-x-auto">
             <table className="w-full text-sm">
               <thead>
                 <tr className="border-b border-gray-200 dark:border-gray-700">

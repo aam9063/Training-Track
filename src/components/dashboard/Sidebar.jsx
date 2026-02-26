@@ -48,7 +48,7 @@ const Sidebar = ({ onCollapse }) => {
   }, [location.pathname]);
 
   const menuItems = [
-    { path: '/dashboard', icon: FiHome, label: 'Dashboard' },
+    { path: '/dashboard', icon: FiHome, label: 'Inicio' },
     { path: '/dashboard/athletes', icon: FiUsers, label: 'Mis Atletas' },
     { path: '/dashboard/planning', icon: FiClipboard, label: 'Planificación' },
     { path: '/dashboard/metrics', icon: FiBarChart2, label: 'Equipo' },
@@ -80,18 +80,6 @@ const Sidebar = ({ onCollapse }) => {
 
   return (
     <>
-      {/* Mobile Menu Button */}
-      <button
-        onClick={() => setMobileOpen(!mobileOpen)}
-        className="lg:hidden fixed top-4 left-4 z-50 p-2 bg-white dark:bg-gray-800 rounded-lg shadow-lg border border-gray-200 dark:border-gray-700"
-      >
-        {mobileOpen ? (
-          <FiX className="w-6 h-6 text-gray-600 dark:text-gray-400" />
-        ) : (
-          <FiMenu className="w-6 h-6 text-gray-600 dark:text-gray-400" />
-        )}
-      </button>
-
       {/* Overlay for mobile */}
       {mobileOpen && (
         <div

@@ -34,7 +34,7 @@ import { showSuccess, showError } from '../../lib/toast';
 const StatCardNew = ({ accent, icon: Icon, label, value, sub, trend, trendUp, linkTo }) => {
   const card = (
     <div
-      className={`rounded-2xl p-4 flex flex-col gap-2 border ${
+      className={`rounded-2xl p-4 flex flex-col gap-2 border h-full ${
         accent
           ? 'bg-[#1A6BFF] border-[#1A6BFF] text-white'
           : 'bg-white dark:bg-gray-800 border-[#E2E8F0] dark:border-gray-700'
@@ -69,7 +69,7 @@ const StatCardNew = ({ accent, icon: Icon, label, value, sub, trend, trendUp, li
       )}
     </div>
   );
-  return linkTo ? <Link to={linkTo} className="block">{card}</Link> : card;
+  return linkTo ? <Link to={linkTo} className="block h-full">{card}</Link> : card;
 };
 
 const SectionHeader = ({ icon: Icon, title, linkTo, linkLabel, actionLabel, onAction }) => (

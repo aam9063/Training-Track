@@ -4,6 +4,7 @@ import { useAuth } from '../contexts/AuthContext';
 import Sidebar from '../components/dashboard/Sidebar';
 import BottomNav from '../components/dashboard/BottomNav';
 import MobileHeader from '../components/dashboard/MobileHeader';
+import NotificationPanel from '../components/common/NotificationPanel';
 import PushNotificationBanner from '../components/common/PushNotificationBanner';
 
 const DashboardLayout = () => {
@@ -48,6 +49,10 @@ const DashboardLayout = () => {
           ${sidebarCollapsed ? 'lg:pl-20' : 'lg:pl-64'}
         `}
       >
+        {/* Desktop top bar — visible en todas las vistas */}
+        <div className="hidden lg:flex items-center justify-end px-8 py-3 bg-white dark:bg-gray-800 border-b border-[#E2E8F0] dark:border-gray-700">
+          <NotificationPanel accentColor="#1A6BFF" isCoach={true} />
+        </div>
         <main className="overflow-x-hidden pb-[72px] lg:pb-0">
           <PushNotificationBanner />
           <Outlet />

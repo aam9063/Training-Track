@@ -1,9 +1,10 @@
 import { useState, useRef } from 'react';
 import { useNavigate } from 'react-router-dom';
 import { motion, AnimatePresence } from 'framer-motion';
-import { FiBell, FiUser, FiMessageSquare, FiLogOut, FiSun, FiMoon } from 'react-icons/fi';
+import { FiUser, FiMessageSquare, FiLogOut, FiSun, FiMoon } from 'react-icons/fi';
 import { useAuth } from '../../contexts/AuthContext';
 import { useTheme } from '../../contexts/ThemeContext';
+import NotificationPanel from '../common/NotificationPanel';
 
 const AthleteMobileHeader = () => {
   const { user, profile, signOut } = useAuth();
@@ -38,10 +39,7 @@ const AthleteMobileHeader = () => {
 
       <div className="flex items-center gap-3">
         {/* Campana */}
-        <button className="w-[38px] h-[38px] rounded-full bg-gray-100 dark:bg-gray-700 flex items-center justify-center relative">
-          <FiBell className="w-[18px] h-[18px] text-slate-500 dark:text-slate-400" />
-          <span className="absolute top-1.5 right-1.5 w-2 h-2 rounded-full bg-red-500 border-2 border-white dark:border-gray-800" />
-        </button>
+        <NotificationPanel accentColor="#16a34a" isCoach={false} />
 
         {/* Avatar con menú */}
         <div className="relative" ref={menuRef}>

@@ -16,134 +16,134 @@ const NotificationContext = createContext(undefined);
 export function NotificationProvider({ children }) {
   const { user, profile } = useAuth();
   const [unreadMessages, setUnreadMessages] = useState(0);
+  const [unreadNotifications, setUnreadNotifications] = useState(0);
   const [activeConversationPartnerId, setActiveConversationPartnerId] = useState(null);
   const activePartnerRef = useRef(null);
 
   // Push notification state: 'loading' | 'not-standalone' | 'unsupported' | 'prompt' | 'subscribed' | 'denied'
   const [pushState, setPushState] = useState('loading');
 
-  // Fetch initial unread count — unified chat_messages table
+  // ─── Unread messages ───────────────────────────────────────────────────────
   const fetchUnreadCount = useCallback(async () => {
     if (!user?.id) return;
-
     try {
       const { count, error } = await supabase
         .from('chat_messages')
         .select('*', { count: 'exact', head: true })
         .eq('receiver_id', user.id)
         .eq('read', false);
-
       if (!error) setUnreadMessages(count || 0);
-    } catch (error) {
-      console.error('Error fetching unread count:', error);
+    } catch (err) {
+      console.error('Error fetching unread count:', err);
     }
   }, [user?.id]);
 
-  // Fetch on mount and when user changes
-  useEffect(() => {
-    fetchUnreadCount();
-  }, [fetchUnreadCount]);
+  useEffect(() => { fetchUnreadCount(); }, [fetchUnreadCount]);
 
-  // Keep ref in sync for use inside realtime callback
+  // ─── Unread notifications ──────────────────────────────────────────────────
+  const fetchUnreadNotifications = useCallback(async () => {
+    if (!user?.id) return;
+    try {
+      const { count, error } = await supabase
+        .from('notifications')
+        .select('*', { count: 'exact', head: true })
+        .eq('user_id', user.id)
+        .is('read_at', null);
+      if (!error) setUnreadNotifications(count || 0);
+    } catch (err) {
+      console.error('Error fetching unread notifications:', err);
+    }
+  }, [user?.id]);
+
+  useEffect(() => { fetchUnreadNotifications(); }, [fetchUnreadNotifications]);
+
+  // Mark all notifications as read
+  const markNotificationsRead = useCallback(async () => {
+    if (!user?.id || unreadNotifications === 0) return;
+    setUnreadNotifications(0); // optimistic
+    await supabase
+      .from('notifications')
+      .update({ read_at: new Date().toISOString() })
+      .eq('user_id', user.id)
+      .is('read_at', null);
+  }, [user?.id, unreadNotifications]);
+
+  // ─── Keep ref in sync ─────────────────────────────────────────────────────
   useEffect(() => {
     activePartnerRef.current = activeConversationPartnerId;
   }, [activeConversationPartnerId]);
 
-  // Set up Realtime subscriptions
+  // ─── Realtime subscriptions ───────────────────────────────────────────────
   useEffect(() => {
     if (!user?.id) return;
 
     const channels = [];
 
-    // New chat messages for this user
+    // New chat messages
     const msgChannel = supabase
       .channel('global-chat-notifications')
       .on(
         'postgres_changes',
-        {
-          event: 'INSERT',
-          schema: 'public',
-          table: 'chat_messages',
-          filter: `receiver_id=eq.${user.id}`,
-        },
+        { event: 'INSERT', schema: 'public', table: 'chat_messages', filter: `receiver_id=eq.${user.id}` },
         async (payload) => {
           const senderId = payload.new.sender_id;
-
-          // Skip toast if the user is already viewing this conversation
           if (activePartnerRef.current === senderId) return;
-
           setUnreadMessages((prev) => prev + 1);
-
           const { data: sender } = await supabase
             .from('users')
             .select('first_name, last_name')
             .eq('id', senderId)
             .single();
-
           const name = sender
             ? `${sender.first_name || ''} ${sender.last_name || ''}`.trim()
             : 'alguien';
-
           showInfo(`Nuevo mensaje de ${name}`);
         }
       )
       .subscribe();
-
     channels.push(msgChannel);
 
-    // Training sessions — only for athletes
+    // New notifications (in-app)
+    const notifChannel = supabase
+      .channel('global-notifications')
+      .on(
+        'postgres_changes',
+        { event: 'INSERT', schema: 'public', table: 'notifications', filter: `user_id=eq.${user.id}` },
+        (payload) => {
+          setUnreadNotifications((prev) => prev + 1);
+          showInfo(payload.new.title);
+        }
+      )
+      .subscribe();
+    channels.push(notifChannel);
+
+    // Training sessions — only for athletes (kept for legacy toast behaviour)
     if (profile?.role === 'athlete') {
       const trainingChannel = supabase
         .channel('athlete-new-training')
         .on(
           'postgres_changes',
-          {
-            event: 'INSERT',
-            schema: 'public',
-            table: 'training_sessions',
-            filter: `athlete_id=eq.${user.id}`,
-          },
-          () => {
-            showInfo('Nuevo entrenamiento asignado');
-          }
+          { event: 'INSERT', schema: 'public', table: 'training_sessions', filter: `athlete_id=eq.${user.id}` },
+          () => {} // notification now handled via notifications table trigger
         )
         .subscribe();
-
       channels.push(trainingChannel);
     }
 
-    return () => {
-      channels.forEach((ch) => supabase.removeChannel(ch));
-    };
+    return () => { channels.forEach((ch) => supabase.removeChannel(ch)); };
   }, [user?.id, profile?.role]);
 
-  // Detect push notification state
+  // ─── Push notification state ──────────────────────────────────────────────
   useEffect(() => {
-    if (!user?.id) {
-      setPushState('loading');
-      return;
-    }
-
+    if (!user?.id) { setPushState('loading'); return; }
     (async () => {
-      if (!isStandaloneMode()) {
-        setPushState('not-standalone');
-        return;
-      }
-      if (!isPushSupported()) {
-        setPushState('unsupported');
-        return;
-      }
-
+      if (!isStandaloneMode()) { setPushState('not-standalone'); return; }
+      if (!isPushSupported()) { setPushState('unsupported'); return; }
       const permission = getPermissionState();
-      if (permission === 'denied') {
-        setPushState('denied');
-        return;
-      }
+      if (permission === 'denied') { setPushState('denied'); return; }
       if (permission === 'granted') {
         const active = await hasActiveSubscription();
         if (active) {
-          // Ensure this device's subscription is linked to the current user
-          // (handles account switching on the same device)
           await ensureSubscriptionForUser(user.id);
           setPushState('subscribed');
         } else {
@@ -151,7 +151,6 @@ export function NotificationProvider({ children }) {
         }
         return;
       }
-      // permission === 'default'
       setPushState('prompt');
     })();
   }, [user?.id]);
@@ -166,9 +165,7 @@ export function NotificationProvider({ children }) {
     setUnreadMessages((prev) => Math.max(0, prev - count));
   }, []);
 
-  const refreshUnreadCount = useCallback(() => {
-    fetchUnreadCount();
-  }, [fetchUnreadCount]);
+  const refreshUnreadCount = useCallback(() => { fetchUnreadCount(); }, [fetchUnreadCount]);
 
   const value = useMemo(
     () => ({
@@ -178,8 +175,10 @@ export function NotificationProvider({ children }) {
       setActiveConversationPartnerId,
       pushState,
       requestPushPermission,
+      unreadNotifications,
+      markNotificationsRead,
     }),
-    [unreadMessages, decrementUnread, refreshUnreadCount, pushState, requestPushPermission]
+    [unreadMessages, decrementUnread, refreshUnreadCount, pushState, requestPushPermission, unreadNotifications, markNotificationsRead]
   );
 
   return (

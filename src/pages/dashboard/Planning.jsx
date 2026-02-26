@@ -1,4 +1,4 @@
-import { useState, useEffect, useCallback } from 'react';
+import { useState, useEffect, useCallback, useMemo } from 'react';
 import { useAuth } from '../../contexts/AuthContext';
 import { motion, AnimatePresence } from 'framer-motion';
 import {
@@ -12,6 +12,9 @@ import {
   FiLock,
   FiCalendar,
   FiClock,
+  FiStar,
+  FiZap,
+  FiClipboard,
 } from 'react-icons/fi';
 import { showSuccess, showError } from '../../lib/toast';
 import usePlanningData from '../../hooks/usePlanningData';
@@ -46,6 +49,63 @@ const WEEK_TYPES = {
   race_week: 'Competición',
 };
 
+// Compute plan status based on assignments and weeks
+function getPlanStatus(plan) {
+  const assignments = plan.plan_assignments || [];
+  if (assignments.length === 0) return 'draft';
+  // If has active assignments, consider active
+  return 'active';
+}
+
+// Compute progress pct: current week / total weeks
+function getPlanProgress(plan) {
+  const totalWeeks = (plan.mesocycles || []).reduce((s, m) => s + (m.weeks || 0), 0);
+  if (totalWeeks === 0) return 0;
+  const assignments = plan.plan_assignments || [];
+  if (assignments.length === 0) return 0;
+  // Use earliest start_date to estimate current week
+  const earliest = assignments
+    .filter(a => a.start_date)
+    .sort((a, b) => new Date(a.start_date) - new Date(b.start_date))[0];
+  if (!earliest) return 0;
+  const weeksPassed = Math.floor((Date.now() - new Date(earliest.start_date)) / (7 * 86400000));
+  return Math.min(100, Math.round((weeksPassed / totalWeeks) * 100));
+}
+
+function getCurrentWeek(plan) {
+  const totalWeeks = (plan.mesocycles || []).reduce((s, m) => s + (m.weeks || 0), 0);
+  const assignments = plan.plan_assignments || [];
+  const earliest = assignments
+    .filter(a => a.start_date)
+    .sort((a, b) => new Date(a.start_date) - new Date(b.start_date))[0];
+  if (!earliest) return null;
+  const weeksPassed = Math.floor((Date.now() - new Date(earliest.start_date)) / (7 * 86400000)) + 1;
+  return { current: Math.min(weeksPassed, totalWeeks), total: totalWeeks };
+};
+
+// Avatar stack for assigned athletes
+const AvatarStack = ({ count }) => {
+  const colors = ['bg-blue-500', 'bg-green-500', 'bg-purple-500', 'bg-orange-500', 'bg-red-500'];
+  const visible = Math.min(count, 3);
+  return (
+    <div className="flex items-center -space-x-1.5">
+      {Array.from({ length: visible }).map((_, i) => (
+        <div
+          key={i}
+          className={`w-6 h-6 rounded-full border-2 border-white dark:border-gray-800 ${colors[i % colors.length]} flex items-center justify-center`}
+        >
+          <span className="text-white text-[9px] font-bold">A</span>
+        </div>
+      ))}
+      {count > 3 && (
+        <div className="w-6 h-6 rounded-full border-2 border-white dark:border-gray-800 bg-gray-200 dark:bg-gray-600 flex items-center justify-center">
+          <span className="text-gray-600 dark:text-gray-300 text-[9px] font-bold">+{count - 3}</span>
+        </div>
+      )}
+    </div>
+  );
+};
+
 const Planning = () => {
   const { profile } = useAuth();
   const coachId = profile?.coach_id || profile?.id;
@@ -62,6 +122,7 @@ const Planning = () => {
   const [showAssignModal, setShowAssignModal] = useState(false);
   const [showMesoForm, setShowMesoForm] = useState(false);
   const [deleteConfirm, setDeleteConfirm] = useState(null);
+  const [activeFilter, setActiveFilter] = useState('all');
 
   // Create plan form
   const [newPlanForm, setNewPlanForm] = useState({ name: '', description: '', modality: 'asfalto' });
@@ -72,8 +133,7 @@ const Planning = () => {
     loadPlans();
   }, [loadPlans]);
 
-  const handleCreatePlan = useCallback(async (type) => {
-    if (type === 'predefined') return; // Proximamente
+  const handleCreatePlan = useCallback(async () => {
     if (!newPlanForm.name.trim()) {
       showError('El nombre del plan es obligatorio');
       return;
@@ -135,8 +195,7 @@ const Planning = () => {
 
   const getWeekDaysPreview = (content) => {
     if (!content?.days) return null;
-    const filledDays = content.days.filter(d => d && d.description?.trim());
-    return filledDays.length;
+    return content.days.filter(d => d && d.description?.trim()).length;
   };
 
   const getTotalKm = (content) => {
@@ -144,119 +203,215 @@ const Planning = () => {
     return content.days.reduce((sum, d) => sum + (d?.km || 0), 0);
   };
 
+  // Filtered plans
+  const filteredPlans = useMemo(() => {
+    if (activeFilter === 'all') return plans;
+    if (activeFilter === 'active') return plans.filter(p => getPlanStatus(p) === 'active');
+    if (activeFilter === 'draft') return plans.filter(p => getPlanStatus(p) === 'draft');
+    return plans;
+  }, [plans, activeFilter]);
+
   // ===== PLAN LIST VIEW =====
   if (!selectedPlan) {
     return (
-      <div className="p-4 sm:p-6 space-y-6">
+      <div className="p-4 sm:p-6">
         {/* Header */}
-        <div className="flex flex-col sm:flex-row sm:items-center sm:justify-between gap-3">
+        <div className="flex items-center justify-between mb-6">
           <div>
             <h1 className="text-2xl font-bold text-gray-900 dark:text-white">Planificación</h1>
-            <p className="mt-1 text-sm text-gray-500 dark:text-gray-400">
-              Crea y gestiona planes de entrenamiento para tus atletas
-            </p>
+            <p className="text-sm text-gray-500 dark:text-gray-400 mt-0.5">Planes de entrenamiento</p>
           </div>
           <button
             onClick={() => setShowCreateModal(true)}
-            className="flex items-center justify-center gap-2 px-4 py-2.5 bg-blue-600 text-white rounded-xl hover:bg-blue-700 transition-colors font-medium text-sm shadow-sm w-full sm:w-auto"
+            className="flex items-center gap-2 px-4 py-2.5 bg-blue-600 text-white rounded-xl hover:bg-blue-700 transition-colors font-medium text-sm shadow-sm"
           >
             <FiPlus className="w-4 h-4" />
             Nuevo Plan
           </button>
         </div>
 
-        {/* Plans Grid */}
         {loading ? (
           <div className="flex items-center justify-center py-20">
-            <div className="w-8 h-8 border-3 border-blue-600 border-t-transparent rounded-full animate-spin" />
+            <div className="w-8 h-8 border-[3px] border-blue-600 border-t-transparent rounded-full animate-spin" />
           </div>
         ) : plans.length === 0 ? (
+          /* ── EMPTY STATE ── */
           <motion.div
-            initial={{ opacity: 0, y: 20 }}
+            initial={{ opacity: 0, y: 16 }}
             animate={{ opacity: 1, y: 0 }}
-            className="flex flex-col items-center justify-center py-20 text-center"
+            className="flex flex-col items-center text-center py-12 px-4"
           >
-            <div className="w-16 h-16 bg-blue-50 dark:bg-blue-900/20 rounded-2xl flex items-center justify-center mb-4">
-              <FiCalendar className="w-8 h-8 text-blue-500" />
+            {/* Illustration */}
+            <div className="w-32 h-32 rounded-full bg-blue-50 dark:bg-blue-900/20 flex items-center justify-center mb-6 relative">
+              <div className="w-20 h-20 rounded-2xl bg-white dark:bg-gray-700 shadow-md flex items-center justify-center">
+                <FiClipboard className="w-9 h-9 text-blue-400" />
+              </div>
+              <div className="absolute bottom-1 right-1 w-8 h-8 rounded-full bg-blue-600 flex items-center justify-center shadow">
+                <FiPlus className="w-4 h-4 text-white" />
+              </div>
             </div>
-            <h3 className="text-lg font-semibold text-gray-900 dark:text-white mb-2">
-              Sin planes de entrenamiento
-            </h3>
-            <p className="text-sm text-gray-500 dark:text-gray-400 max-w-sm mb-6">
-              Crea tu primer plan de entrenamiento y asígnalo a tus atletas para empezar a planificar.
+
+            <h2 className="text-xl font-bold text-gray-900 dark:text-white mb-2">Crea tu primer plan</h2>
+            <p className="text-sm text-gray-500 dark:text-gray-400 max-w-xs mb-8 leading-relaxed">
+              Diseña planes de entrenamiento personalizados para cada atleta, con sesiones semana a semana y orientados a una competición objetivo.
             </p>
+
             <button
               onClick={() => setShowCreateModal(true)}
-              className="flex items-center gap-2 px-4 py-2.5 bg-blue-600 text-white rounded-xl hover:bg-blue-700 transition-colors font-medium text-sm"
+              className="flex items-center gap-2 px-6 py-3 bg-blue-600 text-white rounded-2xl hover:bg-blue-700 transition-colors font-semibold text-sm shadow-sm mb-4"
             >
               <FiPlus className="w-4 h-4" />
-              Crear plan
+              Crear nuevo plan
             </button>
+
+            <p className="text-xs text-gray-400 dark:text-gray-500 mb-8">o importar desde plantilla →</p>
+
+            {/* Feature list */}
+            <div className="w-full max-w-sm space-y-3">
+              {[
+                { icon: FiCalendar, color: 'text-blue-500', bg: 'bg-blue-50 dark:bg-blue-900/20', text: 'Define semanas, sesiones y carga progresiva para cada atleta' },
+                { icon: FiStar, color: 'text-green-500', bg: 'bg-green-50 dark:bg-green-900/20', text: 'Asigna una competición objetivo y TrainingTrack calcula el progreso' },
+                { icon: FiZap, color: 'text-purple-500', bg: 'bg-purple-50 dark:bg-purple-900/20', text: 'Usa IA para generar sesiones automáticamente según el nivel del atleta (próximamente)' },
+              ].map(({ icon: Icon, color, bg, text }) => (
+                <div key={text} className="flex items-start gap-3 p-3 bg-white dark:bg-gray-800 rounded-xl border border-gray-100 dark:border-gray-700 text-left">
+                  <div className={`w-8 h-8 rounded-lg ${bg} flex items-center justify-center flex-shrink-0`}>
+                    <Icon className={`w-4 h-4 ${color}`} />
+                  </div>
+                  <p className="text-sm text-gray-600 dark:text-gray-400 leading-snug">{text}</p>
+                </div>
+              ))}
+            </div>
           </motion.div>
         ) : (
-          <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-4">
-            {plans.map((plan, i) => {
-              const totalWeeks = (plan.mesocycles || []).reduce((sum, m) => sum + (m.weeks || 0), 0);
-              const assignedCount = (plan.plan_assignments || []).length;
-
-              return (
-                <motion.div
-                  key={plan.id}
-                  initial={{ opacity: 0, y: 20 }}
-                  animate={{ opacity: 1, y: 0 }}
-                  transition={{ delay: i * 0.05 }}
-                  className="bg-white dark:bg-gray-800 rounded-xl border border-gray-200 dark:border-gray-700 p-5 hover:shadow-md transition-shadow cursor-pointer group"
-                  onClick={() => selectPlan(plan.id)}
+          <>
+            {/* Filter tabs */}
+            <div className="flex gap-2 mb-4 overflow-x-auto no-scrollbar pb-1">
+              {[
+                { key: 'all', label: 'Todos' },
+                { key: 'active', label: 'Activos' },
+                { key: 'draft', label: 'Borrador' },
+              ].map(f => (
+                <button
+                  key={f.key}
+                  onClick={() => setActiveFilter(f.key)}
+                  className={`px-4 py-1.5 rounded-full text-sm font-medium whitespace-nowrap transition-colors ${
+                    activeFilter === f.key
+                      ? 'bg-gray-900 dark:bg-white text-white dark:text-gray-900'
+                      : 'bg-white dark:bg-gray-800 border border-gray-200 dark:border-gray-700 text-gray-600 dark:text-gray-400 hover:border-gray-300'
+                  }`}
                 >
-                  <div className="flex items-start justify-between mb-3">
-                    <div className="flex-1 min-w-0">
-                      <h3 className="font-semibold text-gray-900 dark:text-white truncate group-hover:text-blue-600 dark:group-hover:text-blue-400 transition-colors">
-                        {plan.name}
-                      </h3>
-                      {plan.description && (
-                        <p className="text-sm text-gray-500 dark:text-gray-400 mt-1 line-clamp-2">
-                          {plan.description}
-                        </p>
-                      )}
+                  {f.label}
+                </button>
+              ))}
+            </div>
+
+            {/* Plans list */}
+            <div className="space-y-3">
+              {filteredPlans.map((plan, i) => {
+                const totalWeeks = (plan.mesocycles || []).reduce((s, m) => s + (m.weeks || 0), 0);
+                const assignedCount = (plan.plan_assignments || []).length;
+                const progress = getPlanProgress(plan);
+                const weekInfo = getCurrentWeek(plan);
+                const status = getPlanStatus(plan);
+
+                return (
+                  <motion.div
+                    key={plan.id}
+                    initial={{ opacity: 0, y: 12 }}
+                    animate={{ opacity: 1, y: 0 }}
+                    transition={{ delay: i * 0.04 }}
+                    className="bg-white dark:bg-gray-800 rounded-2xl border border-gray-100 dark:border-gray-700 p-4 sm:p-5 cursor-pointer hover:shadow-md transition-shadow group"
+                    onClick={() => selectPlan(plan.id)}
+                  >
+                    {/* Top row */}
+                    <div className="flex items-start justify-between gap-3 mb-3">
+                      <div className="flex-1 min-w-0">
+                        <div className="flex items-center gap-2 flex-wrap">
+                          <h3 className="font-semibold text-gray-900 dark:text-white group-hover:text-blue-600 dark:group-hover:text-blue-400 transition-colors">
+                            {plan.name}
+                          </h3>
+                          <span className={`px-2 py-0.5 rounded-full text-[11px] font-semibold ${
+                            status === 'active'
+                              ? 'bg-green-100 text-green-700 dark:bg-green-900/30 dark:text-green-400'
+                              : 'bg-amber-100 text-amber-700 dark:bg-amber-900/30 dark:text-amber-500'
+                          }`}>
+                            {status === 'active' ? 'Activo' : 'Borrador'}
+                          </span>
+                        </div>
+                        <div className="flex items-center gap-3 mt-1.5 flex-wrap">
+                          {plan.modality && (
+                            <span className={`px-2 py-0.5 rounded-full text-xs font-medium ${
+                              plan.modality === 'pista'
+                                ? 'bg-amber-100 text-amber-700 dark:bg-amber-900/30 dark:text-amber-400'
+                                : 'bg-blue-100 text-blue-700 dark:bg-blue-900/30 dark:text-blue-400'
+                            }`}>
+                              {plan.modality === 'pista' ? 'Pista' : 'Asfalto'}
+                            </span>
+                          )}
+                          <span className="flex items-center gap-1 text-xs text-gray-500 dark:text-gray-400">
+                            <FiClock className="w-3.5 h-3.5" />
+                            {totalWeeks} sem.
+                          </span>
+                          <span className="flex items-center gap-1 text-xs text-gray-500 dark:text-gray-400">
+                            <FiUsers className="w-3.5 h-3.5" />
+                            {assignedCount} atleta{assignedCount !== 1 ? 's' : ''}
+                          </span>
+                          {weekInfo && (
+                            <span className="text-xs text-gray-500 dark:text-gray-400">
+                              Sem. {weekInfo.current}/{weekInfo.total}
+                            </span>
+                          )}
+                        </div>
+                      </div>
+                      <FiChevronRight className="w-5 h-5 text-gray-300 dark:text-gray-600 group-hover:text-blue-400 transition-colors flex-shrink-0 mt-0.5" />
                     </div>
-                    <FiChevronRight className="w-5 h-5 text-gray-400 group-hover:text-blue-500 transition-colors flex-shrink-0 ml-2" />
-                  </div>
 
-                  <div className="flex items-center gap-3 flex-wrap">
-                    {plan.modality && (
-                      <span className={`px-2 py-0.5 rounded-full text-xs font-medium ${
-                        plan.modality === 'pista'
-                          ? 'bg-amber-100 text-amber-700 dark:bg-amber-900/30 dark:text-amber-400'
-                          : 'bg-blue-100 text-blue-700 dark:bg-blue-900/30 dark:text-blue-400'
-                      }`}>
-                        {plan.modality === 'pista' ? 'Pista' : 'Asfalto'}
-                      </span>
+                    {/* Progress bar */}
+                    {status === 'active' && (
+                      <div className="mb-3">
+                        <div className="flex items-center justify-between mb-1">
+                          <span className="text-xs text-gray-500 dark:text-gray-400">Progreso del plan</span>
+                          <span className="text-xs font-semibold text-blue-600 dark:text-blue-400">{progress}%</span>
+                        </div>
+                        <div className="h-1.5 bg-gray-100 dark:bg-gray-700 rounded-full overflow-hidden">
+                          <div
+                            className="h-full bg-blue-500 rounded-full transition-all duration-500"
+                            style={{ width: `${progress}%` }}
+                          />
+                        </div>
+                      </div>
                     )}
-                    <span className="flex items-center gap-1 text-xs text-gray-500 dark:text-gray-400">
-                      <FiClock className="w-3.5 h-3.5" />
-                      {totalWeeks} sem.
-                    </span>
-                    <span className="flex items-center gap-1 text-xs text-gray-500 dark:text-gray-400">
-                      <FiUsers className="w-3.5 h-3.5" />
-                      {assignedCount} atleta{assignedCount !== 1 ? 's' : ''}
-                    </span>
-                  </div>
 
-                  <div className="mt-3 flex gap-2">
-                    <button
-                      onClick={(e) => {
-                        e.stopPropagation();
-                        setDeleteConfirm({ type: 'plan', id: plan.id, name: plan.name });
-                      }}
-                      className="p-1.5 text-gray-400 hover:text-red-500 hover:bg-red-50 dark:hover:bg-red-900/20 rounded-lg transition-colors"
-                    >
-                      <FiTrash2 className="w-4 h-4" />
-                    </button>
-                  </div>
-                </motion.div>
-              );
-            })}
-          </div>
+                    {/* Bottom row */}
+                    <div className="flex items-center justify-between">
+                      <div className="flex items-center gap-3">
+                        {assignedCount > 0 && <AvatarStack count={assignedCount} />}
+                        {(plan.plan_assignments || []).find(a => a.start_date) && (
+                          <span className="text-xs text-gray-400 dark:text-gray-500">
+                            Inicio: {new Date((plan.plan_assignments || []).sort((a, b) => new Date(a.start_date) - new Date(b.start_date))[0]?.start_date).toLocaleDateString('es-ES', { day: 'numeric', month: 'short', year: 'numeric' })}
+                          </span>
+                        )}
+                      </div>
+                      <div className="flex items-center gap-1" onClick={e => e.stopPropagation()}>
+                        <button
+                          onClick={() => selectPlan(plan.id)}
+                          className="p-1.5 text-gray-400 hover:text-blue-500 hover:bg-blue-50 dark:hover:bg-blue-900/20 rounded-lg transition-colors"
+                        >
+                          <FiEdit3 className="w-4 h-4" />
+                        </button>
+                        <button
+                          onClick={() => setDeleteConfirm({ type: 'plan', id: plan.id, name: plan.name })}
+                          className="p-1.5 text-gray-400 hover:text-red-500 hover:bg-red-50 dark:hover:bg-red-900/20 rounded-lg transition-colors"
+                        >
+                          <FiTrash2 className="w-4 h-4" />
+                        </button>
+                      </div>
+                    </div>
+                  </motion.div>
+                );
+              })}
+            </div>
+          </>
         )}
 
         {/* Create Plan Modal */}
@@ -268,7 +423,7 @@ const Planning = () => {
                 animate={{ opacity: 1, scale: 1 }}
                 exit={{ opacity: 0, scale: 0.95 }}
                 className="bg-white dark:bg-gray-800 rounded-2xl shadow-xl max-w-lg w-full p-6"
-                onClick={(e) => e.stopPropagation()}
+                onClick={e => e.stopPropagation()}
               >
                 <h2 className="text-xl font-bold text-gray-900 dark:text-white mb-6">
                   Nuevo Plan de Entrenamiento
@@ -276,15 +431,11 @@ const Planning = () => {
 
                 {/* Plan Type Selection */}
                 <div className="grid grid-cols-2 gap-3 mb-6">
-                  <button
-                    onClick={() => handleCreatePlan('custom')}
-                    disabled={saving || !newPlanForm.name.trim()}
-                    className="flex flex-col items-center gap-2 p-4 border-2 border-blue-200 dark:border-blue-700 rounded-xl hover:bg-blue-50 dark:hover:bg-blue-900/20 transition-colors disabled:opacity-50"
-                  >
+                  <div className="flex flex-col items-center gap-2 p-4 border-2 border-blue-300 dark:border-blue-600 bg-blue-50 dark:bg-blue-900/20 rounded-xl">
                     <FiEdit3 className="w-6 h-6 text-blue-600" />
                     <span className="text-sm font-semibold text-gray-900 dark:text-white">Personalizado</span>
                     <span className="text-xs text-gray-500 dark:text-gray-400 text-center">Crea tu propio plan</span>
-                  </button>
+                  </div>
                   <div className="flex flex-col items-center gap-2 p-4 border-2 border-gray-200 dark:border-gray-700 rounded-xl opacity-50 cursor-not-allowed relative">
                     <FiLock className="w-6 h-6 text-gray-400" />
                     <span className="text-sm font-semibold text-gray-500 dark:text-gray-400">Predeterminado</span>
@@ -304,9 +455,11 @@ const Planning = () => {
                     <input
                       type="text"
                       value={newPlanForm.name}
-                      onChange={(e) => setNewPlanForm(prev => ({ ...prev, name: e.target.value }))}
+                      onChange={e => setNewPlanForm(prev => ({ ...prev, name: e.target.value }))}
                       placeholder="Ej: Preparación Media Maratón"
                       className="w-full px-3 py-2.5 bg-gray-50 dark:bg-gray-700 border border-gray-200 dark:border-gray-600 rounded-xl text-gray-900 dark:text-white text-sm focus:ring-2 focus:ring-blue-500 focus:border-transparent outline-none"
+                      style={{ fontSize: '16px' }}
+                      onKeyDown={e => e.key === 'Enter' && handleCreatePlan()}
                     />
                   </div>
                   <div>
@@ -315,10 +468,11 @@ const Planning = () => {
                     </label>
                     <textarea
                       value={newPlanForm.description}
-                      onChange={(e) => setNewPlanForm(prev => ({ ...prev, description: e.target.value }))}
+                      onChange={e => setNewPlanForm(prev => ({ ...prev, description: e.target.value }))}
                       placeholder="Descripción opcional del plan..."
                       rows={2}
                       className="w-full px-3 py-2.5 bg-gray-50 dark:bg-gray-700 border border-gray-200 dark:border-gray-600 rounded-xl text-gray-900 dark:text-white text-sm focus:ring-2 focus:ring-blue-500 focus:border-transparent outline-none resize-none"
+                      style={{ fontSize: '16px' }}
                     />
                   </div>
                   <div>
@@ -360,6 +514,13 @@ const Planning = () => {
                   >
                     Cancelar
                   </button>
+                  <button
+                    onClick={handleCreatePlan}
+                    disabled={saving || !newPlanForm.name.trim()}
+                    className="px-5 py-2 text-sm bg-blue-600 text-white rounded-xl hover:bg-blue-700 transition-colors font-medium disabled:opacity-50"
+                  >
+                    {saving ? 'Creando...' : 'Crear Plan'}
+                  </button>
                 </div>
               </motion.div>
             </div>
@@ -376,7 +537,9 @@ const Planning = () => {
                 exit={{ opacity: 0, scale: 0.95 }}
                 className="bg-white dark:bg-gray-800 rounded-2xl shadow-xl max-w-sm w-full p-6"
               >
-                <h3 className="text-lg font-bold text-gray-900 dark:text-white mb-2">Eliminar {deleteConfirm.type === 'plan' ? 'plan' : 'mesociclo'}</h3>
+                <h3 className="text-lg font-bold text-gray-900 dark:text-white mb-2">
+                  Eliminar {deleteConfirm.type === 'plan' ? 'plan' : 'mesociclo'}
+                </h3>
                 <p className="text-sm text-gray-500 dark:text-gray-400 mb-6">
                   ¿Seguro que quieres eliminar <strong>"{deleteConfirm.name}"</strong>? Esta acción no se puede deshacer.
                 </p>
@@ -408,8 +571,8 @@ const Planning = () => {
 
   // ===== PLAN EDITOR VIEW =====
   return (
-    <div className="p-4 sm:p-6 space-y-6">
-      {/* Header with back button */}
+    <div className="p-4 sm:p-6 space-y-5">
+      {/* Header */}
       <div className="flex items-center justify-between flex-wrap gap-4">
         <div className="flex items-center gap-3">
           <button
@@ -419,8 +582,8 @@ const Planning = () => {
             <FiArrowLeft className="w-5 h-5 text-gray-600 dark:text-gray-400" />
           </button>
           <div>
-            <h1 className="text-2xl font-bold text-gray-900 dark:text-white">{selectedPlan.name}</h1>
-            <div className="flex items-center gap-2 mt-1">
+            <h1 className="text-xl font-bold text-gray-900 dark:text-white">{selectedPlan.name}</h1>
+            <div className="flex items-center gap-2 mt-0.5">
               {selectedPlan.modality && (
                 <span className={`px-2 py-0.5 rounded-full text-xs font-medium ${
                   selectedPlan.modality === 'pista'
@@ -439,14 +602,14 @@ const Planning = () => {
         <div className="flex items-center gap-2">
           <button
             onClick={() => setShowMesoForm(true)}
-            className="flex items-center gap-2 px-4 py-2.5 bg-white dark:bg-gray-800 border border-gray-200 dark:border-gray-700 text-gray-700 dark:text-gray-300 rounded-xl hover:bg-gray-50 dark:hover:bg-gray-700 transition-colors font-medium text-sm"
+            className="flex items-center gap-2 px-4 py-2 bg-white dark:bg-gray-800 border border-gray-200 dark:border-gray-700 text-gray-700 dark:text-gray-300 rounded-xl hover:bg-gray-50 dark:hover:bg-gray-700 transition-colors font-medium text-sm"
           >
             <FiPlus className="w-4 h-4" />
             Añadir Mesociclo
           </button>
           <button
             onClick={() => setShowAssignModal(true)}
-            className="flex items-center gap-2 px-4 py-2.5 bg-green-600 text-white rounded-xl hover:bg-green-700 transition-colors font-medium text-sm shadow-sm"
+            className="flex items-center gap-2 px-4 py-2 bg-green-600 text-white rounded-xl hover:bg-green-700 transition-colors font-medium text-sm shadow-sm"
           >
             <FiUsers className="w-4 h-4" />
             Asignar
@@ -455,51 +618,70 @@ const Planning = () => {
       </div>
 
       {/* Mesocycles */}
-      <div className="space-y-4">
+      <div className="space-y-3">
+        {(selectedPlan.mesocycles || []).length === 0 && !showMesoForm && (
+          <div className="flex flex-col items-center py-12 text-center bg-white dark:bg-gray-800 rounded-2xl border border-dashed border-gray-200 dark:border-gray-700">
+            <FiCalendar className="w-8 h-8 text-gray-300 dark:text-gray-600 mb-3" />
+            <p className="text-sm font-medium text-gray-500 dark:text-gray-400 mb-1">Sin mesociclos todavía</p>
+            <p className="text-xs text-gray-400 dark:text-gray-500 mb-4">Añade fases de entrenamiento a este plan</p>
+            <button
+              onClick={() => setShowMesoForm(true)}
+              className="flex items-center gap-2 px-4 py-2 bg-blue-600 text-white rounded-xl hover:bg-blue-700 transition-colors text-sm font-medium"
+            >
+              <FiPlus className="w-4 h-4" />
+              Añadir Mesociclo
+            </button>
+          </div>
+        )}
+
         {(selectedPlan.mesocycles || []).map((meso, mesoIdx) => (
           <motion.div
             key={meso.id}
-            initial={{ opacity: 0, y: 10 }}
+            initial={{ opacity: 0, y: 8 }}
             animate={{ opacity: 1, y: 0 }}
-            transition={{ delay: mesoIdx * 0.05 }}
-            className="bg-white dark:bg-gray-800 rounded-xl border border-gray-200 dark:border-gray-700 overflow-hidden"
+            transition={{ delay: mesoIdx * 0.04 }}
+            className="bg-white dark:bg-gray-800 rounded-2xl border border-gray-100 dark:border-gray-700 overflow-hidden"
           >
             {/* Mesocycle Header */}
             <div
-              className="flex items-center justify-between p-4 cursor-pointer hover:bg-gray-50 dark:hover:bg-gray-700 transition-colors"
+              className="flex items-center justify-between px-4 py-3.5 cursor-pointer hover:bg-gray-50 dark:hover:bg-gray-700/50 transition-colors"
               onClick={() => setExpandedMeso(expandedMeso === meso.id ? null : meso.id)}
             >
               <div className="flex items-center gap-3">
-                {expandedMeso === meso.id ? (
-                  <FiChevronDown className="w-5 h-5 text-gray-400" />
-                ) : (
-                  <FiChevronRight className="w-5 h-5 text-gray-400" />
-                )}
+                <div className={`w-7 h-7 rounded-lg flex items-center justify-center text-sm font-bold ${PHASE_COLORS[meso.phase] || PHASE_COLORS.base}`}>
+                  {mesoIdx + 1}
+                </div>
                 <div>
                   <div className="flex items-center gap-2">
-                    <h3 className="font-semibold text-gray-900 dark:text-white">{meso.name}</h3>
-                    <span className={`px-2 py-0.5 rounded-full text-xs font-medium ${PHASE_COLORS[meso.phase] || PHASE_COLORS.base}`}>
+                    <span className="font-semibold text-sm text-gray-900 dark:text-white">{meso.name}</span>
+                    <span className={`px-2 py-0.5 rounded-full text-[10px] font-medium ${PHASE_COLORS[meso.phase] || PHASE_COLORS.base}`}>
                       {PHASES[meso.phase] || meso.phase}
                     </span>
                   </div>
-                  <p className="text-sm text-gray-500 dark:text-gray-400 mt-0.5">
+                  <p className="text-xs text-gray-500 dark:text-gray-400 mt-0.5">
                     {meso.weeks || 0} semanas
-                    {meso.focus && ` — ${meso.focus}`}
+                    {meso.focus && ` · ${meso.focus}`}
                   </p>
                 </div>
               </div>
-              <button
-                onClick={(e) => {
-                  e.stopPropagation();
-                  setDeleteConfirm({ type: 'meso', id: meso.id, name: meso.name });
-                }}
-                className="p-1.5 text-gray-400 hover:text-red-500 hover:bg-red-50 dark:hover:bg-red-900/20 rounded-lg transition-colors"
-              >
-                <FiTrash2 className="w-4 h-4" />
-              </button>
+              <div className="flex items-center gap-1">
+                <button
+                  onClick={e => {
+                    e.stopPropagation();
+                    setDeleteConfirm({ type: 'meso', id: meso.id, name: meso.name });
+                  }}
+                  className="p-1.5 text-gray-300 dark:text-gray-600 hover:text-red-500 hover:bg-red-50 dark:hover:bg-red-900/20 rounded-lg transition-colors"
+                >
+                  <FiTrash2 className="w-3.5 h-3.5" />
+                </button>
+                {expandedMeso === meso.id
+                  ? <FiChevronDown className="w-4 h-4 text-gray-400" />
+                  : <FiChevronRight className="w-4 h-4 text-gray-400" />
+                }
+              </div>
             </div>
 
-            {/* Expanded: Microcycles (Weeks) */}
+            {/* Expanded: Microcycles */}
             <AnimatePresence>
               {expandedMeso === meso.id && (
                 <motion.div
@@ -509,7 +691,7 @@ const Planning = () => {
                   transition={{ duration: 0.2 }}
                   className="overflow-hidden"
                 >
-                  <div className="border-t border-gray-100 dark:border-gray-700 divide-y divide-gray-100 dark:divide-gray-700">
+                  <div className="border-t border-gray-100 dark:border-gray-700 divide-y divide-gray-100 dark:divide-gray-700/50">
                     {(meso.microcycles || []).map((micro) => {
                       const daysCount = getWeekDaysPreview(micro.content);
                       const totalKm = getTotalKm(micro.content);
@@ -521,12 +703,12 @@ const Planning = () => {
                             className={`flex items-center justify-between px-4 py-3 cursor-pointer transition-colors ${
                               isEditing
                                 ? 'bg-blue-50 dark:bg-blue-900/10'
-                                : 'hover:bg-gray-50 dark:hover:bg-gray-700'
+                                : 'hover:bg-gray-50 dark:hover:bg-gray-700/50'
                             }`}
                             onClick={() => setEditingWeek(isEditing ? null : micro)}
                           >
                             <div className="flex items-center gap-3">
-                              <span className={`w-8 h-8 rounded-lg flex items-center justify-center text-sm font-semibold ${
+                              <span className={`w-7 h-7 rounded-lg flex items-center justify-center text-xs font-semibold ${
                                 isEditing
                                   ? 'bg-blue-100 dark:bg-blue-900/30 text-blue-600 dark:text-blue-400'
                                   : 'bg-gray-100 dark:bg-gray-700 text-gray-600 dark:text-gray-300'
@@ -534,7 +716,7 @@ const Planning = () => {
                                 {micro.week_number}
                               </span>
                               <div>
-                                <div className="flex items-center gap-2">
+                                <div className="flex items-center gap-1.5">
                                   <span className="text-sm font-medium text-gray-900 dark:text-white">
                                     Semana {micro.week_number}
                                   </span>
@@ -544,7 +726,7 @@ const Planning = () => {
                                     </span>
                                   )}
                                 </div>
-                                <div className="flex items-center gap-3 mt-0.5">
+                                <div className="flex items-center gap-2.5 mt-0.5">
                                   {daysCount !== null ? (
                                     <>
                                       <span className="text-xs text-gray-500 dark:text-gray-400">
@@ -562,10 +744,9 @@ const Planning = () => {
                                 </div>
                               </div>
                             </div>
-                            <FiEdit3 className={`w-4 h-4 ${isEditing ? 'text-blue-500' : 'text-gray-400'}`} />
+                            <FiEdit3 className={`w-4 h-4 ${isEditing ? 'text-blue-500' : 'text-gray-300 dark:text-gray-600'}`} />
                           </div>
 
-                          {/* Inline editor */}
                           {isEditing && (
                             <WeeklyPlanEditor
                               microcycle={micro}
@@ -585,59 +766,64 @@ const Planning = () => {
         ))}
 
         {/* Add Mesocycle Form */}
-        {showMesoForm && (
-          <motion.div
-            initial={{ opacity: 0, y: 10 }}
-            animate={{ opacity: 1, y: 0 }}
-            className="bg-white dark:bg-gray-800 rounded-xl border border-gray-200 dark:border-gray-700 p-4"
-          >
-            <h4 className="text-sm font-semibold text-gray-900 dark:text-white mb-3">Nuevo Mesociclo</h4>
-            <div className="grid grid-cols-1 sm:grid-cols-3 gap-3">
-              <input
-                type="text"
-                value={newMesoForm.name}
-                onChange={(e) => setNewMesoForm(prev => ({ ...prev, name: e.target.value }))}
-                placeholder="Nombre del mesociclo"
-                className="px-3 py-2 bg-gray-50 dark:bg-gray-700 border border-gray-200 dark:border-gray-600 rounded-xl text-sm text-gray-900 dark:text-white focus:ring-2 focus:ring-blue-500 focus:border-transparent outline-none"
-              />
-              <select
-                value={newMesoForm.phase}
-                onChange={(e) => setNewMesoForm(prev => ({ ...prev, phase: e.target.value }))}
-                className="px-3 py-2 bg-gray-50 dark:bg-gray-700 border border-gray-200 dark:border-gray-600 rounded-xl text-sm text-gray-900 dark:text-white focus:ring-2 focus:ring-blue-500 focus:border-transparent outline-none"
-              >
-                {Object.entries(PHASES).map(([val, label]) => (
-                  <option key={val} value={val}>{label}</option>
-                ))}
-              </select>
-              <div className="flex items-center gap-2">
+        <AnimatePresence>
+          {showMesoForm && (
+            <motion.div
+              initial={{ opacity: 0, y: 8 }}
+              animate={{ opacity: 1, y: 0 }}
+              exit={{ opacity: 0, y: -4 }}
+              className="bg-white dark:bg-gray-800 rounded-2xl border border-gray-200 dark:border-gray-700 p-4"
+            >
+              <h4 className="text-sm font-semibold text-gray-900 dark:text-white mb-3">Nuevo Mesociclo</h4>
+              <div className="grid grid-cols-1 sm:grid-cols-3 gap-3">
                 <input
-                  type="number"
-                  min={1}
-                  max={12}
-                  value={newMesoForm.weeks}
-                  onChange={(e) => setNewMesoForm(prev => ({ ...prev, weeks: parseInt(e.target.value) || 4 }))}
-                  className="w-20 px-3 py-2 bg-gray-50 dark:bg-gray-700 border border-gray-200 dark:border-gray-600 rounded-xl text-sm text-gray-900 dark:text-white focus:ring-2 focus:ring-blue-500 focus:border-transparent outline-none"
+                  type="text"
+                  value={newMesoForm.name}
+                  onChange={e => setNewMesoForm(prev => ({ ...prev, name: e.target.value }))}
+                  placeholder="Nombre del mesociclo"
+                  className="px-3 py-2 bg-gray-50 dark:bg-gray-700 border border-gray-200 dark:border-gray-600 rounded-xl text-sm text-gray-900 dark:text-white focus:ring-2 focus:ring-blue-500 focus:border-transparent outline-none"
+                  style={{ fontSize: '16px' }}
                 />
-                <span className="text-sm text-gray-500 dark:text-gray-400">semanas</span>
+                <select
+                  value={newMesoForm.phase}
+                  onChange={e => setNewMesoForm(prev => ({ ...prev, phase: e.target.value }))}
+                  className="px-3 py-2 bg-gray-50 dark:bg-gray-700 border border-gray-200 dark:border-gray-600 rounded-xl text-sm text-gray-900 dark:text-white focus:ring-2 focus:ring-blue-500 focus:border-transparent outline-none"
+                >
+                  {Object.entries(PHASES).map(([val, label]) => (
+                    <option key={val} value={val}>{label}</option>
+                  ))}
+                </select>
+                <div className="flex items-center gap-2">
+                  <input
+                    type="number"
+                    min={1}
+                    max={12}
+                    value={newMesoForm.weeks}
+                    onChange={e => setNewMesoForm(prev => ({ ...prev, weeks: parseInt(e.target.value) || 4 }))}
+                    className="w-20 px-3 py-2 bg-gray-50 dark:bg-gray-700 border border-gray-200 dark:border-gray-600 rounded-xl text-sm text-gray-900 dark:text-white focus:ring-2 focus:ring-blue-500 focus:border-transparent outline-none"
+                    style={{ fontSize: '16px' }}
+                  />
+                  <span className="text-sm text-gray-500 dark:text-gray-400">semanas</span>
+                </div>
               </div>
-            </div>
-            <div className="flex justify-end gap-2 mt-3">
-              <button
-                onClick={() => { setShowMesoForm(false); setNewMesoForm({ name: '', phase: 'base', weeks: 4 }); }}
-                className="px-3 py-1.5 text-sm text-gray-600 dark:text-gray-400 hover:bg-gray-100 dark:hover:bg-gray-700 rounded-lg transition-colors"
-              >
-                Cancelar
-              </button>
-              <button
-                onClick={handleAddMesocycle}
-                disabled={saving || !newMesoForm.name.trim()}
-                className="px-3 py-1.5 text-sm bg-blue-600 text-white rounded-lg hover:bg-blue-700 transition-colors disabled:opacity-50"
-              >
-                {saving ? 'Creando...' : 'Crear'}
-              </button>
-            </div>
-          </motion.div>
-        )}
+              <div className="flex justify-end gap-2 mt-3">
+                <button
+                  onClick={() => { setShowMesoForm(false); setNewMesoForm({ name: '', phase: 'base', weeks: 4 }); }}
+                  className="px-3 py-1.5 text-sm text-gray-600 dark:text-gray-400 hover:bg-gray-100 dark:hover:bg-gray-700 rounded-lg transition-colors"
+                >
+                  Cancelar
+                </button>
+                <button
+                  onClick={handleAddMesocycle}
+                  disabled={saving || !newMesoForm.name.trim()}
+                  className="px-3 py-1.5 text-sm bg-blue-600 text-white rounded-lg hover:bg-blue-700 transition-colors disabled:opacity-50"
+                >
+                  {saving ? 'Creando...' : 'Crear'}
+                </button>
+              </div>
+            </motion.div>
+          )}
+        </AnimatePresence>
       </div>
 
       {/* Plan Assignment Modal */}
@@ -653,7 +839,7 @@ const Planning = () => {
         )}
       </AnimatePresence>
 
-      {/* Delete Confirmation (reused in editor view) */}
+      {/* Delete Confirmation */}
       <AnimatePresence>
         {deleteConfirm && (
           <div className="fixed inset-0 bg-black/50 flex items-center justify-center z-50 p-4">
@@ -663,7 +849,9 @@ const Planning = () => {
               exit={{ opacity: 0, scale: 0.95 }}
               className="bg-white dark:bg-gray-800 rounded-2xl shadow-xl max-w-sm w-full p-6"
             >
-              <h3 className="text-lg font-bold text-gray-900 dark:text-white mb-2">Eliminar {deleteConfirm.type === 'plan' ? 'plan' : 'mesociclo'}</h3>
+              <h3 className="text-lg font-bold text-gray-900 dark:text-white mb-2">
+                Eliminar {deleteConfirm.type === 'plan' ? 'plan' : 'mesociclo'}
+              </h3>
               <p className="text-sm text-gray-500 dark:text-gray-400 mb-6">
                 ¿Seguro que quieres eliminar <strong>"{deleteConfirm.name}"</strong>? Esta acción no se puede deshacer.
               </p>

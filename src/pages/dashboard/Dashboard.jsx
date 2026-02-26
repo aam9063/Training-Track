@@ -15,7 +15,6 @@ import {
   FiMapPin,
   FiPlus,
   FiClock,
-  FiBell,
   FiZap,
   FiStar,
 } from 'react-icons/fi';
@@ -410,17 +409,6 @@ const Dashboard = () => {
 
   return (
     <div className="bg-[#F4F6FA] dark:bg-gray-900">
-
-      {/* ── DESKTOP TOPBAR (hidden en mobile) ── */}
-      <div className="hidden lg:flex items-center justify-end px-8 py-3 border-b border-[#E2E8F0] dark:border-gray-700 bg-white dark:bg-gray-800">
-        <button className="w-9 h-9 rounded-full bg-[#EEF1F7] dark:bg-gray-700 flex items-center justify-center relative">
-          <FiBell className="w-[18px] h-[18px] text-slate-500 dark:text-slate-400" />
-          <span
-            className="absolute top-1.5 right-1.5 w-2 h-2 rounded-full border-2 border-white dark:border-gray-800"
-            style={{ background: '#FF6B35' }}
-          />
-        </button>
-      </div>
 
       {/* ── SCROLL AREA ── */}
       <div className="px-4 lg:px-8 py-5 lg:py-8">

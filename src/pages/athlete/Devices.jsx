@@ -8,6 +8,9 @@ import {
   FiLoader,
   FiX,
   FiRefreshCw,
+  FiZap,
+  FiLink,
+  FiMinusCircle,
 } from 'react-icons/fi';
 import { useAuth } from '../../contexts/AuthContext';
 import {
@@ -38,12 +41,10 @@ const Devices = () => {
 
   const checkStravaConnection = useCallback(async () => {
     if (!profile?.id) return;
-
     setLoading(true);
     const { connected: dbConnected } = await loadStravaTokens(profile.id);
     const connected = dbConnected || isStravaConnected();
     setStravaConnected(connected);
-
     if (connected) {
       const athlete = getStoredAthlete();
       setStravaAthlete(athlete);
@@ -51,7 +52,6 @@ const Devices = () => {
     setLoading(false);
   }, [profile?.id]);
 
-  // Load cached count and last sync when connected
   useEffect(() => {
     if (stravaConnected && profile?.id) {
       getCachedActivityCount(profile.id).then(setCachedCount);
@@ -70,7 +70,6 @@ const Devices = () => {
           .eq('athlete_id', profile.id)
           .eq('device_type', 'strava')
           .single();
-
         if (device && !device.strava_athlete_id) {
           const { data: athlete } = await getStravaAthlete();
           if (athlete?.id) {
@@ -87,6 +86,32 @@ const Devices = () => {
     })();
   }, [stravaConnected, profile?.id]);
 
+  const handleStravaCallback = useCallback(async (code) => {
+    setLoading(true);
+    setError(null);
+    const { data, error: callbackError } = await exchangeStravaCode(code, profile?.id);
+    if (callbackError) {
+      setError(callbackError.isLimitError ? callbackError.userMessage : 'Error al conectar con Strava. Inténtalo de nuevo.');
+      setLoading(false);
+      return;
+    }
+    setStravaConnected(true);
+    setStravaAthlete(data.athlete);
+    setLoading(false);
+  }, [profile?.id]);
+
+  const handleConnectStrava = () => {
+    window.location.href = getStravaAuthUrl();
+  };
+
+  const handleDisconnectStrava = async () => {
+    await disconnectStrava(profile?.id);
+    setStravaConnected(false);
+    setStravaAthlete(null);
+    setCachedCount(null);
+    setLastSyncDate(null);
+  };
+
   const handleFullSync = async () => {
     if (!profile?.id) return;
     setSyncing(true);
@@ -100,16 +125,14 @@ const Devices = () => {
           else setSyncProgress(`Sincronizadas ${total} actividades...`);
         }
       );
-
       setSyncProgress('Obteniendo marcas personales...');
       await syncActivityDetails(profile.id, 50, ({ fetched, total }) => {
         setSyncProgress(`Procesando detalles: ${fetched}/${total}...`);
       });
-
       const count = await getCachedActivityCount(profile.id);
       setCachedCount(count);
       setLastSyncDate(new Date().toISOString());
-      setSyncResult(`Sincronización completada: ${totalSynced} actividades procesadas.`);
+      setSyncResult(`${totalSynced} actividades procesadas correctamente.`);
     } catch (err) {
       setSyncResult(`Error: ${err.message}`);
     } finally {
@@ -118,280 +141,245 @@ const Devices = () => {
     }
   };
 
-  // Handle OAuth callback (wait for profile to be ready)
   useEffect(() => {
     const code = searchParams.get('code');
     if (code && profile?.id) {
       handleStravaCallback(code);
       setSearchParams({});
     }
-  }, [searchParams, setSearchParams, profile?.id]);
+  }, [searchParams, setSearchParams, profile?.id, handleStravaCallback]);
 
-  // Check connection status on mount
   useEffect(() => {
     checkStravaConnection();
   }, [checkStravaConnection]);
-
-  const handleStravaCallback = async (code) => {
-    setLoading(true);
-    setError(null);
-
-    const { data, error: callbackError } = await exchangeStravaCode(code, profile?.id);
-
-    if (callbackError) {
-      if (callbackError.isLimitError) {
-        setError(callbackError.userMessage);
-      } else {
-        setError('Error al conectar con Strava. Inténtalo de nuevo.');
-      }
-      setLoading(false);
-      return;
-    }
-
-    setStravaConnected(true);
-    setStravaAthlete(data.athlete);
-    setLoading(false);
-  };
-
-  const handleConnectStrava = () => {
-    window.location.href = getStravaAuthUrl();
-  };
-
-  const handleDisconnectStrava = async () => {
-    await disconnectStrava(profile?.id);
-    setStravaConnected(false);
-    setStravaAthlete(null);
-  };
 
   if (loading) {
     return (
       <div className="flex items-center justify-center min-h-[60vh]">
         <div className="text-center">
-          <FiLoader className="w-8 h-8 animate-spin text-blue-600 mx-auto mb-4" />
-          <p className="text-gray-600 dark:text-gray-400">Cargando dispositivos...</p>
+          <FiLoader className="w-7 h-7 animate-spin text-brand-primary mx-auto mb-3" />
+          <p className="text-sm text-slate-500 dark:text-gray-400">Cargando dispositivos...</p>
         </div>
       </div>
     );
   }
 
   return (
-    <div className="p-4 sm:p-6 lg:p-8">
-      {/* Header */}
-      <div className="mb-6 sm:mb-8">
-        <h1 className="text-2xl sm:text-3xl font-bold text-gray-900 dark:text-white mb-2">
-          Mis Dispositivos
+    <div className="px-4 lg:px-8 py-6 lg:py-8 max-w-3xl">
+      {/* Page Header */}
+      <div className="mb-7">
+        <h1 className="text-2xl font-bold text-slate-900 dark:text-white tracking-tight">
+          Integraciones
         </h1>
-        <p className="text-sm sm:text-base text-gray-600 dark:text-gray-400">
-          Conecta tus dispositivos para sincronizar entrenamientos automáticamente
+        <p className="text-sm text-slate-500 dark:text-gray-400 mt-1">
+          Conecta tus aplicaciones y dispositivos para sincronizar entrenamientos automáticamente
         </p>
       </div>
 
       {/* Error Banner */}
       {error && (
         <motion.div
-          initial={{ opacity: 0, y: -10 }}
+          initial={{ opacity: 0, y: -8 }}
           animate={{ opacity: 1, y: 0 }}
-          className="mb-6 p-4 bg-red-50 dark:bg-red-900/20 border border-red-200 dark:border-red-800 rounded-xl"
+          className="mb-5 flex items-start gap-3 p-4 bg-red-50 dark:bg-red-900/20 border border-red-200 dark:border-red-800 rounded-xl"
         >
-          <div className="flex items-center justify-between">
-            <div className="flex items-center space-x-2">
-              <FiAlertCircle className="w-5 h-5 text-red-600 dark:text-red-400" />
-              <span className="text-red-700 dark:text-red-300">{error}</span>
-            </div>
-            <button onClick={() => setError(null)} className="text-red-500 hover:text-red-700">
-              <FiX className="w-5 h-5" />
-            </button>
-          </div>
+          <FiAlertCircle className="w-5 h-5 text-red-500 flex-shrink-0 mt-0.5" />
+          <p className="text-sm text-red-700 dark:text-red-300 flex-1">{error}</p>
+          <button onClick={() => setError(null)} className="text-red-400 hover:text-red-600 transition-colors">
+            <FiX className="w-4 h-4" />
+          </button>
         </motion.div>
       )}
 
+      {/* Section: Activas */}
+      <p className="text-xs font-semibold text-slate-400 dark:text-slate-500 uppercase tracking-widest mb-3">
+        Aplicaciones
+      </p>
+
       {/* Strava Card */}
       <motion.div
-        initial={{ opacity: 0, y: 20 }}
+        initial={{ opacity: 0, y: 16 }}
         animate={{ opacity: 1, y: 0 }}
+        className="bg-white dark:bg-gray-800 rounded-2xl border border-brand-border dark:border-gray-700 overflow-hidden mb-3"
       >
-        <div
-          className={`
-            bg-white dark:bg-gray-800 rounded-2xl overflow-hidden shadow-lg border-2
-            ${stravaConnected ? 'border-green-500' : 'border-gray-200 dark:border-gray-700'}
-          `}
-        >
-          {/* Strava Header */}
-          <div className="bg-gradient-to-r from-[#FC4C02] to-[#E34402] p-6 text-white">
-            <div className="flex items-center justify-between">
-              <div className="flex items-center space-x-4">
-                <div className="w-14 h-14 bg-white rounded-xl flex items-center justify-center p-2">
-                  <img
-                    src="/img/integrations/strava.svg"
-                    alt="Strava"
-                    className="w-full h-full object-contain"
-                  />
-                </div>
-                <div>
-                  <h2 className="text-2xl font-bold">Strava</h2>
-                  {stravaAthlete && (
-                    <p className="text-white/80 text-sm">
-                      {stravaAthlete.firstname} {stravaAthlete.lastname}
-                    </p>
-                  )}
-                </div>
-              </div>
+        {/* Card top row */}
+        <div className="flex items-center gap-4 p-5">
+          {/* Logo */}
+          <div className="w-11 h-11 rounded-xl bg-[#FC4C02]/10 flex items-center justify-center flex-shrink-0">
+            <img
+              src="/img/integrations/strava.svg"
+              alt="Strava"
+              className="w-6 h-6 object-contain"
+            />
+          </div>
+
+          {/* Name + description */}
+          <div className="flex-1 min-w-0">
+            <div className="flex items-center gap-2">
+              <span className="font-semibold text-slate-900 dark:text-white text-sm">Strava</span>
               {stravaConnected && (
-                <div className="flex items-center space-x-2 bg-white/20 backdrop-blur-sm px-3 py-1.5 rounded-full">
-                  <FiCheckCircle className="w-4 h-4" />
-                  <span className="font-semibold text-sm">Conectado</span>
-                </div>
+                <span className="inline-flex items-center gap-1 px-2 py-0.5 bg-green-50 dark:bg-green-900/30 text-green-700 dark:text-green-400 text-xs font-medium rounded-full border border-green-200 dark:border-green-700">
+                  <FiCheckCircle className="w-3 h-3" />
+                  Conectado
+                </span>
               )}
             </div>
+            <p className="text-xs text-slate-500 dark:text-gray-400 mt-0.5 truncate">
+              {stravaConnected && stravaAthlete
+                ? `${stravaAthlete.firstname} ${stravaAthlete.lastname}`
+                : 'Sincroniza tus actividades de running y ciclismo'}
+            </p>
           </div>
 
-          {/* Strava Content */}
-          <div className="p-6">
-            {stravaConnected ? (
-              <div>
-                <div className="flex items-center justify-between">
-                  <p className="text-sm text-gray-600 dark:text-gray-400">
-                    Tu cuenta de Strava está vinculada. Tus actividades se muestran en <span className="font-medium text-gray-900 dark:text-white">Mis Entrenamientos</span>.
-                  </p>
-                  <button
-                    onClick={handleDisconnectStrava}
-                    className="flex-shrink-0 ml-4 px-4 py-2 text-sm text-red-600 hover:bg-red-50 dark:text-red-400 dark:hover:bg-red-900/20 rounded-lg transition-colors font-medium"
-                  >
-                    Desvincular
-                  </button>
-                </div>
+          {/* Action button */}
+          {stravaConnected ? (
+            <button
+              onClick={handleDisconnectStrava}
+              className="flex items-center gap-1.5 px-3 py-1.5 text-xs font-medium text-slate-500 dark:text-slate-400 hover:text-red-600 dark:hover:text-red-400 hover:bg-red-50 dark:hover:bg-red-900/20 rounded-lg transition-colors border border-brand-border dark:border-gray-600"
+            >
+              <FiMinusCircle className="w-3.5 h-3.5" />
+              Desvincular
+            </button>
+          ) : (
+            <button
+              onClick={handleConnectStrava}
+              className="flex items-center gap-1.5 px-3 py-1.5 text-xs font-semibold text-white bg-[#FC4C02] hover:bg-[#E34402] rounded-lg transition-colors"
+            >
+              <FiLink className="w-3.5 h-3.5" />
+              Conectar
+            </button>
+          )}
+        </div>
 
-                {/* Sync Section */}
-                <div className="mt-4 pt-4 border-t border-gray-200 dark:border-gray-700">
-                  <div className="flex items-center justify-between">
-                    <div>
-                      <p className="text-sm font-medium text-gray-900 dark:text-white">
-                        Histórico de Actividades
-                      </p>
-                      <p className="text-xs text-gray-500 dark:text-gray-400 mt-0.5">
-                        {cachedCount !== null ? `${cachedCount} actividades en caché` : 'Cargando...'}
-                        {lastSyncDate && (
-                          <span className="ml-2">
-                            · Última sync: {new Date(lastSyncDate).toLocaleDateString('es-ES', { day: 'numeric', month: 'short', hour: '2-digit', minute: '2-digit' })}
-                          </span>
-                        )}
-                      </p>
-                    </div>
-                    <button
-                      onClick={handleFullSync}
-                      disabled={syncing}
-                      className="flex items-center gap-2 px-4 py-2 text-sm bg-[#FC4C02] hover:bg-[#E34402] text-white rounded-lg font-medium disabled:opacity-50 transition-colors"
-                    >
-                      {syncing ? (
-                        <FiLoader className="w-4 h-4 animate-spin" />
-                      ) : (
-                        <FiRefreshCw className="w-4 h-4" />
-                      )}
-                      {syncing ? 'Sincronizando...' : 'Sincronizar Todo'}
-                    </button>
-                  </div>
-                  {syncProgress && (
-                    <div className="mt-3 p-3 bg-orange-50 dark:bg-orange-900/20 rounded-lg">
-                      <p className="text-sm text-orange-700 dark:text-orange-300">{syncProgress}</p>
-                    </div>
-                  )}
-                  {syncResult && (
-                    <div className="mt-3 p-3 bg-green-50 dark:bg-green-900/20 rounded-lg">
-                      <p className="text-sm text-green-700 dark:text-green-300">{syncResult}</p>
-                    </div>
-                  )}
-                </div>
-              </div>
-            ) : (
-              <div className="text-center py-4">
-                <p className="text-gray-600 dark:text-gray-400 mb-5">
-                  Conecta tu cuenta de Strava para sincronizar automáticamente tus entrenamientos
+        {/* Connected: stats + sync */}
+        {stravaConnected && (
+          <div className="border-t border-brand-border dark:border-gray-700 px-5 py-4 bg-slate-50/50 dark:bg-gray-800/50">
+            <div className="flex items-center justify-between">
+              <div>
+                <p className="text-xs font-medium text-slate-700 dark:text-slate-300">
+                  Histórico sincronizado
                 </p>
-                <button
-                  onClick={handleConnectStrava}
-                  className="inline-flex items-center space-x-2 px-6 py-3 bg-[#FC4C02] hover:bg-[#E34402] text-white rounded-xl font-semibold transition-all transform hover:scale-105"
-                >
-                  <span>Conectar con Strava</span>
-                  <FiExternalLink className="w-5 h-5" />
-                </button>
+                <p className="text-xs text-slate-500 dark:text-gray-400 mt-0.5">
+                  {cachedCount !== null ? (
+                    <><span className="font-semibold text-slate-900 dark:text-white">{cachedCount}</span> actividades en caché</>
+                  ) : (
+                    'Calculando...'
+                  )}
+                  {lastSyncDate && (
+                    <span className="ml-2 text-slate-400">
+                      · {new Date(lastSyncDate).toLocaleDateString('es-ES', { day: 'numeric', month: 'short', hour: '2-digit', minute: '2-digit' })}
+                    </span>
+                  )}
+                </p>
+              </div>
+              <button
+                onClick={handleFullSync}
+                disabled={syncing}
+                className="flex items-center gap-1.5 px-3 py-1.5 text-xs font-medium bg-white dark:bg-gray-700 border border-brand-border dark:border-gray-600 text-slate-700 dark:text-slate-200 hover:bg-brand-primary hover:text-white hover:border-brand-primary dark:hover:bg-brand-primary dark:hover:border-brand-primary rounded-lg transition-colors disabled:opacity-50 disabled:cursor-not-allowed"
+              >
+                {syncing ? (
+                  <FiLoader className="w-3.5 h-3.5 animate-spin" />
+                ) : (
+                  <FiRefreshCw className="w-3.5 h-3.5" />
+                )}
+                {syncing ? 'Sincronizando...' : 'Sincronizar todo'}
+              </button>
+            </div>
+
+            {/* Progress */}
+            {syncProgress && (
+              <div className="mt-3 flex items-center gap-2 p-3 bg-brand-primary/5 dark:bg-brand-primary/10 rounded-lg">
+                <FiLoader className="w-3.5 h-3.5 text-brand-primary animate-spin flex-shrink-0" />
+                <p className="text-xs text-brand-primary">{syncProgress}</p>
               </div>
             )}
+
+            {/* Result */}
+            {syncResult && !syncProgress && (
+              <motion.div
+                initial={{ opacity: 0 }}
+                animate={{ opacity: 1 }}
+                className={`mt-3 flex items-center gap-2 p-3 rounded-lg ${
+                  syncResult.startsWith('Error')
+                    ? 'bg-red-50 dark:bg-red-900/20'
+                    : 'bg-green-50 dark:bg-green-900/20'
+                }`}
+              >
+                <FiCheckCircle className={`w-3.5 h-3.5 flex-shrink-0 ${syncResult.startsWith('Error') ? 'text-red-500' : 'text-green-600'}`} />
+                <p className={`text-xs ${syncResult.startsWith('Error') ? 'text-red-700 dark:text-red-300' : 'text-green-700 dark:text-green-300'}`}>
+                  {syncResult}
+                </p>
+              </motion.div>
+            )}
           </div>
-        </div>
+        )}
       </motion.div>
 
-      {/* Otras Integraciones */}
-      <div className="mt-8">
-        <h2 className="text-lg font-bold text-gray-900 dark:text-white mb-4">
-          Otras Integraciones
-        </h2>
-        <div className="grid grid-cols-1 sm:grid-cols-2 gap-4 max-w-2xl">
-          {/* Garmin */}
-          <motion.div
-            initial={{ opacity: 0, y: 20 }}
-            animate={{ opacity: 1, y: 0 }}
-            transition={{ delay: 0.1 }}
-            className="bg-white dark:bg-gray-800 rounded-xl overflow-hidden shadow-sm border border-gray-200 dark:border-gray-700 relative"
-          >
-            <div className="absolute top-2 right-2 z-10">
-              <span className="px-2 py-1 bg-yellow-100 dark:bg-yellow-900/30 text-yellow-700 dark:text-yellow-400 text-xs font-semibold rounded-full">
-                Próximamente
-              </span>
-            </div>
-            <div className="bg-gradient-to-r from-blue-500 to-blue-600 p-4">
-              <div className="w-12 h-12 bg-white rounded-lg flex items-center justify-center p-2">
-                <img
-                  src="/img/integrations/garmin.svg"
-                  alt="Garmin"
-                  className="w-full h-full object-contain"
-                  onError={(e) => { e.currentTarget.style.display = 'none'; }}
-                />
-              </div>
-            </div>
-            <div className="p-4">
-              <h3 className="font-semibold text-gray-900 dark:text-white mb-1">Garmin Connect</h3>
-              <p className="text-sm text-gray-600 dark:text-gray-400 mb-4">
-                Sincroniza automáticamente tus entrenamientos desde tu reloj Garmin
-              </p>
-              <button disabled className="w-full py-2 bg-gray-100 dark:bg-gray-700 text-gray-400 dark:text-gray-500 rounded-lg cursor-not-allowed text-sm">
-                No disponible
-              </button>
-            </div>
-          </motion.div>
+      {/* Section: Próximamente */}
+      <p className="text-xs font-semibold text-slate-400 dark:text-slate-500 uppercase tracking-widest mb-3 mt-7">
+        Próximamente
+      </p>
 
-          {/* COROS */}
-          <motion.div
-            initial={{ opacity: 0, y: 20 }}
-            animate={{ opacity: 1, y: 0 }}
-            transition={{ delay: 0.2 }}
-            className="bg-white dark:bg-gray-800 rounded-xl overflow-hidden shadow-sm border border-gray-200 dark:border-gray-700 relative"
-          >
-            <div className="absolute top-2 right-2 z-10">
-              <span className="px-2 py-1 bg-yellow-100 dark:bg-yellow-900/30 text-yellow-700 dark:text-yellow-400 text-xs font-semibold rounded-full">
-                Próximamente
-              </span>
+      <div className="grid grid-cols-1 sm:grid-cols-2 gap-3">
+        {/* Garmin */}
+        <motion.div
+          initial={{ opacity: 0, y: 16 }}
+          animate={{ opacity: 1, y: 0 }}
+          transition={{ delay: 0.08 }}
+          className="bg-white dark:bg-gray-800 rounded-2xl border border-brand-border dark:border-gray-700 p-5 opacity-60"
+        >
+          <div className="flex items-center gap-3 mb-3">
+            <div className="w-10 h-10 rounded-xl bg-blue-50 dark:bg-blue-900/30 flex items-center justify-center flex-shrink-0">
+              <img
+                src="/img/integrations/garmin.svg"
+                alt="Garmin"
+                className="w-5 h-5 object-contain"
+                onError={(e) => { e.currentTarget.style.display = 'none'; }}
+              />
             </div>
-            <div className="bg-gradient-to-r from-red-500 to-red-600 p-4">
-              <div className="w-12 h-12 bg-black rounded-lg flex items-center justify-center p-2">
-                <img
-                  src="/img/integrations/coros.jpeg"
-                  alt="COROS"
-                  className="w-full h-full object-contain"
-                  onError={(e) => { e.currentTarget.style.display = 'none'; }}
-                />
-              </div>
+            <div>
+              <p className="text-sm font-semibold text-slate-900 dark:text-white">Garmin Connect</p>
+              <span className="text-[10px] font-semibold text-amber-600 dark:text-amber-400 uppercase tracking-wide">Próximamente</span>
             </div>
-            <div className="p-4">
-              <h3 className="font-semibold text-gray-900 dark:text-white mb-1">COROS</h3>
-              <p className="text-sm text-gray-600 dark:text-gray-400 mb-4">
-                Importa datos de tus entrenamientos desde COROS
-              </p>
-              <button disabled className="w-full py-2 bg-gray-100 dark:bg-gray-700 text-gray-400 dark:text-gray-500 rounded-lg cursor-not-allowed text-sm">
-                No disponible
-              </button>
+          </div>
+          <p className="text-xs text-slate-500 dark:text-gray-400 leading-relaxed">
+            Sincroniza automáticamente tus entrenamientos desde tu reloj Garmin
+          </p>
+        </motion.div>
+
+        {/* COROS */}
+        <motion.div
+          initial={{ opacity: 0, y: 16 }}
+          animate={{ opacity: 1, y: 0 }}
+          transition={{ delay: 0.14 }}
+          className="bg-white dark:bg-gray-800 rounded-2xl border border-brand-border dark:border-gray-700 p-5 opacity-60"
+        >
+          <div className="flex items-center gap-3 mb-3">
+            <div className="w-10 h-10 rounded-xl bg-gray-100 dark:bg-gray-700 flex items-center justify-center flex-shrink-0">
+              <img
+                src="/img/integrations/coros.jpeg"
+                alt="COROS"
+                className="w-5 h-5 object-contain rounded"
+                onError={(e) => { e.currentTarget.style.display = 'none'; }}
+              />
             </div>
-          </motion.div>
-        </div>
+            <div>
+              <p className="text-sm font-semibold text-slate-900 dark:text-white">COROS</p>
+              <span className="text-[10px] font-semibold text-amber-600 dark:text-amber-400 uppercase tracking-wide">Próximamente</span>
+            </div>
+          </div>
+          <p className="text-xs text-slate-500 dark:text-gray-400 leading-relaxed">
+            Importa datos de tus entrenamientos desde tu dispositivo COROS
+          </p>
+        </motion.div>
+      </div>
+
+      {/* Info note */}
+      <div className="mt-6 flex items-start gap-3 p-4 bg-brand-primary/5 dark:bg-brand-primary/10 rounded-xl border border-brand-primary/10 dark:border-brand-primary/20">
+        <FiZap className="w-4 h-4 text-brand-primary flex-shrink-0 mt-0.5" />
+        <p className="text-xs text-slate-600 dark:text-slate-300 leading-relaxed">
+          Las actividades sincronizadas desde Strava se vinculan automáticamente con tus sesiones de entrenamiento y se muestran en <span className="font-medium text-slate-900 dark:text-white">Mis Entrenamientos</span>.
+        </p>
       </div>
     </div>
   );

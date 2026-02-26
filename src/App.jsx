@@ -116,9 +116,9 @@ function App() {
               </Routes>
             </Suspense>
           </Router>
-          {/* Mobile: top-center debajo del header fijo */}
+          {/* Mobile: bottom-center por encima del bottom nav */}
           <div className="lg:hidden">
-            <Toaster position="top-center" offset={70} />
+            <Toaster position="bottom-center" offset={90} />
           </div>
           {/* Desktop: bottom-right */}
           <div className="hidden lg:block">

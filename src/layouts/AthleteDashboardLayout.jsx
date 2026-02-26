@@ -4,6 +4,7 @@ import { useAuth } from '../contexts/AuthContext';
 import AthleteSidebar from '../components/athlete/AthleteSidebar';
 import AthleteBottomNav from '../components/athlete/AthleteBottomNav';
 import AthleteMobileHeader from '../components/athlete/AthleteMobileHeader';
+import NotificationPanel from '../components/common/NotificationPanel';
 import PushNotificationBanner from '../components/common/PushNotificationBanner';
 
 const AthleteDashboardLayout = () => {
@@ -44,6 +45,10 @@ const AthleteDashboardLayout = () => {
           ${sidebarCollapsed ? 'lg:pl-20' : 'lg:pl-64'}
         `}
       >
+        {/* Desktop top bar — visible en todas las vistas */}
+        <div className="hidden lg:flex items-center justify-end px-8 py-3 bg-white dark:bg-gray-800 border-b border-gray-200 dark:border-gray-700">
+          <NotificationPanel accentColor="#16a34a" isCoach={false} />
+        </div>
         <main className="overflow-x-hidden pb-[72px] lg:pb-0">
           <PushNotificationBanner />
           <Outlet />

@@ -31,6 +31,7 @@ const Calendar = lazy(() => import('./pages/dashboard/Calendar'));
 const Profile = lazy(() => import('./pages/dashboard/Profile'));
 const CoachMessages = lazy(() => import('./pages/dashboard/Messages'));
 const Planning = lazy(() => import('./pages/dashboard/Planning'));
+const AIReports = lazy(() => import('./pages/dashboard/AIReports'));
 
 // Admin pages
 const AdminLayout = lazy(() => import('./layouts/AdminLayout'));
@@ -88,6 +89,7 @@ function App() {
                   <Route path="calendar" element={<Calendar />} />
                   <Route path="profile" element={<Profile />} />
                   <Route path="messages" element={<CoachMessages />} />
+                  <Route path="ai-reports" element={<AIReports />} />
                 </Route>
 
                 {/* Protected Athlete Dashboard Routes */}

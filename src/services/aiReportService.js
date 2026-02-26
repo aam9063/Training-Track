@@ -490,3 +490,104 @@ export const deleteReport = async (reportId) => {
 
   if (error) throw error;
 };
+
+// ─── Weekly AI Reports (coach feed) ──────────────────────────────────────────
+
+/**
+ * Get all weekly reports for a coach, joined with athlete user info.
+ * Returns reports ordered by: alert_level severity first, then week_start desc.
+ */
+export const getCoachWeeklyReports = async (coachId, weekStart = null) => {
+  let query = supabase
+    .from('weekly_ai_reports')
+    .select(`
+      id, coach_id, athlete_id, week_start, week_end,
+      alert_level, summary, ai_analysis,
+      sessions_planned, sessions_done,
+      planned_km, actual_km, acwr, tsb,
+      status, error_message, created_at
+    `)
+    .eq('coach_id', coachId)
+    .order('week_start', { ascending: false });
+
+  if (weekStart) {
+    query = query.eq('week_start', weekStart);
+  } else {
+    query = query.limit(50);
+  }
+
+  const { data, error } = await query;
+  if (error) throw error;
+
+  // Fetch athlete user info separately to avoid FK join issues
+  const athleteIds = [...new Set((data || []).map(r => r.athlete_id))];
+  let usersMap = {};
+  if (athleteIds.length > 0) {
+    const { data: users } = await supabase
+      .from('users')
+      .select('id, first_name, last_name, profile_image')
+      .in('id', athleteIds);
+    (users || []).forEach(u => { usersMap[u.id] = u; });
+  }
+
+  const enriched = (data || []).map(r => ({ ...r, users: usersMap[r.athlete_id] || {} }));
+
+  // Sort by alert severity: critical > attention > ok
+  const severity = { critical: 0, attention: 1, ok: 2 };
+  return enriched.sort((a, b) => {
+    if (a.week_start !== b.week_start) return b.week_start.localeCompare(a.week_start);
+    return (severity[a.alert_level] ?? 2) - (severity[b.alert_level] ?? 2);
+  });
+};
+
+/**
+ * Get distinct weeks that have reports for a coach.
+ */
+export const getCoachReportWeeks = async (coachId) => {
+  const { data, error } = await supabase
+    .from('weekly_ai_reports')
+    .select('week_start, week_end')
+    .eq('coach_id', coachId)
+    .order('week_start', { ascending: false });
+
+  if (error) throw error;
+
+  // Deduplicate
+  const seen = new Set();
+  return (data || []).filter(r => {
+    if (seen.has(r.week_start)) return false;
+    seen.add(r.week_start);
+    return true;
+  });
+};
+
+/**
+ * Manually trigger weekly report generation for a coach (uses the Edge Function).
+ * Useful for the coach to regenerate reports on demand.
+ */
+export const triggerWeeklyReports = async (coachId, weekStart = null, weekEnd = null) => {
+  const { data: { session } } = await supabase.auth.getSession();
+  if (!session?.access_token) throw new Error('No hay sesión activa.');
+
+  const supabaseUrl = import.meta.env.VITE_SUPABASE_URL;
+  const body = { coach_id: coachId };
+  if (weekStart) body.week_start = weekStart;
+  if (weekEnd) body.week_end = weekEnd;
+
+  const response = await fetch(`${supabaseUrl}/functions/v1/weekly-ai-reports`, {
+    method: 'POST',
+    headers: {
+      'Content-Type': 'application/json',
+      'Authorization': `Bearer ${session.access_token}`,
+      'apikey': import.meta.env.VITE_SUPABASE_ANON_KEY,
+    },
+    body: JSON.stringify(body),
+  });
+
+  if (!response.ok) {
+    const err = await response.json().catch(() => ({}));
+    throw new Error(err.error || `Error ${response.status}`);
+  }
+
+  return response.json();
+};

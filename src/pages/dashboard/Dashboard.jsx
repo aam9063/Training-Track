@@ -464,9 +464,10 @@ const Dashboard = () => {
           />
         </div>
 
-        {/* IA CARD — visual only (mobile: full width, desktop: dentro de col izq) */}
-        <div
-          className="lg:hidden rounded-2xl p-4 flex gap-3 items-start relative overflow-hidden cursor-pointer mb-5"
+        {/* IA CARD — mobile: full width */}
+        <Link
+          to="/dashboard/ai-reports"
+          className="lg:hidden rounded-2xl p-4 flex gap-3 items-start relative overflow-hidden mb-5 active:opacity-80 transition-opacity"
           style={{ background: '#0F172A', border: '1px solid #334155' }}
         >
           <div style={{ position: 'absolute', top: -30, right: -30, width: 100, height: 100, background: 'radial-gradient(circle, rgba(26,107,255,0.35), transparent 70%)', pointerEvents: 'none' }} />
@@ -478,7 +479,7 @@ const Dashboard = () => {
             <p className="text-sm font-semibold text-white leading-snug">Análisis de carga disponible. Consulta el informe de esta semana.</p>
             <p className="text-xs mt-1" style={{ color: '#64748B' }}>Ver informe completo →</p>
           </div>
-        </div>
+        </Link>
 
         {/* ── BENTO GRID: col izq (main) + col der (sidebar) en desktop ── */}
         <div className="lg:grid lg:grid-cols-[1fr_320px] lg:gap-6 space-y-5 lg:space-y-0">
@@ -486,9 +487,10 @@ const Dashboard = () => {
           {/* ── COLUMNA IZQUIERDA ── */}
           <div className="space-y-5">
 
-            {/* IA CARD desktop — solo visible en desktop */}
-            <div
-              className="hidden lg:flex rounded-2xl p-4 gap-3 items-start relative overflow-hidden cursor-pointer"
+            {/* IA CARD desktop */}
+            <Link
+              to="/dashboard/ai-reports"
+              className="hidden lg:flex rounded-2xl p-4 gap-3 items-start relative overflow-hidden hover:opacity-90 transition-opacity"
               style={{ background: '#0F172A', border: '1px solid #334155' }}
             >
               <div style={{ position: 'absolute', top: -30, right: -30, width: 100, height: 100, background: 'radial-gradient(circle, rgba(26,107,255,0.35), transparent 70%)', pointerEvents: 'none' }} />
@@ -500,7 +502,7 @@ const Dashboard = () => {
                 <p className="text-sm font-semibold text-white leading-snug">Análisis de carga disponible. Consulta el informe de esta semana.</p>
                 <p className="text-xs mt-1" style={{ color: '#64748B' }}>Ver informe completo →</p>
               </div>
-            </div>
+            </Link>
 
             {/* AGENDA SEMANAL */}
             <section className="bg-white dark:bg-gray-800 rounded-2xl border border-[#E2E8F0] dark:border-gray-700 p-4">

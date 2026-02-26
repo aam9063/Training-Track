@@ -286,336 +286,330 @@ const Training = () => {
 
   const hasAnyTraining = Object.keys(trainings).length > 0;
 
+  const [activeTab, setActiveTab] = useState('week'); // 'week' | 'recents'
+  const [showConconiTable, setShowConconiTable] = useState(false);
+  const [showVamTable, setShowVamTable] = useState(false);
+
+  // ---- Tests de rendimiento: cálculos compartidos ----
+  const paceOrder = ['RM', 'R10', 'R9', 'R8', 'R7', 'R6', 'R5', 'R4', 'R3', 'R2', 'R1', 'RR'];
+  const sortedPaces = paceOrder.map(code => athletePaces.find(p => p.pace_code === code)).filter(Boolean);
+  const bgColors = { RM:'bg-red-600', R10:'bg-red-500', R9:'bg-red-400', R8:'bg-orange-500', R7:'bg-orange-400', R6:'bg-yellow-500', R5:'bg-yellow-400', R4:'bg-lime-400', R3:'bg-lime-500', R2:'bg-green-400', R1:'bg-green-500', RR:'bg-emerald-600' };
+  const pctLabels = { RM:'100%', R10:'92%', R9:'90%', R8:'88%', R7:'86%', R6:'84%', R5:'82%', R4:'78%', R3:'72%', R2:'62%', R1:'50%', RR:'42%' };
+  const seriesRecovery = (() => {
+    const rec = {};
+    if (latestConconiTest?.conconi_test_series) {
+      const series = [...latestConconiTest.conconi_test_series].sort((a, b) => a.series_number - b.series_number);
+      sortedPaces.forEach((pace, i) => {
+        if (pace.pace_code === 'RR') return;
+        const idx = Math.round((i / (sortedPaces.length - 1)) * (series.length - 1));
+        const s = series[Math.min(idx, series.length - 1)];
+        if (s?.recovery_time_seconds) rec[pace.pace_code] = s.recovery_time_seconds;
+      });
+    }
+    return rec;
+  })();
+  const conconiMaxHr = latestConconiTest?.max_hr_reached;
+  const fmtPaceTest = (secs) => { const m=Math.floor(secs/60); const s=Math.round(secs%60); return `${m}'${String(s).padStart(2,'0')}"`; };
+  const fmtRecTest  = (secs) => { if(!secs) return ''; const m=Math.floor(secs/60); const s=secs%60; return s>0?`${m}'${String(s).padStart(2,'0')}"` :`${m}'`; };
+  const conconiR10 = sortedPaces.find(p => p.pace_code === 'R10');
+  const conconiFirstRecov = Object.values(seriesRecovery)[0];
+  const vamKmh = latestVam ? parseFloat(latestVam.vam_kmh) : null;
+  const vamVo2max = vamKmh ? (vamKmh * 3.5).toFixed(1) : null;
+  const vamMlssKmh = vamKmh ? (vamKmh * 0.88).toFixed(1) : null;
+  const vamMlssPace = vamKmh ? Math.round(3600 / (vamKmh * 0.88)) : null;
+  const vamVt2Kmh = vamKmh ? (vamKmh * 0.875).toFixed(1) : null;
+  const vamVt2Pace = vamKmh ? Math.round(3600 / (vamKmh * 0.875)) : null;
+  const fmtVamP = (secs) => { const m=Math.floor(secs/60); const s=Math.round(secs%60); return `${m}'${String(s).padStart(2,'0')}"`; };
+
   return (
-    <div className="p-4 sm:p-6 lg:p-8">
+    <div className="bg-gray-50 dark:bg-gray-900 min-h-screen">
+      <div className="px-4 lg:px-8 py-5 lg:py-8 space-y-4">
+
       {/* Header */}
-      <div className="flex flex-col sm:flex-row sm:items-center sm:justify-between mb-6 sm:mb-8 gap-4">
+      <div className="flex items-center justify-between">
         <div>
-          <h1 className="text-2xl sm:text-3xl font-bold text-gray-900 dark:text-white mb-2">
+          <h1 className="text-2xl lg:text-3xl font-bold text-slate-900 dark:text-white tracking-tight">
             Mis Entrenamientos
           </h1>
-          <p className="text-sm sm:text-base text-gray-600 dark:text-gray-400">
-            Plan semanal de entrenamiento
+          <p className="text-sm text-slate-500 dark:text-slate-400 mt-0.5">
+            {activeTab === 'week' ? 'Plan semanal de entrenamiento' : 'Últimos 30 días · Strava'}
           </p>
         </div>
         <button
           onClick={downloadPDF}
           disabled={!hasAnyTraining}
-          className="flex items-center justify-center space-x-2 px-4 py-2 bg-blue-600 hover:bg-blue-700 disabled:bg-gray-400 disabled:cursor-not-allowed text-white rounded-lg transition-colors text-sm sm:text-base"
+          className="flex items-center gap-1.5 px-3 py-2 text-sm font-medium text-slate-600 dark:text-slate-400 border border-gray-200 dark:border-gray-700 rounded-xl hover:bg-white dark:hover:bg-gray-800 disabled:opacity-40 disabled:cursor-not-allowed transition-colors"
         >
-          <FiDownload className="w-4 h-4 sm:w-5 sm:h-5" />
-          <span className="hidden sm:inline">Descargar PDF</span>
-          <span className="sm:hidden">PDF</span>
+          <FiDownload className="w-4 h-4" />
+          <span>PDF</span>
         </button>
       </div>
 
-      {/* Week Navigator */}
-      <div className="flex items-center justify-between mb-4 sm:mb-6 bg-white dark:bg-gray-800 rounded-lg p-3 sm:p-4 shadow-sm border border-gray-200 dark:border-gray-700">
-        <button
-          onClick={goToPreviousWeek}
-          className="p-1.5 sm:p-2 hover:bg-gray-100 dark:hover:bg-gray-700 rounded-lg transition-colors"
-        >
-          <FiChevronLeft className="w-5 h-5 sm:w-6 sm:h-6 text-gray-600 dark:text-gray-400" />
-        </button>
-
-        <div className="flex items-center space-x-2 text-gray-900 dark:text-white">
-          <FiCalendar className="w-4 h-4 sm:w-5 sm:h-5 hidden sm:block" />
-          <span className="font-semibold text-xs sm:text-sm lg:text-base text-center">
-            {weekDays[0].toLocaleDateString('es-ES', { day: 'numeric', month: 'short' })}
-            {' - '}
-            {weekDays[6].toLocaleDateString('es-ES', { day: 'numeric', month: 'short', year: 'numeric' })}
-          </span>
-        </div>
-
-        <button
-          onClick={goToNextWeek}
-          className="p-1.5 sm:p-2 hover:bg-gray-100 dark:hover:bg-gray-700 rounded-lg transition-colors"
-        >
-          <FiChevronRight className="w-5 h-5 sm:w-6 sm:h-6 text-gray-600 dark:text-gray-400" />
-        </button>
-      </div>
-
-      {/* Conconi Paces + VAM Results */}
+      {/* ===== TESTS DE RENDIMIENTO ===== */}
       {(athletePaces.length > 0 || latestVam) && (
-        <div className="grid grid-cols-1 lg:grid-cols-2 gap-4 mb-4 sm:mb-6">
-          {/* Conconi Paces Table */}
-          <div className="bg-white dark:bg-gray-800 rounded-xl shadow-sm border border-gray-200 dark:border-gray-700 overflow-hidden">
-            <div className="px-3 sm:px-4 py-2.5 border-b border-gray-200 dark:border-gray-700 flex items-center">
-              <FiZap className="w-4 h-4 mr-2 text-amber-500" />
-              <h3 className="text-sm font-bold text-gray-900 dark:text-white">Test de Conconi</h3>
-            </div>
-            {athletePaces.length > 0 ? (() => {
-              const paceOrder = ['RM', 'R10', 'R9', 'R8', 'R7', 'R6', 'R5', 'R4', 'R3', 'R2', 'R1', 'RR'];
-              const sorted = paceOrder
-                .map(code => athletePaces.find(p => p.pace_code === code))
-                .filter(Boolean);
-              // Background colors matching the screenshot gradient: red → orange → yellow → green
-              const bgColors = {
-                RM:  'bg-red-600',
-                R10: 'bg-red-500',
-                R9:  'bg-red-400',
-                R8:  'bg-orange-500',
-                R7:  'bg-orange-400',
-                R6:  'bg-yellow-500',
-                R5:  'bg-yellow-400',
-                R4:  'bg-lime-400',
-                R3:  'bg-lime-500',
-                R2:  'bg-green-400',
-                R1:  'bg-green-500',
-                RR:  'bg-emerald-600',
-              };
-              // Percentage labels per zone (approximate from screenshot)
-              const pctLabels = {
-                RM:  '100%',
-                R10: '92%',
-                R9:  '90%',
-                R8:  '88%',
-                R7:  '86%',
-                R6:  '84%',
-                R5:  '82%',
-                R4:  '78%',
-                R3:  '72%',
-                R2:  '62%',
-                R1:  '50%',
-                RR:  '42%',
-              };
-              // Map recovery times from conconi series to pace zones (best effort mapping)
-              const seriesRecovery = {};
-              if (latestConconiTest?.conconi_test_series) {
-                const series = [...latestConconiTest.conconi_test_series].sort((a, b) => a.series_number - b.series_number);
-                // Map series to paces: last series ≈ R10, first ≈ R1, distribute linearly
-                const totalSeries = series.length;
-                const totalPaces = sorted.length;
-                sorted.forEach((pace, i) => {
-                  if (pace.pace_code === 'RR') return; // RR has no series
-                  const seriesIdx = Math.round((i / (totalPaces - 1)) * (totalSeries - 1));
-                  const s = series[Math.min(seriesIdx, totalSeries - 1)];
-                  if (s?.recovery_time_seconds) {
-                    seriesRecovery[pace.pace_code] = s.recovery_time_seconds;
-                  }
-                });
-              }
-              const maxHr = latestConconiTest?.max_hr_reached;
-              const formatPaceVal = (secs) => {
-                const min = Math.floor(secs / 60);
-                const sec = Math.round(secs % 60);
-                return `${min}'${String(sec).padStart(2, '0')}"`;
-              };
-              const formatRecovery = (secs) => {
-                if (!secs) return '';
-                const min = Math.floor(secs / 60);
-                const sec = secs % 60;
-                return sec > 0 ? `${min}'${String(sec).padStart(2, '0')}"` : `${min}'`;
-              };
+        <div className="space-y-3">
+          <p className="text-[10px] font-bold uppercase tracking-widest text-slate-400 dark:text-slate-500 flex items-center gap-1.5">
+            <FiZap className="w-3 h-3" /> Tests de Rendimiento
+          </p>
 
-              return (
-                <div className="overflow-x-auto">
-                  <table className="w-full text-[11px] sm:text-xs min-w-[600px]">
+          {/* CONCONI CARD */}
+          {athletePaces.length > 0 && (
+            <div className="bg-white dark:bg-gray-800 rounded-2xl border border-gray-200 dark:border-gray-700 overflow-hidden">
+              <div className="px-4 py-3 flex items-center justify-between">
+                <div className="flex items-center gap-2">
+                  <FiZap className="w-4 h-4 text-amber-500" />
+                  <span className="text-sm font-bold text-slate-900 dark:text-white">Test de Conconi</span>
+                  {latestConconiTest && (
+                    <span className="text-[10px] text-slate-400 dark:text-slate-500">
+                      FC Máx: <span className="font-semibold text-slate-600 dark:text-slate-300">{latestConconiTest.max_hr_reached} bpm</span>
+                      {latestConconiTest.test_date && <> · {new Date(latestConconiTest.test_date).toLocaleDateString('es-ES', { day:'numeric', month:'short', year:'numeric' })}</>}
+                    </span>
+                  )}
+                </div>
+                <button
+                  onClick={() => setShowConconiTable(v => !v)}
+                  className="text-xs font-medium text-blue-600 dark:text-blue-400 flex items-center gap-1 hover:underline"
+                >
+                  {showConconiTable ? 'Ocultar' : 'Ver todo'} <FiChevronDown className={`w-3.5 h-3.5 transition-transform ${showConconiTable ? 'rotate-180' : ''}`} />
+                </button>
+              </div>
+
+              <div className="grid grid-cols-3 divide-x divide-gray-100 dark:divide-gray-700 border-t border-gray-100 dark:border-gray-700">
+                <div className="px-3 py-3 text-center">
+                  <p className="text-[10px] uppercase tracking-wide text-slate-400 dark:text-slate-500 mb-1">FC Máxima</p>
+                  <p className="text-2xl font-bold text-red-500 leading-none">{conconiMaxHr ?? '–'}</p>
+                  <p className="text-[10px] text-slate-400 dark:text-slate-500 mt-0.5">bpm</p>
+                </div>
+                <div className="px-3 py-3 text-center">
+                  <p className="text-[10px] uppercase tracking-wide text-slate-400 dark:text-slate-500 mb-1">Ritmo R10</p>
+                  <p className="text-2xl font-bold text-orange-500 leading-none font-mono">{conconiR10 ? fmtPaceTest(conconiR10.pace_seconds_per_km) : '–'}</p>
+                  <p className="text-[10px] text-slate-400 dark:text-slate-500 mt-0.5">min/km</p>
+                </div>
+                <div className="px-3 py-3 text-center">
+                  <p className="text-[10px] uppercase tracking-wide text-slate-400 dark:text-slate-500 mb-1">Recup. 120p</p>
+                  <p className="text-2xl font-bold text-blue-500 leading-none font-mono">{conconiFirstRecov ? fmtRecTest(conconiFirstRecov) : '–'}</p>
+                  <p className="text-[10px] text-slate-400 dark:text-slate-500 mt-0.5">al 120 bpm</p>
+                </div>
+              </div>
+
+              {showConconiTable && (
+                <div className="border-t border-gray-100 dark:border-gray-700 overflow-x-auto">
+                  <table className="w-full text-[11px] min-w-[560px]">
                     <thead>
                       <tr>
-                        <th className="text-left py-1.5 px-2 text-gray-500 dark:text-gray-400 font-medium whitespace-nowrap sticky left-0 bg-white dark:bg-gray-800 z-10 w-24"></th>
-                        {sorted.map(pace => (
-                          <th key={pace.pace_code} className={`px-1 py-1.5 text-center text-white font-bold whitespace-nowrap ${bgColors[pace.pace_code] || 'bg-gray-500'}`}>
+                        <th className="text-left py-1.5 px-3 text-slate-400 font-medium whitespace-nowrap sticky left-0 bg-white dark:bg-gray-800 z-10 w-20">Zona</th>
+                        {sortedPaces.map(pace => (
+                          <th key={pace.pace_code} className={`px-1.5 py-1.5 text-center text-white font-bold whitespace-nowrap ${bgColors[pace.pace_code] || 'bg-gray-500'}`}>
                             {pace.pace_code}
                           </th>
                         ))}
                       </tr>
                     </thead>
                     <tbody>
-                      {/* Percentage row */}
                       <tr className="bg-gray-50 dark:bg-gray-700/30">
-                        <td className="py-1 px-2 text-gray-400 dark:text-gray-500 font-medium whitespace-nowrap sticky left-0 bg-gray-50 dark:bg-gray-700/30 z-10"></td>
-                        {sorted.map(pace => (
-                          <td key={pace.pace_code} className="px-1 py-1 text-center text-gray-500 dark:text-gray-400 whitespace-nowrap">
-                            {pctLabels[pace.pace_code] || ''}
+                        <td className="py-1 px-3 text-slate-400 text-[10px] sticky left-0 bg-gray-50 dark:bg-gray-700/30 z-10">% FC</td>
+                        {sortedPaces.map(pace => (
+                          <td key={pace.pace_code} className="px-1 py-1 text-center text-slate-500 dark:text-slate-400 whitespace-nowrap">{pctLabels[pace.pace_code] || ''}</td>
+                        ))}
+                      </tr>
+                      <tr className="border-t border-gray-100 dark:border-gray-700">
+                        <td className="py-1.5 px-3 text-slate-600 dark:text-slate-300 font-semibold sticky left-0 bg-white dark:bg-gray-800 z-10">Ritmo</td>
+                        {sortedPaces.map(pace => (
+                          <td key={pace.pace_code} className="px-1 py-1.5 text-center font-mono font-semibold text-slate-900 dark:text-white whitespace-nowrap">{fmtPaceTest(pace.pace_seconds_per_km)}</td>
+                        ))}
+                      </tr>
+                      <tr className="border-t border-gray-100 dark:border-gray-700 bg-gray-50 dark:bg-gray-700/30">
+                        <td className="py-1.5 px-3 text-slate-600 dark:text-slate-300 font-semibold sticky left-0 bg-gray-50 dark:bg-gray-700/30 z-10">Pulso</td>
+                        {sortedPaces.map(pace => (
+                          <td key={pace.pace_code} className="px-1 py-1.5 text-center font-mono text-slate-700 dark:text-slate-300 whitespace-nowrap">
+                            {pace.heart_rate_max || ''}
                           </td>
                         ))}
                       </tr>
-                      {/* Ritmo row */}
-                      <tr className="border-t border-gray-200 dark:border-gray-700">
-                        <td className="py-1.5 px-2 text-gray-600 dark:text-gray-300 font-semibold whitespace-nowrap sticky left-0 bg-white dark:bg-gray-800 z-10">Ritmo/1.000m</td>
-                        {sorted.map(pace => (
-                          <td key={pace.pace_code} className="px-1 py-1.5 text-center font-mono font-semibold text-gray-900 dark:text-white whitespace-nowrap">
-                            {formatPaceVal(pace.pace_seconds_per_km)}
-                          </td>
-                        ))}
-                      </tr>
-                      {/* Pulso row */}
-                      <tr className="border-t border-gray-200 dark:border-gray-700 bg-gray-50 dark:bg-gray-700/30">
-                        <td className="py-1.5 px-2 text-gray-600 dark:text-gray-300 font-semibold whitespace-nowrap sticky left-0 bg-gray-50 dark:bg-gray-700/30 z-10">Pulso</td>
-                        {sorted.map(pace => (
-                          <td key={pace.pace_code} className="px-1 py-1.5 text-center font-mono text-gray-700 dark:text-gray-300 whitespace-nowrap">
-                            {pace.heart_rate_min && pace.heart_rate_max
-                              ? `${pace.heart_rate_max}`
-                              : ''}
-                          </td>
-                        ))}
-                      </tr>
-                      {/* Recovery time row */}
                       {Object.keys(seriesRecovery).length > 0 && (
-                        <tr className="border-t border-gray-200 dark:border-gray-700">
-                          <td className="py-1.5 px-2 text-gray-600 dark:text-gray-300 font-semibold whitespace-nowrap sticky left-0 bg-white dark:bg-gray-800 z-10">Recu. a 120p</td>
-                          {sorted.map(pace => (
-                            <td key={pace.pace_code} className="px-1 py-1.5 text-center font-mono text-gray-700 dark:text-gray-300 whitespace-nowrap">
-                              {seriesRecovery[pace.pace_code] ? formatRecovery(seriesRecovery[pace.pace_code]) : ''}
+                        <tr className="border-t border-gray-100 dark:border-gray-700">
+                          <td className="py-1.5 px-3 text-slate-600 dark:text-slate-300 font-semibold whitespace-nowrap sticky left-0 bg-white dark:bg-gray-800 z-10">Recu. 120p</td>
+                          {sortedPaces.map(pace => (
+                            <td key={pace.pace_code} className="px-1 py-1.5 text-center font-mono text-slate-700 dark:text-slate-300 whitespace-nowrap">
+                              {seriesRecovery[pace.pace_code] ? fmtRecTest(seriesRecovery[pace.pace_code]) : ''}
                             </td>
                           ))}
                         </tr>
                       )}
                     </tbody>
                   </table>
-                  {maxHr && (
-                    <div className="px-3 py-1.5 text-[10px] text-gray-500 dark:text-gray-400 border-t border-gray-100 dark:border-gray-700">
-                      FC máx: <span className="font-semibold text-gray-700 dark:text-gray-300">{maxHr} ppm</span>
-                    </div>
-                  )}
                 </div>
-              );
-            })() : (
-              <div className="text-center py-6">
-                <FiZap className="w-7 h-7 text-gray-300 dark:text-gray-600 mx-auto mb-1.5" />
-                <p className="text-xs text-gray-500 dark:text-gray-400">Sin test de Conconi</p>
-              </div>
-            )}
-          </div>
-
-          {/* VAM Results */}
-          <div className="bg-white dark:bg-gray-800 rounded-xl shadow-sm border border-gray-200 dark:border-gray-700 overflow-hidden">
-            <div className="px-3 sm:px-4 py-2.5 border-b border-gray-200 dark:border-gray-700 flex items-center">
-              <FiActivity className="w-4 h-4 mr-2 text-purple-500" />
-              <h3 className="text-sm font-bold text-gray-900 dark:text-white">Test VAM</h3>
+              )}
             </div>
-            {latestVam ? (() => {
-              const vamKmh = parseFloat(latestVam.vam_kmh);
-              const paceSecsKm = latestVam.pace_seconds_per_km;
-              const vo2max = (vamKmh * 3.5).toFixed(1);
-              // Derived thresholds
-              const mlssKmh = (vamKmh * 0.88).toFixed(1);
-              const mlssPace = Math.round(3600 / (vamKmh * 0.88));
-              const vt2Kmh = (vamKmh * 0.875).toFixed(1);
-              const vt2Pace = Math.round(3600 / (vamKmh * 0.875));
-              const vt1Kmh = (vamKmh * 0.775).toFixed(1);
-              const vt1Pace = Math.round(3600 / (vamKmh * 0.775));
-              const maxHr = latestConconiTest?.max_hr_reached;
-              const formatP = (secs) => {
-                const m = Math.floor(secs / 60);
-                const s = Math.round(secs % 60);
-                return `${m}'${String(s).padStart(2, '0')}"`;
-              };
+          )}
 
-              return (
-                <div className="overflow-x-auto">
-                  <table className="w-full text-[11px] sm:text-xs min-w-[500px]">
+          {/* VAM CARD */}
+          {latestVam && (
+            <div className="bg-white dark:bg-gray-800 rounded-2xl border border-gray-200 dark:border-gray-700 overflow-hidden">
+              <div className="px-4 py-3 flex items-center justify-between">
+                <div className="flex items-center gap-2">
+                  <FiTrendingUp className="w-4 h-4 text-purple-500" />
+                  <span className="text-sm font-bold text-slate-900 dark:text-white">Test VAM</span>
+                  <span className="text-[10px] text-slate-400 dark:text-slate-500">
+                    {new Date(latestVam.test_date).toLocaleDateString('es-ES', { day:'numeric', month:'short', year:'numeric' })}
+                    {' · '}{latestVam.distance_meters}m{' · '}{Math.floor(latestVam.duration_seconds/60)}'{String(latestVam.duration_seconds%60).padStart(2,'0')}"
+                  </span>
+                </div>
+                <button
+                  onClick={() => setShowVamTable(v => !v)}
+                  className="text-xs font-medium text-blue-600 dark:text-blue-400 flex items-center gap-1 hover:underline"
+                >
+                  {showVamTable ? 'Ocultar' : 'Ver todo'} <FiChevronDown className={`w-3.5 h-3.5 transition-transform ${showVamTable ? 'rotate-180' : ''}`} />
+                </button>
+              </div>
+
+              <div className="grid grid-cols-2 gap-2.5 px-4 pb-4 border-t border-gray-100 dark:border-gray-700 pt-3">
+                <div className="rounded-xl bg-red-50 dark:bg-red-900/20 p-3">
+                  <p className="text-[10px] font-bold uppercase tracking-wide text-red-500 mb-1">FC MÁX</p>
+                  <p className="text-2xl font-bold text-red-600 dark:text-red-400 leading-none">{conconiMaxHr ?? '–'} <span className="text-sm font-normal">bpm</span></p>
+                  <p className="text-[10px] text-slate-400 mt-1">–</p>
+                </div>
+                <div className="rounded-xl bg-orange-50 dark:bg-orange-900/20 p-3">
+                  <p className="text-[10px] font-bold uppercase tracking-wide text-orange-500 mb-1">VAM</p>
+                  <p className="text-2xl font-bold text-orange-600 dark:text-orange-400 leading-none">{vamKmh?.toFixed(1)} <span className="text-sm font-normal">km/h</span></p>
+                  <p className="text-[10px] text-slate-400 font-mono mt-1">{fmtVamP(latestVam.pace_seconds_per_km)} min/km</p>
+                </div>
+                <div className="rounded-xl bg-blue-50 dark:bg-blue-900/20 p-3">
+                  <p className="text-[10px] font-bold uppercase tracking-wide text-blue-500 mb-1">VO2 MÁX</p>
+                  <p className="text-2xl font-bold text-blue-600 dark:text-blue-400 leading-none">{vamVo2max} <span className="text-sm font-normal">ml/kg</span></p>
+                  <p className="text-[10px] text-slate-400 mt-1">–</p>
+                </div>
+                <div className="rounded-xl bg-green-50 dark:bg-green-900/20 p-3">
+                  <p className="text-[10px] font-bold uppercase tracking-wide text-green-600 mb-1">MLSS</p>
+                  <p className="text-2xl font-bold text-green-600 dark:text-green-400 leading-none">{vamMlssKmh} <span className="text-sm font-normal">km/h</span></p>
+                  <p className="text-[10px] text-slate-400 font-mono mt-1">{fmtVamP(vamMlssPace)} min/km</p>
+                </div>
+              </div>
+
+              {vamVt2Kmh && (
+                <div className="px-4 py-2 border-t border-gray-100 dark:border-gray-700 flex items-center gap-1.5 text-xs text-slate-500 dark:text-slate-400">
+                  <FiActivity className="w-3.5 h-3.5 text-blue-400" />
+                  VT2: {vamVt2Kmh} km/h · <span className="font-mono">{fmtVamP(vamVt2Pace)}</span> min/km
+                </div>
+              )}
+
+              {showVamTable && (
+                <div className="border-t border-gray-100 dark:border-gray-700 overflow-x-auto">
+                  <table className="w-full text-[11px] min-w-[440px]">
                     <thead>
                       <tr>
                         {[
                           { label: 'FCmax', color: 'bg-red-500' },
-                          { label: 'VAM', color: 'bg-purple-500' },
+                          { label: 'VAM', color: 'bg-orange-500' },
                           { label: 'VO2max', color: 'bg-blue-500' },
-                          { label: 'MLSS', color: 'bg-orange-500' },
+                          { label: 'MLSS', color: 'bg-green-500' },
                           { label: 'VT2', color: 'bg-yellow-500' },
-                          { label: 'VT1', color: 'bg-green-500' },
+                          { label: 'VT1', color: 'bg-lime-500' },
                         ].map(col => (
-                          <th key={col.label} className={`px-2 py-1.5 text-center text-white font-bold whitespace-nowrap ${col.color}`}>
-                            {col.label}
-                          </th>
+                          <th key={col.label} className={`px-2 py-1.5 text-center text-white font-bold whitespace-nowrap ${col.color}`}>{col.label}</th>
                         ))}
                       </tr>
                     </thead>
                     <tbody>
-                      {/* km/h row */}
-                      <tr className="border-t border-gray-200 dark:border-gray-700">
-                        {[
-                          maxHr ? `${maxHr}` : '-',
-                          `${vamKmh.toFixed(1)}`,
-                          vo2max,
-                          mlssKmh,
-                          vt2Kmh,
-                          vt1Kmh,
-                        ].map((val, i) => (
-                          <td key={i} className="px-2 py-1.5 text-center font-mono font-semibold text-gray-900 dark:text-white whitespace-nowrap">
-                            {val}
-                          </td>
+                      <tr className="border-t border-gray-100 dark:border-gray-700">
+                        {[conconiMaxHr??'-', vamKmh?.toFixed(1), vamVo2max, vamMlssKmh, vamVt2Kmh, vamKmh ? (vamKmh*0.775).toFixed(1) : '-'].map((val,i) => (
+                          <td key={i} className="px-2 py-1.5 text-center font-mono font-semibold text-slate-900 dark:text-white whitespace-nowrap">{val}</td>
                         ))}
                       </tr>
-                      {/* Units row */}
                       <tr className="bg-gray-50 dark:bg-gray-700/30">
-                        {[
-                          maxHr ? 'ppm' : '',
-                          'km/h',
-                          'ml/kg/min',
-                          'km/h',
-                          'km/h',
-                          'km/h',
-                        ].map((unit, i) => (
-                          <td key={i} className="px-2 py-1 text-center text-[10px] text-gray-500 dark:text-gray-400 whitespace-nowrap">
-                            {unit}
-                          </td>
+                        {[conconiMaxHr?'ppm':'','km/h','ml/kg/min','km/h','km/h','km/h'].map((u,i) => (
+                          <td key={i} className="px-2 py-1 text-center text-[10px] text-slate-400 whitespace-nowrap">{u}</td>
                         ))}
                       </tr>
-                      {/* Pace row */}
-                      <tr className="border-t border-gray-200 dark:border-gray-700">
-                        {[
-                          '',
-                          formatP(paceSecsKm),
-                          '',
-                          formatP(mlssPace),
-                          formatP(vt2Pace),
-                          formatP(vt1Pace),
-                        ].map((val, i) => (
-                          <td key={i} className="px-2 py-1.5 text-center font-mono text-gray-700 dark:text-gray-300 whitespace-nowrap">
-                            {val}
-                          </td>
+                      <tr className="border-t border-gray-100 dark:border-gray-700">
+                        {['', fmtVamP(latestVam.pace_seconds_per_km), '', fmtVamP(vamMlssPace), fmtVamP(vamVt2Pace), vamKmh ? fmtVamP(Math.round(3600/(vamKmh*0.775))) : '-'].map((val,i) => (
+                          <td key={i} className="px-2 py-1.5 text-center font-mono text-slate-600 dark:text-slate-300 whitespace-nowrap">{val}</td>
                         ))}
                       </tr>
-                      {/* min/km label row */}
                       <tr className="bg-gray-50 dark:bg-gray-700/30">
-                        {['', 'min/km', '', 'min/km', 'min/km', 'min/km'].map((unit, i) => (
-                          <td key={i} className="px-2 py-1 text-center text-[10px] text-gray-500 dark:text-gray-400 whitespace-nowrap">
-                            {unit}
-                          </td>
+                        {['','min/km','','min/km','min/km','min/km'].map((u,i) => (
+                          <td key={i} className="px-2 py-1 text-center text-[10px] text-slate-400 whitespace-nowrap">{u}</td>
                         ))}
                       </tr>
                     </tbody>
                   </table>
-                  <div className="px-3 py-1.5 text-[10px] text-gray-500 dark:text-gray-400 border-t border-gray-100 dark:border-gray-700">
-                    Test: {new Date(latestVam.test_date).toLocaleDateString('es-ES')} &middot; {latestVam.distance_meters}m &middot; {Math.floor(latestVam.duration_seconds / 60)}'{String(latestVam.duration_seconds % 60).padStart(2, '0')}"
-                  </div>
                 </div>
-              );
-            })() : (
-              <div className="text-center py-6">
-                <FiActivity className="w-7 h-7 text-gray-300 dark:text-gray-600 mx-auto mb-1.5" />
-                <p className="text-xs text-gray-500 dark:text-gray-400">Sin test de VAM</p>
-              </div>
-            )}
-          </div>
+              )}
+            </div>
+          )}
         </div>
       )}
 
+      {/* Tab toggle */}
+      <div className="flex bg-white dark:bg-gray-800 rounded-xl border border-gray-200 dark:border-gray-700 p-1 gap-1">
+        <button
+          onClick={() => setActiveTab('week')}
+          className={`flex-1 py-2 text-sm font-semibold rounded-lg transition-colors ${
+            activeTab === 'week'
+              ? 'bg-slate-900 dark:bg-white text-white dark:text-slate-900'
+              : 'text-slate-500 dark:text-slate-400 hover:text-slate-700 dark:hover:text-slate-200'
+          }`}
+        >
+          Esta semana
+        </button>
+        <button
+          onClick={() => setActiveTab('recents')}
+          className={`flex-1 py-2 text-sm font-semibold rounded-lg transition-colors ${
+            activeTab === 'recents'
+              ? 'bg-slate-900 dark:bg-white text-white dark:text-slate-900'
+              : 'text-slate-500 dark:text-slate-400 hover:text-slate-700 dark:hover:text-slate-200'
+          }`}
+        >
+          Recientes
+        </button>
+      </div>
+
+      {/* Week Navigator — only on "Esta semana" tab */}
+      {activeTab === 'week' && (
+      <div className="flex items-center justify-between bg-white dark:bg-gray-800 rounded-xl border border-gray-200 dark:border-gray-700 px-4 py-3">
+        <button
+          onClick={goToPreviousWeek}
+          className="p-1.5 hover:bg-gray-100 dark:hover:bg-gray-700 rounded-lg transition-colors"
+        >
+          <FiChevronLeft className="w-5 h-5 text-slate-500 dark:text-slate-400" />
+        </button>
+        <span className="font-semibold text-sm text-slate-900 dark:text-white">
+          {weekDays[0].toLocaleDateString('es-ES', { day: 'numeric', month: 'short' })}
+          {' – '}
+          {weekDays[6].toLocaleDateString('es-ES', { day: 'numeric', month: 'short', year: 'numeric' })}
+        </span>
+        <button
+          onClick={goToNextWeek}
+          className="p-1.5 hover:bg-gray-100 dark:hover:bg-gray-700 rounded-lg transition-colors"
+        >
+          <FiChevronRight className="w-5 h-5 text-slate-500 dark:text-slate-400" />
+        </button>
+      </div>
+      )}
+
+      {/* ===== ESTA SEMANA TAB ===== */}
+      {activeTab === 'week' && (
+      <>
       {/* Loading State */}
       {loading ? (
         <div className="flex items-center justify-center py-16">
-          <FiLoader className="w-8 h-8 animate-spin text-blue-600" />
+          <FiLoader className="w-8 h-8 animate-spin text-green-600" />
         </div>
       ) : !hasAnyTraining ? (
         /* Empty State */
-        <div className="bg-white dark:bg-gray-800 rounded-xl p-8 sm:p-12 text-center border border-gray-200 dark:border-gray-700">
-          <div className="max-w-md mx-auto">
-            <FiCalendar className="w-16 h-16 text-gray-300 dark:text-gray-600 mx-auto mb-4" />
-            <h3 className="text-lg font-semibold text-gray-900 dark:text-white mb-2">
-              No hay entrenamientos esta semana
-            </h3>
-            <p className="text-gray-500 dark:text-gray-400">
-              Tu entrenador aún no ha creado un plan para esta semana.
-              Prueba a navegar a otras semanas o contacta con tu entrenador.
-            </p>
-          </div>
+        <div className="bg-white dark:bg-gray-800 rounded-2xl p-8 text-center border border-gray-200 dark:border-gray-700">
+          <FiCalendar className="w-12 h-12 text-gray-300 dark:text-gray-600 mx-auto mb-3" />
+          <h3 className="text-base font-semibold text-slate-900 dark:text-white mb-1">
+            No hay entrenamientos esta semana
+          </h3>
+          <p className="text-sm text-slate-500 dark:text-slate-400">
+            Tu entrenador aún no ha creado un plan para esta semana.
+          </p>
         </div>
       ) : (
         <>
-          {/* ===== MOBILE: Compact week list (< lg) ===== */}
-          <div className="lg:hidden bg-white dark:bg-gray-800 rounded-xl shadow-sm border border-gray-200 dark:border-gray-700 overflow-hidden">
+          {/* ===== MOBILE: Session list (< lg) ===== */}
+          <div className="lg:hidden bg-white dark:bg-gray-800 rounded-2xl border border-gray-200 dark:border-gray-700 overflow-hidden">
             <div className="divide-y divide-gray-100 dark:divide-gray-700">
               {weekDays.map((day, index) => {
                 const training = trainings[index];
@@ -634,101 +628,88 @@ const Training = () => {
                     animate={{ opacity: 1 }}
                     transition={{ delay: index * 0.03 }}
                     onClick={() => openDayDetail(training, index)}
-                    className={`w-full flex items-center gap-3 px-4 py-3 text-left transition-colors ${
-                      hasTraining ? 'hover:bg-gray-50 dark:hover:bg-gray-750' : ''
-                    } ${isToday ? 'bg-blue-50/50 dark:bg-blue-900/10' : ''}`}
+                    className={`w-full flex items-center gap-3 px-4 py-3.5 text-left transition-colors ${
+                      isToday
+                        ? 'bg-blue-50/60 dark:bg-blue-900/10'
+                        : hasTraining ? 'hover:bg-gray-50 dark:hover:bg-gray-700/30' : ''
+                    }`}
                   >
-                    {/* Day number + name */}
-                    <div className={`w-10 h-10 rounded-xl flex flex-col items-center justify-center flex-shrink-0 ${
-                      isCompleted
-                        ? 'bg-green-100 dark:bg-green-900/30'
-                        : isToday
-                          ? 'bg-blue-100 dark:bg-blue-900/30'
-                          : 'bg-gray-100 dark:bg-gray-700'
-                    }`}>
-                      <span className={`text-[10px] font-bold uppercase leading-none ${
-                        isCompleted
-                          ? 'text-green-600 dark:text-green-400'
-                          : isToday
-                            ? 'text-blue-600 dark:text-blue-400'
-                            : 'text-gray-500 dark:text-gray-400'
+                    {/* Day column */}
+                    <div className="w-10 flex flex-col items-center flex-shrink-0">
+                      <span className={`text-[10px] font-bold uppercase ${
+                        isToday ? 'text-blue-600 dark:text-blue-400' : 'text-slate-400 dark:text-slate-500'
                       }`}>
                         {DAYS_OF_WEEK[index].slice(0, 3)}
                       </span>
-                      <span className={`text-sm font-bold leading-tight ${
-                        isCompleted
-                          ? 'text-green-700 dark:text-green-300'
-                          : isToday
-                            ? 'text-blue-700 dark:text-blue-300'
-                            : 'text-gray-900 dark:text-white'
+                      <span className={`text-xl font-bold leading-tight ${
+                        isCompleted ? 'text-green-600 dark:text-green-400'
+                          : isToday ? 'text-blue-600 dark:text-blue-400'
+                          : 'text-slate-900 dark:text-white'
                       }`}>
                         {day.getDate()}
                       </span>
                     </div>
 
-                    {/* Status bar */}
-                    <div className={`w-1 h-8 rounded-full flex-shrink-0 ${
-                      isCompleted
-                        ? 'bg-green-500'
-                        : isSkipped
-                          ? 'bg-gray-300 dark:bg-gray-600'
-                          : hasTraining
-                            ? isRest
-                              ? 'bg-gray-200 dark:bg-gray-600'
-                              : 'bg-blue-500'
-                            : 'bg-transparent'
-                    }`} />
-
                     {/* Content */}
                     <div className="flex-1 min-w-0">
                       {training ? (
                         <>
-                          <div className="flex items-center gap-2">
-                            <span className="text-sm font-semibold text-gray-900 dark:text-white truncate">
-                              {isRest ? 'Descanso' : training.title}
+                          <div className="flex items-center gap-2 min-w-0">
+                            <span className={`text-sm font-semibold truncate ${
+                              isRest ? 'text-slate-400 dark:text-slate-500' : 'text-slate-900 dark:text-white'
+                            }`}>
+                              {isRest ? 'Sin entrenamiento' : training.title}
                             </span>
                             {isToday && (
-                              <span className="px-1.5 py-0.5 text-[10px] font-bold bg-blue-100 dark:bg-blue-900/30 text-blue-600 dark:text-blue-400 rounded">
+                              <span className="flex-shrink-0 px-1.5 py-0.5 text-[10px] font-bold bg-blue-600 text-white rounded-md">
                                 HOY
                               </span>
                             )}
                           </div>
-                          <div className="flex items-center gap-2 mt-0.5">
-                            {!isRest && (
-                              <span className={`text-[11px] px-1.5 py-0.5 rounded ${getTypeColor(training.type)}`}>
+                          {!isRest && (
+                            <div className="flex items-center gap-2 mt-0.5">
+                              <span className={`text-[11px] px-1.5 py-0.5 rounded-md font-medium ${getTypeColor(training.type)}`}>
                                 {getTypeLabel(training.type)}
                               </span>
-                            )}
-                            {training.totalDistance && (
-                              <span className="text-[11px] text-gray-500 dark:text-gray-400">{training.totalDistance}</span>
-                            )}
-                            {training.duration && (
-                              <span className="text-[11px] text-gray-500 dark:text-gray-400">{training.duration} min</span>
-                            )}
-                            {training.description && !training.totalDistance && !training.duration && !isRest && (
-                              <span className="text-[11px] text-gray-400 dark:text-gray-500 truncate">{training.description}</span>
-                            )}
-                          </div>
+                              {training.totalDistance && (
+                                <span className="text-[11px] text-slate-500 dark:text-slate-400">{training.totalDistance}</span>
+                              )}
+                              {training.duration && !training.totalDistance && (
+                                <span className="text-[11px] text-slate-500 dark:text-slate-400">{training.duration} min</span>
+                              )}
+                            </div>
+                          )}
+                          {isRest && (
+                            <span className="text-[11px] text-slate-400 dark:text-slate-500">Descanso</span>
+                          )}
                         </>
                       ) : (
-                        <span className="text-xs text-gray-300 dark:text-gray-600">Sin entrenamiento</span>
+                        <span className="text-sm text-slate-300 dark:text-slate-600">Sin entrenamiento</span>
                       )}
                     </div>
 
-                    {/* Right side: status icons */}
-                    <div className="flex items-center gap-1 flex-shrink-0">
+                    {/* Right side */}
+                    <div className="flex items-center gap-1.5 flex-shrink-0">
                       {isCompleted && training.stravaActivityId && !training.rpeScore && (
-                        <span className="relative flex h-2.5 w-2.5 mr-1">
+                        <span className="relative flex h-2 w-2">
                           <span className="animate-ping absolute inline-flex h-full w-full rounded-full bg-[#FC4C02] opacity-75" />
-                          <span className="relative inline-flex rounded-full h-2.5 w-2.5 bg-[#FC4C02]" />
+                          <span className="relative inline-flex rounded-full h-2 w-2 bg-[#FC4C02]" />
                         </span>
                       )}
                       {isCompleted && training.rpeScore && (
-                        <span className="text-sm">{getRPEEmoji(training.rpeScore)}</span>
+                        <span className="text-base">{getRPEEmoji(training.rpeScore)}</span>
                       )}
                       {isCompleted && training.stravaActivityId && (
-                        <SiStrava className="w-4 h-4 text-[#FC4C02]" />
+                        <SiStrava className="w-3.5 h-3.5 text-[#FC4C02]" />
                       )}
+                      {/* Status dot bar */}
+                      <div className={`w-1 h-8 rounded-full ml-1 ${
+                        isCompleted ? 'bg-green-500'
+                          : isSkipped ? 'bg-gray-300 dark:bg-gray-600'
+                          : isRest ? 'bg-gray-200 dark:bg-gray-700'
+                          : hasTraining ? 'bg-blue-400'
+                          : 'bg-transparent'
+                      }`} />
                       {isCompleted && <FiCheckCircle className="w-4 h-4 text-green-500" />}
                       {isSkipped && <FiSkipForward className="w-4 h-4 text-gray-400" />}
                       {canComplete && <FiCheck className="w-4 h-4 text-green-500" />}
@@ -901,116 +882,111 @@ const Training = () => {
           </div>
         </>
       )}
+      </>
+      )}{/* end Esta semana tab */}
 
-      {/* Mis Últimos Entrenamientos (Strava) */}
-      {stravaConnected && (
-        <div className="mt-8">
-          <h2 className="text-xl font-bold text-gray-900 dark:text-white mb-4 flex items-center space-x-2">
-            <FiActivity className="w-5 h-5 text-[#FC4C02]" />
-            <span>Mis Últimos Entrenamientos</span>
-            <span className="text-sm font-normal text-gray-500">(últimos 30 días)</span>
-          </h2>
-
-          {loadingStrava ? (
-            <div className="flex items-center justify-center py-8">
+      {/* ===== RECIENTES TAB ===== */}
+      {activeTab === 'recents' && (
+        <>
+          {!stravaConnected ? (
+            <div className="bg-white dark:bg-gray-800 rounded-2xl p-8 text-center border border-gray-200 dark:border-gray-700">
+              <SiStrava className="w-10 h-10 text-[#FC4C02] mx-auto mb-3" />
+              <p className="text-sm font-semibold text-slate-700 dark:text-slate-300 mb-1">Conecta Strava</p>
+              <p className="text-xs text-slate-500 dark:text-slate-400">Ve a Dispositivos para conectar tu cuenta de Strava</p>
+            </div>
+          ) : loadingStrava ? (
+            <div className="flex items-center justify-center py-16">
               <FiLoader className="w-6 h-6 animate-spin text-[#FC4C02]" />
-              <span className="ml-3 text-gray-500 dark:text-gray-400">Cargando actividades de Strava...</span>
             </div>
           ) : stravaActivities.length === 0 ? (
-            <div className="text-center py-8 bg-white dark:bg-gray-800 rounded-xl border border-gray-200 dark:border-gray-700">
-              <FiActivity className="w-12 h-12 text-gray-400 mx-auto mb-3" />
-              <p className="text-gray-500 dark:text-gray-400">
-                No hay actividades en los últimos 30 días
-              </p>
+            <div className="bg-white dark:bg-gray-800 rounded-2xl p-8 text-center border border-gray-200 dark:border-gray-700">
+              <FiActivity className="w-10 h-10 text-gray-300 dark:text-gray-600 mx-auto mb-2" />
+              <p className="text-sm text-slate-500 dark:text-slate-400">No hay actividades en los últimos 30 días</p>
             </div>
           ) : (
             <div className="space-y-3">
-              {stravaActivities.slice(0, visibleActivities).map((activity) => (
-                <motion.div
-                  key={activity.id}
-                  initial={{ opacity: 0, y: 10 }}
-                  animate={{ opacity: 1, y: 0 }}
-                  onClick={() => loadActivityDetail(activity)}
-                  className="p-4 bg-white dark:bg-gray-800 rounded-xl hover:shadow-md cursor-pointer transition-all border-2 border-gray-200 dark:border-gray-700 hover:border-orange-400 dark:hover:border-orange-500"
-                >
-                  <div className="flex items-start justify-between mb-2 gap-2">
-                    <div className="flex items-center gap-2 min-w-0">
-                      <div className="min-w-0">
-                        <h4 className="font-semibold text-gray-900 dark:text-white text-sm sm:text-base truncate">
+              {stravaActivities.slice(0, visibleActivities).map((activity) => {
+                const rpeData = activitiesRPE[String(activity.id)];
+                return (
+                  <motion.div
+                    key={activity.id}
+                    initial={{ opacity: 0, y: 10 }}
+                    animate={{ opacity: 1, y: 0 }}
+                    onClick={() => loadActivityDetail(activity)}
+                    className="bg-white dark:bg-gray-800 rounded-2xl border border-gray-200 dark:border-gray-700 overflow-hidden cursor-pointer hover:shadow-md transition-all"
+                  >
+                    {/* Card header */}
+                    <div className="px-4 pt-4 pb-3">
+                      <div className="flex items-start justify-between gap-2 mb-1">
+                        <h4 className="font-bold text-slate-900 dark:text-white text-base leading-tight truncate">
                           {activity.name}
                         </h4>
-                        <p className="text-[10px] sm:text-xs text-gray-500 dark:text-gray-400">
-                          {new Date(activity.date).toLocaleDateString('es-ES', {
-                            weekday: 'short',
-                            day: 'numeric',
-                            month: 'short',
-                          })} · {getActivityTypeLabel(activity.type)}
-                        </p>
+                        {activity.has_heartrate && (
+                          <span className="flex items-center gap-1 text-xs text-red-500 flex-shrink-0 whitespace-nowrap">
+                            <FiHeart className="w-3 h-3" />
+                            {activity.average_heartrate} bpm
+                          </span>
+                        )}
                       </div>
-                      {activitiesRPE[String(activity.id)]?.score ? (
-                        <button
-                          onClick={(e) => { e.stopPropagation(); setEditRpeActivity(activity); }}
-                          className="text-2xl hover:scale-110 transition-transform"
-                          title={`Esfuerzo: ${activitiesRPE[String(activity.id)].score}/5 - Click para editar`}
-                        >
-                          {getRPEEmoji(activitiesRPE[String(activity.id)].score)}
-                        </button>
-                      ) : (
-                        <button
-                          onClick={(e) => { e.stopPropagation(); setEditRpeActivity(activity); }}
-                          className="px-2.5 py-1 text-xs font-medium bg-orange-100 dark:bg-orange-900/30 text-orange-600 dark:text-orange-400 rounded-full hover:bg-orange-200 dark:hover:bg-orange-900/50 transition-colors"
-                        >
-                          Valorar
-                        </button>
-                      )}
+                      <div className="flex items-center gap-2">
+                        <span className={`text-[11px] px-1.5 py-0.5 rounded-md font-medium ${getTypeColor(activity.type === 'Run' ? 'running' : activity.type === 'WeightTraining' ? 'gym' : 'cross_training')}`}>
+                          {getActivityTypeLabel(activity.type)}
+                        </span>
+                        <span className="text-xs text-slate-400 dark:text-slate-500">
+                          {new Date(activity.date).toLocaleDateString('es-ES', { weekday: 'short', day: 'numeric', month: 'short', year: 'numeric' })}
+                        </span>
+                      </div>
                     </div>
-                    {activity.has_heartrate && (
-                      <span className="flex items-center text-[10px] sm:text-xs text-red-500 flex-shrink-0 whitespace-nowrap">
-                        <FiHeart className="w-3 h-3 mr-1" />
-                        {activity.average_heartrate} bpm
-                      </span>
-                    )}
-                  </div>
 
-                  <div className="grid grid-cols-4 gap-1 sm:gap-3 text-center">
-                    <div>
-                      <p className="text-sm sm:text-lg font-bold text-blue-600 dark:text-blue-400">
-                        {activity.distanceKm}
-                      </p>
-                      <p className="text-[10px] sm:text-xs text-gray-500">km</p>
+                    {/* Stats row */}
+                    <div className="grid grid-cols-4 divide-x divide-gray-100 dark:divide-gray-700 border-t border-gray-100 dark:border-gray-700">
+                      {[
+                        { val: activity.distanceKm, unit: 'km', color: 'text-slate-900 dark:text-white' },
+                        { val: activity.formattedTime, unit: 'tiempo', color: 'text-slate-900 dark:text-white' },
+                        { val: activity.pace || '–', unit: 'ritmo', color: 'text-green-600 dark:text-green-400' },
+                        { val: activity.total_elevation_gain ?? 0, unit: 'm+', color: 'text-slate-900 dark:text-white' },
+                      ].map(({ val, unit, color }, i) => (
+                        <div key={i} className="py-2.5 text-center">
+                          <p className={`text-sm font-bold font-mono ${color}`}>{val}</p>
+                          <p className="text-[10px] text-slate-400 dark:text-slate-500">{unit}</p>
+                        </div>
+                      ))}
                     </div>
-                    <div>
-                      <p className="text-sm sm:text-lg font-bold text-purple-600 dark:text-purple-400">
-                        {activity.formattedTime}
-                      </p>
-                      <p className="text-[10px] sm:text-xs text-gray-500">tiempo</p>
-                    </div>
-                    <div>
-                      <p className="text-sm sm:text-lg font-bold text-green-600 dark:text-green-400">
-                        {activity.pace}
-                      </p>
-                      <p className="text-[10px] sm:text-xs text-gray-500">ritmo</p>
-                    </div>
-                    <div>
-                      <p className="text-sm sm:text-lg font-bold text-orange-600 dark:text-orange-400">
-                        {activity.total_elevation_gain || 0}
-                      </p>
-                      <p className="text-[10px] sm:text-xs text-gray-500">m+</p>
-                    </div>
-                  </div>
 
-                  <div className="mt-2 text-center">
-                    <span className="text-xs text-orange-500">Click para ver detalles</span>
-                  </div>
-                </motion.div>
-              ))}
+                    {/* Footer: kcal + kudos + RPE + Ver detalle */}
+                    <div className="px-4 py-2.5 flex items-center justify-between border-t border-gray-100 dark:border-gray-700">
+                      <div className="flex items-center gap-3 text-xs text-slate-400 dark:text-slate-500">
+                        {activity.calories > 0 && <span>{activity.calories} kcal</span>}
+                        {activity.kudos_count > 0 && <span>· {activity.kudos_count} kudos</span>}
+                      </div>
+                      <div className="flex items-center gap-2">
+                        {rpeData?.score ? (
+                          <button
+                            onClick={(e) => { e.stopPropagation(); setEditRpeActivity(activity); }}
+                            className="text-xl hover:scale-110 transition-transform"
+                          >
+                            {getRPEEmoji(rpeData.score)}
+                          </button>
+                        ) : (
+                          <button
+                            onClick={(e) => { e.stopPropagation(); setEditRpeActivity(activity); }}
+                            className="px-2.5 py-1 text-xs font-semibold bg-amber-50 dark:bg-amber-900/20 text-amber-600 dark:text-amber-400 rounded-lg border border-amber-200 dark:border-amber-800/40 hover:bg-amber-100 dark:hover:bg-amber-900/30 transition-colors"
+                          >
+                            + Valorar sesión
+                          </button>
+                        )}
+                        <span className="text-xs font-medium text-slate-400 dark:text-slate-500">Ver detalle &rsaquo;</span>
+                      </div>
+                    </div>
+                  </motion.div>
+                );
+              })}
 
-              {/* Load more / pagination */}
               {visibleActivities < stravaActivities.length && (
-                <div className="text-center pt-2">
+                <div className="text-center">
                   <button
                     onClick={(e) => { e.stopPropagation(); showMoreActivities(); }}
-                    className="px-6 py-2.5 bg-[#FC4C02] hover:bg-[#E34402] text-white rounded-lg transition-colors text-sm font-medium"
+                    className="px-6 py-2.5 bg-slate-900 hover:bg-slate-800 dark:bg-slate-700 dark:hover:bg-slate-600 text-white rounded-xl transition-colors text-sm font-medium"
                   >
                     Cargar más ({stravaActivities.length - visibleActivities} restantes)
                   </button>
@@ -1018,8 +994,8 @@ const Training = () => {
               )}
             </div>
           )}
-        </div>
-      )}
+        </>
+      )}{/* end Recientes tab */}
 
       {/* Strava Activity Detail Modal */}
       <AnimatePresence>
@@ -1032,18 +1008,28 @@ const Training = () => {
               className="bg-white dark:bg-gray-800 rounded-2xl shadow-2xl w-full max-w-4xl max-h-[90vh] overflow-hidden flex flex-col"
             >
               {/* Modal Header */}
-              <div className="p-6 border-b border-gray-200 dark:border-gray-700 bg-gradient-to-r from-[#FC4C02] to-[#E34402]">
+              <div className={`p-6 border-b border-gray-200 dark:border-gray-700 ${
+                selectedActivity.type === 'Run' || selectedActivity.type === 'VirtualRun'
+                  ? 'bg-blue-50 dark:bg-blue-900/20'
+                  : selectedActivity.type === 'WeightTraining' || selectedActivity.type === 'Workout'
+                    ? 'bg-purple-50 dark:bg-purple-900/20'
+                    : selectedActivity.type === 'Yoga' || selectedActivity.type === 'Pilates'
+                      ? 'bg-green-50 dark:bg-green-900/20'
+                      : selectedActivity.type === 'Ride' || selectedActivity.type === 'VirtualRide'
+                        ? 'bg-orange-50 dark:bg-orange-900/20'
+                        : 'bg-slate-50 dark:bg-gray-800'
+              }`}>
                 <div className="flex items-start justify-between">
-                  <div className="text-white">
-                    <h2 className="text-xl font-bold">{selectedActivity.name}</h2>
-                    <p className="text-orange-100 text-sm mt-1">
+                  <div>
+                    <h2 className="text-xl font-bold text-slate-900 dark:text-white">{selectedActivity.name}</h2>
+                    <p className="text-slate-500 dark:text-slate-400 text-sm mt-1">
                       {new Date(selectedActivity.date).toLocaleDateString('es-ES', {
                         weekday: 'long', day: 'numeric', month: 'long', year: 'numeric',
                       })} · {getActivityTypeLabel(selectedActivity.type)}
                     </p>
                   </div>
-                  <button onClick={() => setSelectedActivity(null)} className="p-2 hover:bg-white/20 rounded-lg transition-colors">
-                    <FiX className="w-6 h-6 text-white" />
+                  <button onClick={() => setSelectedActivity(null)} className="p-2 hover:bg-white/60 dark:hover:bg-gray-700 rounded-lg transition-colors">
+                    <FiX className="w-6 h-6 text-slate-500 dark:text-slate-400" />
                   </button>
                 </div>
               </div>
@@ -1175,26 +1161,30 @@ const Training = () => {
                     {/* Segments */}
                     {selectedActivity.segment_efforts && selectedActivity.segment_efforts.length > 0 && (
                       <div>
-                        <h3 className="font-semibold text-gray-900 dark:text-white mb-3 flex items-center">
-                          <FiFlag className="w-4 h-4 mr-2 text-yellow-500" />Segmentos ({selectedActivity.segment_efforts.length})
+                        <h3 className="font-semibold text-slate-900 dark:text-white mb-2 flex items-center gap-2 text-sm">
+                          <span className="text-slate-500">≡</span> Segmentos ({selectedActivity.segment_efforts.length})
                         </h3>
-                        <div className="space-y-2 max-h-60 overflow-y-auto custom-scrollbar">
-                          {selectedActivity.segment_efforts.slice(0, 10).map((effort) => (
-                            <div key={effort.id} className="flex items-center justify-between p-3 bg-gray-50 dark:bg-gray-700/50 rounded-lg hover:bg-gray-100 dark:hover:bg-gray-700 transition-colors">
-                              <div className="flex-1 min-w-0 mr-3">
-                                <p className="font-medium text-gray-900 dark:text-white truncate">{effort.segment?.name || effort.name}</p>
-                                <p className="text-xs text-gray-500 dark:text-gray-400">{(effort.segment?.distance || effort.distance) / 1000 || 0} km</p>
+                        <div className="space-y-1 max-h-64 overflow-y-auto">
+                          {selectedActivity.segment_efforts.slice(0, 10).map((effort) => {
+                            const distKm = ((effort.segment?.distance || effort.distance || 0) / 1000).toFixed(3);
+                            return (
+                              <div key={effort.id} className="flex items-center gap-3 px-3 py-2.5 bg-gray-50 dark:bg-gray-700/40 rounded-xl hover:bg-gray-100 dark:hover:bg-gray-700/60 transition-colors">
+                                <div className="w-8 h-8 rounded-lg bg-orange-100 dark:bg-orange-900/30 flex items-center justify-center flex-shrink-0">
+                                  <FiFlag className="w-3.5 h-3.5 text-[#FC4C02]" />
+                                </div>
+                                <div className="flex-1 min-w-0">
+                                  <p className="text-sm font-medium text-slate-900 dark:text-white truncate">{effort.segment?.name || effort.name}</p>
+                                  <p className="text-xs text-slate-400 dark:text-slate-500">{distKm} km</p>
+                                </div>
+                                <div className="text-right flex-shrink-0">
+                                  <p className="font-mono font-semibold text-[#FC4C02]">{formatDuration(effort.moving_time || effort.elapsed_time)}</p>
+                                  {effort.pr_rank === 1 && (
+                                    <span className="text-[10px] text-yellow-600 dark:text-yellow-400 font-bold">PR</span>
+                                  )}
+                                </div>
                               </div>
-                              <div className="text-right">
-                                <p className="font-mono font-semibold text-gray-900 dark:text-white">{formatDuration(effort.moving_time || effort.elapsed_time)}</p>
-                                {effort.pr_rank && (
-                                  <span className={`text-xs px-1.5 py-0.5 rounded ${effort.pr_rank === 1 ? 'bg-yellow-100 text-yellow-700 dark:bg-yellow-900/30 dark:text-yellow-400' : effort.pr_rank === 2 ? 'bg-gray-200 text-gray-700 dark:bg-gray-600 dark:text-gray-300' : 'bg-orange-100 text-orange-700 dark:bg-orange-900/30 dark:text-orange-400'}`}>
-                                    PR #{effort.pr_rank}
-                                  </span>
-                                )}
-                              </div>
-                            </div>
-                          ))}
+                            );
+                          })}
                         </div>
                       </div>
                     )}
@@ -1204,7 +1194,7 @@ const Training = () => {
                       href={`https://www.strava.com/activities/${selectedActivity.id}`}
                       target="_blank"
                       rel="noopener noreferrer"
-                      className="flex items-center justify-center space-x-2 w-full py-3 bg-[#FC4C02] hover:bg-[#E34402] text-white rounded-xl transition-colors"
+                      className="flex items-center justify-center gap-2 w-full py-3 bg-slate-900 hover:bg-slate-800 dark:bg-slate-700 dark:hover:bg-slate-600 text-white rounded-xl transition-colors font-medium text-sm"
                     >
                       <span>Ver en Strava</span>
                       <FiExternalLink className="w-4 h-4" />
@@ -1737,6 +1727,7 @@ const Training = () => {
           editMode
         />
       )}
+      </div>
     </div>
   );
 };

@@ -2,6 +2,8 @@ import { useState } from 'react';
 import { Navigate, Outlet } from 'react-router-dom';
 import { useAuth } from '../contexts/AuthContext';
 import Sidebar from '../components/dashboard/Sidebar';
+import BottomNav from '../components/dashboard/BottomNav';
+import MobileHeader from '../components/dashboard/MobileHeader';
 import PushNotificationBanner from '../components/common/PushNotificationBanner';
 
 const DashboardLayout = () => {
@@ -33,18 +35,20 @@ const DashboardLayout = () => {
 
   // Coach dashboard
   return (
-    <div className="min-h-screen bg-gray-50 dark:bg-gray-900 overflow-x-hidden">
+    <div className="min-h-screen bg-brand-bg dark:bg-gray-900 overflow-x-hidden">
       <Sidebar onCollapse={setSidebarCollapsed} />
+      <BottomNav />
+      <MobileHeader />
 
-      {/* Main Content - Fixed: Use conditional classes instead of template literals */}
+      {/* Main Content */}
       <div
         className={`
           transition-all duration-300
-          pt-16 lg:pt-0
+          pt-[62px] lg:pt-0
           ${sidebarCollapsed ? 'lg:pl-20' : 'lg:pl-64'}
         `}
       >
-        <main className="min-h-screen overflow-x-hidden">
+        <main className="overflow-x-hidden pb-[72px] lg:pb-0">
           <PushNotificationBanner />
           <Outlet />
         </main>

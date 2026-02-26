@@ -9,6 +9,18 @@ export default {
     extend: {
       fontFamily: {
         sans: ['Inter', 'system-ui', 'sans-serif'],
+        mono: ['DM Mono', 'monospace'],
+      },
+      colors: {
+        brand: {
+          bg: '#F4F6FA',
+          surface2: '#EEF1F7',
+          primary: '#1A6BFF',
+          'primary-light': '#E8F0FF',
+          accent: '#FF6B35',
+          'accent-light': '#FFF0EA',
+          border: '#E2E8F0',
+        },
       },
     },
   },

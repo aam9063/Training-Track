@@ -142,62 +142,39 @@ const ActivityTypeDistribution = ({ activities }) => {
 
   return (
     <div className="flex flex-col">
-      {/* Chart */}
-      <div className="flex items-center justify-center py-2">
-        <div className="w-44 h-44 sm:w-48 sm:h-48">
-          <Doughnut
-            data={chartData}
-            options={{
-              responsive: true,
-              maintainAspectRatio: true,
-              cutout: '65%',
-              plugins: {
-                legend: { display: false },
-                tooltip: {
-                  callbacks: {
-                    label: (ctx) => `${ctx.label}: ${ctx.parsed} min`,
-                  },
-                },
-              },
-            }}
-          />
-        </div>
-      </div>
-
-      {/* Legend with details */}
-      <div className="mt-4 space-y-2">
+      {/* List */}
+      <div className="space-y-2">
         {sortedTypes.map(([type, data]) => {
           const percentage = totalTime > 0 ? Math.round((data.time / totalTime) * 100) : 0;
           return (
-            <div key={type} className="flex items-center justify-between text-xs sm:text-sm gap-2">
-              <div className="flex items-center space-x-2 min-w-0">
-                <div
-                  className="w-2.5 h-2.5 sm:w-3 sm:h-3 rounded-full flex-shrink-0"
-                  style={{ backgroundColor: activityColors[type] || '#6b7280' }}
-                />
-                <span className="text-gray-700 dark:text-gray-300 truncate">
-                  {activityTypeLabels[type] || type}
-                </span>
-              </div>
-              <div className="flex items-center space-x-2 sm:space-x-3 text-gray-500 dark:text-gray-400 flex-shrink-0 whitespace-nowrap">
-                <span>{data.count} act.</span>
-                <span>{formatTime(data.time)}</span>
-                <span className="font-medium text-gray-900 dark:text-white">{percentage}%</span>
-              </div>
+            <div key={type} className="flex items-center gap-2.5">
+              <div
+                className="w-2.5 h-2.5 rounded-full flex-shrink-0"
+                style={{ backgroundColor: activityColors[type] || '#6b7280' }}
+              />
+              <span className="flex-1 text-sm font-medium text-slate-700 dark:text-slate-300 truncate">
+                {activityTypeLabels[type] || type}
+              </span>
+              <span className="text-xs text-slate-400 dark:text-slate-500 whitespace-nowrap">
+                {data.count} act. · {formatTime(data.time)}
+              </span>
+              <span className="text-xs font-bold text-blue-600 dark:text-blue-400 w-8 text-right flex-shrink-0">
+                {percentage}%
+              </span>
             </div>
           );
         })}
       </div>
 
       {/* Summary */}
-      <div className="mt-4 pt-4 border-t border-gray-200 dark:border-gray-700 grid grid-cols-2 gap-4 text-center">
+      <div className="mt-4 pt-4 border-t border-gray-100 dark:border-gray-700 grid grid-cols-2 gap-4 text-center">
         <div>
-          <p className="text-xl sm:text-2xl font-bold text-gray-900 dark:text-white">{activities.length}</p>
-          <p className="text-[10px] sm:text-xs text-gray-500 dark:text-gray-400">Actividades</p>
+          <p className="text-2xl font-bold text-slate-900 dark:text-white">{activities.length}</p>
+          <p className="text-xs text-slate-400 dark:text-slate-500">Actividades totales</p>
         </div>
         <div>
-          <p className="text-xl sm:text-2xl font-bold text-gray-900 dark:text-white">{(totalDistance / 1000).toFixed(1)}</p>
-          <p className="text-[10px] sm:text-xs text-gray-500 dark:text-gray-400">km totales</p>
+          <p className="text-2xl font-bold text-slate-900 dark:text-white">{(totalDistance / 1000).toFixed(1)}</p>
+          <p className="text-xs text-slate-400 dark:text-slate-500">km totales</p>
         </div>
       </div>
     </div>
@@ -887,15 +864,15 @@ const AthleteMetrics = () => {
         </div>
 
         {/* Week Filter */}
-        <div className="flex items-center space-x-2 bg-gray-100 dark:bg-gray-700 rounded-lg p-1">
+        <div className="flex items-center bg-gray-100 dark:bg-gray-700 rounded-xl p-1 gap-0.5">
           {[4, 8, 12].map((weeks) => (
             <button
               key={weeks}
               onClick={() => setWeekFilter(weeks)}
-              className={`px-4 py-2 rounded-lg text-sm font-medium transition-all ${
+              className={`px-4 py-2 rounded-lg text-sm font-semibold transition-all ${
                 weekFilter === weeks
-                  ? 'bg-orange-500 text-white shadow-sm'
-                  : 'text-gray-600 dark:text-gray-400 hover:bg-gray-200 dark:hover:bg-gray-600'
+                  ? 'bg-slate-900 dark:bg-white text-white dark:text-slate-900 shadow-sm'
+                  : 'text-gray-600 dark:text-gray-400 hover:text-gray-900 dark:hover:text-white'
               }`}
             >
               {weeks} sem
@@ -1000,37 +977,60 @@ const AthleteMetrics = () => {
           initial={{ opacity: 0, y: 20 }}
           animate={{ opacity: 1, y: 0 }}
           transition={{ delay: 0.3 }}
-          className="bg-white dark:bg-gray-800 rounded-xl p-4 mb-4 sm:mb-6 sm:p-6 shadow-sm border border-gray-200 dark:border-gray-700"
+          className="bg-white dark:bg-gray-800 rounded-2xl p-4 mb-4 sm:mb-6 sm:p-5 border border-gray-200 dark:border-gray-700"
         >
-          <div className="flex items-center space-x-2 mb-2">
-            <FiTarget className="w-5 h-5 sm:w-6 sm:h-6 text-purple-500" />
-            <h3 className="text-lg sm:text-xl font-bold text-gray-900 dark:text-white flex items-center">
-              Predictor de Tiempos
-              <InfoTooltip text="Estimación de tiempos usando el modelo VDOT de Jack Daniels, el mismo sistema que usan relojes deportivos como COROS y Garmin. Basado en tu mejor marca registrada." />
-            </h3>
+          {/* Header */}
+          <div className="flex items-center justify-between mb-1">
+            <div className="flex items-center gap-2">
+              <FiTarget className="w-4 h-4 text-violet-500" />
+              <h3 className="text-base font-bold text-slate-900 dark:text-white">
+                Predictor de Tiempos
+                <InfoTooltip text="Estimación de tiempos usando el modelo VDOT de Jack Daniels, el mismo sistema que usan relojes deportivos como COROS y Garmin. Basado en tu mejor marca registrada." />
+              </h3>
+            </div>
+            <span className="text-[11px] font-bold bg-violet-100 dark:bg-violet-900/40 text-violet-700 dark:text-violet-300 px-2.5 py-1 rounded-full">
+              VDOT {racePredictions.vdot}
+            </span>
           </div>
-          <p className="text-sm text-gray-500 dark:text-gray-400 mb-4 sm:mb-6">
-            VDOT: {racePredictions.vdot} — Modelo Daniels-Gilbert
+          <p className="text-xs text-slate-400 dark:text-slate-500 mb-4">
+            Modelo Daniels-Gilbert · Actualizado hoy
           </p>
 
-          <div className="grid grid-cols-2 lg:grid-cols-4 gap-3 sm:gap-4">
-            {Object.entries(racePredictions.predictions).map(([distance, data]) => (
-              <div
-                key={distance}
-                className="bg-gradient-to-br from-purple-50 to-blue-50 dark:from-purple-900/20 dark:to-blue-900/20 rounded-lg p-4 border border-purple-200 dark:border-purple-800"
-              >
-                <p className="text-sm font-medium text-purple-700 dark:text-purple-300 mb-1">
-                  {distance}
-                </p>
-                <p className="text-xl sm:text-2xl font-bold text-gray-900 dark:text-white mb-1">
-                  {data.timeFormatted}
-                </p>
-                <p className="text-xs text-gray-500 dark:text-gray-400">
-                  {data.pace} min/km
-                </p>
+          {/* 2×2 prediction cards */}
+          {(() => {
+            const barColors = {
+              '5 km': 'bg-blue-500',
+              '10 km': 'bg-green-500',
+              'Media Maratón': 'bg-orange-500',
+              'Maratón': 'bg-red-500',
+            };
+            const entries = Object.entries(racePredictions.predictions).slice(0, 4);
+            return (
+              <div className="grid grid-cols-2 gap-2.5">
+                {entries.map(([distance, data]) => (
+                  <div key={distance} className="bg-gray-50 dark:bg-gray-700/50 rounded-xl p-3.5">
+                    <p className="text-[10px] font-bold uppercase tracking-widest text-slate-400 dark:text-slate-500 mb-1">
+                      {distance.toUpperCase()}
+                    </p>
+                    <p className="text-2xl font-bold text-slate-900 dark:text-white leading-none mb-0.5">
+                      {data.timeFormatted}
+                    </p>
+                    <p className="text-xs text-slate-400 dark:text-slate-500 mb-2">
+                      {data.pace} min/km
+                    </p>
+                    <div className="w-full h-1 bg-gray-200 dark:bg-gray-600 rounded-full overflow-hidden">
+                      <div className={`h-1 rounded-full ${barColors[distance] || 'bg-violet-500'}`} style={{ width: '100%' }} />
+                    </div>
+                  </div>
+                ))}
               </div>
-            ))}
-          </div>
+            );
+          })()}
+
+          <p className="text-[11px] text-slate-400 dark:text-slate-500 mt-3 flex items-center gap-1">
+            <span className="inline-block w-3.5 h-3.5 rounded-full bg-violet-100 dark:bg-violet-900/40 text-violet-500 text-center leading-3.5 text-[9px]">i</span>
+            Cada punto de VDOT ≈ 30s menos en 5km
+          </p>
         </motion.div>
       )}
 
@@ -1071,23 +1071,41 @@ const AthleteMetrics = () => {
           initial={{ opacity: 0, y: 20 }}
           animate={{ opacity: 1, y: 0 }}
           transition={{ delay: 0.35 }}
-          className="bg-white dark:bg-gray-800 rounded-xl mb-4 sm:mb-6 p-4 sm:p-6 shadow-sm border border-gray-200 dark:border-gray-700"
+          className="bg-white dark:bg-gray-800 rounded-2xl mb-4 sm:mb-6 p-4 sm:p-5 border border-gray-200 dark:border-gray-700"
         >
-          <div className="flex items-center space-x-2 mb-2">
-            <FiHeart className="w-5 h-5 sm:w-6 sm:h-6 text-red-500" />
-            <h3 className="text-lg sm:text-xl font-bold text-gray-900 dark:text-white">
-              Zonas de Entrenamiento
-            </h3>
+          {/* Header */}
+          <div className="flex items-center gap-2 mb-0.5">
+            <FiClock className="w-4 h-4 text-slate-500" />
+            <h3 className="text-base font-bold text-slate-900 dark:text-white">Zonas de Entrenamiento</h3>
           </div>
-          <p className="text-sm text-gray-500 dark:text-gray-400 mb-4 sm:mb-6">
-            FC Máx: {hrZoneData.maxHR} bpm | FC Reposo: {hrZoneData.restingHR} bpm (Karvonen)
+          <p className="text-xs text-slate-400 dark:text-slate-500 mb-4">
+            VDOT: {racePredictions?.vdot ?? '–'} · FC Máx: {hrZoneData.maxHR} bpm · FC Reposo: {hrZoneData.restingHR} bpm
           </p>
 
-          <div className="grid grid-cols-1 lg:grid-cols-2 gap-6">
-            {/* Doughnut Chart */}
-            <div className="flex items-center justify-center">
-              {hrZoneData.totalHRActivities > 0 ? (
-                <div className="w-56 h-56 sm:w-64 sm:h-64">
+          {/* Zone list */}
+          <div className="space-y-2 mb-5">
+            {hrZoneData.zones.map((zone) => (
+              <div key={zone.name} className="flex items-center gap-3">
+                <div className="w-2.5 h-2.5 rounded-full flex-shrink-0" style={{ backgroundColor: zone.color }} />
+                <span className="flex-1 text-sm font-medium text-slate-700 dark:text-slate-300">{zone.name}</span>
+                <span className="text-xs font-mono text-slate-400 dark:text-slate-500 whitespace-nowrap">
+                  {zone.bpmMin}–{zone.bpmMax} bpm
+                </span>
+              </div>
+            ))}
+          </div>
+
+          {/* Distribución por zona */}
+          <div className="border-t border-gray-100 dark:border-gray-700 pt-4">
+            <p className="text-xs font-semibold text-slate-600 dark:text-slate-300 mb-0.5">Distribución por zona</p>
+            <p className="text-[11px] text-slate-400 dark:text-slate-500 mb-3">
+              Basado en FC · últimas {weekFilter} semanas
+            </p>
+
+            {hrZoneData.totalHRActivities > 0 ? (
+              <div className="flex flex-col sm:flex-row gap-4 items-start">
+                {/* Donut */}
+                <div className="relative flex-shrink-0 w-32 h-32 mx-auto sm:mx-0">
                   <Doughnut
                     data={{
                       labels: hrZoneData.zones.map(z => z.name),
@@ -1109,81 +1127,92 @@ const AthleteMetrics = () => {
                               const pct = hrZoneData.totalHRActivities > 0
                                 ? Math.round((ctx.raw / hrZoneData.totalHRActivities) * 100)
                                 : 0;
-                              return `${ctx.label}: ${ctx.raw} act. (${pct}%)`;
+                              return `${ctx.label}: ${pct}%`;
                             },
                           },
                         },
                       },
-                      cutout: '60%',
+                      cutout: '62%',
                     }}
                   />
+                  {/* Center label */}
+                  <div className="absolute inset-0 flex items-center justify-center pointer-events-none">
+                    <span className="text-lg font-bold text-slate-900 dark:text-white">
+                      {hrZoneData.zones[1] && hrZoneData.totalHRActivities > 0
+                        ? Math.round((hrZoneData.zones[1].count / hrZoneData.totalHRActivities) * 100)
+                        : 0}%
+                    </span>
+                  </div>
                 </div>
-              ) : (
-                <div className="text-center py-8">
-                  <FiHeart className="w-10 h-10 text-gray-300 dark:text-gray-600 mx-auto mb-2" />
-                  <p className="text-sm text-gray-500 dark:text-gray-400">
-                    No hay datos de frecuencia cardíaca
-                  </p>
-                </div>
-              )}
-            </div>
 
-            {/* Zone Table */}
-            <div className="space-y-2">
-              {hrZoneData.zones.map((zone) => {
-                const pct = hrZoneData.totalHRActivities > 0
-                  ? Math.round((zone.count / hrZoneData.totalHRActivities) * 100)
-                  : 0;
-                return (
-                  <div key={zone.name} className="flex items-center gap-3">
-                    <div
-                      className="w-3 h-3 rounded-full flex-shrink-0"
-                      style={{ backgroundColor: zone.color }}
-                    />
-                    <div className="flex-1 min-w-0">
-                      <div className="flex items-center justify-between mb-1">
-                        <span className="text-sm font-medium text-gray-700 dark:text-gray-300 truncate">
-                          {zone.name}
-                        </span>
-                        <span className="text-xs text-gray-500 dark:text-gray-400 ml-2 flex-shrink-0">
-                          {zone.bpmMin}-{zone.bpmMax} bpm
-                        </span>
+                {/* Legend + bars */}
+                <div className="flex-1 min-w-0 space-y-1.5">
+                  {hrZoneData.zones.map((zone) => {
+                    const pct = hrZoneData.totalHRActivities > 0
+                      ? Math.round((zone.count / hrZoneData.totalHRActivities) * 100)
+                      : 0;
+                    const shortName = zone.name.replace('Z1 - ', 'Z1 ').replace('Z2 - ', 'Z2 ').replace('Z3 - ', 'Z3 ').replace('Z4 - ', 'Z4 ').replace('Z5 - ', 'Z5 ');
+                    return (
+                      <div key={zone.name} className="flex items-center gap-2">
+                        <div className="w-2 h-2 rounded-full flex-shrink-0" style={{ backgroundColor: zone.color }} />
+                        <span className="text-[11px] text-slate-500 dark:text-slate-400 w-20 truncate">{shortName}</span>
+                        <span className="text-[11px] font-semibold text-slate-700 dark:text-slate-300 w-8 text-right flex-shrink-0">{pct}%</span>
                       </div>
-                      <div className="w-full bg-gray-200 dark:bg-gray-700 rounded-full h-2">
+                    );
+                  })}
+                </div>
+              </div>
+            ) : (
+              <div className="text-center py-6">
+                <FiHeart className="w-8 h-8 text-gray-300 dark:text-gray-600 mx-auto mb-2" />
+                <p className="text-sm text-gray-500 dark:text-gray-400">No hay datos de frecuencia cardíaca</p>
+              </div>
+            )}
+
+            {/* Progress bars */}
+            {hrZoneData.totalHRActivities > 0 && (
+              <div className="mt-4 space-y-2">
+                {hrZoneData.zones.map((zone) => {
+                  const pct = hrZoneData.totalHRActivities > 0
+                    ? Math.round((zone.count / hrZoneData.totalHRActivities) * 100)
+                    : 0;
+                  const shortName = zone.name.replace('Z1 - ', 'Z1 ').replace('Z2 - ', 'Z2 ').replace('Z3 - ', 'Z3 ').replace('Z4 - ', 'Z4 ').replace('Z5 - ', 'Z5 ');
+                  return (
+                    <div key={zone.name} className="flex items-center gap-2">
+                      <span className="text-[11px] text-slate-500 dark:text-slate-400 w-24 flex-shrink-0">{shortName}</span>
+                      <div className="flex-1 h-2 bg-gray-100 dark:bg-gray-700 rounded-full overflow-hidden">
                         <div
                           className="h-2 rounded-full transition-all duration-500"
-                          style={{
-                            width: `${Math.max(pct, 2)}%`,
-                            backgroundColor: zone.color,
-                          }}
+                          style={{ width: `${Math.max(pct, 1)}%`, backgroundColor: zone.color }}
                         />
                       </div>
-                      <p className="text-xs text-gray-500 dark:text-gray-400 mt-0.5">
-                        {zone.count} act. ({pct}%)
-                      </p>
+                      <span className="text-[11px] font-semibold text-slate-500 dark:text-slate-400 w-7 text-right flex-shrink-0">{pct}%</span>
                     </div>
-                  </div>
-                );
-              })}
-            </div>
+                  );
+                })}
+              </div>
+            )}
           </div>
         </motion.div>
       )}
 
       {/* Activity Distribution and Total Activity Time Section */}
-      <div className="grid grid-cols-1 lg:grid-cols-2 gap-4 sm:gap-6 mb-6 sm:mb-8">
+      <div className="grid grid-cols-1 lg:grid-cols-2 gap-4 sm:gap-6 mb-4 sm:mb-6">
         {/* Activity Type Distribution */}
         <motion.div
           initial={{ opacity: 0, y: 20 }}
           animate={{ opacity: 1, y: 0 }}
           transition={{ delay: 0.4 }}
-          className="bg-white dark:bg-gray-800 rounded-xl p-4 sm:p-6 shadow-sm border border-gray-200 dark:border-gray-700 overflow-hidden"
+          className="bg-white dark:bg-gray-800 rounded-2xl p-4 sm:p-5 border border-gray-200 dark:border-gray-700 overflow-hidden"
         >
-          <h3 className="text-base sm:text-lg font-bold text-gray-900 dark:text-white mb-4 flex items-center">
-            <FiActivity className="w-5 h-5 mr-2 text-blue-500 flex-shrink-0" />
-            <span className="truncate">Distribución de Actividades</span>
-            <InfoTooltip text="Proporción de cada tipo de actividad (carrera, ciclismo, natación, etc.) registrada en Strava durante el período seleccionado." />
-          </h3>
+          <div className="flex items-center gap-2 mb-1">
+            <FiActivity className="w-4 h-4 text-blue-500 flex-shrink-0" />
+            <h3 className="text-base font-bold text-slate-900 dark:text-white">
+              Distribución de Actividades
+              <InfoTooltip text="Proporción de cada tipo de actividad (carrera, ciclismo, natación, etc.) registrada en Strava durante el período seleccionado." />
+            </h3>
+          </div>
+          <p className="text-xs text-slate-400 dark:text-slate-500 mb-4">Últimas {weekFilter} semanas</p>
           <ActivityTypeDistribution activities={rawActivities} />
         </motion.div>
 
@@ -1207,141 +1236,103 @@ const AthleteMetrics = () => {
           initial={{ opacity: 0, y: 20 }}
           animate={{ opacity: 1, y: 0 }}
           transition={{ delay: 0.55 }}
-          className="bg-white dark:bg-gray-800 rounded-xl p-4 sm:p-6 shadow-sm border border-gray-200 dark:border-gray-700 mb-6 sm:mb-8"
+          className="bg-white dark:bg-gray-800 rounded-2xl p-4 sm:p-5 border border-gray-200 dark:border-gray-700 mb-4 sm:mb-6"
         >
-          <h3 className="text-base sm:text-lg font-bold text-gray-900 dark:text-white mb-4 flex items-center">
-            <FiShield className="w-5 h-5 mr-2 text-orange-500" />
-            Gestión de Carga de Entrenamiento
-            <InfoTooltip text="Ratio de carga aguda/crónica (ACWR): compara el volumen de la última semana con la media de las 4 anteriores. Zona óptima: 0.8–1.3. Por encima de 1.5 aumenta el riesgo de lesión." />
-          </h3>
+          {/* Header */}
+          <div className="flex items-center gap-2 mb-1">
+            <FiZap className="w-4 h-4 text-amber-500" />
+            <h3 className="text-base font-bold text-slate-900 dark:text-white">
+              Gestión de Carga
+              <InfoTooltip text="Ratio de carga aguda/crónica (ACWR): compara el volumen de la última semana con la media de las 4 anteriores. Zona óptima: 0.8–1.3. Por encima de 1.5 aumenta el riesgo de lesión." />
+            </h3>
+          </div>
+          <p className="text-xs text-slate-400 dark:text-slate-500 mb-3">ACWR · ratio carga aguda/crónica</p>
 
-          {/* Alert Banner */}
+          {/* Alert banner */}
           {(() => {
             const { acwr } = loadData;
-            let alertConfig;
-            if (acwr < 0.8) {
-              alertConfig = {
-                bg: 'bg-blue-50 dark:bg-blue-900/20 border-blue-200 dark:border-blue-800',
-                text: 'text-blue-700 dark:text-blue-300',
-                message: 'Tu carga actual está por debajo de lo habitual. Considera aumentar gradualmente el volumen.',
-              };
-            } else if (acwr <= 1.3) {
-              alertConfig = {
-                bg: 'bg-green-50 dark:bg-green-900/20 border-green-200 dark:border-green-800',
-                text: 'text-green-700 dark:text-green-300',
-                message: 'Tu carga está en zona óptima. ¡Sigue así!',
-              };
-            } else if (acwr <= 1.5) {
-              alertConfig = {
-                bg: 'bg-orange-50 dark:bg-orange-900/20 border-orange-200 dark:border-orange-800',
-                text: 'text-orange-700 dark:text-orange-300',
-                message: 'Cuidado: tu carga está aumentando rápidamente. Controla el volumen esta semana.',
-              };
-            } else {
-              alertConfig = {
-                bg: 'bg-red-50 dark:bg-red-900/20 border-red-200 dark:border-red-800',
-                text: 'text-red-700 dark:text-red-300',
-                message: 'Alerta: riesgo elevado de sobrecarga. Reduce la intensidad y descansa.',
-              };
-            }
+            let cfg;
+            if (acwr < 0.8) cfg = { bg: 'bg-blue-50 dark:bg-blue-900/20', text: 'text-blue-700 dark:text-blue-300', icon: '📉', msg: 'Tu carga actual está por debajo de lo habitual. Considera aumentar gradualmente el volumen.' };
+            else if (acwr <= 1.3) cfg = { bg: 'bg-green-50 dark:bg-green-900/20', text: 'text-green-700 dark:text-green-300', icon: '✓', msg: 'Tu carga está en zona óptima. ¡Sigue así!' };
+            else if (acwr <= 1.5) cfg = { bg: 'bg-orange-50 dark:bg-orange-900/20', text: 'text-orange-700 dark:text-orange-300', icon: '⚠', msg: 'Cuidado: tu carga está aumentando rápidamente. Controla el volumen esta semana.' };
+            else cfg = { bg: 'bg-red-50 dark:bg-red-900/20', text: 'text-red-700 dark:text-red-300', icon: '🚨', msg: 'Alerta: riesgo elevado de sobrecarga. Reduce la intensidad y descansa.' };
             return (
-              <div className={`flex items-center p-3 rounded-lg border text-sm ${alertConfig.bg} ${alertConfig.text} mb-6`}>
-                <FiAlertTriangle className="w-4 h-4 mr-2 flex-shrink-0" />
-                <span>{alertConfig.message}</span>
+              <div className={`flex items-center gap-2 px-3 py-2 rounded-xl text-sm font-medium ${cfg.bg} ${cfg.text} mb-4`}>
+                <span className="flex-shrink-0">{cfg.icon}</span>
+                <span>{cfg.msg}</span>
               </div>
             );
           })()}
 
-          {/* Gauge + Load Summary Cards */}
-          <div className="grid grid-cols-1 md:grid-cols-2 gap-6 mb-6">
-            <div className="flex items-center justify-center">
-              <ACWRGauge acwr={loadData.acwr} />
+          {/* Gauge centrado + valor grande */}
+          <div className="flex flex-col items-center mb-4">
+            <ACWRGauge acwr={loadData.acwr} />
+          </div>
+
+          {/* 3 stat chips */}
+          <div className="grid grid-cols-3 gap-2.5 mb-4">
+            <div className="bg-gray-50 dark:bg-gray-700/50 rounded-xl p-3 text-center">
+              <p className="text-[10px] text-slate-400 dark:text-slate-500 mb-1">Carga aguda</p>
+              <p className="text-xl font-bold text-slate-900 dark:text-white">{loadData.acuteLoad}</p>
+              <p className="text-[10px] text-slate-400">km · 7 días</p>
             </div>
-
-            <div className="grid grid-cols-3 gap-3">
-              <div className="bg-gray-50 dark:bg-gray-700/50 rounded-xl p-3 sm:p-4 text-center">
-                <p className="text-[11px] text-gray-500 dark:text-gray-400 mb-1">Carga Aguda</p>
-                <p className="text-lg sm:text-2xl font-bold text-gray-900 dark:text-white">
-                  {loadData.acuteLoad}
-                </p>
-                <p className="text-[10px] text-gray-400 dark:text-gray-500">km (7 días)</p>
-              </div>
-
-              <div className="bg-gray-50 dark:bg-gray-700/50 rounded-xl p-3 sm:p-4 text-center">
-                <p className="text-[11px] text-gray-500 dark:text-gray-400 mb-1">Carga Crónica</p>
-                <p className="text-lg sm:text-2xl font-bold text-gray-900 dark:text-white">
-                  {loadData.chronicLoadWeekly}
-                </p>
-                <p className="text-[10px] text-gray-400 dark:text-gray-500">km/sem (4 sem)</p>
-              </div>
-
-              <div className="bg-gray-50 dark:bg-gray-700/50 rounded-xl p-3 sm:p-4 text-center">
-                <p className="text-[11px] text-gray-500 dark:text-gray-400 mb-1">ACWR</p>
-                <p className={`text-lg sm:text-2xl font-bold ${getACWRZone(loadData.acwr).textClass}`}>
-                  {loadData.acwr.toFixed(2)}
-                </p>
-                <span className={`inline-block mt-1 px-2 py-0.5 rounded-full text-[10px] font-medium ${getACWRZone(loadData.acwr).badgeClass}`}>
-                  {getACWRZone(loadData.acwr).label}
-                </span>
-              </div>
+            <div className="bg-gray-50 dark:bg-gray-700/50 rounded-xl p-3 text-center">
+              <p className="text-[10px] text-slate-400 dark:text-slate-500 mb-1">Carga crónica</p>
+              <p className="text-xl font-bold text-slate-900 dark:text-white">{loadData.chronicLoadWeekly}</p>
+              <p className="text-[10px] text-slate-400">km/sem · 4 sem</p>
+            </div>
+            <div className="bg-gray-50 dark:bg-gray-700/50 rounded-xl p-3 text-center">
+              <p className="text-[10px] text-slate-400 dark:text-slate-500 mb-1">ACWR</p>
+              <p className={`text-xl font-bold ${getACWRZone(loadData.acwr).textClass}`}>{loadData.acwr.toFixed(2)}</p>
+              <p className={`text-[10px] font-medium ${getACWRZone(loadData.acwr).textClass}`}>{getACWRZone(loadData.acwr).label}</p>
             </div>
           </div>
 
           {/* Weekly Load Bar Chart */}
-          <div>
-            <h4 className="text-sm font-semibold text-gray-700 dark:text-gray-300 mb-3">
-              Carga semanal (últimas 8 semanas)
-            </h4>
-            <div className="h-48 sm:h-64">
-              <Bar
-                data={{
-                  labels: loadData.weeklyLoads.map(w => w.label),
-                  datasets: [{
-                    label: 'km/semana',
-                    data: loadData.weeklyLoads.map(w => w.km),
-                    backgroundColor: loadData.weeklyLoads.map(w => w.color),
-                    borderRadius: 4,
-                    barPercentage: 0.7,
-                  }],
-                }}
-                options={{
-                  responsive: true,
-                  maintainAspectRatio: false,
-                  plugins: {
-                    legend: { display: false },
-                    tooltip: {
-                      callbacks: {
-                        label: (ctx) => {
-                          const week = loadData.weeklyLoads[ctx.dataIndex];
-                          const acwrText = week.acwr !== null ? ` | ACWR: ${week.acwr}` : '';
-                          return `${ctx.parsed.y} km${acwrText}`;
-                        },
+          <p className="text-xs font-semibold text-slate-600 dark:text-slate-300 mb-2">
+            Carga semanal · últimas 8 semanas
+          </p>
+          <div className="h-44">
+            <Bar
+              data={{
+                labels: loadData.weeklyLoads.map(w => w.label),
+                datasets: [{
+                  label: 'km/semana',
+                  data: loadData.weeklyLoads.map(w => w.km),
+                  backgroundColor: loadData.weeklyLoads.map(w => w.color),
+                  borderRadius: 4,
+                  barPercentage: 0.7,
+                }],
+              }}
+              options={{
+                responsive: true,
+                maintainAspectRatio: false,
+                plugins: {
+                  legend: { display: false },
+                  tooltip: {
+                    callbacks: {
+                      label: (ctx) => {
+                        const week = loadData.weeklyLoads[ctx.dataIndex];
+                        const acwrText = week.acwr !== null ? ` | ACWR: ${week.acwr}` : '';
+                        return `${ctx.parsed.y} km${acwrText}`;
                       },
                     },
                   },
-                  scales: {
-                    x: {
-                      grid: { display: false },
-                      ticks: { color: 'rgb(156, 163, 175)' },
-                    },
-                    y: {
-                      beginAtZero: true,
-                      grid: { color: 'rgba(156, 163, 175, 0.1)' },
-                      ticks: { color: 'rgb(156, 163, 175)' },
-                      title: { display: true, text: 'Kilómetros', color: 'rgb(156, 163, 175)' },
-                    },
-                  },
-                }}
-              />
-            </div>
+                },
+                scales: {
+                  x: { grid: { display: false }, ticks: { color: 'rgb(156,163,175)', font: { size: 10 } } },
+                  y: { beginAtZero: true, grid: { color: 'rgba(156,163,175,0.1)' }, ticks: { color: 'rgb(156,163,175)', font: { size: 10 } } },
+                },
+              }}
+            />
           </div>
 
           {/* Zone legend */}
-          <div className="flex flex-wrap items-center gap-3 mt-4 text-xs text-gray-500 dark:text-gray-400">
-            <span className="flex items-center"><span className="w-3 h-3 rounded-full bg-blue-500 mr-1" />Bajo (&lt;0.8)</span>
-            <span className="flex items-center"><span className="w-3 h-3 rounded-full bg-green-500 mr-1" />Óptimo (0.8-1.3)</span>
-            <span className="flex items-center"><span className="w-3 h-3 rounded-full bg-orange-500 mr-1" />Alto (1.3-1.5)</span>
-            <span className="flex items-center"><span className="w-3 h-3 rounded-full bg-red-500 mr-1" />Peligro (&gt;1.5)</span>
+          <div className="flex flex-wrap items-center gap-3 mt-3 text-[11px] text-slate-400 dark:text-slate-500">
+            <span className="flex items-center gap-1"><span className="w-2.5 h-2.5 rounded-full bg-blue-500" />Bajo</span>
+            <span className="flex items-center gap-1"><span className="w-2.5 h-2.5 rounded-full bg-green-500" />Óptimo</span>
+            <span className="flex items-center gap-1"><span className="w-2.5 h-2.5 rounded-full bg-orange-500" />Alto</span>
+            <span className="flex items-center gap-1"><span className="w-2.5 h-2.5 rounded-full bg-red-500" />Peligro</span>
           </div>
         </motion.div>
       )}
@@ -1771,46 +1762,99 @@ const AthleteMetrics = () => {
         </motion.div>
       )}
 
-      {/* Best Performances Summary */}
-      {stravaMetrics && (stravaMetrics.longestRun || stravaMetrics.fastestPace) && (
+      {/* Records & Mejores Marcas */}
+      {stravaMetrics && (stravaMetrics.longestRun || stravaMetrics.fastestPace || bestEfforts?.length > 0) && (
         <motion.div
           initial={{ opacity: 0, y: 20 }}
           animate={{ opacity: 1, y: 0 }}
           transition={{ delay: 0.6 }}
-          className="grid grid-cols-1 sm:grid-cols-2 gap-4 mb-6 sm:mb-8"
+          className="bg-white dark:bg-gray-800 rounded-2xl p-4 sm:p-5 border border-gray-200 dark:border-gray-700 mb-4 sm:mb-6"
         >
-          {stravaMetrics.longestRun && (
-            <div className="bg-gradient-to-r from-yellow-50 to-orange-50 dark:from-yellow-900/20 dark:to-orange-900/20 rounded-xl p-4 sm:p-6 border-2 border-yellow-200 dark:border-yellow-800">
-              <div className="flex items-center justify-between mb-3">
-                <span className="text-xs sm:text-sm font-medium text-yellow-700 dark:text-yellow-400">
-                  Carrera más larga
-                </span>
-                <FiTarget className="w-5 h-5 text-yellow-600 flex-shrink-0" />
+          <div className="flex items-center gap-2 mb-0.5">
+            <span className="text-amber-400">★</span>
+            <h3 className="text-base font-bold text-slate-900 dark:text-white">Récords & Mejores marcas</h3>
+          </div>
+          <p className="text-xs text-slate-400 dark:text-slate-500 mb-4">Mejores registros históricos en Strava</p>
+
+          {/* Top 2 highlight cards */}
+          <div className="grid grid-cols-2 gap-2.5 mb-4">
+            {stravaMetrics.longestRun && (
+              <div className="rounded-xl bg-amber-50 dark:bg-amber-900/20 p-3.5">
+                <p className="text-[10px] font-bold uppercase tracking-widest text-amber-600 dark:text-amber-400 mb-1 flex items-center gap-1">
+                  <FiZap className="w-3 h-3" /> Carrera más larga
+                </p>
+                <p className="text-2xl font-bold text-amber-700 dark:text-amber-300 leading-none mb-0.5">
+                  {stravaMetrics.longestRun.distanceKm} km
+                </p>
+                <p className="text-[11px] text-slate-400 truncate">{stravaMetrics.longestRun.name}</p>
               </div>
-              <p className="text-2xl sm:text-3xl font-bold text-yellow-700 dark:text-yellow-300 mb-1">
-                {stravaMetrics.longestRun.distanceKm} km
-              </p>
-              <p className="text-xs sm:text-sm text-gray-600 dark:text-gray-400 truncate">
-                {stravaMetrics.longestRun.name}
-              </p>
-            </div>
-          )}
-          {stravaMetrics.fastestPace && (
-            <div className="bg-gradient-to-r from-green-50 to-emerald-50 dark:from-green-900/20 dark:to-emerald-900/20 rounded-xl p-4 sm:p-6 border-2 border-green-200 dark:border-green-800">
-              <div className="flex items-center justify-between mb-3">
-                <span className="text-xs sm:text-sm font-medium text-green-700 dark:text-green-400">
-                  Ritmo más rápido
-                </span>
-                <FiZap className="w-5 h-5 text-green-600 flex-shrink-0" />
+            )}
+            {stravaMetrics.fastestPace && (
+              <div className="rounded-xl bg-green-50 dark:bg-green-900/20 p-3.5">
+                <p className="text-[10px] font-bold uppercase tracking-widest text-green-600 dark:text-green-400 mb-1 flex items-center gap-1">
+                  <FiZap className="w-3 h-3" /> Ritmo más rápido
+                </p>
+                <p className="text-2xl font-bold text-green-700 dark:text-green-300 leading-none mb-0.5">
+                  {stravaMetrics.fastestPace.pace} <span className="text-sm font-normal">/km</span>
+                </p>
+                <p className="text-[11px] text-slate-400 truncate">{stravaMetrics.fastestPace.name}</p>
               </div>
-              <p className="text-2xl sm:text-3xl font-bold text-green-700 dark:text-green-300 mb-1">
-                {stravaMetrics.fastestPace.pace}
-              </p>
-              <p className="text-xs sm:text-sm text-gray-600 dark:text-gray-400 truncate">
-                {stravaMetrics.fastestPace.name} ({stravaMetrics.fastestPace.distanceKm} km)
-              </p>
-            </div>
-          )}
+            )}
+          </div>
+
+          {/* Best efforts grid 2×2 */}
+          {bestEfforts && bestEfforts.length > 0 && (() => {
+            const distMap = {
+              '5k': { label: '5 KM', dist: '5000m' },
+              '10k': { label: '10 KM', dist: '10000m' },
+              'half marathon': { label: 'MEDIA MARATÓN', dist: '21097m' },
+              'marathon': { label: 'MARATÓN', dist: '42195m' },
+            };
+            const fmtTime = (secs) => {
+              if (!secs) return '–';
+              const h = Math.floor(secs / 3600);
+              const m = Math.floor((secs % 3600) / 60);
+              const s = secs % 60;
+              if (h > 0) return `${h}:${String(m).padStart(2,'0')}:${String(s).padStart(2,'0')}`;
+              return `${m}:${String(s).padStart(2,'0')}`;
+            };
+            const fmtPace = (secs, meters) => {
+              if (!secs || !meters) return '–';
+              const paceSecPerKm = secs / (meters / 1000);
+              const m = Math.floor(paceSecPerKm / 60);
+              const s = Math.round(paceSecPerKm % 60);
+              return `${m}:${String(s).padStart(2,'0')}`;
+            };
+            const slots = ['5k', '10k', 'half marathon', 'marathon'].map(key => {
+              const effort = bestEfforts.find(e => e.name?.toLowerCase() === key);
+              return { key, ...distMap[key], effort };
+            });
+            return (
+              <div className="grid grid-cols-2 gap-2.5">
+                {slots.map(({ key, label, effort }) => (
+                  <div key={key} className="bg-gray-50 dark:bg-gray-700/50 rounded-xl p-3">
+                    <p className="text-[10px] font-bold uppercase tracking-widest text-slate-400 dark:text-slate-500 mb-1">{label}</p>
+                    {effort ? (
+                      <>
+                        <p className="text-xl font-bold text-slate-900 dark:text-white leading-none mb-0.5">
+                          {fmtTime(effort.elapsed_time)}
+                        </p>
+                        <p className="text-[11px] text-slate-400 font-mono">{fmtPace(effort.elapsed_time, effort.distance)} min/km</p>
+                        <p className="text-[10px] text-slate-300 dark:text-slate-600 mt-0.5">
+                          {effort.start_date_local ? new Date(effort.start_date_local).toLocaleDateString('es-ES', { month: 'short', year: 'numeric' }) : ''}
+                        </p>
+                      </>
+                    ) : (
+                      <>
+                        <p className="text-xl font-bold text-slate-300 dark:text-slate-600 leading-none mb-0.5">–</p>
+                        <p className="text-[11px] text-slate-300 dark:text-slate-600">Sin registro</p>
+                      </>
+                    )}
+                  </div>
+                ))}
+              </div>
+            );
+          })()}
         </motion.div>
       )}
 

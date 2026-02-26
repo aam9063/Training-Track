@@ -413,7 +413,7 @@ export const updateAthleteVdot = async (athleteId, bestEfforts) => {
 const autoGenerateTrainingZones = async (athleteId, vdot, paces) => {
   const zones = [
     { zone: 1, name: 'Easy (E)', min: paces.easy.max, max: paces.easy.min, unit: 's/km', description: 'Ritmo fácil, conversacional' },
-    { zone: 2, name: 'Marathon (M)', min: paces.marathon, max: paces.marathon, unit: 's/km', description: 'Ritmo maratón' },
+    { zone: 2, name: 'Tempo (M)', min: paces.marathon, max: paces.marathon, unit: 's/km', description: 'Ritmo maratón / Tempo' },
     { zone: 3, name: 'Threshold (T)', min: paces.threshold, max: paces.threshold, unit: 's/km', description: 'Umbral de lactato' },
     { zone: 4, name: 'Interval (I)', min: paces.interval, max: paces.interval, unit: 's/km', description: 'Desarrollo VO2max' },
     { zone: 5, name: 'Repetition (R)', min: paces.repetition, max: paces.repetition, unit: 's/km', description: 'Velocidad y economía' },

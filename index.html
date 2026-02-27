@@ -16,11 +16,11 @@
   </script>
 
   <!-- SEO Basico -->
-  <title>TrainingTrack - Plataforma de Gestión de Entrenamiento de Atletismo</title>
+  <title>TrainingTrack — Software de entrenamiento para atletismo con IA</title>
   <meta name="description"
-    content="Plataforma de gestión de entrenamientos de atletismo para entrenadores y atletas. Planificación semanal, métricas de Strava, informes de rendimiento con IA, tests fisiológicos y más.">
+    content="Gestiona tus atletas, diseña planes de temporada y recibe informes IA automáticos cada lunes con ACWR, TSB y RPE. Sincronización con Strava, predictor de tiempos y notificaciones push. Gratis durante la beta.">
   <meta name="keywords"
-    content="entrenamiento atletismo, planificación deportiva, entrenador personal, métricas Strava, informes IA, rendimiento deportivo, running, trail, maratón, gestión atletas">
+    content="software entrenamiento atletismo, gestión atletas, planificador temporada, informes IA atletismo, ACWR TSB RPE, predictor tiempos running, sincronización Strava, entrenador personal atletismo, running 800m maratón, mesociclos, carga entrenamiento">
   <meta name="author" content="TrainingTrack">
   <meta name="robots" content="index, follow">
   <meta name="google-site-verification" content="yGm-gqsWlA9MHvm4zjpV4cndlFSf8amlLu3FMUdgZV8" />
@@ -39,9 +39,9 @@
   <!-- Open Graph (Facebook, LinkedIn, WhatsApp) -->
   <meta property="og:type" content="website" />
   <meta property="og:url" content="https://www.trainingtrack.es/" />
-  <meta property="og:title" content="TrainingTrack - Gestión de Entrenamiento de Atletismo" />
+  <meta property="og:title" content="TrainingTrack — Software de entrenamiento para atletismo con IA" />
   <meta property="og:description"
-    content="Planifica entrenamientos, analiza métricas de Strava y genera informes de rendimiento con IA. La plataforma para entrenadores y atletas." />
+    content="Informes IA automáticos cada lunes con ACWR, TSB y RPE. Planificador de temporada, predictor de tiempos y sincronización con Strava. Gratis durante la beta." />
   <meta property="og:image" content="https://www.trainingtrack.es/img/og-image.png" />
   <meta property="og:image:width" content="1200" />
   <meta property="og:image:height" content="630" />
@@ -50,9 +50,9 @@
 
   <!-- Twitter Card -->
   <meta name="twitter:card" content="summary_large_image" />
-  <meta name="twitter:title" content="TrainingTrack - Gestión de Entrenamiento de Atletismo" />
+  <meta name="twitter:title" content="TrainingTrack — Software de entrenamiento para atletismo con IA" />
   <meta name="twitter:description"
-    content="Planifica entrenamientos, analiza métricas de Strava y genera informes de rendimiento con IA." />
+    content="Informes IA automáticos cada lunes con ACWR, TSB y RPE. Planificador de temporada, predictor de tiempos y Strava. Gratis durante la beta." />
   <meta name="twitter:image" content="https://www.trainingtrack.es/img/og-image.png" />
 
   <!-- PWA / Movil -->
@@ -62,22 +62,21 @@
   <meta name="apple-mobile-web-app-title" content="TrainingTrack" />
   <link rel="manifest" href="/manifest.json" />
 
-  <!-- Structured Data: Organization -->
+  <!-- Structured Data: SoftwareApplication -->
   <script type="application/ld+json">
     {
       "@context": "https://schema.org",
       "@type": "SoftwareApplication",
       "name": "TrainingTrack",
       "applicationCategory": "SportsApplication",
-      "operatingSystem": "Web",
-      "description": "Plataforma de gestión de entrenamientos de atletismo para entrenadores y atletas. Planificación semanal, métricas de Strava, informes de rendimiento con IA y tests fisiológicos.",
+      "operatingSystem": "Web, iOS, Android",
+      "description": "Software de gestión de entrenamiento para atletismo. Informes IA automáticos semanales con ACWR, TSB y RPE, planificador de temporada con mesociclos, predictor de tiempos basado en tests VAM y Conconi, sincronización con Strava y notificaciones push.",
       "url": "https://www.trainingtrack.es",
       "offers": {
-        "@type": "AggregateOffer",
+        "@type": "Offer",
+        "price": "0",
         "priceCurrency": "EUR",
-        "lowPrice": "0",
-        "highPrice": "149",
-        "offerCount": "3"
+        "description": "Acceso gratuito durante la fase beta. Sin tarjeta de crédito."
       },
       "author": {
         "@type": "Organization",
@@ -89,11 +88,6 @@
           "addressLocality": "Alicante",
           "addressCountry": "ES"
         }
-      },
-      "aggregateRating": {
-        "@type": "AggregateRating",
-        "ratingValue": "4.8",
-        "ratingCount": "50"
       }
     }
     </script>
@@ -106,34 +100,42 @@
       "mainEntity": [
         {
           "@type": "Question",
-            "name": "¿TrainingTrack es gratuito?",
+          "name": "¿TrainingTrack es gratuito?",
           "acceptedAnswer": {
             "@type": "Answer",
-            "text": "Durante la fase beta, el acceso es completamente gratuito con todas las funcionalidades. No se requiere tarjeta de crédito."
+            "text": "Sí, durante la fase beta el acceso es completamente gratuito con todas las funcionalidades incluidas. No se requiere tarjeta de crédito."
           }
         },
         {
           "@type": "Question",
-          "name": "¿Cómo se integra con Strava?",
+          "name": "¿Qué incluyen los informes IA semanales?",
           "acceptedAnswer": {
             "@type": "Answer",
-            "text": "Los atletas conectan su cuenta de Strava con un solo clic. Las actividades se sincronizan automáticamente y el entrenador puede ver métricas, rutas y rendimiento en tiempo real."
+            "text": "Cada lunes la IA genera automáticamente un informe por atleta con ACWR (ratio carga aguda/crónica), TSB (balance de fatiga), RPE medio, carga interna (Foster), kilómetros reales desde Strava, alertas de sobreentrenamiento y 4 recomendaciones concretas para la semana siguiente. Si hay competición próxima, incluye predicción de estado de forma."
           }
         },
         {
           "@type": "Question",
-          "name": "¿Qué incluyen los informes de IA?",
+          "name": "¿Cómo funciona la integración con Strava?",
           "acceptedAnswer": {
             "@type": "Answer",
-            "text": "Los informes generados por inteligencia artificial incluyen análisis de rendimiento, ratio ACWR, riesgo de lesión, progresión de métricas y recomendaciones personalizadas de entrenamiento."
+            "text": "Los atletas conectan su cuenta de Strava con un clic. Las actividades se sincronizan automáticamente: distancia, tiempo, ritmo y frecuencia cardíaca aparecen en el dashboard. Cuando el atleta completa una actividad en Strava que coincide con una sesión planificada, se marca como completada automáticamente."
           }
         },
         {
           "@type": "Question",
-          "name": "¿Puedo usar la app en el móvil?",
+          "name": "¿Para qué disciplinas y distancias es útil TrainingTrack?",
           "acceptedAnswer": {
             "@type": "Answer",
-            "text": "Sí, TrainingTrack es una aplicación web responsive que funciona en cualquier dispositivo: ordenador, tablet o móvil, sin necesidad de instalar nada."
+            "text": "TrainingTrack está diseñado para atletismo de fondo y medio fondo: desde 800 metros hasta maratón y trail. El predictor de tiempos usa tests VAM y Conconi para estimar marcas en 5K, 10K, media maratón y maratón."
+          }
+        },
+        {
+          "@type": "Question",
+          "name": "¿Puedo usar TrainingTrack en el móvil?",
+          "acceptedAnswer": {
+            "@type": "Answer",
+            "text": "Sí. TrainingTrack es una aplicación web instalable directamente desde el navegador (sin pasar por el App Store ni Google Play). En iOS, abre Safari y pulsa 'Añadir a pantalla de inicio'. En Android, usa Chrome y pulsa 'Instalar app'. Quedará en tu pantalla de inicio como cualquier app nativa."
           }
         }
       ]

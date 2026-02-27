@@ -209,7 +209,36 @@ input[type="date"] {
   width: 100%;
 }
 
+/* Scrollbar global — fino, invisible en reposo, aparece al hover */
+::-webkit-scrollbar        { width: 5px; height: 5px; }
+::-webkit-scrollbar-track  { background: transparent; }
+::-webkit-scrollbar-thumb  { background: transparent; border-radius: 10px; }
+
+/* Scroll de la página (html/body) */
+html:hover::-webkit-scrollbar-thumb,
+body:hover::-webkit-scrollbar-thumb { background: #CBD5E1; }
+html.dark:hover::-webkit-scrollbar-thumb,
+html.dark body:hover::-webkit-scrollbar-thumb { background: #4B5563; }
+
+/* Scroll de elementos internos */
+*:hover::-webkit-scrollbar-thumb { background: #CBD5E1; }
+html.dark *:hover::-webkit-scrollbar-thumb { background: #4B5563; }
+
+/* Firefox */
+* { scrollbar-width: thin; scrollbar-color: transparent transparent; }
+
 /* Mapbox GL styles */
 .mapboxgl-map {
   border-radius: 0.75rem;
+}
+
+/* Toast centrado en móvil — evita que se salga del viewport */
+@media (max-width: 1023px) {
+  [data-sileo-viewport] {
+    left: 50% !important;
+    right: auto !important;
+    transform: translateX(-50%) !important;
+    width: calc(100vw - 32px) !important;
+    max-width: 360px !important;
+  }
 }

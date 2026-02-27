@@ -10,7 +10,7 @@ const YOUTUBE_VIDEO_ID = 'TU_VIDEO_ID';
 export default function Hero() {
   const [showDemo, setShowDemo] = useState(false);
   const { theme } = useTheme();
-  const mobileImg = theme === 'dark' ? '/img/mobile-1-dark.png' : '/img/mobile-1.png';
+  const mobileImg = theme === 'dark' ? '/img/mobile-5-dark.png' : '/img/mobile-5.png';
 
   const containerVariants = {
     hidden: { opacity: 0 },

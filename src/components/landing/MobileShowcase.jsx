@@ -76,7 +76,7 @@ export default function MobileShowcase() {
             className="inline-flex items-center gap-2 px-4 py-1.5 bg-sky-100 dark:bg-sky-900/30 text-sky-600 dark:text-sky-400 rounded-full text-sm font-semibold mb-4"
           >
             <FiSmartphone className="w-4 h-4" />
-            App móvil · Móvil primero
+            App móvil
           </motion.span>
 
           <h2 className="text-4xl sm:text-5xl font-bold text-gray-900 dark:text-white mb-4">

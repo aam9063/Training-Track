@@ -103,15 +103,28 @@ export default function MobileShowcase() {
             {/* Glow */}
             <div className="absolute inset-0 bg-sky-400/10 dark:bg-sky-600/10 rounded-full blur-3xl pointer-events-none" />
 
-            {/* Main phone */}
-            <div className="relative z-10 w-full max-w-[200px] sm:max-w-[240px]">
-              <div className="bg-gray-900 rounded-[2.5rem] p-2.5 shadow-2xl ring-1 ring-white/10">
+            {/* 3D perspective wrapper */}
+            <div className="relative z-10 w-full max-w-[200px] sm:max-w-[240px]" style={{ perspective: '900px' }}>
+
+              {/* Phone frame — tilted */}
+              <motion.div
+                initial={{ rotateY: 0, rotateX: 0 }}
+                whileInView={{ rotateY: -18, rotateX: 6 }}
+                viewport={{ once: true, margin: '-50px' }}
+                transition={{ duration: 1, ease: 'easeOut' }}
+                whileHover={{ rotateY: -8, rotateX: 3, transition: { duration: 0.4 } }}
+                className="bg-gray-900 rounded-[2.5rem] p-2.5 ring-1 ring-white/10"
+                style={{
+                  transformStyle: 'preserve-3d',
+                  boxShadow: '-20px 20px 60px rgba(0,0,0,0.45), -8px 8px 20px rgba(0,0,0,0.25)',
+                }}
+              >
                 <div className="rounded-[2rem] overflow-hidden bg-white aspect-[9/19.5] relative">
-                  {/* Notch bar — sits above the screenshot content */}
+                  {/* Notch bar */}
                   <div className="absolute top-0 left-0 right-0 h-7 bg-gray-900 flex items-center justify-center z-10">
                     <div className="w-20 h-4 bg-gray-900 rounded-full" />
                   </div>
-                  {/* Screenshot pushed down below notch */}
+                  {/* Screenshot */}
                   <div className="absolute inset-0 top-7 overflow-hidden">
                     <AnimatePresence mode="wait">
                       <motion.img
@@ -128,9 +141,9 @@ export default function MobileShowcase() {
                     </AnimatePresence>
                   </div>
                 </div>
-              </div>
+              </motion.div>
 
-              {/* PWA install badge — top right, anchored to phone */}
+              {/* PWA install badge — outside the 3D transform */}
               <motion.div
                 initial={{ opacity: 0, scale: 0 }}
                 whileInView={{ opacity: 1, scale: 1 }}
@@ -151,7 +164,7 @@ export default function MobileShowcase() {
                 </div>
               </motion.div>
 
-              {/* Floating AI badge — bottom left, anchored to phone */}
+              {/* Floating AI badge — outside the 3D transform */}
               <motion.div
                 initial={{ opacity: 0, x: -20 }}
                 whileInView={{ opacity: 1, x: 0 }}

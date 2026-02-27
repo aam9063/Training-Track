@@ -1,4 +1,5 @@
 import { useState, useEffect } from 'react';
+import { useNavigate } from 'react-router-dom';
 import { motion, AnimatePresence } from 'framer-motion';
 import {
   FiChevronLeft,
@@ -21,7 +22,9 @@ import {
   FiSkipForward,
   FiRotateCcw,
   FiChevronDown,
+  FiFileText,
 } from 'react-icons/fi';
+import { listGymFilesForAthlete } from '../../services/gymFilesService';
 import { SiStrava } from 'react-icons/si';
 import { generateWeeklyPDF } from '../../lib/pdfExport';
 import { useAuth } from '../../contexts/AuthContext';
@@ -49,6 +52,7 @@ import useAthleteTestData from '../../hooks/useAthleteTestData';
 import useStravaActivities from '../../hooks/useStravaActivities';
 
 const Training = () => {
+  const navigate = useNavigate();
   const { profile } = useAuth();
   const {
     currentWeek, trainings, loading,
@@ -68,6 +72,17 @@ const Training = () => {
     activitiesRPE, editRpeActivity, setEditRpeActivity,
     loadActivityDetail, handleEditRPESave, showMoreActivities,
   } = useStravaActivities(profile?.id);
+
+  // Gym files count (just for the badge on the entry card)
+  const [gymFilesCount, setGymFilesCount] = useState(0);
+
+  useEffect(() => {
+    const coachId = profile?.athlete?.coach_athlete_relationship?.[0]?.coach_id;
+    if (!coachId) return;
+    listGymFilesForAthlete(coachId).then(({ data }) => {
+      setGymFilesCount(data?.length ?? 0);
+    });
+  }, [profile?.athlete]);
 
   // Strava-linked activities for auto-completed sessions
   const [linkedActivities, setLinkedActivities] = useState({});
@@ -344,6 +359,26 @@ const Training = () => {
           <span>PDF</span>
         </button>
       </div>
+
+      {/* ===== MATERIAL DE FUERZA ===== */}
+      {gymFilesCount > 0 && (
+        <button
+          onClick={() => navigate('/athlete/gym-files')}
+          className="w-full flex items-center gap-4 bg-white dark:bg-gray-800 border border-gray-100 dark:border-gray-700 rounded-2xl px-4 py-4 hover:bg-gray-50 dark:hover:bg-gray-750 transition-colors text-left"
+        >
+          <div className="flex-shrink-0 w-11 h-11 rounded-xl bg-gradient-to-br from-red-400 to-orange-500 flex flex-col items-center justify-center shadow-sm">
+            <span className="text-[9px] font-black text-white tracking-wider leading-none">PDF</span>
+            <FiFileText className="w-3 h-3 text-white/80 mt-0.5" />
+          </div>
+          <div className="flex-1 min-w-0">
+            <p className="text-sm font-semibold text-slate-800 dark:text-white">Material de Fuerza</p>
+            <p className="text-[11px] text-slate-400 dark:text-slate-500 mt-0.5">
+              {gymFilesCount} {gymFilesCount === 1 ? 'documento disponible' : 'documentos disponibles'}
+            </p>
+          </div>
+          <FiChevronRight className="w-4 h-4 text-slate-300 dark:text-slate-600 flex-shrink-0" />
+        </button>
+      )}
 
       {/* ===== TESTS DE RENDIMIENTO ===== */}
       {(athletePaces.length > 0 || latestVam) && (

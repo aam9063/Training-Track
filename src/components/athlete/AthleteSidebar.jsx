@@ -156,7 +156,7 @@ const AthleteSidebar = ({ onCollapse }) => {
                 `}
               >
                 <Icon className={`w-5 h-5 flex-shrink-0 ${active ? 'text-green-600 dark:text-green-400' : ''}`} />
-                <span className={`font-medium flex-1 ${collapsed ? 'lg:hidden' : ''}`}>{item.label}</span>
+                <span className={`text-sm font-medium flex-1 ${collapsed ? 'lg:hidden' : ''}`}>{item.label}</span>
                 {item.badge > 0 && (
                   collapsed ? (
                     <span className="absolute -top-1 -right-1 bg-red-500 text-white text-[10px] font-bold rounded-full w-4 h-4 flex items-center justify-center lg:flex hidden">

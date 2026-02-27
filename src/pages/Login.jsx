@@ -203,28 +203,43 @@ export default function Login() {
             initial={{ opacity: 0, y: 30 }}
             animate={{ opacity: 1, y: 0 }}
             transition={{ duration: 0.6, delay: 0.2 }}
-            className="text-center max-w-lg"
+            className="text-left max-w-lg"
           >
-            <h2 className="text-4xl font-bold mb-6">
-              Gestiona tus entrenamientos como un profesional
+            <h2 className="text-4xl font-bold mb-5">
+              Tu rendimiento, controlado al detalle
             </h2>
-            <p className="text-xl text-sky-100 mb-8">
-              Únete a cientos de entrenadores y atletas que ya confían en Training Track para alcanzar sus metas.
+            <p className="text-lg text-sky-100 mb-10">
+              Planes de entrenamiento, seguimiento Strava, análisis de carga y comunicación directa entre entrenador y atleta — todo en un solo lugar.
             </p>
 
-            {/* Stats */}
-            <div className="grid grid-cols-3 gap-6 mt-12">
-              <div className="text-center">
-                <div className="text-3xl font-bold">500+</div>
-                <div className="text-sky-200 text-sm">Entrenadores</div>
+            {/* Features */}
+            <div className="flex flex-col gap-3">
+              <div className="flex items-center gap-4 bg-white/10 rounded-2xl px-5 py-4">
+                <div className="w-10 h-10 rounded-xl bg-white/20 flex items-center justify-center flex-shrink-0">
+                  <svg viewBox="0 0 24 24" className="w-5 h-5 fill-white" xmlns="http://www.w3.org/2000/svg"><path d="M15.387 17.944l-2.089-4.116h-3.065L15.387 24l5.15-10.172H17.44l-2.053 4.116zm-7.008-7.27H3.62l2.332 4.667 2.427-4.667zm4.943 0h-3.817l1.908 3.817 1.909-3.817zm3.414 0h-2.427l-1.909 3.817 1.91 3.815 2.426-7.632zM3.62 10.5h5.157L6.345 5.838 3.62 10.5zm4.943 0h3.817L10.47 5.838 8.563 10.5zm4.943 0h2.332L13.413 5.838 13.506 10.5z"/></svg>
+                </div>
+                <div>
+                  <p className="font-semibold text-white text-sm">Sincronización con Strava</p>
+                  <p className="text-sky-200 text-xs mt-0.5">Completa entrenamientos automáticamente al subir tu actividad</p>
+                </div>
               </div>
-              <div className="text-center">
-                <div className="text-3xl font-bold">5000+</div>
-                <div className="text-sky-200 text-sm">Atletas</div>
+              <div className="flex items-center gap-4 bg-white/10 rounded-2xl px-5 py-4">
+                <div className="w-10 h-10 rounded-xl bg-white/20 flex items-center justify-center flex-shrink-0">
+                  <svg viewBox="0 0 24 24" fill="none" stroke="white" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round" className="w-5 h-5"><path d="M13 2L3 14h9l-1 8 10-12h-9l1-8z"/></svg>
+                </div>
+                <div>
+                  <p className="font-semibold text-white text-sm">Informes semanales con IA</p>
+                  <p className="text-sky-200 text-xs mt-0.5">Análisis automático de carga, fatiga y progresión por atleta</p>
+                </div>
               </div>
-              <div className="text-center">
-                <div className="text-3xl font-bold">98%</div>
-                <div className="text-sky-200 text-sm">Satisfacción</div>
+              <div className="flex items-center gap-4 bg-white/10 rounded-2xl px-5 py-4">
+                <div className="w-10 h-10 rounded-xl bg-white/20 flex items-center justify-center flex-shrink-0">
+                  <svg viewBox="0 0 24 24" fill="none" stroke="white" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round" className="w-5 h-5"><path d="M14 2H6a2 2 0 0 0-2 2v16a2 2 0 0 0 2 2h12a2 2 0 0 0 2-2V8z"/><polyline points="14 2 14 8 20 8"/><line x1="16" y1="13" x2="8" y2="13"/><line x1="16" y1="17" x2="8" y2="17"/></svg>
+                </div>
+                <div>
+                  <p className="font-semibold text-white text-sm">Planificación y material compartido</p>
+                  <p className="text-sky-200 text-xs mt-0.5">Mesociclos, microciclos y PDFs de gym accesibles para tus atletas</p>
+                </div>
               </div>
             </div>
           </motion.div>

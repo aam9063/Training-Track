@@ -15,7 +15,20 @@ import {
   FiStar,
   FiZap,
   FiClipboard,
+  FiUpload,
+  FiFileText,
+  FiDownload,
+  FiEye,
+  FiPackage,
 } from 'react-icons/fi';
+import {
+  uploadGymFile,
+  listGymFiles,
+  deleteGymFile,
+  getGymFileSignedUrl,
+  formatFileSize,
+  daysUntilExpiry,
+} from '../../services/gymFilesService';
 import { showSuccess, showError } from '../../lib/toast';
 import usePlanningData from '../../hooks/usePlanningData';
 import WeeklyPlanEditor from '../../components/dashboard/WeeklyPlanEditor';
@@ -124,6 +137,16 @@ const Planning = () => {
   const [deleteConfirm, setDeleteConfirm] = useState(null);
   const [activeFilter, setActiveFilter] = useState('all');
 
+  // Planning tabs: 'plans' | 'gym'
+  const [planningTab, setPlanningTab] = useState('plans');
+
+  // Gym files state
+  const [gymFiles, setGymFiles] = useState([]);
+  const [gymLoading, setGymLoading] = useState(false);
+  const [gymUploading, setGymUploading] = useState(false);
+  const [gymDeleteConfirm, setGymDeleteConfirm] = useState(null);
+  const [gymForm, setGymForm] = useState({ name: '', file: null });
+
   // Create plan form
   const [newPlanForm, setNewPlanForm] = useState({ name: '', description: '', modality: 'asfalto' });
   // Create mesocycle form
@@ -203,6 +226,55 @@ const Planning = () => {
     return content.days.reduce((sum, d) => sum + (d?.km || 0), 0);
   };
 
+  // ===== GYM FILES =====
+  const loadGymFiles = useCallback(async () => {
+    if (!coachId) return;
+    setGymLoading(true);
+    const { data } = await listGymFiles(coachId);
+    setGymFiles(data);
+    setGymLoading(false);
+  }, [coachId]);
+
+  useEffect(() => {
+    if (planningTab === 'gym') loadGymFiles();
+  }, [planningTab, loadGymFiles]);
+
+  const handleGymUpload = useCallback(async () => {
+    if (!gymForm.file) { showError('Selecciona un archivo PDF'); return; }
+    if (gymForm.file.size > 10 * 1024 * 1024) { showError('El archivo no puede superar 10 MB'); return; }
+    const displayName = gymForm.name.trim() || gymForm.file.name;
+    setGymUploading(true);
+    const { error } = await uploadGymFile(coachId, gymForm.file, displayName);
+    setGymUploading(false);
+    if (error) { showError('Error al subir el archivo'); return; }
+    showSuccess('Archivo subido correctamente');
+    setGymForm({ name: '', file: null });
+    loadGymFiles();
+  }, [gymForm, coachId, loadGymFiles]);
+
+  const handleGymDelete = useCallback(async (file) => {
+    const { error } = await deleteGymFile(file.id, file.storage_path);
+    if (error) { showError('Error al eliminar el archivo'); return; }
+    showSuccess('Archivo eliminado');
+    setGymDeleteConfirm(null);
+    setGymFiles(prev => prev.filter(f => f.id !== file.id));
+  }, []);
+
+  const handleGymView = useCallback(async (storagePath) => {
+    const { url, error } = await getGymFileSignedUrl(storagePath);
+    if (error || !url) { showError('No se pudo abrir el archivo'); return; }
+    window.open(url, '_blank');
+  }, []);
+
+  const handleGymDownload = useCallback(async (file) => {
+    const { url, error } = await getGymFileSignedUrl(file.storage_path);
+    if (error || !url) { showError('No se pudo descargar el archivo'); return; }
+    const a = document.createElement('a');
+    a.href = url;
+    a.download = file.filename;
+    a.click();
+  }, []);
+
   // Filtered plans
   const filteredPlans = useMemo(() => {
     if (activeFilter === 'all') return plans;
@@ -216,21 +288,189 @@ const Planning = () => {
     return (
       <div className="p-4 sm:p-6">
         {/* Header */}
-        <div className="flex items-center justify-between mb-6">
+        <div className="flex items-center justify-between mb-4">
           <div>
             <h1 className="text-2xl font-bold text-gray-900 dark:text-white">Planificación</h1>
-            <p className="text-sm text-gray-500 dark:text-gray-400 mt-0.5">Planes de entrenamiento</p>
+            <p className="text-sm text-gray-500 dark:text-gray-400 mt-0.5">
+              {planningTab === 'plans' ? 'Planes de entrenamiento' : 'Archivos PDF de gimnasio'}
+            </p>
           </div>
-          <button
-            onClick={() => setShowCreateModal(true)}
-            className="flex items-center gap-2 px-4 py-2.5 bg-blue-600 text-white rounded-xl hover:bg-blue-700 transition-colors font-medium text-sm shadow-sm"
-          >
-            <FiPlus className="w-4 h-4" />
-            Nuevo Plan
-          </button>
+          {planningTab === 'plans' ? (
+            <button
+              onClick={() => setShowCreateModal(true)}
+              className="flex items-center gap-2 px-4 py-2.5 bg-blue-600 text-white rounded-xl hover:bg-blue-700 transition-colors font-medium text-sm shadow-sm"
+            >
+              <FiPlus className="w-4 h-4" />
+              Nuevo Plan
+            </button>
+          ) : null}
         </div>
 
-        {loading ? (
+        {/* Tab toggle */}
+        <div className="flex gap-2 mb-5">
+          {[
+            { key: 'plans', label: 'Planes', icon: FiClipboard },
+            { key: 'gym', label: 'Archivos Gym', icon: FiPackage },
+          ].map(({ key, label, icon: Icon }) => (
+            <button
+              key={key}
+              onClick={() => setPlanningTab(key)}
+              className={`flex items-center gap-1.5 px-4 py-1.5 rounded-full text-sm font-medium transition-colors ${
+                planningTab === key
+                  ? 'bg-gray-900 dark:bg-white text-white dark:text-gray-900'
+                  : 'bg-white dark:bg-gray-800 border border-gray-200 dark:border-gray-700 text-gray-600 dark:text-gray-400 hover:border-gray-300'
+              }`}
+            >
+              <Icon className="w-3.5 h-3.5" />
+              {label}
+            </button>
+          ))}
+        </div>
+
+        {/* ===== GYM FILES TAB ===== */}
+        {planningTab === 'gym' && (
+          <div className="space-y-4">
+            {/* Upload form */}
+            <div className="bg-white dark:bg-gray-800 rounded-2xl border border-gray-200 dark:border-gray-700 p-4 sm:p-5">
+              <div className="flex items-center gap-2 mb-4">
+                <FiUpload className="w-4 h-4 text-blue-500" />
+                <h3 className="text-sm font-bold text-slate-900 dark:text-white">Subir PDF de Gym</h3>
+              </div>
+              <div className="space-y-3">
+                <div>
+                  <label className="block text-xs font-medium text-slate-600 dark:text-slate-400 mb-1">
+                    Nombre del archivo
+                  </label>
+                  <input
+                    type="text"
+                    value={gymForm.name}
+                    onChange={e => setGymForm(f => ({ ...f, name: e.target.value }))}
+                    placeholder="Ej: Plan Fuerza Semana 1"
+                    className="w-full px-3 py-2 text-sm rounded-xl border border-gray-200 dark:border-gray-600 bg-white dark:bg-gray-700 text-slate-900 dark:text-white placeholder-slate-400 focus:outline-none focus:ring-2 focus:ring-blue-500"
+                  />
+                </div>
+                <div>
+                  <label className="block text-xs font-medium text-slate-600 dark:text-slate-400 mb-1">
+                    Archivo PDF <span className="text-slate-400 font-normal">(máx. 10 MB)</span>
+                  </label>
+                  <input
+                    type="file"
+                    accept="application/pdf,.pdf"
+                    onChange={e => setGymForm(f => ({ ...f, file: e.target.files[0] || null }))}
+                    className="w-full text-sm text-slate-600 dark:text-slate-400 file:mr-3 file:py-1.5 file:px-3 file:rounded-lg file:border-0 file:text-xs file:font-medium file:bg-blue-50 file:text-blue-600 dark:file:bg-blue-900/30 dark:file:text-blue-400 hover:file:bg-blue-100 cursor-pointer"
+                  />
+                  {gymForm.file && (
+                    <p className="text-xs text-slate-400 mt-1">
+                      {gymForm.file.name} · {formatFileSize(gymForm.file.size)}
+                    </p>
+                  )}
+                </div>
+                <div className="flex items-center justify-between pt-1">
+                  <p className="text-[11px] text-slate-400 dark:text-slate-500 flex items-center gap-1">
+                    <FiClock className="w-3 h-3" /> Disponible 14 días
+                  </p>
+                  <button
+                    onClick={handleGymUpload}
+                    disabled={gymUploading || !gymForm.file}
+                    className="flex items-center gap-1.5 px-4 py-2 bg-blue-600 text-white rounded-xl text-sm font-medium hover:bg-blue-700 disabled:opacity-50 disabled:cursor-not-allowed transition-colors"
+                  >
+                    {gymUploading ? (
+                      <div className="w-3.5 h-3.5 border-2 border-white border-t-transparent rounded-full animate-spin" />
+                    ) : (
+                      <FiUpload className="w-3.5 h-3.5" />
+                    )}
+                    {gymUploading ? 'Subiendo…' : 'Subir'}
+                  </button>
+                </div>
+              </div>
+            </div>
+
+            {/* Files list */}
+            {gymLoading ? (
+              <div className="flex items-center justify-center py-10">
+                <div className="w-6 h-6 border-2 border-blue-600 border-t-transparent rounded-full animate-spin" />
+              </div>
+            ) : gymFiles.length === 0 ? (
+              <div className="flex flex-col items-center text-center py-10 px-4">
+                <div className="w-16 h-16 rounded-full bg-gray-100 dark:bg-gray-700/50 flex items-center justify-center mb-3">
+                  <FiFileText className="w-7 h-7 text-gray-400" />
+                </div>
+                <p className="text-sm font-medium text-slate-700 dark:text-slate-300 mb-1">Sin archivos todavía</p>
+                <p className="text-xs text-slate-400 dark:text-slate-500">Sube el primer PDF de gym para tus atletas</p>
+              </div>
+            ) : (
+              <div className="space-y-2">
+                {gymFiles.map(file => {
+                  const days = daysUntilExpiry(file.expires_at);
+                  const daysBadge = days <= 3
+                    ? 'bg-red-100 text-red-600 dark:bg-red-900/30 dark:text-red-400'
+                    : days <= 7
+                    ? 'bg-orange-100 text-orange-600 dark:bg-orange-900/30 dark:text-orange-400'
+                    : 'bg-green-100 text-green-600 dark:bg-green-900/30 dark:text-green-400';
+
+                  return (
+                    <div key={file.id} className="bg-white dark:bg-gray-800 rounded-xl border border-gray-200 dark:border-gray-700 p-3 flex items-center gap-3">
+                      <div className="w-9 h-9 rounded-lg bg-red-50 dark:bg-red-900/20 flex items-center justify-center flex-shrink-0">
+                        <FiFileText className="w-4 h-4 text-red-500" />
+                      </div>
+                      <div className="flex-1 min-w-0">
+                        <p className="text-sm font-medium text-slate-900 dark:text-white truncate">{file.filename}</p>
+                        <div className="flex items-center gap-2 mt-0.5">
+                          <span className="text-[11px] text-slate-400">{formatFileSize(file.file_size)}</span>
+                          <span className={`text-[10px] font-semibold px-1.5 py-0.5 rounded-full ${daysBadge}`}>
+                            {days}d
+                          </span>
+                        </div>
+                      </div>
+                      <div className="flex items-center gap-1 flex-shrink-0">
+                        <button
+                          onClick={() => handleGymView(file.storage_path)}
+                          title="Ver"
+                          className="p-1.5 rounded-lg text-slate-400 hover:text-blue-600 hover:bg-blue-50 dark:hover:bg-blue-900/20 transition-colors"
+                        >
+                          <FiEye className="w-3.5 h-3.5" />
+                        </button>
+                        <button
+                          onClick={() => handleGymDownload(file)}
+                          title="Descargar"
+                          className="p-1.5 rounded-lg text-slate-400 hover:text-green-600 hover:bg-green-50 dark:hover:bg-green-900/20 transition-colors"
+                        >
+                          <FiDownload className="w-3.5 h-3.5" />
+                        </button>
+                        {gymDeleteConfirm === file.id ? (
+                          <div className="flex items-center gap-1">
+                            <button
+                              onClick={() => handleGymDelete(file)}
+                              className="px-2 py-1 text-[10px] font-semibold bg-red-600 text-white rounded-lg hover:bg-red-700 transition-colors"
+                            >
+                              Sí
+                            </button>
+                            <button
+                              onClick={() => setGymDeleteConfirm(null)}
+                              className="px-2 py-1 text-[10px] font-semibold bg-gray-200 dark:bg-gray-600 text-gray-700 dark:text-gray-300 rounded-lg hover:bg-gray-300 transition-colors"
+                            >
+                              No
+                            </button>
+                          </div>
+                        ) : (
+                          <button
+                            onClick={() => setGymDeleteConfirm(file.id)}
+                            title="Eliminar"
+                            className="p-1.5 rounded-lg text-slate-400 hover:text-red-600 hover:bg-red-50 dark:hover:bg-red-900/20 transition-colors"
+                          >
+                            <FiTrash2 className="w-3.5 h-3.5" />
+                          </button>
+                        )}
+                      </div>
+                    </div>
+                  );
+                })}
+              </div>
+            )}
+          </div>
+        )}
+
+        {planningTab === 'plans' && (loading ? (
           <div className="flex items-center justify-center py-20">
             <div className="w-8 h-8 border-[3px] border-blue-600 border-t-transparent rounded-full animate-spin" />
           </div>
@@ -412,7 +652,7 @@ const Planning = () => {
               })}
             </div>
           </>
-        )}
+        ))}
 
         {/* Create Plan Modal */}
         <AnimatePresence>

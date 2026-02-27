@@ -1048,58 +1048,42 @@ const AthleteProfile = () => {
             </button>
           </div>
 
-          <div className="p-4 flex-1 overflow-y-auto max-h-[600px] custom-scrollbar">
+          <div className="p-4 flex-1 overflow-y-auto max-h-[600px] scrollbar-hover">
             {stravaMetrics ? (
               <>
-                {/* Main Strava Stats */}
+                {/* Main Stats — mismo estilo que Metrics.jsx del atleta */}
                 <div className="grid grid-cols-2 gap-3 mb-4">
-                  <div className="p-3 bg-orange-50 dark:bg-orange-900/20 rounded-xl">
-                    <p className="text-xs text-orange-600 dark:text-orange-400 mb-1">Distancia Total</p>
-                    <p className="text-2xl font-bold text-orange-700 dark:text-orange-300">
-                      {stravaMetrics.totalDistanceKm}
-                      <span className="text-sm font-normal ml-1">km</span>
-                    </p>
+                  <div className="bg-gradient-to-br from-orange-500 to-orange-600 rounded-xl p-3 text-white shadow-sm">
+                    <p className="text-xs font-medium opacity-80 mb-1">Running</p>
+                    <p className="text-2xl font-bold">{stravaMetrics.totalDistanceKm}<span className="text-xs font-normal ml-1 opacity-75">km</span></p>
                   </div>
-                  <div className="p-3 bg-blue-50 dark:bg-blue-900/20 rounded-xl">
-                    <p className="text-xs text-blue-600 dark:text-blue-400 mb-1">Tiempo Total</p>
-                    <p className="text-lg font-bold text-blue-700 dark:text-blue-300">
-                      {stravaMetrics.totalTimeFormatted}
-                    </p>
+                  <div className="bg-gradient-to-br from-blue-500 to-blue-600 rounded-xl p-3 text-white shadow-sm">
+                    <p className="text-xs font-medium opacity-80 mb-1">Tiempo</p>
+                    <p className="text-lg font-bold">{stravaMetrics.totalTimeFormatted}</p>
                   </div>
-                  <div className="p-3 bg-green-50 dark:bg-green-900/20 rounded-xl">
-                    <p className="text-xs text-green-600 dark:text-green-400 mb-1">Ritmo Medio</p>
-                    <p className="text-xl font-bold text-green-700 dark:text-green-300">
-                      {stravaMetrics.avgPace || '-'}
-                    </p>
+                  <div className="bg-gradient-to-br from-green-500 to-green-600 rounded-xl p-3 text-white shadow-sm">
+                    <p className="text-xs font-medium opacity-80 mb-1">Ritmo Medio</p>
+                    <p className="text-xl font-bold">{stravaMetrics.avgPace || '-'}<span className="text-xs font-normal ml-1 opacity-75">min/km</span></p>
                   </div>
-                  <div className="p-3 bg-red-50 dark:bg-red-900/20 rounded-xl">
-                    <p className="text-xs text-red-600 dark:text-red-400 mb-1">FC Media</p>
-                    <p className="text-2xl font-bold text-red-700 dark:text-red-300">
-                      {stravaMetrics.avgHeartrate || '-'}
-                      {stravaMetrics.avgHeartrate && <span className="text-sm font-normal ml-1">bpm</span>}
-                    </p>
+                  <div className="bg-gradient-to-br from-red-500 to-red-600 rounded-xl p-3 text-white shadow-sm">
+                    <p className="text-xs font-medium opacity-80 mb-1">FC Media</p>
+                    <p className="text-2xl font-bold">{stravaMetrics.avgHeartrate || '-'}<span className="text-xs font-normal ml-1 opacity-75">bpm</span></p>
                   </div>
                 </div>
 
                 {/* Additional Stats */}
                 <div className="grid grid-cols-3 gap-2 mb-4">
-                  <div className="p-2 bg-gray-50 dark:bg-gray-700/50 rounded-lg text-center">
-                    <p className="text-lg font-bold text-gray-900 dark:text-white">
-                      {stravaMetrics.totalActivities}
-                    </p>
-                    <p className="text-xs text-gray-500">Actividades</p>
+                  <div className="bg-gradient-to-br from-purple-500 to-purple-600 rounded-xl p-2.5 text-white text-center shadow-sm">
+                    <p className="text-lg font-bold">{stravaMetrics.totalActivities}</p>
+                    <p className="text-[10px] opacity-75">Actividades</p>
                   </div>
-                  <div className="p-2 bg-gray-50 dark:bg-gray-700/50 rounded-lg text-center">
-                    <p className="text-lg font-bold text-gray-900 dark:text-white">
-                      {stravaMetrics.totalElevation}m
-                    </p>
-                    <p className="text-xs text-gray-500">Desnivel</p>
+                  <div className="bg-gradient-to-br from-yellow-500 to-amber-600 rounded-xl p-2.5 text-white text-center shadow-sm">
+                    <p className="text-lg font-bold">{stravaMetrics.totalElevation}m</p>
+                    <p className="text-[10px] opacity-75">Desnivel</p>
                   </div>
-                  <div className="p-2 bg-gray-50 dark:bg-gray-700/50 rounded-lg text-center">
-                    <p className="text-lg font-bold text-gray-900 dark:text-white">
-                      {stravaMetrics.avgDistanceKm}km
-                    </p>
-                    <p className="text-xs text-gray-500">Media/Activ.</p>
+                  <div className="bg-gradient-to-br from-slate-600 to-slate-700 rounded-xl p-2.5 text-white text-center shadow-sm">
+                    <p className="text-lg font-bold">{stravaMetrics.avgDistanceKm}km</p>
+                    <p className="text-[10px] opacity-75">Media/Activ.</p>
                   </div>
                 </div>
 
@@ -1116,32 +1100,22 @@ const AthleteProfile = () => {
                           datasets: [
                             {
                               data: stravaMetrics.weeklyStats.slice().reverse().map(w => parseFloat(w.distanceKm)),
-                              borderColor: '#f97316',
-                              backgroundColor: 'rgba(249, 115, 22, 0.1)',
+                              borderColor: '#1A6BFF',
+                              backgroundColor: 'rgba(26, 107, 255, 0.1)',
                               fill: true,
                               tension: 0.4,
                               pointRadius: 4,
-                              pointBackgroundColor: '#f97316',
+                              pointBackgroundColor: '#1A6BFF',
                             },
                           ],
                         }}
                         options={{
                           responsive: true,
                           maintainAspectRatio: false,
-                          plugins: {
-                            legend: { display: false },
-                          },
+                          plugins: { legend: { display: false } },
                           scales: {
-                            x: {
-                              display: true,
-                              ticks: { font: { size: 9 } },
-                              grid: { display: false },
-                            },
-                            y: {
-                              display: true,
-                              ticks: { font: { size: 9 } },
-                              grid: { color: 'rgba(0,0,0,0.05)' },
-                            },
+                            x: { display: true, ticks: { font: { size: 9 } }, grid: { display: false } },
+                            y: { display: true, ticks: { font: { size: 9 } }, grid: { color: 'rgba(0,0,0,0.05)' } },
                           },
                         }}
                       />
@@ -1152,27 +1126,25 @@ const AthleteProfile = () => {
                 {/* Best Performances */}
                 {(stravaMetrics.longestRun || stravaMetrics.fastestPace) && (
                   <div className="space-y-2">
-                    <p className="text-xs font-medium text-gray-500 dark:text-gray-400">
-                      Mejores Resultados (últimas actividades)
-                    </p>
+                    <p className="text-xs font-medium text-gray-500 dark:text-gray-400">Mejores resultados</p>
                     {stravaMetrics.longestRun && (
-                      <div className="flex items-center justify-between p-2 bg-yellow-50 dark:bg-yellow-900/20 rounded-lg">
-                        <div className="flex items-center">
-                          <FiTarget className="w-4 h-4 text-yellow-600 mr-2" />
+                      <div className="flex items-center justify-between p-2.5 bg-slate-50 dark:bg-gray-700/50 rounded-xl">
+                        <div className="flex items-center gap-2">
+                          <FiTarget className="w-4 h-4 text-slate-400" />
                           <span className="text-xs text-gray-600 dark:text-gray-400">Más larga</span>
                         </div>
-                        <span className="text-sm font-bold text-yellow-700 dark:text-yellow-300">
+                        <span className="text-sm font-bold text-slate-900 dark:text-white">
                           {stravaMetrics.longestRun.distanceKm} km
                         </span>
                       </div>
                     )}
                     {stravaMetrics.fastestPace && (
-                      <div className="flex items-center justify-between p-2 bg-green-50 dark:bg-green-900/20 rounded-lg">
-                        <div className="flex items-center">
-                          <FiZap className="w-4 h-4 text-green-600 mr-2" />
+                      <div className="flex items-center justify-between p-2.5 bg-slate-50 dark:bg-gray-700/50 rounded-xl">
+                        <div className="flex items-center gap-2">
+                          <FiZap className="w-4 h-4 text-slate-400" />
                           <span className="text-xs text-gray-600 dark:text-gray-400">Más rápida</span>
                         </div>
-                        <span className="text-sm font-bold text-green-700 dark:text-green-300">
+                        <span className="text-sm font-bold text-slate-900 dark:text-white">
                           {stravaMetrics.fastestPace.pace}
                         </span>
                       </div>
@@ -1182,67 +1154,51 @@ const AthleteProfile = () => {
               </>
             ) : (
               <>
-                {/* Fallback to athlete data if no Strava */}
+                {/* Fallback sin Strava */}
                 <div className="grid grid-cols-2 gap-3 mb-4">
                   {athlete.vo2_max && (
-                    <div className="p-3 bg-green-50 dark:bg-green-900/20 rounded-xl">
-                      <p className="text-xs text-green-600 dark:text-green-400 mb-1">VO2 Max</p>
-                      <p className="text-2xl font-bold text-green-700 dark:text-green-300">
-                        {athlete.vo2_max}
-                      </p>
+                    <div className="bg-gradient-to-br from-green-500 to-green-600 rounded-xl p-3 text-white shadow-sm">
+                      <p className="text-xs font-medium opacity-80 mb-1">VO2 Max</p>
+                      <p className="text-2xl font-bold">{athlete.vo2_max}</p>
                     </div>
                   )}
                   {athlete.resting_heart_rate && (
-                    <div className="p-3 bg-red-50 dark:bg-red-900/20 rounded-xl">
-                      <p className="text-xs text-red-600 dark:text-red-400 mb-1">FC Reposo</p>
-                      <p className="text-2xl font-bold text-red-700 dark:text-red-300">
-                        {athlete.resting_heart_rate} <span className="text-sm font-normal">bpm</span>
-                      </p>
+                    <div className="bg-gradient-to-br from-red-500 to-red-600 rounded-xl p-3 text-white shadow-sm">
+                      <p className="text-xs font-medium opacity-80 mb-1">FC Reposo</p>
+                      <p className="text-2xl font-bold">{athlete.resting_heart_rate}<span className="text-xs font-normal ml-1 opacity-75">bpm</span></p>
                     </div>
                   )}
                   {athlete.max_heart_rate && (
-                    <div className="p-3 bg-purple-50 dark:bg-purple-900/20 rounded-xl">
-                      <p className="text-xs text-purple-600 dark:text-purple-400 mb-1">FC Max</p>
-                      <p className="text-2xl font-bold text-purple-700 dark:text-purple-300">
-                        {athlete.max_heart_rate} <span className="text-sm font-normal">bpm</span>
-                      </p>
+                    <div className="bg-gradient-to-br from-purple-500 to-purple-600 rounded-xl p-3 text-white shadow-sm">
+                      <p className="text-xs font-medium opacity-80 mb-1">FC Max</p>
+                      <p className="text-2xl font-bold">{athlete.max_heart_rate}<span className="text-xs font-normal ml-1 opacity-75">bpm</span></p>
                     </div>
                   )}
-                  <div className="p-3 bg-blue-50 dark:bg-blue-900/20 rounded-xl">
-                    <p className="text-xs text-blue-600 dark:text-blue-400 mb-1">Actividades</p>
-                    <p className="text-2xl font-bold text-blue-700 dark:text-blue-300">
-                      {stravaActivities.length}
-                    </p>
+                  <div className="bg-gradient-to-br from-blue-500 to-blue-600 rounded-xl p-3 text-white shadow-sm">
+                    <p className="text-xs font-medium opacity-80 mb-1">Actividades</p>
+                    <p className="text-2xl font-bold">{stravaActivities.length}</p>
                   </div>
                 </div>
 
-                {/* Mini Chart from metrics */}
                 {metrics.length > 0 && (
                   <div className="h-32">
                     <Line
                       data={{
                         labels: metrics.slice(-7).map((_, i) => `D${i + 1}`),
-                        datasets: [
-                          {
-                            data: metrics.slice(-7).map((m) => m.distance_meters || 0),
-                            borderColor: '#3B82F6',
-                            backgroundColor: 'rgba(59, 130, 246, 0.1)',
-                            fill: true,
-                            tension: 0.4,
-                            pointRadius: 0,
-                          },
-                        ],
+                        datasets: [{
+                          data: metrics.slice(-7).map((m) => m.distance_meters || 0),
+                          borderColor: '#1A6BFF',
+                          backgroundColor: 'rgba(26, 107, 255, 0.1)',
+                          fill: true,
+                          tension: 0.4,
+                          pointRadius: 0,
+                        }],
                       }}
                       options={{
                         responsive: true,
                         maintainAspectRatio: false,
-                        plugins: {
-                          legend: { display: false },
-                        },
-                        scales: {
-                          x: { display: false },
-                          y: { display: false },
-                        },
+                        plugins: { legend: { display: false } },
+                        scales: { x: { display: false }, y: { display: false } },
                       }}
                     />
                   </div>
@@ -1420,7 +1376,7 @@ const AthleteProfile = () => {
               initial={{ opacity: 0, scale: 0.95 }}
               animate={{ opacity: 1, scale: 1 }}
               exit={{ opacity: 0, scale: 0.95 }}
-              className="bg-white dark:bg-gray-800 rounded-2xl shadow-2xl w-full max-w-4xl max-h-[90vh] overflow-hidden flex flex-col"
+              className="bg-white dark:bg-gray-800 rounded-2xl shadow-2xl w-full max-w-5xl max-h-[90vh] overflow-hidden flex flex-col"
             >
               {/* Modal Header */}
               <div className={`p-6 border-b border-gray-200 dark:border-gray-700 ${
@@ -1456,7 +1412,7 @@ const AthleteProfile = () => {
               </div>
 
               {/* Modal Content */}
-              <div className="flex-1 overflow-y-auto p-6 custom-scrollbar-orange">
+              <div className="flex-1 overflow-y-auto p-6 scrollbar-hover">
                 {selectedActivity.loading ? (
                   <div className="flex items-center justify-center py-12">
                     <FiLoader className="w-8 h-8 animate-spin text-orange-500" />

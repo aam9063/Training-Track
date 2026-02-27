@@ -17,12 +17,13 @@ import {
   FiClock,
   FiZap,
   FiStar,
+  FiTrash2,
 } from 'react-icons/fi';
 import CreateCompetitionModal from '../../components/dashboard/CreateCompetitionModal';
 import { toLocalDateStr } from '../../lib/dateUtils';
 import useCoachDashboard from '../../hooks/useCoachDashboard';
 import { getWeekStartDate } from '../../services/weeklyTrainingService';
-import { addAthletesToCompetition } from '../../services/athleteService';
+import { addAthletesToCompetition, deleteAthleteCompetition } from '../../services/athleteService';
 import { getCoachAthletesList } from '../../services/planningService';
 import { showSuccess, showError } from '../../lib/toast';
 
@@ -279,6 +280,7 @@ const Dashboard = () => {
   const [allAthletes, setAllAthletes] = useState([]);
   const [addingAthleteIds, setAddingAthleteIds] = useState([]);
   const [savingAdd, setSavingAdd] = useState(false);
+  const [deletingComp, setDeletingComp] = useState(false);
   const displayName = profile?.first_name || user?.user_metadata?.first_name || 'entrenador';
 
   // Próximas competiciones agrupadas
@@ -287,7 +289,7 @@ const Dashboard = () => {
     upcomingCompetitions.forEach(c => {
       const key = `${c.name}||${c.event_date}||${c.distance_km || ''}||${c.location || ''}`;
       if (!groups[key]) groups[key] = { ...c, athletes: [] };
-      groups[key].athletes.push({ id: c.athlete_id, name: c.athleteName, image: c.athleteImage });
+      groups[key].athletes.push({ id: c.athlete_id, name: c.athleteName, image: c.athleteImage, competitionId: c.id });
     });
     return Object.values(groups);
   })();
@@ -347,7 +349,7 @@ const Dashboard = () => {
     weekCompetitions.filter(c => c.event_date === dateStr).forEach(c => {
       const key = `${c.name}||${c.event_date}||${c.distance_km || ''}||${c.location || ''}`;
       if (!groups[key]) groups[key] = { ...c, isCompetition: true, athletes: [] };
-      groups[key].athletes.push({ id: c.athlete_id, name: c.athleteName, image: c.athleteImage });
+      groups[key].athletes.push({ id: c.athlete_id, name: c.athleteName, image: c.athleteImage, competitionId: c.id });
     });
     return Object.values(groups);
   };
@@ -391,6 +393,42 @@ const Dashboard = () => {
     } else {
       showSuccess(`${addingAthleteIds.length} atleta${addingAthleteIds.length > 1 ? 's' : ''} añadido${addingAthleteIds.length > 1 ? 's' : ''}`);
       setShowAddAthletes(false);
+      setSelectedSession(null);
+      refreshCompetitions();
+    }
+  };
+
+  const handleRemoveAthleteFromComp = async (athlete) => {
+    if (!athlete.competitionId) return;
+    setDeletingComp(true);
+    const { error } = await deleteAthleteCompetition(athlete.competitionId);
+    setDeletingComp(false);
+    if (error) {
+      showError('Error al eliminar atleta de la competición');
+    } else {
+      showSuccess(`${athlete.name} eliminado de la competición`);
+      const remaining = (selectedSession.athletes || []).filter(a => a.competitionId !== athlete.competitionId);
+      if (remaining.length === 0) {
+        setSelectedSession(null);
+      } else {
+        setSelectedSession(prev => ({ ...prev, athletes: remaining }));
+      }
+      refreshCompetitions();
+    }
+  };
+
+  const handleDeleteEntireCompetition = async () => {
+    if (!selectedSession?.athletes?.length) return;
+    if (!window.confirm(`¿Eliminar la competición "${selectedSession.name}" para todos los atletas?`)) return;
+    setDeletingComp(true);
+    const ids = selectedSession.athletes.map(a => a.competitionId).filter(Boolean);
+    const results = await Promise.all(ids.map(id => deleteAthleteCompetition(id)));
+    setDeletingComp(false);
+    const anyError = results.some(r => r.error);
+    if (anyError) {
+      showError('Error al eliminar la competición');
+    } else {
+      showSuccess('Competición eliminada');
       setSelectedSession(null);
       refreshCompetitions();
     }
@@ -812,7 +850,7 @@ const Dashboard = () => {
               initial={{ opacity: 0, scale: 0.95 }}
               animate={{ opacity: 1, scale: 1 }}
               exit={{ opacity: 0, scale: 0.95 }}
-              className="bg-white dark:bg-gray-800 rounded-2xl shadow-xl max-w-md w-full max-h-[90vh] overflow-y-auto"
+              className="bg-white dark:bg-gray-800 rounded-2xl shadow-xl max-w-md w-full max-h-[90vh] overflow-y-auto no-scrollbar"
             >
               <div className="p-6">
                 <div className="flex items-center justify-between mb-5">
@@ -826,12 +864,10 @@ const Dashboard = () => {
 
                 <div className="space-y-4">
                   {/* Fecha */}
-                  <div
-                    className={`p-3 rounded-xl flex items-center gap-3 ${selectedSession.isCompetition ? 'bg-red-50 dark:bg-red-900/20' : 'bg-blue-50 dark:bg-blue-900/20'}`}
-                  >
-                    <FiCalendar style={{ color: selectedSession.isCompetition ? '#EF4444' : '#1A6BFF' }} className="w-5 h-5 flex-shrink-0" />
+                  <div className="p-3 rounded-xl flex items-center gap-3 bg-slate-50 dark:bg-gray-700/50">
+                    <FiCalendar className="w-5 h-5 flex-shrink-0 text-slate-400" />
                     <div>
-                      <p className="text-sm font-medium" style={{ color: selectedSession.isCompetition ? '#DC2626' : '#1A6BFF' }}>
+                      <p className="text-sm font-medium text-slate-700 dark:text-slate-200">
                         {new Date(
                           (selectedSession.isCompetition ? selectedSession.event_date : selectedSession.scheduled_date) + 'T00:00:00'
                         ).toLocaleDateString('es-ES', { weekday: 'long', year: 'numeric', month: 'long', day: 'numeric' })}
@@ -871,7 +907,7 @@ const Dashboard = () => {
                         {selectedSession.athletes?.length > 1 ? `${selectedSession.athletes.length} atletas` : 'Atleta'}
                       </p>
                       {selectedSession.isCompetition && (
-                        <button onClick={() => handleOpenAddAthletes(selectedSession)} className="flex items-center gap-1 text-xs font-medium hover:underline" style={{ color: '#EF4444' }}>
+                        <button onClick={() => handleOpenAddAthletes(selectedSession)} className="flex items-center gap-1 text-xs font-medium hover:underline text-[#1A6BFF]">
                           <FiPlus className="w-3 h-3" /> Añadir atletas
                         </button>
                       )}
@@ -883,33 +919,44 @@ const Dashboard = () => {
                         image: selectedSession.athleteImage,
                         status: selectedSession.status,
                       }]).map(athlete => (
-                        <Link
-                          key={athlete.id}
-                          to={`/dashboard/athletes/${athlete.id}`}
-                          onClick={() => setSelectedSession(null)}
-                          className="flex items-center gap-3 p-3 bg-slate-50 dark:bg-gray-700/50 rounded-xl hover:bg-slate-100 dark:hover:bg-gray-700 transition-colors"
-                        >
-                          <AvatarCircle name={athlete.name} image={athlete.image} size="lg" />
-                          <div className="flex-1 min-w-0">
-                            <p className="font-medium text-slate-900 dark:text-white text-sm truncate">{athlete.name}</p>
-                          </div>
-                          {!selectedSession.isCompetition && (
-                            <span className={`text-[10px] px-2 py-0.5 rounded-full ${getStatusColor(athlete.status)}`}>
-                              {getStatusLabel(athlete.status)}
-                            </span>
+                        <div key={athlete.id} className="flex items-center gap-3 p-3 bg-slate-50 dark:bg-gray-700/50 rounded-xl hover:bg-slate-100 dark:hover:bg-gray-700 transition-colors">
+                          <Link
+                            to={`/dashboard/athletes/${athlete.id}`}
+                            onClick={() => setSelectedSession(null)}
+                            className="flex-1 flex items-center gap-3 min-w-0"
+                          >
+                            <AvatarCircle name={athlete.name} image={athlete.image} size="lg" />
+                            <div className="flex-1 min-w-0">
+                              <p className="font-medium text-slate-900 dark:text-white text-sm truncate">{athlete.name}</p>
+                            </div>
+                            {!selectedSession.isCompetition && (
+                              <span className={`text-[10px] px-2 py-0.5 rounded-full ${getStatusColor(athlete.status)}`}>
+                                {getStatusLabel(athlete.status)}
+                              </span>
+                            )}
+                          </Link>
+                          {selectedSession.isCompetition && (
+                            <button
+                              onClick={() => handleRemoveAthleteFromComp(athlete)}
+                              disabled={deletingComp}
+                              title="Quitar de la competición"
+                              className="p-1.5 rounded-lg text-slate-400 hover:text-slate-600 dark:hover:text-slate-200 transition-colors flex-shrink-0 disabled:opacity-40"
+                            >
+                              <FiTrash2 className="w-4 h-4" />
+                            </button>
                           )}
-                        </Link>
+                        </div>
                       ))}
                     </div>
 
                     {/* Panel añadir atletas */}
                     {selectedSession.isCompetition && showAddAthletes && (
-                      <div className="mt-3 p-3 rounded-xl border bg-red-50 dark:bg-red-900/20 border-red-200 dark:border-red-800">
+                      <div className="mt-3 p-3 rounded-xl border bg-slate-50 dark:bg-gray-700/50 border-slate-200 dark:border-gray-600">
                         <p className="text-xs font-medium text-slate-700 dark:text-slate-300 mb-2">Selecciona atletas a añadir:</p>
                         {allAthletes.length === 0 ? (
                           <p className="text-xs text-slate-400 text-center py-2">Todos los atletas ya están asignados</p>
                         ) : (
-                          <div className="space-y-1 max-h-40 overflow-y-auto mb-3">
+                          <div className="space-y-1 max-h-40 scrollbar-hover mb-3">
                             {allAthletes.map(a => {
                               const selected = addingAthleteIds.includes(a.id);
                               return (
@@ -919,11 +966,11 @@ const Dashboard = () => {
                                   onClick={() => setAddingAthleteIds(prev =>
                                     prev.includes(a.id) ? prev.filter(x => x !== a.id) : [...prev, a.id]
                                   )}
-                                  className={`w-full flex items-center gap-2 px-3 py-2 rounded-lg text-left text-sm transition-colors ${selected ? 'bg-red-100 dark:bg-red-900/30 border border-red-300 dark:border-red-700' : 'border border-transparent'}`}
+                                  className={`w-full flex items-center gap-2 px-3 py-2 rounded-lg text-left text-sm transition-colors ${selected ? 'bg-[#E8F0FF] dark:bg-blue-900/30 border border-[#1A6BFF]/30 dark:border-blue-700' : 'border border-transparent'}`}
                                 >
                                   <div
                                     className="w-4 h-4 rounded flex items-center justify-center flex-shrink-0"
-                                    style={{ background: selected ? '#EF4444' : 'transparent', border: selected ? 'none' : '2px solid #CBD5E1' }}
+                                    style={{ background: selected ? '#1A6BFF' : 'transparent', border: selected ? 'none' : '2px solid #CBD5E1' }}
                                   >
                                     {selected && <FiCheck className="w-2.5 h-2.5 text-white" />}
                                   </div>
@@ -941,7 +988,7 @@ const Dashboard = () => {
                               onClick={handleConfirmAddAthletes}
                               disabled={savingAdd || addingAthleteIds.length === 0}
                               className="text-xs px-3 py-1.5 text-white rounded-lg hover:opacity-90 disabled:opacity-50 font-medium transition-colors"
-                              style={{ background: '#EF4444' }}
+                              style={{ background: '#1A6BFF' }}
                             >
                               {savingAdd ? 'Guardando...' : `Añadir${addingAthleteIds.length > 0 ? ` (${addingAthleteIds.length})` : ''}`}
                             </button>
@@ -1014,12 +1061,24 @@ const Dashboard = () => {
                     </>
                   )}
 
-                  <button
-                    onClick={() => setSelectedSession(null)}
-                    className="w-full py-2.5 bg-slate-100 dark:bg-gray-700 text-slate-700 dark:text-slate-300 rounded-xl hover:bg-slate-200 dark:hover:bg-gray-600 transition-colors text-sm font-medium"
-                  >
-                    Cerrar
-                  </button>
+                  <div className="flex gap-2">
+                    {selectedSession.isCompetition && (
+                      <button
+                        onClick={handleDeleteEntireCompetition}
+                        disabled={deletingComp}
+                        className="flex-1 py-2.5 bg-red-50 dark:bg-red-900/20 text-red-600 dark:text-red-400 rounded-xl hover:bg-red-100 dark:hover:bg-red-900/30 transition-colors text-sm font-medium disabled:opacity-40 flex items-center justify-center gap-1.5"
+                      >
+                        <FiTrash2 className="w-3.5 h-3.5" />
+                        {deletingComp ? 'Eliminando...' : 'Eliminar competición'}
+                      </button>
+                    )}
+                    <button
+                      onClick={() => setSelectedSession(null)}
+                      className="flex-1 py-2.5 bg-slate-100 dark:bg-gray-700 text-slate-700 dark:text-slate-300 rounded-xl hover:bg-slate-200 dark:hover:bg-gray-600 transition-colors text-sm font-medium"
+                    >
+                      Cerrar
+                    </button>
+                  </div>
                 </div>
               </div>
             </motion.div>

@@ -193,9 +193,14 @@ function ReportCard({ report, onClick }) {
               colorClass={sessPct < 50 ? 'text-red-600' : sessPct < 80 ? 'text-amber-600' : 'text-slate-900 dark:text-white'}
             />
             <MetricPill
-              label="Carga sem."
-              value={`${report.actual_km}km`}
-              colorClass="text-slate-900 dark:text-white"
+              label="RPE med."
+              value={report.avg_rpe != null ? report.avg_rpe.toFixed(1) : '—'}
+              colorClass={
+                report.avg_rpe == null ? 'text-slate-400'
+                : report.avg_rpe >= 8.5 ? 'text-red-600'
+                : report.avg_rpe >= 7.5 ? 'text-amber-600'
+                : 'text-green-600'
+              }
             />
           </div>
         </div>
@@ -221,6 +226,8 @@ function ReportDetailView({ report, onBack }) {
   const sessPlan = comparativa.sesiones_planificadas ?? report.sessions_planned ?? 0;
   const timeExecMin = comparativa.tiempo_ejecutado_min ?? 0;
   const timePlanMin = comparativa.tiempo_planificado_min ?? 0;
+  const avgRpe = comparativa.rpe_medio ?? report.avg_rpe ?? null;
+  const internalLoad = comparativa.carga_interna ?? report.internal_load ?? null;
 
   const formatMin = (m) => {
     if (!m) return '0h';
@@ -261,11 +268,23 @@ function ReportDetailView({ report, onBack }) {
       </div>
 
       {/* Key metrics */}
-      <div className="grid grid-cols-4 gap-2 mb-5 bg-slate-900 dark:bg-gray-950 rounded-2xl p-4">
-        <MetricPill label="ACWR" value={report.acwr != null ? report.acwr.toFixed(2) : '—'} colorClass={report.acwr > 1.5 ? 'text-red-400' : report.acwr >= 1.2 ? 'text-amber-400' : 'text-green-400'} />
-        <MetricPill label="TSB" value={report.tsb != null ? (report.tsb > 0 ? `+${Math.round(report.tsb)}` : Math.round(report.tsb)) : '—'} colorClass={report.tsb < -30 ? 'text-red-400' : report.tsb < -10 ? 'text-amber-400' : 'text-green-400'} />
+      <div className="grid grid-cols-3 gap-2 mb-2 bg-slate-900 dark:bg-gray-950 rounded-t-2xl px-4 pt-4 pb-3">
+        <MetricPill label="ACWR" value={report.acwr != null ? report.acwr.toFixed(2) : '—'} colorClass={report.acwr == null ? 'text-slate-500' : report.acwr > 1.5 ? 'text-red-400' : report.acwr >= 1.2 ? 'text-amber-400' : 'text-green-400'} />
+        <MetricPill label="TSB" value={report.tsb != null ? (report.tsb > 0 ? `+${Math.round(report.tsb)}` : Math.round(report.tsb)) : '—'} colorClass={report.tsb == null ? 'text-slate-500' : report.tsb < -30 ? 'text-red-400' : report.tsb < -10 ? 'text-amber-400' : 'text-green-400'} />
         <MetricPill label="Sesiones" value={`${report.sessions_done}/${report.sessions_planned}`} colorClass="text-white" />
-        <MetricPill label="Carga" value={`${report.actual_km}km`} colorClass="text-amber-400" />
+      </div>
+      <div className="grid grid-cols-3 gap-2 mb-5 bg-slate-900 dark:bg-gray-950 rounded-b-2xl px-4 pb-4 pt-3 border-t border-white/5">
+        <MetricPill label="Km ejecutados" value={`${report.actual_km}km`} colorClass="text-amber-400" />
+        <MetricPill
+          label="RPE medio"
+          value={report.avg_rpe != null ? `${report.avg_rpe.toFixed(1)}/10` : '—'}
+          colorClass={report.avg_rpe == null ? 'text-slate-500' : report.avg_rpe >= 8.5 ? 'text-red-400' : report.avg_rpe >= 7.5 ? 'text-amber-400' : 'text-green-400'}
+        />
+        <MetricPill
+          label="Carga interna"
+          value={report.internal_load != null ? `${Math.round(report.internal_load)}UA` : '—'}
+          colorClass="text-slate-300"
+        />
       </div>
 
       <div className="space-y-5">
@@ -312,10 +331,11 @@ function ReportDetailView({ report, onBack }) {
           </p>
           <div className="bg-white dark:bg-gray-800 border border-brand-border dark:border-gray-700 rounded-xl p-4 space-y-3">
             {[
-              { label: 'Km totales', exec: kmExec, plan: kmPlan, execLabel: `${kmExec}`, planLabel: `${kmPlan}` },
+              { label: 'Km totales', exec: kmExec, plan: kmPlan, execLabel: `${kmExec}km`, planLabel: `${kmPlan}km` },
               { label: 'Sesiones', exec: sessExec, plan: sessPlan, execLabel: `${sessExec}`, planLabel: `${sessPlan}` },
               { label: 'Tiempo', exec: timeExecMin, plan: timePlanMin, execLabel: formatMin(timeExecMin), planLabel: formatMin(timePlanMin) },
-            ].map(({ label, exec, plan, execLabel, planLabel }) => {
+              ...(avgRpe != null ? [{ label: 'RPE medio', exec: avgRpe, plan: 7, execLabel: `${avgRpe.toFixed(1)}/10`, planLabel: '7/10', overrideColor: avgRpe >= 8.5 ? 'bg-red-500' : avgRpe >= 7.5 ? 'bg-amber-400' : 'bg-green-500' }] : []),
+            ].map(({ label, exec, plan, execLabel, planLabel, overrideColor }) => {
               const execPct = plan > 0 ? Math.min(100, Math.round((exec / plan) * 100)) : (exec > 0 ? 100 : 0);
               const overload = exec > plan;
               return (
@@ -330,7 +350,7 @@ function ReportDetailView({ report, onBack }) {
                   </div>
                   <div className="relative h-2 bg-slate-100 dark:bg-gray-700 rounded-full overflow-visible">
                     <div className="absolute inset-0 rounded-full bg-brand-primary/20" />
-                    <div className={`absolute top-0 left-0 h-full rounded-full transition-all duration-500 ${overload ? 'bg-red-500' : 'bg-brand-primary'}`} style={{ width: `${Math.min(execPct, 100)}%` }} />
+                    <div className={`absolute top-0 left-0 h-full rounded-full transition-all duration-500 ${overrideColor ?? (overload ? 'bg-red-500' : 'bg-brand-primary')}`} style={{ width: `${Math.min(execPct, 100)}%` }} />
                   </div>
                 </div>
               );

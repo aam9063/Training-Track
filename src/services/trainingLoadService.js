@@ -296,23 +296,16 @@ export const getTodayWellness = async (athleteId) => {
 export const saveTrainingZones = async (athleteId, zoneType, zones) => {
   const today = toLocalDateStr(new Date());
 
-  // Delete zones created today (allows re-running on the same day)
-  await supabase
-    .from('training_zones')
-    .delete()
-    .eq('athlete_id', athleteId)
-    .eq('zone_type', zoneType)
-    .eq('valid_from', today);
-
-  // Expire older zones of this type
+  // Expire older zones of this type (rows from previous days)
   await supabase
     .from('training_zones')
     .update({ valid_until: today })
     .eq('athlete_id', athleteId)
     .eq('zone_type', zoneType)
-    .is('valid_until', null);
+    .is('valid_until', null)
+    .neq('valid_from', today);
 
-  // Insert new zones
+  // Upsert today's zones — handles re-runs on the same day without 409
   const records = zones.map((z) => ({
     athlete_id: athleteId,
     zone_type: zoneType,
@@ -328,7 +321,7 @@ export const saveTrainingZones = async (athleteId, zoneType, zones) => {
 
   const { error } = await supabase
     .from('training_zones')
-    .insert(records);
+    .upsert(records, { onConflict: 'athlete_id,zone_type,zone_number,valid_from' });
 
   if (error) throw error;
 };

@@ -1,0 +1,58 @@
+# TrainingTrack
+
+> TrainingTrack es una plataforma web y PWA para entrenadores de running y sus atletas. Permite planificar, asignar y hacer seguimiento de entrenamientos semanales, analizar métricas de rendimiento (ACWR, TSB, zonas de FC, ritmos), integrar actividades de Strava, y generar informes semanales automáticos con IA que incluyen percepción de esfuerzo (RPE), carga interna y predicciones de competición.
+
+TrainingTrack está dirigida a entrenadores de atletismo y running que gestionan múltiples atletas, y a atletas que quieren ver sus datos de entrenamiento de forma clara e inteligente. La plataforma conecta a entrenadores y atletas en tiempo real, con chat integrado, notificaciones push y sincronización automática con Strava.
+
+**Web:** https://trainingtrack.es
+**Tecnología:** React 19, Supabase (PostgreSQL + Auth + Edge Functions), Vite, Tailwind CSS, PWA
+**Idioma de la interfaz:** Español
+**Disponible en:** Web (desktop y móvil), instalable como app (PWA)
+
+## Funcionalidades principales
+
+- [Panel del entrenador](https://trainingtrack.es/dashboard): Vista semanal de todos los atletas asignados, agenda de sesiones, próximas competiciones y estadísticas globales.
+- [Planificación de entrenamientos](https://trainingtrack.es/dashboard/planning): Creación de planes de temporada con mesociclos (base, construcción, pico, taper, recuperación) y microciclos semanales. Asignación de planes completos a múltiples atletas desde una fecha de inicio.
+- [Calendario](https://trainingtrack.es/dashboard/calendar): Vista mensual/semanal de sesiones y competiciones, agrupadas por tipo de entrenamiento.
+- [Informes IA semanales](https://trainingtrack.es/dashboard/ai-reports): Análisis automático semanal por atleta usando IA (DeepSeek). Incluye ACWR, TSB, RPE medio, carga interna (método Foster), alertas detectadas, recomendaciones personalizadas y predicción de estado de forma para competiciones próximas. Exportable en PDF.
+- [Métricas del atleta](https://trainingtrack.es/athlete/metrics): Análisis de rendimiento basado en actividades de Strava: km totales, ritmo medio, FC media, predictor de tiempos de carrera (modelo Daniels-Gilbert), zonas de entrenamiento, test de Conconi y VAM, evolución de la carga de entrenamiento.
+- [Integración con Strava](https://trainingtrack.es/athlete/metrics): Sincronización automática de actividades. Las sesiones completadas se marcan automáticamente cuando el atleta registra una actividad en Strava.
+- [Chat entrenador-atleta](https://trainingtrack.es/dashboard/messages): Mensajería directa en tiempo real entre entrenador y cada atleta.
+- [Notificaciones push](https://trainingtrack.es/): Notificaciones en tiempo real para nuevas sesiones asignadas, mensajes del entrenador, competiciones añadidas e informes IA listos. Funciona incluso sin la app abierta (PWA standalone).
+- [Gestión de atletas](https://trainingtrack.es/dashboard/athletes): Lista de atletas del entrenador con acceso a sus métricas, entrenamientos y datos de rendimiento.
+
+## Métricas y conceptos de entrenamiento cubiertos
+
+TrainingTrack calcula y muestra las siguientes métricas de ciencia del deporte:
+
+- **ACWR (Acute:Chronic Workload Ratio):** ratio de carga aguda (última semana) vs crónica (4 semanas). Zona segura: 0.8–1.3. Por encima de 1.5 indica riesgo de lesión.
+- **TSB (Training Stress Balance):** diferencia entre fitness (CTL) y fatiga (ATL). Positivo = atleta fresco; negativo = atleta cargado; por debajo de -30 indica sobrecarga.
+- **RPE (Rate of Perceived Exertion):** percepción subjetiva del esfuerzo en escala 1-10. Clave para detectar fatiga oculta cuando el volumen parece normal.
+- **Carga interna (Session-RPE, método Foster):** suma de RPE × duración en minutos por sesión. Representa la carga real percibida acumulada en la semana.
+- **CTL (Chronic Training Load):** fitness a largo plazo, media ponderada exponencial de 42 días.
+- **ATL (Acute Training Load):** fatiga a corto plazo, media ponderada exponencial de 7 días.
+- **Zonas de frecuencia cardíaca:** calculadas por umbral de lactato o test de Conconi.
+- **Predictor de tiempos:** modelo Daniels-Gilbert basado en VDOT para estimar tiempos en 5K, 10K, media maratón y maratón.
+
+## Para entrenadores
+
+TrainingTrack permite a los entrenadores:
+- Crear y asignar planes de entrenamiento periodizados a varios atletas simultáneamente
+- Recibir alertas automáticas semanales cuando un atleta tiene indicadores de riesgo (ACWR alto, RPE elevado, sesiones no completadas)
+- Ver en un solo panel el estado de todos sus atletas
+- Exportar informes individuales en PDF para compartir con atletas o para registros
+- Comunicarse directamente con cada atleta por chat
+
+## Para atletas
+
+Los atletas en TrainingTrack pueden:
+- Ver sus sesiones de entrenamiento asignadas por el entrenador con instrucciones detalladas
+- Registrar su RPE (percepción de esfuerzo) tras completar cada sesión
+- Conectar su cuenta de Strava para sincronización automática de actividades
+- Ver su evolución de métricas de rendimiento: ritmo, FC, km, carga de entrenamiento
+- Recibir notificaciones push cuando el entrenador añade nuevas sesiones o mensajes
+
+## Optional
+
+- [Política de privacidad](https://trainingtrack.es/privacy): Tratamiento de datos personales y de salud de atletas.
+- [Términos de uso](https://trainingtrack.es/terms): Condiciones de uso de la plataforma.

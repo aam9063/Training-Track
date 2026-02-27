@@ -14,7 +14,6 @@ import {
   FiTarget,
   FiZap,
   FiBarChart2,
-  FiAlertTriangle,
   FiShield,
   FiNavigation,
 } from 'react-icons/fi';
@@ -674,88 +673,74 @@ const AthleteMetricsView = () => {
               <motion.div
                 initial={{ opacity: 0, y: 20 }}
                 animate={{ opacity: 1, y: 0 }}
-                className="bg-white dark:bg-gray-800 rounded-xl p-3 sm:p-4 border border-gray-200 dark:border-gray-700"
+                className="bg-gradient-to-br from-orange-500 to-orange-600 rounded-xl p-3 sm:p-4 sm:p-5 text-white shadow-lg"
               >
                 <div className="flex items-center justify-between mb-2">
-                  <FiActivity className="w-4 h-4 sm:w-5 sm:h-5 text-orange-500" />
-                  <span className={`text-[10px] sm:text-xs font-medium px-1.5 sm:px-2 py-0.5 rounded-full ${
-                    periodComparison.changes.distance >= 0
-                      ? 'bg-green-100 text-green-700 dark:bg-green-900/30 dark:text-green-400'
-                      : 'bg-red-100 text-red-700 dark:bg-red-900/30 dark:text-red-400'
+                  <span className="text-xs sm:text-sm font-medium opacity-90">Running</span>
+                  <span className={`text-[10px] sm:text-xs font-semibold px-1.5 py-0.5 rounded-full bg-white/20 ${
+                    periodComparison.changes.distance >= 0 ? 'text-white' : 'text-white'
                   }`}>
                     {periodComparison.changes.distance >= 0 ? '+' : ''}{periodComparison.changes.distance}%
                   </span>
                 </div>
-                <p className="text-xl sm:text-2xl font-bold text-gray-900 dark:text-white truncate">
+                <p className="text-xl sm:text-2xl font-bold mb-1 truncate">
                   {(periodComparison.current.distance / 1000).toFixed(1)} km
                 </p>
-                <p className="text-[10px] sm:text-xs text-gray-500">Distancia (últimas 2 sem.)</p>
+                <p className="text-xs opacity-75">Distancia (últimas 2 sem.)</p>
               </motion.div>
 
               <motion.div
                 initial={{ opacity: 0, y: 20 }}
                 animate={{ opacity: 1, y: 0 }}
                 transition={{ delay: 0.1 }}
-                className="bg-white dark:bg-gray-800 rounded-xl p-3 sm:p-4 border border-gray-200 dark:border-gray-700"
+                className="bg-gradient-to-br from-blue-500 to-blue-600 rounded-xl p-3 sm:p-4 sm:p-5 text-white shadow-lg"
               >
                 <div className="flex items-center justify-between mb-2">
-                  <FiClock className="w-4 h-4 sm:w-5 sm:h-5 text-blue-500" />
-                  <span className={`text-[10px] sm:text-xs font-medium px-1.5 sm:px-2 py-0.5 rounded-full ${
-                    periodComparison.changes.time >= 0
-                      ? 'bg-green-100 text-green-700 dark:bg-green-900/30 dark:text-green-400'
-                      : 'bg-red-100 text-red-700 dark:bg-red-900/30 dark:text-red-400'
-                  }`}>
+                  <span className="text-xs sm:text-sm font-medium opacity-90">Tiempo</span>
+                  <span className="text-[10px] sm:text-xs font-semibold px-1.5 py-0.5 rounded-full bg-white/20 text-white">
                     {periodComparison.changes.time >= 0 ? '+' : ''}{periodComparison.changes.time}%
                   </span>
                 </div>
-                <p className="text-lg sm:text-2xl font-bold text-gray-900 dark:text-white truncate">
+                <p className="text-lg sm:text-2xl font-bold mb-1 truncate">
                   {formatDuration(periodComparison.current.time)}
                 </p>
-                <p className="text-[10px] sm:text-xs text-gray-500">Tiempo (últimas 2 sem.)</p>
+                <p className="text-xs opacity-75">Tiempo (últimas 2 sem.)</p>
               </motion.div>
 
               <motion.div
                 initial={{ opacity: 0, y: 20 }}
                 animate={{ opacity: 1, y: 0 }}
                 transition={{ delay: 0.2 }}
-                className="bg-white dark:bg-gray-800 rounded-xl p-3 sm:p-4 border border-gray-200 dark:border-gray-700"
+                className="bg-gradient-to-br from-purple-500 to-purple-600 rounded-xl p-3 sm:p-4 sm:p-5 text-white shadow-lg"
               >
                 <div className="flex items-center justify-between mb-2">
-                  <FiCalendar className="w-4 h-4 sm:w-5 sm:h-5 text-purple-500" />
-                  <span className={`text-[10px] sm:text-xs font-medium px-1.5 sm:px-2 py-0.5 rounded-full ${
-                    periodComparison.changes.activities >= 0
-                      ? 'bg-green-100 text-green-700 dark:bg-green-900/30 dark:text-green-400'
-                      : 'bg-red-100 text-red-700 dark:bg-red-900/30 dark:text-red-400'
-                  }`}>
+                  <span className="text-xs sm:text-sm font-medium opacity-90">Actividades</span>
+                  <span className="text-[10px] sm:text-xs font-semibold px-1.5 py-0.5 rounded-full bg-white/20 text-white">
                     {periodComparison.changes.activities >= 0 ? '+' : ''}{periodComparison.changes.activities}%
                   </span>
                 </div>
-                <p className="text-xl sm:text-2xl font-bold text-gray-900 dark:text-white">
+                <p className="text-xl sm:text-2xl font-bold mb-1">
                   {periodComparison.current.activities}
                 </p>
-                <p className="text-[10px] sm:text-xs text-gray-500">Actividades (últimas 2)</p>
+                <p className="text-xs opacity-75">Actividades (últimas 2)</p>
               </motion.div>
 
               <motion.div
                 initial={{ opacity: 0, y: 20 }}
                 animate={{ opacity: 1, y: 0 }}
                 transition={{ delay: 0.3 }}
-                className="bg-white dark:bg-gray-800 rounded-xl p-3 sm:p-4 border border-gray-200 dark:border-gray-700"
+                className="bg-gradient-to-br from-yellow-500 to-amber-600 rounded-xl p-3 sm:p-4 sm:p-5 text-white shadow-lg"
               >
                 <div className="flex items-center justify-between mb-2">
-                  <FiTrendingUp className="w-4 h-4 sm:w-5 sm:h-5 text-green-500" />
-                  <span className={`text-[10px] sm:text-xs font-medium px-1.5 sm:px-2 py-0.5 rounded-full ${
-                    periodComparison.changes.elevation >= 0
-                      ? 'bg-green-100 text-green-700 dark:bg-green-900/30 dark:text-green-400'
-                      : 'bg-red-100 text-red-700 dark:bg-red-900/30 dark:text-red-400'
-                  }`}>
+                  <span className="text-xs sm:text-sm font-medium opacity-90">Desnivel</span>
+                  <span className="text-[10px] sm:text-xs font-semibold px-1.5 py-0.5 rounded-full bg-white/20 text-white">
                     {periodComparison.changes.elevation >= 0 ? '+' : ''}{periodComparison.changes.elevation}%
                   </span>
                 </div>
-                <p className="text-xl sm:text-2xl font-bold text-gray-900 dark:text-white">
+                <p className="text-xl sm:text-2xl font-bold mb-1">
                   {Math.round(periodComparison.current.elevation)}m
                 </p>
-                <p className="text-[10px] sm:text-xs text-gray-500">Desnivel (últimas 2 sem.)</p>
+                <p className="text-xs opacity-75">Desnivel (últimas 2 sem.)</p>
               </motion.div>
             </div>
           )}
@@ -779,24 +764,29 @@ const AthleteMetricsView = () => {
                 VDOT: {racePredictions.vdot} — Modelo Daniels-Gilbert
               </p>
 
-              <div className="grid grid-cols-2 lg:grid-cols-4 gap-3 sm:gap-4">
-                {Object.entries(racePredictions.predictions).map(([distance, data]) => (
-                  <div
-                    key={distance}
-                    className="bg-gradient-to-br from-purple-50 to-blue-50 dark:from-purple-900/20 dark:to-blue-900/20 rounded-lg p-4 border border-purple-200 dark:border-purple-800"
-                  >
-                    <p className="text-sm font-medium text-purple-700 dark:text-purple-300 mb-1">
-                      {distance}
-                    </p>
-                    <p className="text-xl sm:text-2xl font-bold text-gray-900 dark:text-white mb-1">
-                      {data.timeFormatted}
-                    </p>
-                    <p className="text-xs text-gray-500 dark:text-gray-400">
-                      {data.pace} min/km
-                    </p>
+              {(() => {
+                const barColors = { '5 km': 'bg-blue-500', '10 km': 'bg-green-500', 'Media Maratón': 'bg-orange-500', 'Maratón': 'bg-red-500' };
+                return (
+                  <div className="grid grid-cols-2 gap-2.5">
+                    {Object.entries(racePredictions.predictions).slice(0, 4).map(([distance, data]) => (
+                      <div key={distance} className="bg-gray-50 dark:bg-gray-700/50 rounded-xl p-3.5">
+                        <p className="text-[10px] font-bold uppercase tracking-widest text-slate-400 dark:text-slate-500 mb-1">
+                          {distance.toUpperCase()}
+                        </p>
+                        <p className="text-2xl font-bold text-slate-900 dark:text-white leading-none mb-0.5">
+                          {data.timeFormatted}
+                        </p>
+                        <p className="text-xs text-slate-400 dark:text-slate-500 mb-2">
+                          {data.pace} min/km
+                        </p>
+                        <div className="w-full h-1 bg-gray-200 dark:bg-gray-600 rounded-full overflow-hidden">
+                          <div className={`h-1 rounded-full ${barColors[distance] || 'bg-violet-500'}`} style={{ width: '100%' }} />
+                        </div>
+                      </div>
+                    ))}
                   </div>
-                ))}
-              </div>
+                );
+              })()}
             </motion.div>
           )}
 
@@ -806,24 +796,44 @@ const AthleteMetricsView = () => {
               initial={{ opacity: 0, y: 20 }}
               animate={{ opacity: 1, y: 0 }}
               transition={{ delay: 0.45 }}
-              className="bg-white dark:bg-gray-800 rounded-xl p-4 sm:p-6 shadow-sm border border-gray-200 dark:border-gray-700"
+              className="bg-white dark:bg-gray-800 rounded-2xl p-4 sm:p-5 border border-gray-200 dark:border-gray-700"
             >
-              <div className="flex items-center space-x-2 mb-2">
-                <FiHeart className="w-5 h-5 sm:w-6 sm:h-6 text-red-500" />
-                <h3 className="text-lg sm:text-xl font-bold text-gray-900 dark:text-white flex items-center">
-                  Zonas de Frecuencia Cardíaca
+              {/* Header */}
+              <div className="flex items-center gap-2 mb-0.5">
+                <FiHeart className="w-4 h-4 text-red-500" />
+                <h3 className="text-base font-bold text-slate-900 dark:text-white">
+                  Zonas de Entrenamiento
                   <InfoTooltip text="Zonas de entrenamiento basadas en frecuencia cardíaca calculadas con la fórmula de Karvonen (% de la frecuencia cardíaca de reserva). Cada zona trabaja un sistema energético diferente." />
                 </h3>
               </div>
-              <p className="text-sm text-gray-500 dark:text-gray-400 mb-4 sm:mb-6">
-                FC Máx: {hrZoneData.maxHR} bpm | FC Reposo: {hrZoneData.restingHR} bpm (Karvonen)
+              <p className="text-xs text-slate-400 dark:text-slate-500 mb-4">
+                FC Máx: {hrZoneData.maxHR} bpm · FC Reposo: {hrZoneData.restingHR} bpm
               </p>
 
-              <div className="grid grid-cols-1 lg:grid-cols-2 gap-6">
-                {/* Doughnut Chart */}
-                <div className="flex items-center justify-center">
-                  {hrZoneData.totalHRActivities > 0 ? (
-                    <div className="w-56 h-56 sm:w-64 sm:h-64">
+              {/* Zone list */}
+              <div className="space-y-2 mb-5">
+                {hrZoneData.zones.map((zone) => (
+                  <div key={zone.name} className="flex items-center gap-3">
+                    <div className="w-2.5 h-2.5 rounded-full flex-shrink-0" style={{ backgroundColor: zone.color }} />
+                    <span className="flex-1 text-sm font-medium text-slate-700 dark:text-slate-300">{zone.name}</span>
+                    <span className="text-xs font-mono text-slate-400 dark:text-slate-500 whitespace-nowrap">
+                      {zone.bpmMin}–{zone.bpmMax} bpm
+                    </span>
+                  </div>
+                ))}
+              </div>
+
+              {/* Distribución por zona */}
+              <div className="border-t border-gray-100 dark:border-gray-700 pt-4">
+                <p className="text-xs font-semibold text-slate-600 dark:text-slate-300 mb-0.5">Distribución por zona</p>
+                <p className="text-[11px] text-slate-400 dark:text-slate-500 mb-3">
+                  Basado en FC media de cada actividad
+                </p>
+
+                {hrZoneData.totalHRActivities > 0 ? (
+                  <div className="flex flex-col sm:flex-row gap-4 items-start">
+                    {/* Donut */}
+                    <div className="relative flex-shrink-0 w-32 h-32 mx-auto sm:mx-0">
                       <Doughnut
                         data={{
                           labels: hrZoneData.zones.map(z => z.name),
@@ -845,63 +855,71 @@ const AthleteMetricsView = () => {
                                   const pct = hrZoneData.totalHRActivities > 0
                                     ? Math.round((ctx.raw / hrZoneData.totalHRActivities) * 100)
                                     : 0;
-                                  return `${ctx.label}: ${ctx.raw} act. (${pct}%)`;
+                                  return `${ctx.label}: ${pct}%`;
                                 },
                               },
                             },
                           },
-                          cutout: '60%',
+                          cutout: '62%',
                         }}
                       />
+                      {/* Center label */}
+                      <div className="absolute inset-0 flex items-center justify-center pointer-events-none">
+                        <span className="text-lg font-bold text-slate-900 dark:text-white">
+                          {hrZoneData.zones[1] && hrZoneData.totalHRActivities > 0
+                            ? Math.round((hrZoneData.zones[1].count / hrZoneData.totalHRActivities) * 100)
+                            : 0}%
+                        </span>
+                      </div>
                     </div>
-                  ) : (
-                    <div className="text-center py-8">
-                      <FiHeart className="w-10 h-10 text-gray-300 dark:text-gray-600 mx-auto mb-2" />
-                      <p className="text-sm text-gray-500 dark:text-gray-400">
-                        No hay datos de frecuencia cardíaca
-                      </p>
-                    </div>
-                  )}
-                </div>
 
-                {/* Zone Table */}
-                <div className="space-y-2">
-                  {hrZoneData.zones.map((zone) => {
-                    const pct = hrZoneData.totalHRActivities > 0
-                      ? Math.round((zone.count / hrZoneData.totalHRActivities) * 100)
-                      : 0;
-                    return (
-                      <div key={zone.name} className="flex items-center gap-3">
-                        <div
-                          className="w-3 h-3 rounded-full flex-shrink-0"
-                          style={{ backgroundColor: zone.color }}
-                        />
-                        <div className="flex-1 min-w-0">
-                          <div className="flex items-center justify-between mb-1">
-                            <span className="text-sm font-medium text-gray-700 dark:text-gray-300 truncate">
-                              {zone.name}
-                            </span>
-                            <span className="text-xs text-gray-500 dark:text-gray-400 ml-2 flex-shrink-0">
-                              {zone.bpmMin}-{zone.bpmMax} bpm
-                            </span>
+                    {/* Legend + bars */}
+                    <div className="flex-1 min-w-0 space-y-1.5">
+                      {hrZoneData.zones.map((zone) => {
+                        const pct = hrZoneData.totalHRActivities > 0
+                          ? Math.round((zone.count / hrZoneData.totalHRActivities) * 100)
+                          : 0;
+                        const shortName = zone.name.replace('Z1 - ', 'Z1 ').replace('Z2 - ', 'Z2 ').replace('Z3 - ', 'Z3 ').replace('Z4 - ', 'Z4 ').replace('Z5 - ', 'Z5 ');
+                        return (
+                          <div key={zone.name} className="flex items-center gap-2">
+                            <div className="w-2 h-2 rounded-full flex-shrink-0" style={{ backgroundColor: zone.color }} />
+                            <span className="text-[11px] text-slate-500 dark:text-slate-400 w-20 truncate">{shortName}</span>
+                            <span className="text-[11px] font-semibold text-slate-700 dark:text-slate-300 w-8 text-right flex-shrink-0">{pct}%</span>
                           </div>
-                          <div className="w-full bg-gray-200 dark:bg-gray-700 rounded-full h-2">
+                        );
+                      })}
+                    </div>
+                  </div>
+                ) : (
+                  <div className="text-center py-6">
+                    <FiHeart className="w-8 h-8 text-gray-300 dark:text-gray-600 mx-auto mb-2" />
+                    <p className="text-sm text-gray-500 dark:text-gray-400">No hay datos de frecuencia cardíaca</p>
+                  </div>
+                )}
+
+                {/* Progress bars */}
+                {hrZoneData.totalHRActivities > 0 && (
+                  <div className="mt-4 space-y-2">
+                    {hrZoneData.zones.map((zone) => {
+                      const pct = hrZoneData.totalHRActivities > 0
+                        ? Math.round((zone.count / hrZoneData.totalHRActivities) * 100)
+                        : 0;
+                      const shortName = zone.name.replace('Z1 - ', 'Z1 ').replace('Z2 - ', 'Z2 ').replace('Z3 - ', 'Z3 ').replace('Z4 - ', 'Z4 ').replace('Z5 - ', 'Z5 ');
+                      return (
+                        <div key={zone.name} className="flex items-center gap-2">
+                          <span className="text-[11px] text-slate-500 dark:text-slate-400 w-24 flex-shrink-0">{shortName}</span>
+                          <div className="flex-1 h-2 bg-gray-100 dark:bg-gray-700 rounded-full overflow-hidden">
                             <div
                               className="h-2 rounded-full transition-all duration-500"
-                              style={{
-                                width: `${Math.max(pct, 2)}%`,
-                                backgroundColor: zone.color,
-                              }}
+                              style={{ width: `${Math.max(pct, 1)}%`, backgroundColor: zone.color }}
                             />
                           </div>
-                          <p className="text-xs text-gray-500 dark:text-gray-400 mt-0.5">
-                            {zone.count} act. ({pct}%)
-                          </p>
+                          <span className="text-[11px] font-semibold text-slate-500 dark:text-slate-400 w-7 text-right flex-shrink-0">{pct}%</span>
                         </div>
-                      </div>
-                    );
-                  })}
-                </div>
+                      );
+                    })}
+                  </div>
+                )}
               </div>
             </motion.div>
           )}
@@ -912,142 +930,104 @@ const AthleteMetricsView = () => {
               initial={{ opacity: 0, y: 20 }}
               animate={{ opacity: 1, y: 0 }}
               transition={{ delay: 0.05 }}
-              className="bg-white dark:bg-gray-800 rounded-2xl p-4 sm:p-6 border border-gray-200 dark:border-gray-700"
+              className="bg-white dark:bg-gray-800 rounded-2xl p-4 sm:p-5 border border-gray-200 dark:border-gray-700"
             >
-              <h3 className="text-lg font-bold text-gray-900 dark:text-white mb-4 flex items-center">
-                <FiShield className="w-5 h-5 mr-2 text-orange-500" />
-                Gestión de Carga de Entrenamiento
-                <InfoTooltip text="Ratio de carga aguda/crónica (ACWR): compara el volumen de la última semana con la media de las 4 anteriores. Zona óptima: 0.8–1.3. Por encima de 1.5 aumenta el riesgo de lesión." />
-              </h3>
+              {/* Header */}
+              <div className="flex items-center gap-2 mb-1">
+                <FiZap className="w-4 h-4 text-amber-500" />
+                <h3 className="text-base font-bold text-slate-900 dark:text-white">
+                  Gestión de Carga
+                  <InfoTooltip text="Ratio de carga aguda/crónica (ACWR): compara el volumen de la última semana con la media de las 4 anteriores. Zona óptima: 0.8–1.3. Por encima de 1.5 aumenta el riesgo de lesión." />
+                </h3>
+              </div>
+              <p className="text-xs text-slate-400 dark:text-slate-500 mb-3">ACWR · ratio carga aguda/crónica</p>
 
-              {/* Alert Banner (coach perspective) */}
+              {/* Alert banner */}
               {(() => {
                 const { acwr } = loadData;
                 const name = athlete?.user?.first_name || 'El atleta';
-                let alertConfig;
-                if (acwr < 0.8) {
-                  alertConfig = {
-                    bg: 'bg-blue-50 dark:bg-blue-900/20 border-blue-200 dark:border-blue-800',
-                    text: 'text-blue-700 dark:text-blue-300',
-                    message: `${name} tiene una carga por debajo de lo habitual. Considera aumentar el volumen gradualmente.`,
-                  };
-                } else if (acwr <= 1.3) {
-                  alertConfig = {
-                    bg: 'bg-green-50 dark:bg-green-900/20 border-green-200 dark:border-green-800',
-                    text: 'text-green-700 dark:text-green-300',
-                    message: `La carga de ${name} está en zona óptima. Buen equilibrio entre estímulo y recuperación.`,
-                  };
-                } else if (acwr <= 1.5) {
-                  alertConfig = {
-                    bg: 'bg-orange-50 dark:bg-orange-900/20 border-orange-200 dark:border-orange-800',
-                    text: 'text-orange-700 dark:text-orange-300',
-                    message: `Atención: la carga de ${name} está aumentando rápidamente. Valora moderar el volumen esta semana.`,
-                  };
-                } else {
-                  alertConfig = {
-                    bg: 'bg-red-50 dark:bg-red-900/20 border-red-200 dark:border-red-800',
-                    text: 'text-red-700 dark:text-red-300',
-                    message: `Alerta: ${name} presenta riesgo elevado de sobrecarga. Recomendable reducir intensidad y volumen.`,
-                  };
-                }
+                let cfg;
+                if (acwr < 0.8) cfg = { bg: 'bg-blue-50 dark:bg-blue-900/20', text: 'text-blue-700 dark:text-blue-300', icon: '📉', msg: `${name} tiene una carga por debajo de lo habitual. Considera aumentar el volumen gradualmente.` };
+                else if (acwr <= 1.3) cfg = { bg: 'bg-green-50 dark:bg-green-900/20', text: 'text-green-700 dark:text-green-300', icon: '✓', msg: `La carga de ${name} está en zona óptima. Buen equilibrio entre estímulo y recuperación.` };
+                else if (acwr <= 1.5) cfg = { bg: 'bg-orange-50 dark:bg-orange-900/20', text: 'text-orange-700 dark:text-orange-300', icon: '⚠', msg: `Atención: la carga de ${name} está aumentando rápidamente. Valora moderar el volumen esta semana.` };
+                else cfg = { bg: 'bg-red-50 dark:bg-red-900/20', text: 'text-red-700 dark:text-red-300', icon: '🚨', msg: `Alerta: ${name} presenta riesgo elevado de sobrecarga. Recomendable reducir intensidad y volumen.` };
                 return (
-                  <div className={`flex items-center p-3 rounded-lg border text-sm ${alertConfig.bg} ${alertConfig.text} mb-6`}>
-                    <FiAlertTriangle className="w-4 h-4 mr-2 flex-shrink-0" />
-                    <span>{alertConfig.message}</span>
+                  <div className={`flex items-center gap-2 px-3 py-2 rounded-xl text-sm font-medium ${cfg.bg} ${cfg.text} mb-4`}>
+                    <span className="flex-shrink-0">{cfg.icon}</span>
+                    <span>{cfg.msg}</span>
                   </div>
                 );
               })()}
 
-              {/* Gauge + Load Summary Cards */}
-              <div className="grid grid-cols-1 md:grid-cols-2 gap-6 mb-6">
-                <div className="flex items-center justify-center">
-                  <ACWRGauge acwr={loadData.acwr} />
+              {/* Gauge centrado */}
+              <div className="flex flex-col items-center mb-4">
+                <ACWRGauge acwr={loadData.acwr} />
+              </div>
+
+              {/* 3 stat chips */}
+              <div className="grid grid-cols-3 gap-2.5 mb-4">
+                <div className="bg-gray-50 dark:bg-gray-700/50 rounded-xl p-3 text-center">
+                  <p className="text-[10px] text-slate-400 dark:text-slate-500 mb-1">Carga aguda</p>
+                  <p className="text-xl font-bold text-slate-900 dark:text-white">{loadData.acuteLoad}</p>
+                  <p className="text-[10px] text-slate-400">km · 7 días</p>
                 </div>
-
-                <div className="grid grid-cols-3 gap-3">
-                  <div className="bg-gray-50 dark:bg-gray-700/50 rounded-xl p-3 sm:p-4 text-center">
-                    <p className="text-[11px] text-gray-500 dark:text-gray-400 mb-1">Carga Aguda</p>
-                    <p className="text-lg sm:text-2xl font-bold text-gray-900 dark:text-white">
-                      {loadData.acuteLoad}
-                    </p>
-                    <p className="text-[10px] text-gray-400 dark:text-gray-500">km (7 días)</p>
-                  </div>
-
-                  <div className="bg-gray-50 dark:bg-gray-700/50 rounded-xl p-3 sm:p-4 text-center">
-                    <p className="text-[11px] text-gray-500 dark:text-gray-400 mb-1">Carga Crónica</p>
-                    <p className="text-lg sm:text-2xl font-bold text-gray-900 dark:text-white">
-                      {loadData.chronicLoadWeekly}
-                    </p>
-                    <p className="text-[10px] text-gray-400 dark:text-gray-500">km/sem (4 sem)</p>
-                  </div>
-
-                  <div className="bg-gray-50 dark:bg-gray-700/50 rounded-xl p-3 sm:p-4 text-center">
-                    <p className="text-[11px] text-gray-500 dark:text-gray-400 mb-1">ACWR</p>
-                    <p className={`text-lg sm:text-2xl font-bold ${getACWRZone(loadData.acwr).textClass}`}>
-                      {loadData.acwr.toFixed(2)}
-                    </p>
-                    <span className={`inline-block mt-1 px-2 py-0.5 rounded-full text-[10px] font-medium ${getACWRZone(loadData.acwr).badgeClass}`}>
-                      {getACWRZone(loadData.acwr).label}
-                    </span>
-                  </div>
+                <div className="bg-gray-50 dark:bg-gray-700/50 rounded-xl p-3 text-center">
+                  <p className="text-[10px] text-slate-400 dark:text-slate-500 mb-1">Carga crónica</p>
+                  <p className="text-xl font-bold text-slate-900 dark:text-white">{loadData.chronicLoadWeekly}</p>
+                  <p className="text-[10px] text-slate-400">km/sem · 4 sem</p>
+                </div>
+                <div className="bg-gray-50 dark:bg-gray-700/50 rounded-xl p-3 text-center">
+                  <p className="text-[10px] text-slate-400 dark:text-slate-500 mb-1">ACWR</p>
+                  <p className={`text-xl font-bold ${getACWRZone(loadData.acwr).textClass}`}>{loadData.acwr.toFixed(2)}</p>
+                  <p className={`text-[10px] font-medium ${getACWRZone(loadData.acwr).textClass}`}>{getACWRZone(loadData.acwr).label}</p>
                 </div>
               </div>
 
               {/* Weekly Load Bar Chart */}
-              <div>
-                <h4 className="text-sm font-semibold text-gray-700 dark:text-gray-300 mb-3">
-                  Carga semanal (últimas 8 semanas)
-                </h4>
-                <div className="h-48 sm:h-64">
-                  <Bar
-                    data={{
-                      labels: loadData.weeklyLoads.map(w => w.label),
-                      datasets: [{
-                        label: 'km/semana',
-                        data: loadData.weeklyLoads.map(w => w.km),
-                        backgroundColor: loadData.weeklyLoads.map(w => w.color),
-                        borderRadius: 4,
-                        barPercentage: 0.7,
-                      }],
-                    }}
-                    options={{
-                      responsive: true,
-                      maintainAspectRatio: false,
-                      plugins: {
-                        legend: { display: false },
-                        tooltip: {
-                          callbacks: {
-                            label: (ctx) => {
-                              const week = loadData.weeklyLoads[ctx.dataIndex];
-                              const acwrText = week.acwr !== null ? ` | ACWR: ${week.acwr}` : '';
-                              return `${ctx.parsed.y} km${acwrText}`;
-                            },
+              <p className="text-xs font-semibold text-slate-600 dark:text-slate-300 mb-2">
+                Carga semanal · últimas 8 semanas
+              </p>
+              <div className="h-44">
+                <Bar
+                  data={{
+                    labels: loadData.weeklyLoads.map(w => w.label),
+                    datasets: [{
+                      label: 'km/semana',
+                      data: loadData.weeklyLoads.map(w => w.km),
+                      backgroundColor: loadData.weeklyLoads.map(w => w.color),
+                      borderRadius: 4,
+                      barPercentage: 0.7,
+                    }],
+                  }}
+                  options={{
+                    responsive: true,
+                    maintainAspectRatio: false,
+                    plugins: {
+                      legend: { display: false },
+                      tooltip: {
+                        callbacks: {
+                          label: (ctx) => {
+                            const week = loadData.weeklyLoads[ctx.dataIndex];
+                            const acwrText = week.acwr !== null ? ` | ACWR: ${week.acwr}` : '';
+                            return `${ctx.parsed.y} km${acwrText}`;
                           },
                         },
                       },
-                      scales: {
-                        x: {
-                          grid: { display: false },
-                          ticks: { color: 'rgb(156, 163, 175)' },
-                        },
-                        y: {
-                          beginAtZero: true,
-                          grid: { color: 'rgba(156, 163, 175, 0.1)' },
-                          ticks: { color: 'rgb(156, 163, 175)' },
-                          title: { display: true, text: 'Kilómetros', color: 'rgb(156, 163, 175)' },
-                        },
-                      },
-                    }}
-                  />
-                </div>
+                    },
+                    scales: {
+                      x: { grid: { display: false }, ticks: { color: 'rgb(156,163,175)', font: { size: 10 } } },
+                      y: { beginAtZero: true, grid: { color: 'rgba(156,163,175,0.1)' }, ticks: { color: 'rgb(156,163,175)', font: { size: 10 } } },
+                    },
+                  }}
+                />
               </div>
 
               {/* Zone legend */}
-              <div className="flex flex-wrap items-center gap-3 mt-4 text-xs text-gray-500 dark:text-gray-400">
-                <span className="flex items-center"><span className="w-3 h-3 rounded-full bg-blue-500 mr-1" />Bajo (&lt;0.8)</span>
-                <span className="flex items-center"><span className="w-3 h-3 rounded-full bg-green-500 mr-1" />Óptimo (0.8-1.3)</span>
-                <span className="flex items-center"><span className="w-3 h-3 rounded-full bg-orange-500 mr-1" />Alto (1.3-1.5)</span>
-                <span className="flex items-center"><span className="w-3 h-3 rounded-full bg-red-500 mr-1" />Peligro (&gt;1.5)</span>
+              <div className="flex flex-wrap items-center gap-3 mt-3 text-[11px] text-slate-400 dark:text-slate-500">
+                <span className="flex items-center gap-1"><span className="w-2.5 h-2.5 rounded-full bg-blue-500" />Bajo</span>
+                <span className="flex items-center gap-1"><span className="w-2.5 h-2.5 rounded-full bg-green-500" />Óptimo</span>
+                <span className="flex items-center gap-1"><span className="w-2.5 h-2.5 rounded-full bg-orange-500" />Alto</span>
+                <span className="flex items-center gap-1"><span className="w-2.5 h-2.5 rounded-full bg-red-500" />Peligro</span>
               </div>
             </motion.div>
           )}

@@ -7,36 +7,36 @@ const initialScreenshots = [
     id: 1,
     light: '/img/1.png',
     dark: '/img/1-dark.png',
-    alt: 'Dashboard de entrenador',
-    title: 'Dashboard Intuitivo',
+    alt: 'Dashboard del entrenador con agenda semanal y próximas competiciones',
+    title: 'Dashboard del entrenador',
   },
   {
     id: 2,
     light: '/img/2.png',
     dark: '/img/2-dark.png',
-    alt: 'Calendario de entrenamientos',
-    title: 'Planificación Visual',
+    alt: 'Calendario mensual con sesiones y competiciones por atleta',
+    title: 'Calendario de entrenamientos',
   },
   {
     id: 3,
     light: '/img/3.png',
     dark: '/img/3-dark.png',
-    alt: 'Análisis de rendimiento',
-    title: 'Métricas Avanzadas',
+    alt: 'Métricas de rendimiento del atleta con datos de Strava',
+    title: 'Métricas reales desde Strava',
   },
   {
     id: 4,
     light: '/img/4.png',
     dark: '/img/4-dark.png',
-    alt: 'Perfil de atleta',
-    title: 'Gestión de Atletas',
+    alt: 'Planificador de temporada con mesociclos y asignación a atletas',
+    title: 'Planificador de temporada',
   },
   {
     id: 5,
     light: '/img/5.png',
     dark: '/img/5-dark.png',
-    alt: 'Estadísticas detalladas',
-    title: 'Reportes Detallados',
+    alt: 'Informes IA semanales por atleta con ACWR, TSB y RPE',
+    title: 'Informes IA semanales',
   }
 ];
 
@@ -264,40 +264,6 @@ export default function AppShowcase() {
             ))}
           </AnimatePresence>
         </div>
-
-        {/* Trust indicators */}
-        <motion.div
-          initial={{ opacity: 0, y: 20 }}
-          whileInView={{ opacity: 1, y: 0 }}
-          viewport={{ once: true }}
-          transition={{ duration: 0.6, delay: 0.3 }}
-          className="mt-16 text-center"
-        >
-          <p className="text-gray-500 dark:text-gray-400 text-sm mb-8">
-            Usado por entrenadores y atletas de élite en toda España
-          </p>
-          <div className="flex flex-wrap items-center justify-center gap-10 md:gap-16 cursor-pointer">
-            {[
-              { name: 'CA Alicante', logo: '/img/LogoAAA.png' },
-            ].map((org, i) => (
-              <div
-                key={i}
-                className="group flex flex-col items-center gap-3 transition-all duration-500"
-              >
-                <div className="w-16 h-16 md:w-20 md:h-20 relative overflow-hidden rounded-lg">
-                  <img
-                    src={org.logo}
-                    alt={org.name}
-                    className="w-full h-full object-contain grayscale opacity-60 group-hover:grayscale-0 group-hover:opacity-100 transition-all duration-500"
-                  />
-                </div>
-                <span className="text-gray-500 dark:text-gray-400 text-xs md:text-sm font-medium group-hover:text-gray-700 dark:group-hover:text-gray-200 transition-colors duration-500">
-                  {org.name}
-                </span>
-              </div>
-            ))}
-          </div>
-        </motion.div>
       </div>
     </section>
   );

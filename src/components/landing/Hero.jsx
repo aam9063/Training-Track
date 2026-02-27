@@ -150,8 +150,18 @@ export default function Hero() {
             className="relative hidden lg:flex justify-center"
           >
             {/* Phone frame */}
-            <div className="relative w-64 mx-auto">
-              <div className="bg-gray-900 rounded-[2.5rem] p-2.5 shadow-2xl ring-1 ring-white/10">
+            <div className="relative w-64 mx-auto" style={{ perspective: '900px' }}>
+              <motion.div
+                initial={{ rotateY: 0, rotateX: 0 }}
+                animate={{ rotateY: 18, rotateX: 6 }}
+                transition={{ duration: 1, delay: 0.6, ease: 'easeOut' }}
+                whileHover={{ rotateY: 8, rotateX: 3, transition: { duration: 0.4 } }}
+                className="bg-gray-900 rounded-[2.5rem] p-2.5 ring-1 ring-white/10"
+                style={{
+                  transformStyle: 'preserve-3d',
+                  boxShadow: '20px 20px 60px rgba(0,0,0,0.45), 8px 8px 20px rgba(0,0,0,0.25)',
+                }}
+              >
                 <div className="rounded-[2rem] overflow-hidden bg-white relative">
                   {/* Notch bar — covers top of screenshot */}
                   <div className="absolute top-0 left-0 right-0 h-7 bg-gray-900 flex items-center justify-center z-10">
@@ -166,7 +176,7 @@ export default function Hero() {
                     />
                   </div>
                 </div>
-              </div>
+              </motion.div>
             </div>
 
             {/* Floating card — informe IA */}

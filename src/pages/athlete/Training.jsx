@@ -1308,59 +1308,54 @@ const Training = () => {
                   <div className="space-y-6">
                     {/* Completed Session RPE Summary */}
                     {selectedDay.status === 'completed' && selectedDay.rpeScore && (
-                      <div className="bg-green-50 dark:bg-green-900/20 rounded-lg p-4 border border-green-200 dark:border-green-800">
-                        <div className="flex items-center justify-between">
-                          <div className="flex items-center space-x-3">
-                            <span className="text-3xl">{getRPEEmoji(selectedDay.rpeScore)}</span>
-                            <div>
-                              <p className="font-semibold text-green-800 dark:text-green-300">
-                                Esfuerzo percibido: {RPE_OPTIONS.find(o => o.score === selectedDay.rpeScore)?.label}
-                              </p>
-                              {selectedDay.rpeNotes && (
-                                <p className="text-sm text-green-700 dark:text-green-400 mt-1">{selectedDay.rpeNotes}</p>
-                              )}
-                            </div>
-                          </div>
-                          {selectedDay.actualDuration && (
-                            <div className="text-right">
-                              <p className="text-sm text-green-600 dark:text-green-400">Duración real</p>
-                              <p className="font-bold text-green-800 dark:text-green-300">{selectedDay.actualDuration} min</p>
-                            </div>
+                      <div className="flex items-center gap-4 bg-green-50 dark:bg-green-900/20 rounded-2xl p-4 border border-green-100 dark:border-green-800/50">
+                        <span className="text-4xl flex-shrink-0">{getRPEEmoji(selectedDay.rpeScore)}</span>
+                        <div className="flex-1 min-w-0">
+                          <p className="text-xs font-bold uppercase tracking-widest text-green-600 dark:text-green-400 mb-0.5">Percepción de esfuerzo</p>
+                          <p className="font-semibold text-green-900 dark:text-green-200">
+                            {RPE_OPTIONS.find(o => o.score === selectedDay.rpeScore)?.label}
+                          </p>
+                          {selectedDay.rpeNotes && (
+                            <p className="text-sm text-green-700 dark:text-green-400 mt-1">{selectedDay.rpeNotes}</p>
+                          )}
+                          {selectedDay.notesAthlete && (
+                            <p className="text-sm text-green-700 dark:text-green-400 mt-1 italic">"{selectedDay.notesAthlete}"</p>
                           )}
                         </div>
-                        {selectedDay.notesAthlete && (
-                          <p className="mt-3 text-sm text-green-700 dark:text-green-400 border-t border-green-200 dark:border-green-800 pt-3">
-                            💬 {selectedDay.notesAthlete}
-                          </p>
+                        {selectedDay.actualDuration && (
+                          <div className="text-right flex-shrink-0">
+                            <p className="text-[10px] uppercase tracking-widest text-green-500 dark:text-green-400">Duración</p>
+                            <p className="text-lg font-bold text-green-800 dark:text-green-200">{selectedDay.actualDuration} <span className="text-sm font-normal">min</span></p>
+                          </div>
                         )}
                       </div>
                     )}
 
                     {/* Strava Auto-completed Banner */}
                     {selectedDay.status === 'completed' && selectedDay.stravaActivityId && linkedActivities[selectedDayIndex] && (
-                      <div className="bg-[#FC4C02]/10 dark:bg-[#FC4C02]/20 rounded-lg p-4 border border-[#FC4C02]/30">
-                        <div className="flex items-center space-x-2 mb-3">
-                          <SiStrava className="w-5 h-5 text-[#FC4C02]" />
-                          <p className="font-semibold text-[#FC4C02]">Completado automáticamente vía Strava</p>
+                      <div className="rounded-2xl border border-[#FC4C02]/20 overflow-hidden">
+                        <div className="flex items-center gap-2 px-4 py-2.5 bg-[#FC4C02]/10 dark:bg-[#FC4C02]/15">
+                          <SiStrava className="w-4 h-4 text-[#FC4C02]" />
+                          <p className="text-xs font-bold uppercase tracking-widest text-[#FC4C02]">Completado vía Strava</p>
                         </div>
-                        <div className="grid grid-cols-3 gap-3">
-                          <div className="text-center">
-                            <p className="text-xs text-gray-500 dark:text-gray-400">Distancia</p>
-                            <p className="text-lg font-bold text-gray-900 dark:text-white">{linkedActivities[selectedDayIndex].distanceKm} km</p>
+                        <div className="grid grid-cols-3 divide-x divide-gray-100 dark:divide-gray-700 bg-white dark:bg-gray-800">
+                          <div className="flex flex-col items-center py-3">
+                            <p className="text-[10px] uppercase tracking-widest text-slate-400 dark:text-slate-500 mb-0.5">Distancia</p>
+                            <p className="text-lg font-bold text-slate-900 dark:text-white">{linkedActivities[selectedDayIndex].distanceKm} <span className="text-xs font-normal text-slate-400">km</span></p>
                           </div>
-                          <div className="text-center">
-                            <p className="text-xs text-gray-500 dark:text-gray-400">Tiempo</p>
-                            <p className="text-lg font-bold text-gray-900 dark:text-white">{linkedActivities[selectedDayIndex].formattedTime}</p>
+                          <div className="flex flex-col items-center py-3">
+                            <p className="text-[10px] uppercase tracking-widest text-slate-400 dark:text-slate-500 mb-0.5">Tiempo</p>
+                            <p className="text-lg font-bold text-slate-900 dark:text-white">{linkedActivities[selectedDayIndex].formattedTime}</p>
                           </div>
-                          <div className="text-center">
-                            <p className="text-xs text-gray-500 dark:text-gray-400">Ritmo</p>
-                            <p className="text-lg font-bold text-gray-900 dark:text-white">{linkedActivities[selectedDayIndex].pace} min/km</p>
+                          <div className="flex flex-col items-center py-3">
+                            <p className="text-[10px] uppercase tracking-widest text-slate-400 dark:text-slate-500 mb-0.5">Ritmo</p>
+                            <p className="text-lg font-bold text-slate-900 dark:text-white">{linkedActivities[selectedDayIndex].pace} <span className="text-xs font-normal text-slate-400">min/km</span></p>
                           </div>
                         </div>
                         {linkedActivities[selectedDayIndex].average_heartrate && (
-                          <div className="mt-2 flex items-center justify-center space-x-1 text-sm text-gray-600 dark:text-gray-400">
-                            <FiHeart className="w-3.5 h-3.5 text-red-500" />
-                            <span>FC media: <strong>{Math.round(linkedActivities[selectedDayIndex].average_heartrate)} bpm</strong></span>
+                          <div className="flex items-center justify-center gap-1.5 py-2 bg-red-50 dark:bg-red-900/10 border-t border-red-100 dark:border-red-900/30">
+                            <FiHeart className="w-3 h-3 text-red-500" />
+                            <span className="text-xs text-red-600 dark:text-red-400">FC media: <strong>{Math.round(linkedActivities[selectedDayIndex].average_heartrate)} bpm</strong></span>
                           </div>
                         )}
                       </div>
@@ -1368,38 +1363,38 @@ const Training = () => {
 
                     {/* Skipped Session Info */}
                     {selectedDay.status === 'skipped' && (
-                      <div className="bg-gray-100 dark:bg-gray-700/50 rounded-lg p-4 border border-gray-300 dark:border-gray-600">
-                        <div className="flex items-center space-x-2">
-                          <FiSkipForward className="w-5 h-5 text-gray-500" />
-                          <p className="font-semibold text-gray-700 dark:text-gray-300">Sesión omitida</p>
+                      <div className="flex items-center gap-3 bg-gray-100 dark:bg-gray-700/50 rounded-2xl p-4 border border-gray-200 dark:border-gray-600">
+                        <div className="w-9 h-9 rounded-xl bg-gray-200 dark:bg-gray-600 flex items-center justify-center flex-shrink-0">
+                          <FiSkipForward className="w-4 h-4 text-gray-500 dark:text-gray-400" />
                         </div>
-                        {selectedDay.notesAthlete && (
-                          <p className="mt-2 text-sm text-gray-600 dark:text-gray-400">{selectedDay.notesAthlete}</p>
-                        )}
+                        <div>
+                          <p className="text-sm font-semibold text-gray-700 dark:text-gray-300">Sesión omitida</p>
+                          {selectedDay.notesAthlete && (
+                            <p className="text-xs text-gray-500 dark:text-gray-400 mt-0.5">{selectedDay.notesAthlete}</p>
+                          )}
+                        </div>
                       </div>
                     )}
 
                     {/* Summary Stats */}
-                    <div className="grid grid-cols-2 gap-4">
+                    <div className="grid grid-cols-2 gap-3">
                       {selectedDay.totalDistance && (
-                        <div className="bg-blue-50 dark:bg-blue-900/20 rounded-lg p-4">
-                          <div className="flex items-center space-x-2 mb-1">
-                            <FiTarget className="w-4 h-4 text-blue-600 dark:text-blue-400" />
-                            <span className="text-sm text-blue-600 dark:text-blue-400">Distancia Total</span>
-                          </div>
-                          <p className="text-2xl font-bold text-blue-700 dark:text-blue-300">
+                        <div className="bg-white dark:bg-gray-800 border border-gray-100 dark:border-gray-700 rounded-2xl p-4">
+                          <p className="text-[10px] font-bold uppercase tracking-widest text-slate-400 dark:text-slate-500 mb-1 flex items-center gap-1">
+                            <FiTarget className="w-3 h-3" /> Distancia
+                          </p>
+                          <p className="text-2xl font-bold text-slate-900 dark:text-white">
                             {selectedDay.totalDistance}
                           </p>
                         </div>
                       )}
                       {selectedDay.duration && (
-                        <div className="bg-purple-50 dark:bg-purple-900/20 rounded-lg p-4">
-                          <div className="flex items-center space-x-2 mb-1">
-                            <FiClock className="w-4 h-4 text-purple-600 dark:text-purple-400" />
-                            <span className="text-sm text-purple-600 dark:text-purple-400">Duración est.</span>
-                          </div>
-                          <p className="text-2xl font-bold text-purple-700 dark:text-purple-300">
-                            {selectedDay.duration} min
+                        <div className="bg-white dark:bg-gray-800 border border-gray-100 dark:border-gray-700 rounded-2xl p-4">
+                          <p className="text-[10px] font-bold uppercase tracking-widest text-slate-400 dark:text-slate-500 mb-1 flex items-center gap-1">
+                            <FiClock className="w-3 h-3" /> Duración est.
+                          </p>
+                          <p className="text-2xl font-bold text-slate-900 dark:text-white">
+                            {selectedDay.duration} <span className="text-sm font-normal text-slate-400">min</span>
                           </p>
                         </div>
                       )}
@@ -1408,10 +1403,8 @@ const Training = () => {
                     {/* Description */}
                     {selectedDay.description && (
                       <div>
-                        <h4 className="text-sm font-semibold text-gray-700 dark:text-gray-300 mb-2">
-                          Descripción
-                        </h4>
-                        <p className="text-gray-600 dark:text-gray-400 bg-gray-50 dark:bg-gray-700/50 rounded-lg p-4">
+                        <p className="text-[10px] font-bold uppercase tracking-widest text-slate-400 dark:text-slate-500 mb-2">Descripción</p>
+                        <p className="text-sm text-slate-700 dark:text-slate-300 bg-white dark:bg-gray-800 border border-gray-100 dark:border-gray-700 rounded-2xl px-4 py-3 leading-relaxed">
                           {selectedDay.description}
                         </p>
                       </div>
@@ -1420,70 +1413,44 @@ const Training = () => {
                     {/* Exercises List */}
                     {selectedDay.exercises?.length > 0 && (
                       <div>
-                        <h4 className="text-sm font-semibold text-gray-700 dark:text-gray-300 mb-3">
-                          Ejercicios ({selectedDay.exercises.length})
-                        </h4>
-                        <div className="space-y-3">
+                        <p className="text-[10px] font-bold uppercase tracking-widest text-slate-400 dark:text-slate-500 mb-2">
+                          Ejercicios · {selectedDay.exercises.length}
+                        </p>
+                        <div className="space-y-2">
                           {selectedDay.exercises.map((exercise, index) => (
                             <div
                               key={exercise.id || index}
-                              className="rounded-lg p-4 border bg-gray-50 dark:bg-gray-700/50 border-gray-200 dark:border-gray-600"
+                              className="bg-white dark:bg-gray-800 border border-gray-100 dark:border-gray-700 rounded-2xl p-4"
                             >
                               <div className="flex items-start justify-between mb-2">
-                                <div className="flex items-start space-x-3">
-                                  {selectedDay.status === 'completed' && (
-                                    <FiCheckCircle className="w-5 h-5 text-green-500 mt-0.5 flex-shrink-0" />
+                                <div className="flex items-start gap-2">
+                                  {selectedDay.status === 'completed' ? (
+                                    <FiCheckCircle className="w-4 h-4 text-green-500 mt-0.5 flex-shrink-0" />
+                                  ) : (
+                                    <span className="w-4 h-4 mt-0.5 flex-shrink-0 flex items-center justify-center text-[10px] font-bold text-slate-400">{index + 1}</span>
                                   )}
-                                  <h5 className="font-medium text-gray-900 dark:text-white">
-                                    {index + 1}. {exercise.name}
+                                  <h5 className="text-sm font-semibold text-slate-900 dark:text-white">
+                                    {exercise.name}
                                   </h5>
                                 </div>
                                 {exercise.paceCode && (
-                                  <span className="text-xs px-2 py-1 bg-green-100 dark:bg-green-900/30 text-green-700 dark:text-green-400 rounded-full">
+                                  <span className="text-[10px] font-bold px-2 py-0.5 bg-blue-50 dark:bg-blue-900/30 text-blue-600 dark:text-blue-400 rounded-full">
                                     {exercise.paceCode}
                                   </span>
                                 )}
                               </div>
 
-                              {/* Planned values */}
-                              <div className="grid grid-cols-2 sm:grid-cols-4 gap-3 text-sm">
-                                {exercise.sets && (
-                                  <div>
-                                    <span className="text-gray-500 dark:text-gray-400">Series:</span>
-                                    <span className="ml-1 font-medium text-gray-900 dark:text-white">{exercise.sets}</span>
-                                  </div>
-                                )}
-                                {exercise.reps && (
-                                  <div>
-                                    <span className="text-gray-500 dark:text-gray-400">Reps:</span>
-                                    <span className="ml-1 font-medium text-gray-900 dark:text-white">{exercise.reps}</span>
-                                  </div>
-                                )}
-                                {exercise.distance && (
-                                  <div>
-                                    <span className="text-gray-500 dark:text-gray-400">Distancia:</span>
-                                    <span className="ml-1 font-medium text-gray-900 dark:text-white">{formatDistance(exercise.distance)}</span>
-                                  </div>
-                                )}
-                                {exercise.rest && (
-                                  <div>
-                                    <span className="text-gray-500 dark:text-gray-400">Descanso:</span>
-                                    <span className="ml-1 font-medium text-gray-900 dark:text-white">{formatRest(exercise.rest)}</span>
-                                  </div>
-                                )}
+                              <div className="flex flex-wrap gap-x-4 gap-y-1 text-xs text-slate-500 dark:text-slate-400">
+                                {exercise.sets && <span><span className="font-medium text-slate-700 dark:text-slate-300">{exercise.sets}</span> series</span>}
+                                {exercise.reps && <span><span className="font-medium text-slate-700 dark:text-slate-300">{exercise.reps}</span> reps</span>}
+                                {exercise.distance && <span><span className="font-medium text-slate-700 dark:text-slate-300">{formatDistance(exercise.distance)}</span></span>}
+                                {exercise.rest && <span>r: <span className="font-medium text-slate-700 dark:text-slate-300">{formatRest(exercise.rest)}</span></span>}
+                                {exercise.paceCode && <span>Ritmo: <span className="font-medium text-slate-700 dark:text-slate-300">{getPaceLabel(exercise.paceCode)}</span></span>}
                               </div>
 
-                              {exercise.paceCode && (
-                                <div className="mt-2 pt-2 border-t border-gray-200 dark:border-gray-600">
-                                  <span className="text-xs text-gray-500 dark:text-gray-400">
-                                    Ritmo: {getPaceLabel(exercise.paceCode)}
-                                  </span>
-                                </div>
-                              )}
-
                               {exercise.notes && (
-                                <p className="mt-2 text-sm text-gray-500 dark:text-gray-400 italic">
-                                  💡 {exercise.notes}
+                                <p className="mt-2 text-xs text-slate-400 dark:text-slate-500 italic">
+                                  {exercise.notes}
                                 </p>
                               )}
                             </div>
@@ -1494,73 +1461,59 @@ const Training = () => {
 
                     {/* Coach Notes — only show if different from description */}
                     {selectedDay.notes && selectedDay.notes !== selectedDay.description && (
-                      <div className="bg-yellow-50 dark:bg-yellow-900/20 rounded-lg p-4 border border-yellow-200 dark:border-yellow-800">
-                        <h4 className="text-sm font-semibold text-yellow-700 dark:text-yellow-400 mb-2 flex items-center">
-                          💬 Notas del Entrenador
-                        </h4>
-                        <p className="text-yellow-800 dark:text-yellow-300">
-                          {selectedDay.notes}
-                        </p>
+                      <div className="flex gap-3 bg-amber-50 dark:bg-amber-900/10 rounded-2xl p-4 border border-amber-100 dark:border-amber-800/40">
+                        <div className="w-7 h-7 rounded-lg bg-amber-100 dark:bg-amber-900/30 flex items-center justify-center flex-shrink-0 mt-0.5">
+                          <span className="text-sm">💬</span>
+                        </div>
+                        <div>
+                          <p className="text-[10px] font-bold uppercase tracking-widest text-amber-600 dark:text-amber-400 mb-1">Nota del entrenador</p>
+                          <p className="text-sm text-amber-800 dark:text-amber-300">{selectedDay.notes}</p>
+                        </div>
                       </div>
                     )}
 
                     {/* Strava RPE Section (for auto-completed sessions missing RPE) */}
                     {showStravaRpeFlow && selectedDay.status === 'completed' && selectedDay.stravaActivityId && !selectedDay.rpeScore && (
-                      <div className="bg-gradient-to-br from-orange-50 to-amber-50 dark:from-orange-900/20 dark:to-amber-900/20 rounded-xl p-5 border border-orange-200 dark:border-orange-800">
-                        <h4 className="text-base font-bold text-orange-800 dark:text-orange-300 mb-1">
-                          ¿Cómo te has sentido?
-                        </h4>
-                        <p className="text-sm text-orange-600 dark:text-orange-400 mb-4">
-                          Indica tu percepción de esfuerzo
-                        </p>
+                      <div className="bg-white dark:bg-gray-800 rounded-2xl border border-gray-100 dark:border-gray-700 p-5">
+                        <p className="text-[10px] font-bold uppercase tracking-widest text-slate-400 dark:text-slate-500 mb-1">Percepción de esfuerzo</p>
+                        <p className="text-base font-bold text-slate-900 dark:text-white mb-4">¿Cómo te has sentido?</p>
 
-                        <div className="flex justify-center gap-2 sm:gap-3 mb-5">
+                        <div className="flex justify-between gap-1 mb-5">
                           {RPE_OPTIONS.map((option) => (
                             <button
                               key={option.score}
                               onClick={() => setRpeScore(option.score)}
-                              className={`flex flex-col items-center p-2 sm:p-3 rounded-xl transition-all duration-200 ${
+                              className={`flex flex-col items-center flex-1 py-2.5 rounded-xl transition-all duration-150 ${
                                 rpeScore === option.score
-                                  ? 'bg-orange-200 dark:bg-orange-800/50 ring-2 ring-orange-500 scale-110'
-                                  : 'hover:bg-orange-100 dark:hover:bg-orange-800/30 hover:scale-105'
+                                  ? 'bg-slate-100 dark:bg-slate-700 ring-2 ring-slate-400 dark:ring-slate-500 scale-105'
+                                  : 'hover:bg-slate-50 dark:hover:bg-slate-700/50'
                               }`}
                             >
-                              <span className="text-2xl sm:text-3xl mb-1">{option.emoji}</span>
-                              <span className={`text-[10px] sm:text-xs font-medium ${
-                                rpeScore === option.score
-                                  ? 'text-orange-700 dark:text-orange-300'
-                                  : 'text-gray-500 dark:text-gray-400'
-                              }`}>
-                                {option.label}
-                              </span>
+                              <span className="text-2xl mb-1">{option.emoji}</span>
+                              <span className="text-[9px] font-medium text-slate-500 dark:text-slate-400 leading-tight text-center">{option.label}</span>
                             </button>
                           ))}
                         </div>
 
-                        <div className="mb-3">
-                          <label className="block text-sm font-medium text-orange-700 dark:text-orange-400 mb-1">
-                            Sensaciones / Comentarios (opcional)
-                          </label>
-                          <textarea
-                            value={athleteNotes}
-                            onChange={(e) => setAthleteNotes(e.target.value)}
-                            placeholder="¿Cómo te has sentido? Describe tus sensaciones..."
-                            rows={2}
-                            className="w-full px-3 py-2 rounded-lg border border-orange-300 dark:border-orange-700 bg-white dark:bg-gray-800 text-gray-900 dark:text-white placeholder-gray-400 text-sm focus:ring-2 focus:ring-orange-500 focus:border-transparent resize-none"
-                          />
-                        </div>
+                        <textarea
+                          value={athleteNotes}
+                          onChange={(e) => setAthleteNotes(e.target.value)}
+                          placeholder="Sensaciones, comentarios... (opcional)"
+                          rows={2}
+                          className="w-full px-3 py-2.5 rounded-xl border border-gray-200 dark:border-gray-600 bg-gray-50 dark:bg-gray-700 text-sm text-slate-900 dark:text-white placeholder-slate-400 focus:ring-2 focus:ring-slate-400 focus:border-transparent resize-none mb-3"
+                        />
 
-                        <div className="flex items-center gap-3">
+                        <div className="flex items-center gap-2">
                           <button
                             onClick={handleStravaRpeSave}
                             disabled={saving}
-                            className="flex-1 py-2.5 bg-[#FC4C02] hover:bg-[#E34402] disabled:bg-orange-300 text-white rounded-lg font-semibold transition-colors text-sm"
+                            className="flex-1 py-2.5 bg-slate-900 dark:bg-white hover:bg-slate-700 dark:hover:bg-gray-100 disabled:opacity-50 text-white dark:text-slate-900 rounded-xl font-semibold transition-colors text-sm"
                           >
                             {saving ? 'Guardando...' : 'Guardar RPE'}
                           </button>
                           <button
                             onClick={() => setShowStravaRpeFlow(false)}
-                            className="px-4 py-2.5 text-sm text-orange-700 dark:text-orange-400 hover:bg-orange-100 dark:hover:bg-orange-800/30 rounded-lg transition-colors"
+                            className="px-4 py-2.5 text-sm text-slate-500 dark:text-slate-400 hover:bg-gray-100 dark:hover:bg-gray-700 rounded-xl transition-colors"
                           >
                             Cancelar
                           </button>
@@ -1570,77 +1523,58 @@ const Training = () => {
 
                     {/* RPE Section (inline, shown when completing) */}
                     {showCompletionFlow && selectedDay.status === 'planned' && (
-                      <div className="bg-gradient-to-br from-green-50 to-emerald-50 dark:from-green-900/20 dark:to-emerald-900/20 rounded-xl p-5 border border-green-200 dark:border-green-800">
-                        <h4 className="text-base font-bold text-green-800 dark:text-green-300 mb-1">
-                          ¿Cómo te has sentido?
-                        </h4>
-                        <p className="text-sm text-green-600 dark:text-green-400 mb-4">
-                          Indica tu percepción de esfuerzo
-                        </p>
+                      <div className="bg-white dark:bg-gray-800 rounded-2xl border border-gray-100 dark:border-gray-700 p-5">
+                        <p className="text-[10px] font-bold uppercase tracking-widest text-slate-400 dark:text-slate-500 mb-1">Percepción de esfuerzo</p>
+                        <p className="text-base font-bold text-slate-900 dark:text-white mb-4">¿Cómo te has sentido?</p>
 
-                        {/* Emoji RPE Scale */}
-                        <div className="flex justify-center gap-2 sm:gap-3 mb-5">
+                        <div className="flex justify-between gap-1 mb-5">
                           {RPE_OPTIONS.map((option) => (
                             <button
                               key={option.score}
                               onClick={() => setRpeScore(option.score)}
-                              className={`flex flex-col items-center p-2 sm:p-3 rounded-xl transition-all duration-200 ${
+                              className={`flex flex-col items-center flex-1 py-2.5 rounded-xl transition-all duration-150 ${
                                 rpeScore === option.score
-                                  ? 'bg-green-200 dark:bg-green-800/50 ring-2 ring-green-500 scale-110'
-                                  : 'hover:bg-green-100 dark:hover:bg-green-800/30 hover:scale-105'
+                                  ? 'bg-slate-100 dark:bg-slate-700 ring-2 ring-slate-400 dark:ring-slate-500 scale-105'
+                                  : 'hover:bg-slate-50 dark:hover:bg-slate-700/50'
                               }`}
                             >
-                              <span className="text-2xl sm:text-3xl mb-1">{option.emoji}</span>
-                              <span className={`text-[10px] sm:text-xs font-medium ${
-                                rpeScore === option.score
-                                  ? 'text-green-700 dark:text-green-300'
-                                  : 'text-gray-500 dark:text-gray-400'
-                              }`}>
-                                {option.label}
-                              </span>
+                              <span className="text-2xl mb-1">{option.emoji}</span>
+                              <span className="text-[9px] font-medium text-slate-500 dark:text-slate-400 leading-tight text-center">{option.label}</span>
                             </button>
                           ))}
                         </div>
 
-                        {/* Athlete notes */}
-                        <div className="mb-3">
-                          <label className="block text-sm font-medium text-green-700 dark:text-green-400 mb-1">
-                            Sensaciones / Comentarios (opcional)
-                          </label>
-                          <textarea
-                            value={athleteNotes}
-                            onChange={(e) => setAthleteNotes(e.target.value)}
-                            placeholder="¿Cómo te has sentido? Describe tus sensaciones..."
-                            rows={2}
-                            className="w-full px-3 py-2 rounded-lg border border-green-300 dark:border-green-700 bg-white dark:bg-gray-800 text-gray-900 dark:text-white placeholder-gray-400 text-sm focus:ring-2 focus:ring-green-500 focus:border-transparent resize-none"
-                          />
-                        </div>
+                        <textarea
+                          value={athleteNotes}
+                          onChange={(e) => setAthleteNotes(e.target.value)}
+                          placeholder="Sensaciones, comentarios... (opcional)"
+                          rows={2}
+                          className="w-full px-3 py-2.5 rounded-xl border border-gray-200 dark:border-gray-600 bg-gray-50 dark:bg-gray-700 text-sm text-slate-900 dark:text-white placeholder-slate-400 focus:ring-2 focus:ring-slate-400 focus:border-transparent resize-none mb-3"
+                        />
 
-                        {/* Actual duration */}
-                        <div className="mb-4">
-                          <label className="block text-sm font-medium text-green-700 dark:text-green-400 mb-1">
-                            Duración real (min, opcional)
-                          </label>
+                        <div className="flex items-center gap-2 mb-3">
+                          <label className="text-xs text-slate-500 dark:text-slate-400 whitespace-nowrap">Duración real</label>
                           <input
                             type="number"
                             value={actualDuration}
                             onChange={(e) => setActualDuration(e.target.value)}
-                            placeholder={selectedDay.duration ? `Est: ${selectedDay.duration}` : 'Minutos'}
-                            className="w-32 px-3 py-2 rounded-lg border border-green-300 dark:border-green-700 bg-white dark:bg-gray-800 text-gray-900 dark:text-white text-sm focus:ring-2 focus:ring-green-500 focus:border-transparent"
+                            placeholder={selectedDay.duration ? `${selectedDay.duration} est.` : 'min'}
+                            className="w-24 px-3 py-2 rounded-xl border border-gray-200 dark:border-gray-600 bg-gray-50 dark:bg-gray-700 text-sm text-slate-900 dark:text-white focus:ring-2 focus:ring-slate-400 focus:border-transparent"
                           />
+                          <span className="text-xs text-slate-400">min</span>
                         </div>
 
-                        <div className="flex items-center gap-3">
+                        <div className="flex items-center gap-2">
                           <button
                             onClick={handleCompleteSession}
                             disabled={saving}
-                            className="flex-1 py-2.5 bg-green-600 hover:bg-green-700 disabled:bg-green-400 text-white rounded-lg font-semibold transition-colors text-sm"
+                            className="flex-1 py-2.5 bg-slate-900 dark:bg-white hover:bg-slate-700 dark:hover:bg-gray-100 disabled:opacity-50 text-white dark:text-slate-900 rounded-xl font-semibold transition-colors text-sm"
                           >
                             {saving ? 'Guardando...' : 'Guardar y Completar'}
                           </button>
                           <button
                             onClick={() => setShowCompletionFlow(false)}
-                            className="px-4 py-2.5 text-sm text-green-700 dark:text-green-400 hover:bg-green-100 dark:hover:bg-green-800/30 rounded-lg transition-colors"
+                            className="px-4 py-2.5 text-sm text-slate-500 dark:text-slate-400 hover:bg-gray-100 dark:hover:bg-gray-700 rounded-xl transition-colors"
                           >
                             Cancelar
                           </button>
@@ -1655,11 +1589,11 @@ const Training = () => {
               {selectedDay.type !== 'rest' && !showCompletionFlow && !showStravaRpeFlow && (
                 <div className="p-4 border-t border-gray-200 dark:border-gray-700 flex-shrink-0">
                   {selectedDay.status === 'planned' && isPastOrToday(selectedDay.date) ? (
-                    <div className="flex items-center gap-3">
+                    <div className="flex items-center gap-2">
                       <button
                         onClick={() => setShowCompletionFlow(true)}
                         disabled={saving}
-                        className="flex-1 flex items-center justify-center space-x-2 py-2.5 bg-green-600 hover:bg-green-700 disabled:bg-gray-300 dark:disabled:bg-gray-600 text-white rounded-lg font-semibold transition-colors text-sm"
+                        className="flex-1 flex items-center justify-center gap-2 py-2.5 bg-slate-900 dark:bg-white hover:bg-slate-700 dark:hover:bg-gray-100 disabled:opacity-50 text-white dark:text-slate-900 rounded-xl font-semibold transition-colors text-sm"
                       >
                         <FiCheckCircle className="w-4 h-4" />
                         <span>Completar Sesión</span>
@@ -1667,17 +1601,17 @@ const Training = () => {
                       <button
                         onClick={handleSkipSession}
                         disabled={saving}
-                        className="flex items-center space-x-1 px-4 py-2.5 text-sm text-gray-600 dark:text-gray-400 hover:bg-gray-100 dark:hover:bg-gray-700 rounded-lg transition-colors"
+                        className="flex items-center gap-1 px-4 py-2.5 text-sm text-slate-500 dark:text-slate-400 hover:bg-gray-100 dark:hover:bg-gray-700 rounded-xl transition-colors"
                       >
                         <FiSkipForward className="w-4 h-4" />
                         <span>Omitir</span>
                       </button>
                     </div>
                   ) : selectedDay.status === 'completed' && selectedDay.stravaActivityId && !selectedDay.rpeScore ? (
-                    <div className="flex items-center gap-3">
+                    <div className="flex items-center gap-2">
                       <button
                         onClick={() => setShowStravaRpeFlow(true)}
-                        className="flex-1 flex items-center justify-center space-x-2 py-2.5 bg-[#FC4C02] hover:bg-[#E34402] text-white rounded-lg font-semibold transition-colors text-sm"
+                        className="flex-1 flex items-center justify-center gap-2 py-2.5 bg-slate-900 dark:bg-white hover:bg-slate-700 dark:hover:bg-gray-100 text-white dark:text-slate-900 rounded-xl font-semibold transition-colors text-sm"
                       >
                         <SiStrava className="w-4 h-4" />
                         <span>Indicar RPE</span>
@@ -1685,50 +1619,50 @@ const Training = () => {
                       <button
                         onClick={handleRevertSession}
                         disabled={saving}
-                        className="flex items-center space-x-1 px-4 py-2.5 text-sm text-gray-500 hover:bg-gray-100 dark:hover:bg-gray-700 rounded-lg transition-colors"
+                        className="flex items-center gap-1 px-4 py-2.5 text-sm text-slate-500 dark:text-slate-400 hover:bg-gray-100 dark:hover:bg-gray-700 rounded-xl transition-colors"
                       >
                         <FiRotateCcw className="w-4 h-4" />
                         <span>Revertir</span>
                       </button>
                     </div>
                   ) : selectedDay.status === 'completed' ? (
-                    <div className="flex items-center gap-3">
+                    <div className="flex items-center gap-2">
                       <button
                         onClick={closeDayDetail}
-                        className="flex-1 px-4 py-2.5 bg-gray-100 dark:bg-gray-700 text-gray-700 dark:text-gray-300 rounded-lg hover:bg-gray-200 dark:hover:bg-gray-600 transition-colors text-sm"
+                        className="flex-1 px-4 py-2.5 bg-gray-100 dark:bg-gray-700 text-slate-700 dark:text-slate-300 rounded-xl hover:bg-gray-200 dark:hover:bg-gray-600 transition-colors text-sm font-medium"
                       >
                         Cerrar
                       </button>
                       <button
                         onClick={handleRevertSession}
                         disabled={saving}
-                        className="flex items-center space-x-1 px-4 py-2.5 text-sm text-gray-500 hover:bg-gray-100 dark:hover:bg-gray-700 rounded-lg transition-colors"
+                        className="flex items-center gap-1 px-4 py-2.5 text-sm text-slate-500 dark:text-slate-400 hover:bg-gray-100 dark:hover:bg-gray-700 rounded-xl transition-colors"
                       >
                         <FiRotateCcw className="w-4 h-4" />
                         <span>Revertir</span>
                       </button>
                     </div>
                   ) : selectedDay.status === 'skipped' ? (
-                    <div className="flex items-center gap-3">
+                    <div className="flex items-center gap-2">
                       <button
                         onClick={closeDayDetail}
-                        className="flex-1 px-4 py-2.5 bg-gray-100 dark:bg-gray-700 text-gray-700 dark:text-gray-300 rounded-lg hover:bg-gray-200 dark:hover:bg-gray-600 transition-colors text-sm"
+                        className="flex-1 px-4 py-2.5 bg-gray-100 dark:bg-gray-700 text-slate-700 dark:text-slate-300 rounded-xl hover:bg-gray-200 dark:hover:bg-gray-600 transition-colors text-sm font-medium"
                       >
                         Cerrar
                       </button>
                       <button
                         onClick={handleRevertSession}
                         disabled={saving}
-                        className="flex items-center space-x-1 px-4 py-2.5 text-sm text-blue-600 dark:text-blue-400 hover:bg-blue-50 dark:hover:bg-blue-900/20 rounded-lg transition-colors"
+                        className="flex items-center gap-1 px-4 py-2.5 text-sm text-slate-500 dark:text-slate-400 hover:bg-gray-100 dark:hover:bg-gray-700 rounded-xl transition-colors"
                       >
                         <FiRotateCcw className="w-4 h-4" />
-                        <span>Revertir a planificado</span>
+                        <span>Revertir</span>
                       </button>
                     </div>
                   ) : (
                     <button
                       onClick={closeDayDetail}
-                      className="w-full px-4 py-2.5 bg-gray-100 dark:bg-gray-700 text-gray-700 dark:text-gray-300 rounded-lg hover:bg-gray-200 dark:hover:bg-gray-600 transition-colors text-sm"
+                      className="w-full px-4 py-2.5 bg-gray-100 dark:bg-gray-700 text-slate-700 dark:text-slate-300 rounded-xl hover:bg-gray-200 dark:hover:bg-gray-600 transition-colors text-sm font-medium"
                     >
                       Cerrar
                     </button>
@@ -1739,7 +1673,7 @@ const Training = () => {
                 <div className="p-4 border-t border-gray-200 dark:border-gray-700 flex-shrink-0">
                   <button
                     onClick={closeDayDetail}
-                    className="w-full px-4 py-2.5 bg-gray-100 dark:bg-gray-700 text-gray-700 dark:text-gray-300 rounded-lg hover:bg-gray-200 dark:hover:bg-gray-600 transition-colors text-sm"
+                    className="w-full px-4 py-2.5 bg-gray-100 dark:bg-gray-700 text-slate-700 dark:text-slate-300 rounded-xl hover:bg-gray-200 dark:hover:bg-gray-600 transition-colors text-sm font-medium"
                   >
                     Cerrar
                   </button>

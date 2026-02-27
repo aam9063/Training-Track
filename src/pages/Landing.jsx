@@ -3,6 +3,7 @@ import { useLocation } from 'react-router-dom';
 import Navbar from '../components/landing/Navbar';
 import Hero from '../components/landing/Hero';
 import AppShowcase from '../components/landing/AppShowcase';
+import MobileShowcase from '../components/landing/MobileShowcase';
 import About from '../components/landing/About';
 import AIReports from '../components/landing/AIReports';
 import Testimonials from '../components/landing/Testimonials';
@@ -32,6 +33,7 @@ export default function Landing() {
       <Navbar />
       <Hero />
       <AppShowcase />
+      <MobileShowcase />
       <About />
       <AIReports />
       <Testimonials />

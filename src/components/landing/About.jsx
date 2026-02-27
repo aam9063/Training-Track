@@ -17,38 +17,38 @@ export default function About() {
   const features = [
     {
       icon: HiChartBar,
-      title: 'Análisis Inteligente',
-      description: 'Métricas avanzadas, zonas de entrenamiento y análisis de rendimiento basados en tus datos reales.',
+      title: 'Informes IA automáticos',
+      description: 'Cada lunes la IA analiza ACWR, TSB, RPE y carga interna de cada atleta y te avisa si algo requiere atención.',
       gradient: 'from-sky-500 to-sky-600',
     },
     {
       icon: HiUsers,
-      title: 'Gestión Centralizada',
-      description: 'Todos tus atletas en un solo lugar. Perfiles detallados, historial y comunicación directa.',
+      title: 'Gestión centralizada',
+      description: 'Todos tus atletas en un solo lugar. Perfiles detallados, historial de entrenamientos y chat directo integrado.',
       gradient: 'from-slate-600 to-slate-700',
     },
     {
       icon: HiClock,
-      title: 'Planificación Avanzada',
-      description: 'Crea mesociclos, microciclos y sesiones detalladas con ejercicios de carrera y fuerza.',
+      title: 'Planificador de temporada',
+      description: 'Diseña planes con mesociclos (base, construcción, pico, taper) y asígnalos a múltiples atletas desde una fecha de inicio.',
       gradient: 'from-orange-500 to-red-500',
     },
     {
       icon: HiRefresh,
-      title: 'Sincronización Total',
-      description: 'Conecta con Garmin, Strava, Coros y más. Carga entrenamientos y recibe datos automáticamente.',
+      title: 'Sincronización con Strava',
+      description: 'Las actividades se importan automáticamente. Cuando el atleta completa un entreno en Strava, la sesión se marca sola.',
       gradient: 'from-green-500 to-emerald-500',
     },
     {
       icon: HiTrendingUp,
-      title: 'Evolución Continua',
-      description: 'Visualiza el progreso con gráficas interactivas, PRs y comparativas temporales.',
+      title: 'Predictor de rendimiento',
+      description: 'Tests VAM y Conconi calculan zonas de FC y predicen tiempos de carrera en 5K, 10K, media maratón y maratón.',
       gradient: 'from-sky-600 to-sky-700',
     },
     {
       icon: HiLightningBolt,
-      title: 'Feedback Inmediato',
-      description: 'Notificaciones en tiempo real. El atleta completa y el entrenador lo sabe al instante.',
+      title: 'Notificaciones push',
+      description: 'El atleta recibe un aviso cuando el entrenador añade sesiones o mensajes. Funciona incluso con la app cerrada.',
       gradient: 'from-yellow-500 to-orange-500',
     },
   ];
@@ -193,14 +193,14 @@ export default function About() {
                 </div>
 
                 <h3 className="text-3xl md:text-4xl font-bold text-gray-900 dark:text-white mb-6 leading-tight">
-                  Conectado con tus
-                  <span className="text-sky-600 dark:text-sky-400"> dispositivos favoritos</span>
+                  Conectado con
+                  <span className="text-sky-600 dark:text-sky-400"> Strava</span>
+                  <span className="block text-2xl md:text-3xl mt-1 text-gray-500 dark:text-gray-400 font-medium">y más plataformas próximamente</span>
                 </h3>
 
                 <p className="text-gray-600 dark:text-gray-300 text-lg mb-8 leading-relaxed">
-                  Sincroniza automáticamente con las principales plataformas.
-                  Carga los entrenamientos directamente en tu reloj y recibe
-                  los datos una vez completados.
+                  La integración con Strava ya está activa. Cuando el atleta termina un entreno,
+                  la actividad se importa sola y la sesión se marca como completada.
                 </p>
 
                 <div className="space-y-4">
@@ -211,8 +211,8 @@ export default function About() {
                       </svg>
                     </div>
                     <div>
-                      <p className="text-gray-900 dark:text-white font-medium">Envío de entrenamientos</p>
-                      <p className="text-gray-500 dark:text-gray-400 text-sm">Planifica en Training Track y aparece en tu dispositivo</p>
+                      <p className="text-gray-900 dark:text-white font-medium">Sesiones completadas automáticamente</p>
+                      <p className="text-gray-500 dark:text-gray-400 text-sm">Sincronización en tiempo real vía webhook de Strava</p>
                     </div>
                   </div>
 
@@ -223,20 +223,20 @@ export default function About() {
                       </svg>
                     </div>
                     <div>
-                      <p className="text-gray-900 dark:text-white font-medium">Importación automática</p>
-                      <p className="text-gray-500 dark:text-gray-400 text-sm">Los datos se sincronizan al finalizar el entrenamiento</p>
+                      <p className="text-gray-900 dark:text-white font-medium">Métricas reales en el dashboard</p>
+                      <p className="text-gray-500 dark:text-gray-400 text-sm">Distancia, ritmo, FC y desnivel desde tus actividades</p>
                     </div>
                   </div>
 
                   <div className="flex items-start gap-3">
-                    <div className="flex-shrink-0 w-6 h-6 rounded-full bg-green-100 dark:bg-green-500/20 flex items-center justify-center mt-0.5">
-                      <svg className="w-3.5 h-3.5 text-green-600 dark:text-green-400" fill="none" viewBox="0 0 24 24" stroke="currentColor">
-                        <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={3} d="M5 13l4 4L19 7" />
+                    <div className="flex-shrink-0 w-6 h-6 rounded-full bg-amber-100 dark:bg-amber-500/20 flex items-center justify-center mt-0.5">
+                      <svg className="w-3.5 h-3.5 text-amber-600 dark:text-amber-400" fill="none" viewBox="0 0 24 24" stroke="currentColor">
+                        <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M12 8v4l3 3m6-3a9 9 0 11-18 0 9 9 0 0118 0z" />
                       </svg>
                     </div>
                     <div>
-                      <p className="text-gray-900 dark:text-white font-medium">Análisis unificado</p>
-                      <p className="text-gray-500 dark:text-gray-400 text-sm">Toda la información centralizada en un solo lugar</p>
+                      <p className="text-gray-900 dark:text-white font-medium">Garmin, Polar, Suunto, Coros — próximamente</p>
+                      <p className="text-gray-500 dark:text-gray-400 text-sm">En desarrollo. ¡Deja tu dispositivo preferido en los comentarios!</p>
                     </div>
                   </div>
                 </div>

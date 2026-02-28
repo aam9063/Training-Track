@@ -35,20 +35,33 @@ export default function GymFiles() {
 
   useEffect(() => { loadFiles(); }, [loadFiles]);
 
+  const isPwa = () => window.matchMedia('(display-mode: standalone)').matches || window.navigator.standalone === true;
+
   const handleView = async (storagePath) => {
     const { url } = await getGymFileSignedUrl(storagePath);
-    if (url) window.open(url, '_blank');
+    if (!url) return;
+    // En PWA window.open está bloqueado — navegar en la misma pestaña
+    if (isPwa()) {
+      window.location.href = url;
+    } else {
+      window.open(url, '_blank');
+    }
   };
 
   const handleDownload = async (file) => {
     const { url } = await getGymFileSignedUrl(file.storage_path);
     if (!url) return;
-    const a = document.createElement('a');
-    a.href = url;
-    a.download = file.filename;
-    document.body.appendChild(a);
-    a.click();
-    document.body.removeChild(a);
+    // En PWA iOS el anchor download no funciona — usar location.href
+    if (isPwa()) {
+      window.location.href = url;
+    } else {
+      const a = document.createElement('a');
+      a.href = url;
+      a.download = file.filename;
+      document.body.appendChild(a);
+      a.click();
+      document.body.removeChild(a);
+    }
   };
 
   const daysColor = (days) => {

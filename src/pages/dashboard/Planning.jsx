@@ -260,19 +260,31 @@ const Planning = () => {
     setGymFiles(prev => prev.filter(f => f.id !== file.id));
   }, []);
 
+  const isPwa = () => window.matchMedia('(display-mode: standalone)').matches || window.navigator.standalone === true;
+
   const handleGymView = useCallback(async (storagePath) => {
     const { url, error } = await getGymFileSignedUrl(storagePath);
     if (error || !url) { showError('No se pudo abrir el archivo'); return; }
-    window.open(url, '_blank');
+    if (isPwa()) {
+      window.location.href = url;
+    } else {
+      window.open(url, '_blank');
+    }
   }, []);
 
   const handleGymDownload = useCallback(async (file) => {
     const { url, error } = await getGymFileSignedUrl(file.storage_path);
     if (error || !url) { showError('No se pudo descargar el archivo'); return; }
-    const a = document.createElement('a');
-    a.href = url;
-    a.download = file.filename;
-    a.click();
+    if (isPwa()) {
+      window.location.href = url;
+    } else {
+      const a = document.createElement('a');
+      a.href = url;
+      a.download = file.filename;
+      document.body.appendChild(a);
+      a.click();
+      document.body.removeChild(a);
+    }
   }, []);
 
   // Filtered plans

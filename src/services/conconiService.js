@@ -104,6 +104,12 @@ const processRows = (rows, distanceMeters = 800) => {
  * Parse a time value into seconds.
  * Handles: "2'30", "1'28", "57"", "1:03", raw seconds,
  * and Excel day fractions (small decimals like 0.001736).
+ *
+ * Excel time quirk: a cell formatted as "h:mm" (e.g. 2:30 meaning 2h30m) stores
+ * the value as 0.1041... (= 2.5/24). A duration cell formatted as "[mm]:ss" or
+ * "m:ss" with value 2'30" stores 0.001736 (= 150/86400).
+ * We first try the raw seconds result; if it's unreasonably large for a Conconi
+ * series (>900s = 15min), we divide by 60 to re-interpret hours→minutes.
  */
 const parseTimeStr = (val) => {
   if (val == null) return null;
@@ -111,8 +117,14 @@ const parseTimeStr = (val) => {
   // Excel day fraction: a number < 1 representing time as fraction of 24h
   if (typeof val === 'number') {
     if (val > 0 && val < 1) {
-      // Day fraction → seconds: val * 24 * 3600
-      return Math.round(val * 86400);
+      const totalSeconds = Math.round(val * 86400);
+      // If result is plausible for a Conconi series (30s–900s), return as-is
+      if (totalSeconds >= 30 && totalSeconds <= 900) return totalSeconds;
+      // Otherwise the cell may be formatted as h:mm — divide by 60 to get minutes→seconds
+      // e.g. 0.1041 (= 2:30 as hour fraction) → 9000s → /60 → 150s ✓
+      const reinterpreted = Math.round(totalSeconds / 60);
+      if (reinterpreted >= 30 && reinterpreted <= 900) return reinterpreted;
+      return null;
     }
     // Could be raw seconds (e.g. 150) — only valid if reasonable (< 3600)
     if (val > 0 && val < 3600) return Math.round(val);
@@ -155,9 +167,11 @@ const getCellRaw = (cell) => {
   const v = cell.value;
   // ExcelJS returns Date objects for time-formatted cells
   if (v instanceof Date) {
-    // Convert back to Excel day fraction for parseTimeStr
+    // Convert back to Excel day fraction so parseTimeStr can handle it
     const totalSeconds = v.getUTCHours() * 3600 + v.getUTCMinutes() * 60 + v.getUTCSeconds();
-    return totalSeconds > 0 ? totalSeconds / 86400 : '';
+    if (totalSeconds > 0) return totalSeconds / 86400;
+    // Date-only values (e.g. calendar dates at midnight) → skip
+    return '';
   }
   // Formula result
   if (typeof v === 'object' && v.result != null) return v.result;
@@ -176,73 +190,154 @@ const getCellText = (cell) => {
 
 /**
  * Detect and extract Conconi data from a transposed XLSX worksheet (ExcelJS).
- * Looks for rows containing labels like "1.000m"/"1000m" (time), "Pulso" (HR),
- * and "r: 120p"/"r:120p"/"120" (recovery).
- * Series are in columns; each column = one series.
+ *
+ * Expected layout (series in columns, rows are: time, pulso, recovery):
+ *   Col A/B: metadata (date, labels like "1.000m", "Pulso", "r: 120p")
+ *   Col C+:  one column per series with the actual values
+ *
+ * The label row for time may contain "1.000m", "1000m", "1000", "tiempo", etc.
+ * Pulso row: "Pulso", "FC", "frecuencia", "heartrate"
+ * Recovery row: "r: 120p", "r:120p", "recupera", "120"
+ *
  * Returns array of series objects or null if format not detected.
  */
 const extractTransposedConconi = (worksheet, distanceMeters = 800) => {
   const rowCount = worksheet.rowCount;
   if (rowCount < 2) return null;
 
-  let timeRowIdx = -1;
-  let pulsoRowIdx = -1;
-  let recoveryRowIdx = -1;
-  let maxLabelCol = -1;
+  // Build a map of row→{labelCol, labelText} for each row that has a known label
+  // Strategy: find the "Pulso" row first (most unambiguous), then infer time/recovery
+  // by looking at adjacent rows (typically: time = pulso-1, recovery = pulso+1)
 
-  // Scan first 6 columns of each row for known labels
-  for (let r = 1; r <= rowCount; r++) {
+  let pulsoRowIdx = -1;
+  let pulsoLabelCol = 1;
+
+  // Pass 1: find "Pulso" row — most unique label
+  for (let r = 1; r <= rowCount && pulsoRowIdx < 0; r++) {
     const row = worksheet.getRow(r);
-    for (let c = 1; c <= 6; c++) {
-      const cell = getCellText(row.getCell(c)).trim().toLowerCase().replace(/[\s.]+/g, '');
-      if (cell.includes('1000') && timeRowIdx < 0) {
-        timeRowIdx = r;
-        maxLabelCol = Math.max(maxLabelCol, c);
-      }
-      if ((cell === 'pulso' || cell === 'fc' || cell.includes('frecuencia') || cell.includes('heartrate')) && pulsoRowIdx < 0) {
+    for (let c = 1; c <= 8; c++) {
+      const cell = getCellText(row.getCell(c)).trim().toLowerCase().replace(/[\s.:]+/g, '');
+      if (cell === 'pulso' || cell === 'fc' || cell.includes('frecuencia') || cell.includes('pulsaciones')) {
         pulsoRowIdx = r;
-        maxLabelCol = Math.max(maxLabelCol, c);
-      }
-      if ((cell.includes('120') || cell.includes('recupera')) && recoveryRowIdx < 0) {
-        recoveryRowIdx = r;
-        maxLabelCol = Math.max(maxLabelCol, c);
+        pulsoLabelCol = c;
+        break;
       }
     }
   }
 
-  if (pulsoRowIdx < 0) return null;
-  if (timeRowIdx < 0 && pulsoRowIdx > 1) {
+  if (pulsoRowIdx < 0) {
+    console.warn('[Conconi] No se encontró fila "Pulso"');
+    return null;
+  }
+
+  // Pass 2: find time row — search BACKWARDS from pulsoRow (closest match wins)
+  // This avoids picking up the legend table rows further above
+  let timeRowIdx = -1;
+  let timeLabelCol = pulsoLabelCol;
+
+  for (let r = pulsoRowIdx - 1; r >= Math.max(1, pulsoRowIdx - 3); r--) {
+    const row = worksheet.getRow(r);
+    for (let c = 1; c <= 8; c++) {
+      const cell = getCellText(row.getCell(c)).trim().toLowerCase().replace(/[\s.:]+/g, '');
+      if (cell.includes('1000') || cell === '1km') {
+        timeRowIdx = r;
+        timeLabelCol = c;
+        break;
+      }
+    }
+    if (timeRowIdx > 0) break;
+  }
+
+  // If still no time row, assume the row just before pulso
+  if (timeRowIdx < 0) {
     timeRowIdx = pulsoRowIdx - 1;
+    timeLabelCol = pulsoLabelCol;
   }
 
-  const dataStartCol = maxLabelCol + 1;
+  // Pass 3: find recovery row — look after pulso for "120p" / "r:" label
+  let recoveryRowIdx = -1;
+  let recoveryLabelCol = pulsoLabelCol;
+
+  for (let r = pulsoRowIdx + 1; r <= Math.min(rowCount, pulsoRowIdx + 4); r++) {
+    const row = worksheet.getRow(r);
+    for (let c = 1; c <= 8; c++) {
+      const cell = getCellText(row.getCell(c)).trim().toLowerCase().replace(/[\s.:]+/g, '');
+      if (cell.startsWith('r:') || cell.startsWith('r120') || cell === 'r120p' || cell === '120p' || cell.includes('recupera')) {
+        recoveryRowIdx = r;
+        recoveryLabelCol = c;
+        break;
+      }
+    }
+    if (recoveryRowIdx > 0) break;
+  }
+
+  // Data starts one column after the rightmost label column found
+  const maxLabelCol = Math.max(pulsoLabelCol, timeLabelCol, recoveryLabelCol);
+  let dataStartCol = maxLabelCol + 1;
+
+  // Refine dataStartCol by scanning the time row for the first actual time value.
+  // ExcelJS stores time-of-day cells (e.g. 2:30) as Date objects with the time encoded
+  // in UTC hours/minutes. getCellRaw converts them to a day fraction.
+  // We must NOT skip Date cells here — we use getCellRaw to get the fraction, then parseTimeStr.
+  // We only skip cells whose raw value is a large integer (calendar day serial > 1).
+  if (timeRowIdx > 0) {
+    const timeRow = worksheet.getRow(timeRowIdx);
+    for (let c = dataStartCol; c <= dataStartCol + 10; c++) {
+      const cell = timeRow.getCell(c);
+      // getCellRaw handles Date → fraction conversion
+      const raw = getCellRaw(cell);
+      // Skip empty or text labels
+      if (raw === '' || typeof raw === 'string') continue;
+      const parsed = parseTimeStr(raw);
+      // Accept values that look like race times (30s–900s)
+      if (parsed != null && parsed >= 30 && parsed <= 900) { dataStartCol = c; break; }
+    }
+  }
+
   const colCount = worksheet.columnCount;
-  const series = [];
 
+  // First pass: collect all candidate columns with their data
+  const candidates = [];
   for (let c = dataStartCol; c <= colCount; c++) {
-    const timeVal = timeRowIdx > 0 ? parseTimeStr(getCellRaw(worksheet.getRow(timeRowIdx).getCell(c))) : null;
+    const timeVal = timeRowIdx > 0
+      ? parseTimeStr(getCellRaw(worksheet.getRow(timeRowIdx).getCell(c)))
+      : null;
+    if (timeVal == null || timeVal <= 0) continue;
+
     const pulsoRaw = String(getCellRaw(worksheet.getRow(pulsoRowIdx).getCell(c)) ?? '').trim();
+    if (pulsoRaw.toUpperCase() === 'X' || pulsoRaw === '-') continue;
+
     const hrVal = parseInt(pulsoRaw);
-    const recVal = recoveryRowIdx > 0 ? parseTimeStr(getCellRaw(worksheet.getRow(recoveryRowIdx).getCell(c))) : null;
+    const hrValid = !isNaN(hrVal) && hrVal > 30 && hrVal <= 250;
 
-    if (pulsoRaw.toUpperCase() === 'X' || pulsoRaw === '') continue;
-    if (isNaN(hrVal) || hrVal <= 0 || hrVal > 250) continue;
+    const recVal = recoveryRowIdx > 0
+      ? parseTimeStr(getCellRaw(worksheet.getRow(recoveryRowIdx).getCell(c)))
+      : null;
 
-    series.push({
-      series_number: series.length + 1,
-      distance_meters: distanceMeters,
-      time_seconds: timeVal || 0,
-      heart_rate: hrVal,
-      recovery_time_seconds: recVal,
-      max_heart_rate_reached: false,
-    });
+    candidates.push({ timeVal, hrVal: hrValid ? hrVal : 0, recVal });
   }
 
-  if (series.length < 5) return null;
+  // If any column has a valid HR, the test has been (at least partially) performed:
+  // only include columns where the athlete actually recorded their HR.
+  // If no HR anywhere, it's a blank template: include all columns (time-only preview).
+  const hasAnyHR = candidates.some((c) => c.hrVal > 0);
 
-  const maxHR = Math.max(...series.map((s) => s.heart_rate));
+  const series = candidates
+    .filter((c) => !hasAnyHR || c.hrVal > 0)
+    .map((c, i) => ({
+      series_number: i + 1,
+      distance_meters: distanceMeters,
+      time_seconds: c.timeVal,
+      heart_rate: c.hrVal,
+      recovery_time_seconds: c.recVal,
+      max_heart_rate_reached: false,
+    }));
+
+  if (series.length < 2) return null;
+
+  const maxHR = Math.max(...series.map((s) => s.heart_rate).filter((h) => h > 0));
   series.forEach((s) => {
-    s.max_heart_rate_reached = s.heart_rate >= maxHR;
+    s.max_heart_rate_reached = s.heart_rate > 0 && s.heart_rate >= maxHR;
   });
 
   return series;

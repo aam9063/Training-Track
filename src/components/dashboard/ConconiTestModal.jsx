@@ -104,6 +104,7 @@ const ConconiTestModal = ({ isOpen, onClose, athlete, coachId, onSuccess }) => {
 
     setCalculatedPaces(data.paces || []);
     setSaving(false);
+    // If no paces were calculated (e.g. no heart rate data), still show results
     setStep('results');
   };
 
@@ -169,8 +170,9 @@ const ConconiTestModal = ({ isOpen, onClose, athlete, coachId, onSuccess }) => {
             {step === 'upload' && (
               <div>
                 <p className="text-sm text-gray-600 dark:text-gray-400 mb-4">
-                  Sube el archivo CSV o Excel (.xlsx) con los resultados del Test de Conconi. El archivo debe contener
-                  columnas de serie, tiempo, frecuencia cardíaca y opcionalmente tiempo de recuperación.
+                  Sube el Excel (.xlsx) del Test de Conconi. Se detecta automáticamente el formato
+                  con filas <strong>1.000m</strong> (tiempo de serie), <strong>Pulso</strong> (FC al terminar)
+                  y <strong>r: 120p</strong> (recuperación hasta 120 bpm), con una columna por serie.
                 </p>
 
                 {/* Series distance selector */}
@@ -234,22 +236,38 @@ const ConconiTestModal = ({ isOpen, onClose, athlete, coachId, onSuccess }) => {
                   />
                 </div>
 
-                {/* CSV format hint */}
+                {/* Format hint */}
                 <div className="mt-4 p-3 bg-gray-50 dark:bg-gray-700/50 rounded-lg">
-                  <p className="text-xs font-medium text-gray-600 dark:text-gray-400 mb-1">
-                    Formato esperado del CSV:
+                  <p className="text-xs font-medium text-gray-600 dark:text-gray-400 mb-2">
+                    Formato del Excel (series en columnas):
                   </p>
-                  <code className="text-xs text-gray-500 dark:text-gray-400 block">
-                    serie,tiempo,fc,recuperacion
-                    <br />
-                    1,3:30,140,90
-                    <br />
-                    2,3:20,152,95
-                    <br />
-                    3,3:10,162,100
-                    <br />
-                    ...
-                  </code>
+                  <div className="overflow-x-auto">
+                    <table className="text-[10px] text-gray-500 dark:text-gray-400 border-collapse">
+                      <tbody>
+                        <tr>
+                          <td className="border border-gray-200 dark:border-gray-600 px-2 py-0.5 font-medium">1.000m</td>
+                          <td className="border border-gray-200 dark:border-gray-600 px-2 py-0.5">2:30</td>
+                          <td className="border border-gray-200 dark:border-gray-600 px-2 py-0.5">2:40</td>
+                          <td className="border border-gray-200 dark:border-gray-600 px-2 py-0.5">2:50</td>
+                          <td className="border border-gray-200 dark:border-gray-600 px-2 py-0.5 text-gray-400">...</td>
+                        </tr>
+                        <tr>
+                          <td className="border border-gray-200 dark:border-gray-600 px-2 py-0.5 font-medium">Pulso</td>
+                          <td className="border border-gray-200 dark:border-gray-600 px-2 py-0.5">148</td>
+                          <td className="border border-gray-200 dark:border-gray-600 px-2 py-0.5">155</td>
+                          <td className="border border-gray-200 dark:border-gray-600 px-2 py-0.5">163</td>
+                          <td className="border border-gray-200 dark:border-gray-600 px-2 py-0.5 text-gray-400">...</td>
+                        </tr>
+                        <tr>
+                          <td className="border border-gray-200 dark:border-gray-600 px-2 py-0.5 font-medium">r: 120p</td>
+                          <td className="border border-gray-200 dark:border-gray-600 px-2 py-0.5">1'20"</td>
+                          <td className="border border-gray-200 dark:border-gray-600 px-2 py-0.5">1'35"</td>
+                          <td className="border border-gray-200 dark:border-gray-600 px-2 py-0.5">1'50"</td>
+                          <td className="border border-gray-200 dark:border-gray-600 px-2 py-0.5 text-gray-400">...</td>
+                        </tr>
+                      </tbody>
+                    </table>
+                  </div>
                 </div>
               </div>
             )}
@@ -356,17 +374,21 @@ const ConconiTestModal = ({ isOpen, onClose, athlete, coachId, onSuccess }) => {
                             {formatTime(s.time_seconds)}
                           </td>
                           <td className="px-3 py-2">
-                            <span
-                              className={`font-mono ${
-                                s.max_heart_rate_reached
-                                  ? 'text-red-600 dark:text-red-400 font-bold'
-                                  : 'text-gray-700 dark:text-gray-300'
-                              }`}
-                            >
-                              {s.heart_rate}
-                            </span>
-                            {s.max_heart_rate_reached && (
-                              <span className="text-xs text-red-500 ml-1">MAX</span>
+                            {s.heart_rate > 0 ? (
+                              <span
+                                className={`font-mono ${
+                                  s.max_heart_rate_reached
+                                    ? 'text-red-600 dark:text-red-400 font-bold'
+                                    : 'text-gray-700 dark:text-gray-300'
+                                }`}
+                              >
+                                {s.heart_rate}
+                                {s.max_heart_rate_reached && (
+                                  <span className="text-xs text-red-500 ml-1">MAX</span>
+                                )}
+                              </span>
+                            ) : (
+                              <span className="text-gray-300 dark:text-gray-600">—</span>
                             )}
                           </td>
                           <td className="px-3 py-2 text-gray-500 dark:text-gray-400 font-mono text-xs">
@@ -393,10 +415,12 @@ const ConconiTestModal = ({ isOpen, onClose, athlete, coachId, onSuccess }) => {
                   </div>
                   <div>
                     <p className="text-sm font-semibold text-green-800 dark:text-green-300">
-                      Ritmos calculados correctamente
+                      Test guardado correctamente
                     </p>
                     <p className="text-xs text-green-600 dark:text-green-400">
-                      Se han generado 11 zonas de ritmo para {athleteName}
+                      {calculatedPaces.length > 0
+                        ? `Se han generado ${calculatedPaces.length} zonas de ritmo para ${athleteName}`
+                        : `Series guardadas para ${athleteName}. Añade FC para calcular zonas de ritmo.`}
                     </p>
                   </div>
                 </div>

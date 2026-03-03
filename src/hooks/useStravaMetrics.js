@@ -1,4 +1,4 @@
-import { useState, useEffect, useCallback } from 'react';
+import { useState, useEffect, useCallback, useRef } from 'react';
 import {
   isStravaConnected,
   getStravaAthleteStats,
@@ -6,11 +6,16 @@ import {
   loadStravaTokens,
   calculateStravaMetrics,
   extractBestEfforts,
+  calculatePace,
 } from '../services/stravaService';
 import { syncPersonalBests, updateAthleteVdot } from '../services/trainingLoadService';
-import { getCachedActivities } from '../services/stravaCacheService';
+import { getCachedActivities, getAthleteAllTimeStats } from '../services/stravaCacheService';
 import { incrementalSync } from '../services/stravaSyncService';
 import { supabase } from '../lib/supabase';
+
+// Minimum ms between incremental syncs to avoid hammering on every page visit
+const SYNC_THROTTLE_MS = 5 * 60 * 1000; // 5 minutes
+const lastSyncTime = {}; // keyed by athleteId, persists across re-renders (module-level)
 
 export default function useStravaMetrics(profileId) {
   const [loading, setLoading] = useState(true);
@@ -31,75 +36,96 @@ export default function useStravaMetrics(profileId) {
       setStravaConnected(connected);
 
       if (connected) {
-        // Incremental sync: fetch only new activities
-        await incrementalSync(profileId);
+        // Throttled incremental sync: only run if last sync was > 5 min ago
+        const now = Date.now();
+        if (!lastSyncTime[profileId] || now - lastSyncTime[profileId] > SYNC_THROTTLE_MS) {
+          await incrementalSync(profileId);
+          lastSyncTime[profileId] = now;
+        }
 
-        // Read time-filtered activities for period metrics (charts, weekly stats)
+        // 1. Fetch period-filtered activities for charts & period totals
         const weeksAgo = new Date();
         weeksAgo.setDate(weeksAgo.getDate() - weekFilter * 7);
         const filteredActivities = await getCachedActivities(profileId, { after: weeksAgo });
 
-        // Read ALL cached activities for all-time stats (longestRun, fastestPace, bestEfforts)
-        const allActivities = await getCachedActivities(profileId);
+        // 2. Fetch all-time aggregate stats from DB (single query, no full table scan to client)
+        const allTimeStats = await getAthleteAllTimeStats(profileId);
 
-        if (filteredActivities.length > 0 || allActivities.length > 0) {
-          // Use filtered activities for period-specific metrics
+        if (filteredActivities.length > 0 || allTimeStats) {
+          // Period metrics from filtered activities
           const periodMetrics = calculateStravaMetrics(filteredActivities);
 
-          // Use ALL activities for all-time records
-          const allTimeMetrics = calculateStravaMetrics(allActivities);
-
-          // Merge: period metrics for totals/charts, all-time for records
+          // Merge period metrics with all-time records from the DB aggregation
           const mergedMetrics = {
             ...periodMetrics,
-            longestRun: allTimeMetrics.longestRun,
-            fastestPace: allTimeMetrics.fastestPace,
+            longestRun: allTimeStats?.longestRun
+              ? {
+                  distance: allTimeStats.longestRun.distance,
+                  distanceKm: (allTimeStats.longestRun.distance / 1000).toFixed(2),
+                  date: allTimeStats.longestRun.start_date_local,
+                  name: null,
+                }
+              : periodMetrics.longestRun,
+            fastestPace: allTimeStats?.fastestPace
+              ? {
+                  // fastestPace is seconds/km; calculatePace(seconds, meters) → "m:ss /km"
+                  pace: calculatePace(allTimeStats.fastestPace, 1000),
+                  date: null,
+                  name: null,
+                }
+              : periodMetrics.fastestPace,
           };
 
           setRawActivities(filteredActivities);
           setStravaMetrics(mergedMetrics);
 
-          // Best efforts from ALL activities (not just filtered)
-          setBestEfforts(extractBestEfforts(allActivities));
+          // Best efforts from the DB aggregation (last 500 runs, no full download)
+          if (allTimeStats?.bestEfforts?.length) {
+            setBestEfforts(extractBestEfforts(
+              // extractBestEfforts expects activity objects with best_efforts arrays
+              [{ best_efforts: allTimeStats.bestEfforts }]
+            ));
+          } else {
+            setBestEfforts(extractBestEfforts(filteredActivities));
+          }
 
-          // Auto-sync: update VDOT, PBs, and max HR from all cached data
-          try {
-            const allEfforts = allActivities.flatMap((a) => a.best_efforts || []);
-            const promises = [];
-            if (allEfforts.length > 0) {
-              promises.push(
-                updateAthleteVdot(profileId, allEfforts),
-                syncPersonalBests(profileId, allEfforts),
-              );
+          // Auto-sync VDOT, PBs, and max HR — only when we just ran a fresh sync
+          // (i.e. lastSyncTime was updated this call, not throttled)
+          const justSynced = lastSyncTime[profileId] && (Date.now() - lastSyncTime[profileId] < 10000);
+          if (justSynced) {
+            try {
+              const promises = [];
+              if (allTimeStats?.bestEfforts?.length) {
+                promises.push(
+                  updateAthleteVdot(profileId, allTimeStats.bestEfforts),
+                  syncPersonalBests(profileId, allTimeStats.bestEfforts),
+                );
+              }
+              if (allTimeStats?.observedMaxHR) {
+                promises.push(
+                  supabase
+                    .from('athletes')
+                    .select('max_heart_rate')
+                    .eq('id', profileId)
+                    .single()
+                    .then(({ data }) => {
+                      if (!data?.max_heart_rate || allTimeStats.observedMaxHR > data.max_heart_rate) {
+                        return supabase
+                          .from('athletes')
+                          .update({ max_heart_rate: allTimeStats.observedMaxHR })
+                          .eq('id', profileId);
+                      }
+                    })
+                );
+              }
+              await Promise.all(promises);
+            } catch (syncErr) {
+              console.error('Auto-sync error (non-critical):', syncErr);
             }
-            // Auto-detect max HR from activities
-            const observedMaxHR = Math.max(
-              ...allActivities.filter(a => a.max_heartrate).map(a => a.max_heartrate)
-            );
-            if (observedMaxHR > 0 && isFinite(observedMaxHR)) {
-              promises.push(
-                supabase
-                  .from('athletes')
-                  .select('max_heart_rate')
-                  .eq('id', profileId)
-                  .single()
-                  .then(({ data }) => {
-                    if (!data?.max_heart_rate || observedMaxHR > data.max_heart_rate) {
-                      return supabase
-                        .from('athletes')
-                        .update({ max_heart_rate: observedMaxHR })
-                        .eq('id', profileId);
-                    }
-                  })
-              );
-            }
-            await Promise.all(promises);
-          } catch (syncErr) {
-            console.error('Auto-sync error (non-critical):', syncErr);
           }
         }
 
-        // Get athlete stats (lightweight API call, no cache needed)
+        // Athlete stats (lightweight Strava API call)
         const athlete = getStoredAthlete();
         if (athlete?.id) {
           const { data: stats } = await getStravaAthleteStats(athlete.id);

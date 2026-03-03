@@ -420,39 +420,61 @@ const autoGenerateTrainingZones = async (athleteId, vdot, paces) => {
 // ============================================================
 
 /**
- * Sync Strava best efforts to personal_bests table
+ * Sync Strava best efforts to personal_bests table.
+ * Uses 2 queries total regardless of how many efforts are passed:
+ * 1. Fetch all existing PBs for this athlete (one SELECT)
+ * 2. Upsert only the efforts that improve on existing records (one batch UPSERT)
  */
 export const syncPersonalBests = async (athleteId, bestEfforts) => {
   if (!bestEfforts || bestEfforts.length === 0) return;
 
-  for (const effort of bestEfforts) {
-    if (!effort.elapsed_time || !effort.name) continue;
+  // 1. Fetch all existing auto-detected PBs in one query
+  const { data: existingPBs } = await supabase
+    .from('personal_bests')
+    .select('distance, time_seconds')
+    .eq('athlete_id', athleteId)
+    .eq('official', false);
 
-    // Check if we already have a PB for this distance
-    const { data: existing } = await supabase
-      .from('personal_bests')
-      .select('id, time_seconds')
-      .eq('athlete_id', athleteId)
-      .eq('distance', effort.name)
-      .order('time_seconds', { ascending: true })
-      .limit(1);
-
-    const shouldInsert = !existing || existing.length === 0 || effort.elapsed_time < existing[0].time_seconds;
-
-    if (shouldInsert) {
-      await supabase
-        .from('personal_bests')
-        .upsert({
-          athlete_id: athleteId,
-          distance: effort.name,
-          time_seconds: effort.elapsed_time,
-          date: effort.start_date_local?.split('T')[0] || null,
-          official: false,
-          notes: 'Auto-detectado desde Strava',
-          updated_at: new Date().toISOString(),
-        }, { onConflict: 'athlete_id,distance,date', ignoreDuplicates: true });
+  // Build a map of distance → best existing time
+  const existingMap = {};
+  for (const pb of existingPBs || []) {
+    if (!existingMap[pb.distance] || pb.time_seconds < existingMap[pb.distance]) {
+      existingMap[pb.distance] = pb.time_seconds;
     }
   }
+
+  // Find the best time per distance across all efforts (deduplicate in memory)
+  const bestPerDistance = {};
+  for (const effort of bestEfforts) {
+    if (!effort.elapsed_time || !effort.name) continue;
+    const existing = bestPerDistance[effort.name];
+    if (!existing || effort.elapsed_time < existing.elapsed_time) {
+      bestPerDistance[effort.name] = effort;
+    }
+  }
+
+  // 2. Build upsert batch — only efforts that beat the current DB record
+  const toUpsert = [];
+  for (const [distance, effort] of Object.entries(bestPerDistance)) {
+    const currentBest = existingMap[distance];
+    if (!currentBest || effort.elapsed_time < currentBest) {
+      toUpsert.push({
+        athlete_id: athleteId,
+        distance,
+        time_seconds: effort.elapsed_time,
+        date: effort.start_date_local?.split('T')[0] || null,
+        official: false,
+        notes: 'Auto-detectado desde Strava',
+        updated_at: new Date().toISOString(),
+      });
+    }
+  }
+
+  if (toUpsert.length === 0) return;
+
+  await supabase
+    .from('personal_bests')
+    .upsert(toUpsert, { onConflict: 'athlete_id,distance,date', ignoreDuplicates: true });
 };
 
 // ============================================================

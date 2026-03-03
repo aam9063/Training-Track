@@ -154,6 +154,58 @@ export const updateActivityDetails = async (athleteId, stravaId, detailData) => 
 };
 
 /**
+ * Get all-time aggregate stats for an athlete directly from the DB.
+ * Returns a single row instead of fetching all activities to the client.
+ * Used for: longestRun, fastestPace, observedMaxHR, bestEfforts summary.
+ */
+export const getAthleteAllTimeStats = async (athleteId) => {
+  // Aggregate query: longest run, fastest pace (min avg_speed on runs > 1km), max HR
+  const { data, error } = await supabase
+    .from('strava_activities')
+    .select('distance, average_speed, max_heartrate, best_efforts, start_date_local')
+    .eq('athlete_id', athleteId)
+    .in('sport_type', ['Run', 'TrailRun', 'VirtualRun', 'Walk', 'Hike'])
+    .order('start_date_local', { ascending: false })
+    .limit(500); // last 500 run activities is enough for all-time records
+
+  if (error || !data) return null;
+
+  let longestRun = null;
+  let fastestPaceActivity = null;
+  let observedMaxHR = 0;
+  const allBestEfforts = [];
+
+  for (const row of data) {
+    const dist = Number(row.distance || 0);
+    const speed = row.average_speed ? Number(row.average_speed) : null;
+    const hr = row.max_heartrate ? Number(row.max_heartrate) : null;
+
+    if (!longestRun || dist > longestRun.distance) {
+      longestRun = { distance: dist, start_date_local: row.start_date_local };
+    }
+    // Fastest pace: highest average_speed on runs > 1km
+    if (speed && dist > 1000) {
+      if (!fastestPaceActivity || speed > fastestPaceActivity.average_speed) {
+        fastestPaceActivity = { average_speed: speed, distance: dist };
+      }
+    }
+    if (hr && hr > observedMaxHR) observedMaxHR = hr;
+    if (row.best_efforts?.length) allBestEfforts.push(...row.best_efforts);
+  }
+
+  return {
+    longestRun: longestRun
+      ? { distance: longestRun.distance, start_date_local: longestRun.start_date_local }
+      : null,
+    fastestPace: fastestPaceActivity
+      ? 1000 / fastestPaceActivity.average_speed // seconds per km
+      : null,
+    observedMaxHR: observedMaxHR > 0 ? observedMaxHR : null,
+    bestEfforts: allBestEfforts,
+  };
+};
+
+/**
  * Get count of cached activities for an athlete.
  */
 export const getCachedActivityCount = async (athleteId) => {

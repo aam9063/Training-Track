@@ -394,7 +394,32 @@ export const rejectAthleteRequest = async (relationshipId) => {
   }
 };
 
+// Helper: call strava-proxy Edge Function (tokens stay server-side)
+const callStravaProxy = async (athleteId, endpoint, params = {}) => {
+  const { data: { session } } = await supabase.auth.getSession();
+  if (!session?.access_token) throw new Error('No session');
+
+  const supabaseUrl = import.meta.env.VITE_SUPABASE_URL;
+  const response = await fetch(`${supabaseUrl}/functions/v1/strava-proxy`, {
+    method: 'POST',
+    headers: {
+      'Content-Type': 'application/json',
+      'Authorization': `Bearer ${session.access_token}`,
+      'apikey': import.meta.env.VITE_SUPABASE_ANON_KEY,
+    },
+    body: JSON.stringify({ athlete_id: athleteId, endpoint, params }),
+  });
+
+  if (!response.ok) {
+    const err = await response.json().catch(() => ({}));
+    throw new Error(err.error || `Strava proxy error: ${response.status}`);
+  }
+
+  return response.json();
+};
+
 // Get athlete's Strava connection info (for coach to view activities)
+// Uses safe view that excludes access_token/refresh_token
 export const getAthleteStravaConnection = async (athleteId) => {
   if (!athleteId) {
     return { data: null, error: new Error('No athleteId provided') };
@@ -402,7 +427,7 @@ export const getAthleteStravaConnection = async (athleteId) => {
 
   try {
     const { data, error } = await supabase
-      .from('devices')
+      .from('devices_safe_view')
       .select('*')
       .eq('athlete_id', athleteId)
       .eq('device_type', 'strava')
@@ -416,109 +441,41 @@ export const getAthleteStravaConnection = async (athleteId) => {
   }
 };
 
-// Get athlete's Strava activities (using their stored tokens)
+// Get athlete's Strava activities via server-side proxy (tokens never reach coach's browser)
 export const getAthleteStravaActivities = async (athleteId, params = {}) => {
   if (!athleteId) {
     return { data: [], error: new Error('No athleteId provided') };
   }
 
   try {
-    // Get athlete's Strava tokens from database
-    const { data: device, error: deviceError } = await supabase
-      .from('devices')
-      .select('*')
-      .eq('athlete_id', athleteId)
-      .eq('device_type', 'strava')
-      .single();
+    const activities = await callStravaProxy(athleteId, 'activities', {
+      before: params.before,
+      after: params.after,
+      page: params.page || 1,
+      per_page: params.per_page || 10,
+    });
 
-    if (deviceError || !device) {
-      return { data: [], error: null, notConnected: true };
-    }
-
-    // Check if token is expired and needs refresh
-    const tokenExpiresAt = new Date(device.token_expires_at).getTime();
-    const now = Date.now();
-    let accessToken = device.access_token;
-
-    if (tokenExpiresAt <= now + 300000) { // 5 min buffer
-      const refreshData = await refreshStravaTokenViaEdge(device.refresh_token, athleteId);
-      if (!refreshData) {
-        return { data: [], error: new Error('Failed to refresh token'), notConnected: true };
-      }
-      accessToken = refreshData.access_token;
-    }
-
-    // Fetch activities from Strava
-    const queryParams = new URLSearchParams();
-    if (params.before) queryParams.append('before', params.before);
-    if (params.after) queryParams.append('after', params.after);
-    queryParams.append('page', params.page || 1);
-    queryParams.append('per_page', params.per_page || 10);
-
-    const activitiesResponse = await fetch(
-      `https://www.strava.com/api/v3/athlete/activities?${queryParams.toString()}`,
-      {
-        headers: { Authorization: `Bearer ${accessToken}` },
-      }
-    );
-
-    if (!activitiesResponse.ok) {
-      throw new Error('Failed to fetch activities');
-    }
-
-    const activities = await activitiesResponse.json();
     return { data: activities, error: null };
   } catch (error) {
+    if (error.message?.includes('not connected') || error.message?.includes('Not authorized')) {
+      return { data: [], error: null, notConnected: true };
+    }
     console.error('Error fetching athlete Strava activities:', error);
     return { data: [], error };
   }
 };
 
-// Get detailed Strava activity (with laps, splits, segments)
+// Get detailed Strava activity via server-side proxy
 export const getAthleteStravaActivityDetail = async (athleteId, activityId) => {
   if (!athleteId || !activityId) {
     return { data: null, error: new Error('Missing athleteId or activityId') };
   }
 
   try {
-    // Get athlete's Strava tokens from database
-    const { data: device, error: deviceError } = await supabase
-      .from('devices')
-      .select('*')
-      .eq('athlete_id', athleteId)
-      .eq('device_type', 'strava')
-      .single();
+    const activity = await callStravaProxy(athleteId, 'activity_detail', {
+      activity_id: activityId,
+    });
 
-    if (deviceError || !device) {
-      return { data: null, error: new Error('Athlete not connected to Strava') };
-    }
-
-    // Check if token is expired and needs refresh
-    const tokenExpiresAt = new Date(device.token_expires_at).getTime();
-    const now = Date.now();
-    let accessToken = device.access_token;
-
-    if (tokenExpiresAt <= now + 300000) {
-      const refreshData = await refreshStravaTokenViaEdge(device.refresh_token, athleteId);
-      if (!refreshData) {
-        return { data: null, error: new Error('Failed to refresh token') };
-      }
-      accessToken = refreshData.access_token;
-    }
-
-    // Fetch detailed activity from Strava
-    const response = await fetch(
-      `https://www.strava.com/api/v3/activities/${activityId}?include_all_efforts=true`,
-      {
-        headers: { Authorization: `Bearer ${accessToken}` },
-      }
-    );
-
-    if (!response.ok) {
-      throw new Error('Failed to fetch activity details');
-    }
-
-    const activity = await response.json();
     return { data: activity, error: null };
   } catch (error) {
     console.error('Error fetching activity details:', error);

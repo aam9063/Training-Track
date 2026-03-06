@@ -1,4 +1,7 @@
 {
+  "redirects": [
+    { "source": "/:path(.*)", "has": [{ "type": "host", "value": "www.trainingtrack.es" }], "destination": "https://trainingtrack.es/:path", "permanent": true }
+  ],
   "rewrites": [
     { "source": "/(.*)", "destination": "/index.html" }
   ],

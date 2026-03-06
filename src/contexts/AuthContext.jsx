@@ -212,8 +212,14 @@ export function AuthProvider({ children }) {
   }, []);
 
   // Sign in with Google
-  const signInWithGoogle = useCallback(async () => {
+  // metadata: { role, coachId, coachEmail } — saved to localStorage for post-OAuth callback
+  const signInWithGoogle = useCallback(async (metadata = null) => {
     try {
+      // Store registration metadata before redirect (OAuth loses state)
+      if (metadata) {
+        localStorage.setItem('google_oauth_metadata', JSON.stringify(metadata));
+      }
+
       const { data, error } = await supabase.auth.signInWithOAuth({
         provider: 'google',
         options: {
@@ -225,6 +231,8 @@ export function AuthProvider({ children }) {
       return { data, error: null };
     } catch (error) {
       console.error('Google sign in error:', error);
+      // Clean up on error
+      localStorage.removeItem('google_oauth_metadata');
       return { data: null, error };
     }
   }, []);

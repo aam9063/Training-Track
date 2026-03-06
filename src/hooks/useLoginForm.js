@@ -3,6 +3,7 @@ import { useForm } from 'react-hook-form';
 import { zodResolver } from '@hookform/resolvers/zod';
 import { z } from 'zod';
 import { useAuth } from '../contexts/AuthContext';
+import { supabase } from '../lib/supabase';
 
 const loginSchema = z.object({
   email: z
@@ -34,6 +35,15 @@ export default function useLoginForm() {
     setError('');
 
     try {
+      // Check if user registered with Google before attempting password login
+      const { data: provider } = await supabase.rpc('check_auth_provider', { p_email: data.email });
+
+      if (provider === 'google') {
+        setError('Esta cuenta está vinculada a Google. Usa el botón "Iniciar sesión con Google".');
+        setIsLoading(false);
+        return;
+      }
+
       const result = await signIn({
         email: data.email,
         password: data.password,

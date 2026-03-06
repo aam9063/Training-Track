@@ -242,7 +242,7 @@ function ReportDetailView({ report, onBack }) {
       animate={{ opacity: 1, x: 0 }}
       exit={{ opacity: 0, x: 24 }}
       transition={{ type: 'spring', stiffness: 300, damping: 30 }}
-      className="px-4 lg:px-8 py-6 lg:py-8"
+      className="px-4 lg:px-8 py-6 lg:py-8 overflow-hidden"
     >
       {/* Back button */}
       <button
@@ -290,13 +290,13 @@ function ReportDetailView({ report, onBack }) {
       <div className="space-y-5">
         {/* AI Summary */}
         {ai.resumen && (
-          <div className="flex gap-3 p-4 bg-slate-900 dark:bg-gray-950 rounded-2xl">
+          <div className="flex gap-3 p-4 bg-slate-900 dark:bg-gray-950 rounded-2xl overflow-hidden">
             <div className="w-8 h-8 rounded-lg flex items-center justify-center flex-shrink-0" style={{ background: 'rgba(26,107,255,0.2)' }}>
               <FiZap className="w-4 h-4" style={{ color: '#1A6BFF' }} />
             </div>
-            <div>
+            <div className="min-w-0">
               <p className="text-[10px] font-bold uppercase tracking-widest mb-1" style={{ color: '#1A6BFF' }}>Análisis IA</p>
-              <p className="text-sm leading-relaxed" style={{ color: '#e2e8f0' }}>{ai.resumen}</p>
+              <p className="text-sm leading-relaxed break-words" style={{ color: '#e2e8f0' }}>{ai.resumen}</p>
             </div>
           </div>
         )}
@@ -513,17 +513,24 @@ function exportReportPDF(report) {
 
   // AI Summary
   if (ai.resumen) {
+    doc.setFontSize(8);
+    doc.setFont('helvetica', 'normal');
+    const textWidth = CW - 8;
+    const summaryLines = doc.splitTextToSize(ai.resumen, textWidth);
+    const lineHeight = 4.2;
+    const paddingTop = 10;
+    const paddingBottom = 5;
+    const summaryH = paddingTop + summaryLines.length * lineHeight + paddingBottom;
     doc.setFillColor(241, 245, 249);
-    const summaryLines = doc.splitTextToSize(ai.resumen, CW - 20);
-    const summaryH = 8 + summaryLines.length * 5;
     doc.roundedRect(MARGIN, y, CW, summaryH, 2, 2, 'F');
     doc.setFontSize(7.5);
     doc.setFont('helvetica', 'bold');
     doc.setTextColor(26, 107, 255);
     doc.text('ANÁLISIS IA', MARGIN + 4, y + 5.5);
+    doc.setFontSize(8);
     doc.setFont('helvetica', 'normal');
     doc.setTextColor(30, 41, 59);
-    doc.text(summaryLines, MARGIN + 4, y + 11);
+    doc.text(summaryLines, MARGIN + 4, y + paddingTop + 1, { lineHeightFactor: 1.4 });
     y += summaryH + 6;
   }
 

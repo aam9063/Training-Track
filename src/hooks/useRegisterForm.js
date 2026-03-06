@@ -114,7 +114,11 @@ export default function useRegisterForm() {
     }
 
     try {
-      const { error } = await signInWithGoogle();
+      const { error } = await signInWithGoogle({
+        role,
+        coachId: inviteCoachId || null,
+        coachEmail: role === 'athlete' && !inviteCoachId ? form.getValues('coachEmail') : null,
+      });
       if (error) throw error;
     } catch (err) {
       form.setError('root', { message: 'Error al registrar con Google' });

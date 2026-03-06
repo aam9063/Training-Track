@@ -20,6 +20,7 @@ const UseCases = lazy(() => import('./pages/UseCases'));
 const PrivacyPolicy = lazy(() => import('./pages/PrivacyPolicy'));
 const Blog = lazy(() => import('./pages/blog/Blog'));
 const BlogPost = lazy(() => import('./pages/blog/BlogPost'));
+const AuthCallback = lazy(() => import('./pages/AuthCallback'));
 
 // Coach pages
 const Dashboard = lazy(() => import('./pages/dashboard/Dashboard'));
@@ -78,6 +79,7 @@ function App() {
                 <Route path="/privacidad" element={<PrivacyPolicy />} />
                 <Route path="/blog" element={<Blog />} />
                 <Route path="/blog/:slug" element={<BlogPost />} />
+                <Route path="/auth/callback" element={<AuthCallback />} />
 
                 {/* Protected Coach Dashboard Routes */}
                 <Route path="/dashboard" element={<DashboardLayout />}>

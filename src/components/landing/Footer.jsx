@@ -55,7 +55,7 @@ export default function Footer() {
                 <img src="/img/logo.png" alt="TrainingTrack" className="w-16 h-16 object-contain" />
 
                 </div>
-                <span className="text-2xl font-bold text-gray-900 dark:text-white">TrainingTrack</span>
+                <span className="text-2xl font-bold text-gray-900 dark:text-white">Training Track</span>
               </div>
 
               <p className="text-gray-500 dark:text-gray-400 mb-6 leading-relaxed">
@@ -68,10 +68,6 @@ export default function Footer() {
                 <div className="flex items-center space-x-3 text-sm">
                   <HiMail className="w-5 h-5 text-sky-500" />
                   <span>info@trainingtrack.es</span>
-                </div>
-                <div className="flex items-center space-x-3 text-sm">
-                  <HiPhone className="w-5 h-5 text-sky-500" />
-                  <span>+34 900 123 456</span>
                 </div>
                 <div className="flex items-center space-x-3 text-sm">
                   <HiLocationMarker className="w-5 h-5 text-sky-500" />
@@ -189,7 +185,7 @@ export default function Footer() {
         >
           {/* Copyright */}
           <div className="text-gray-500 dark:text-gray-400 text-sm">
-            © {currentYear} Training Track Pro. Todos los derechos reservados.
+            © {currentYear} Training Track. Todos los derechos reservados.
           </div>
 
           {/* Social Links */}

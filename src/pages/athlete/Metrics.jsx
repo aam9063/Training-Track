@@ -39,6 +39,7 @@ import PMCChart from '../../components/athlete/PMCChart';
 import TrainingZonesCard from '../../components/athlete/TrainingZonesCard';
 import InfoTooltip from '../../components/common/InfoTooltip';
 import useStravaMetrics from '../../hooks/useStravaMetrics';
+import { exportActivitiesCSV, exportLoadCSV } from '../../lib/dataExport';
 
 // Register Chart.js components
 ChartJS.register(
@@ -443,6 +444,7 @@ const AthleteMetrics = () => {
     stravaStats, weekFilter, setWeekFilter, rawActivities,
   } = useStravaMetrics(profile?.id);
   const [activityTimePeriod, setActivityTimePeriod] = useState('7days');
+  const [exportOpen, setExportOpen] = useState(false);
   const [dbPersonalBests, setDbPersonalBests] = useState([]);
 
   // Fetch personal bests from DB for race predictions
@@ -855,9 +857,43 @@ const AthleteMetrics = () => {
       {/* Header */}
       <div className="flex flex-col sm:flex-row sm:items-center sm:justify-between mb-6 sm:mb-8 gap-4">
         <div>
-          <h1 className="text-2xl sm:text-3xl font-bold text-gray-900 dark:text-white mb-2">
-            Mis Métricas
-          </h1>
+          <div className="flex items-center gap-3 mb-2">
+            <h1 className="text-2xl sm:text-3xl font-bold text-gray-900 dark:text-white">
+              Mis Métricas
+            </h1>
+            {/* Export dropdown */}
+            <div className="relative">
+              <button
+                onClick={() => setExportOpen((o) => !o)}
+                className="flex items-center gap-1.5 px-3 py-1.5 text-xs font-semibold text-gray-600 dark:text-gray-300 bg-gray-100 dark:bg-gray-700 hover:bg-gray-200 dark:hover:bg-gray-600 rounded-lg transition-colors"
+              >
+                <FiDownload className="w-3.5 h-3.5" />
+                Exportar
+              </button>
+              {exportOpen && (
+                <>
+                  {/* Backdrop to close on outside click */}
+                  <div className="fixed inset-0 z-10" onClick={() => setExportOpen(false)} />
+                  <div className="absolute left-0 top-full mt-1 w-48 bg-white dark:bg-gray-800 rounded-xl shadow-lg border border-gray-200 dark:border-gray-700 py-1 z-20">
+                    <button
+                      onClick={() => { exportActivitiesCSV(rawActivities, profile?.full_name || 'atleta'); setExportOpen(false); }}
+                      className="w-full text-left px-4 py-2.5 text-sm text-gray-700 dark:text-gray-300 hover:bg-gray-50 dark:hover:bg-gray-700 flex items-center gap-2"
+                    >
+                      <FiActivity className="w-4 h-4 text-orange-500" />
+                      Actividades (CSV)
+                    </button>
+                    <button
+                      onClick={() => { exportLoadCSV(loadData?.weeklyLoads, profile?.full_name || 'atleta'); setExportOpen(false); }}
+                      className="w-full text-left px-4 py-2.5 text-sm text-gray-700 dark:text-gray-300 hover:bg-gray-50 dark:hover:bg-gray-700 flex items-center gap-2"
+                    >
+                      <FiTrendingUp className="w-4 h-4 text-blue-500" />
+                      Carga semanal (CSV)
+                    </button>
+                  </div>
+                </>
+              )}
+            </div>
+          </div>
           <p className="text-sm sm:text-base text-gray-600 dark:text-gray-400">
             Análisis de rendimiento basado en Strava
           </p>

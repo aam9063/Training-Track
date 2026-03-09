@@ -1,5 +1,6 @@
 import { useEffect } from 'react';
 import { useLocation } from 'react-router-dom';
+import useSEO from '../hooks/useSEO';
 import Navbar from '../components/landing/Navbar';
 import Hero from '../components/landing/Hero';
 import AppShowcase from '../components/landing/AppShowcase';
@@ -18,6 +19,12 @@ import CookieConsent from '../components/landing/CookieConsent';
 
 export default function Landing() {
   const location = useLocation();
+
+  useSEO({
+    title: 'Plataforma de entrenamiento de running y atletismo con IA',
+    description: 'Plataforma para entrenadores de running y atletismo. Planifica entrenamientos, controla la carga con ACWR y TSB, sincroniza Strava, genera informes IA semanales y comunícate con tus atletas. Desde 800m hasta maratón. Gratis durante la beta.',
+    path: '/',
+  });
 
   useEffect(() => {
     if (location.hash) {

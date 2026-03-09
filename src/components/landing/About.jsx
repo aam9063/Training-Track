@@ -277,6 +277,7 @@ export default function About() {
                             <img
                               src={integration.logo}
                               alt={integration.name}
+                              loading="lazy"
                               className="w-full h-full object-contain"
                               onError={(e) => {
                                 e.currentTarget.style.display = 'none';

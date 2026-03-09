@@ -8,28 +8,17 @@ export default function Footer() {
 
   const footerLinks = {
     product: [
-      { name: 'Características', href: '/not-found' },
-      { name: 'Pricing', href: '#pricing' },
       { name: 'Casos de Uso', href: '/casos-de-uso' },
+      { name: 'Pricing', href: '#pricing' },
       { name: 'Testimonios', href: '#testimonios' },
     ],
     company: [
       { name: 'Sobre Nosotros', href: '#conocenos' },
       { name: 'Blog', href: '/blog' },
-      { name: 'Carreras', href: '/not-found' },
-      { name: 'Prensa', href: '/not-found' },
-    ],
-    resources: [
-      { name: 'Documentación', href: '/not-found' },
-      { name: 'Centro de Ayuda', href: '/not-found' },
-      { name: 'API', href: '/not-found' },
-      { name: 'Comunidad', href: '/not-found' },
     ],
     legal: [
       { name: 'Privacidad', href: '/privacidad' },
-      { name: 'Términos', href: '/not-found' },
       { name: 'Cookies', href: '#', onClick: () => { localStorage.removeItem('cookie_consent'); window.location.reload(); } },
-      { name: 'Licencias', href: '/not-found' },
     ],
   };
 
@@ -52,7 +41,7 @@ export default function Footer() {
 
       <div className="relative max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 py-16">
         {/* Main Footer Content */}
-        <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-6 gap-12 mb-12">
+        <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-5 gap-12 mb-12">
           {/* Brand Section */}
           <div className="lg:col-span-2">
             <motion.div
@@ -78,7 +67,7 @@ export default function Footer() {
               <div className="space-y-3 text-gray-500 dark:text-gray-300">
                 <div className="flex items-center space-x-3 text-sm">
                   <HiMail className="w-5 h-5 text-sky-500" />
-                  <span>contacto@trainingtrack.com</span>
+                  <span>info@trainingtrack.es</span>
                 </div>
                 <div className="flex items-center space-x-3 text-sm">
                   <HiPhone className="w-5 h-5 text-sky-500" />
@@ -124,28 +113,6 @@ export default function Footer() {
             <h3 className="text-gray-900 dark:text-white font-semibold mb-4">Compañía</h3>
             <ul className="space-y-3">
               {footerLinks.company.map((link, index) => (
-                <li key={index}>
-                  <a
-                    href={link.href}
-                    className="text-gray-500 dark:text-gray-400 hover:text-gray-900 dark:hover:text-white transition-colors duration-200"
-                  >
-                    {link.name}
-                  </a>
-                </li>
-              ))}
-            </ul>
-          </motion.div>
-
-          {/* Resources Links */}
-          <motion.div
-            initial={{ opacity: 0, y: 20 }}
-            whileInView={{ opacity: 1, y: 0 }}
-            viewport={{ once: true }}
-            transition={{ duration: 0.5, delay: 0.3 }}
-          >
-            <h3 className="text-gray-900 dark:text-white font-semibold mb-4">Recursos</h3>
-            <ul className="space-y-3">
-              {footerLinks.resources.map((link, index) => (
                 <li key={index}>
                   <a
                     href={link.href}

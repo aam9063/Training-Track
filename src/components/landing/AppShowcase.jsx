@@ -244,6 +244,7 @@ export default function AppShowcase() {
                   <img
                     src={getSrc(screenshot)}
                     alt={screenshot.alt}
+                    loading="lazy"
                     onError={(e) => handleImgError(e, screenshot)}
                     className="w-full aspect-[4/3] object-cover object-top"
                   />

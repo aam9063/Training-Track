@@ -28,7 +28,7 @@ export default function Hero() {
   const features = [
     { icon: FiZap,        text: 'Informes IA automáticos cada lunes con ACWR, TSB y RPE' },
     { icon: FiCalendar,   text: 'Planificador de temporada con mesociclos y asignación masiva' },
-    { icon: FiTrendingUp, text: 'Predictor de tiempos basado en tests VAM y Conconi' },
+    { icon: FiTrendingUp, text: 'Predicción de ritmos basado en tests VAM y Conconi' },
     { icon: FiSmartphone, text: 'App instalable en móvil directamente desde el navegador' },
   ];
 

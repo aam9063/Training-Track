@@ -26,15 +26,15 @@ export default function Hero() {
   };
 
   const features = [
-    { icon: FiZap,        text: 'Informes IA automáticos cada lunes con ACWR, TSB y RPE' },
-    { icon: FiCalendar,   text: 'Planificador de temporada con mesociclos y asignación masiva' },
-    { icon: FiTrendingUp, text: 'Predicción de ritmos basado en tests VAM y Conconi' },
-    { icon: FiSmartphone, text: 'App instalable en móvil directamente desde el navegador' },
+    { icon: FiZap,        text: 'Informes IA cada lunes: ACWR, TSB, RPE y alertas de riesgo de lesión' },
+    { icon: FiTrendingUp, text: 'Strava conectado — las sesiones se completan solas al terminar de correr' },
+    { icon: FiCalendar,   text: 'Planificador por mesociclos con asignación masiva a todos tus atletas' },
+    { icon: FiSmartphone, text: 'PWA instalable en móvil — sin App Store, con notificaciones push' },
   ];
 
   const stats = [
-    { value: '800m → 42K', label: 'Todas las distancias', sub: 'Medio fondo y fondo' },
-    { value: 'Strava + IA', label: 'Análisis automático', sub: 'Sincronización en tiempo real' },
+    { value: 'Strava + IA', label: 'Datos automáticos', sub: 'Sin copiar nada a mano' },
+    { value: 'ACWR · TSB', label: 'Control de carga real', sub: 'Prevén lesiones antes de que ocurran' },
     { value: '100% gratis', label: 'Durante la Beta', sub: 'Sin tarjeta de crédito' },
   ];
 
@@ -72,7 +72,7 @@ export default function Hero() {
               <div className="inline-flex items-center gap-2 px-4 py-2 bg-sky-100 dark:bg-sky-900/30 rounded-full">
                 <span className="w-2 h-2 bg-sky-600 rounded-full animate-pulse" />
                 <span className="text-sm font-medium text-sky-600 dark:text-sky-400">
-                  Plataforma de entrenamiento con IA · Beta gratuita
+                  La plataforma inteligente para entrenadores de running · Beta gratuita
                 </span>
               </div>
             </motion.div>
@@ -82,10 +82,10 @@ export default function Hero() {
               variants={itemVariants}
               className="text-4xl sm:text-5xl lg:text-6xl font-bold text-gray-900 dark:text-white mb-5 leading-tight text-center lg:text-left"
             >
-              El entrenador
+              Entrena con datos.
               <br />
               <span className="text-sky-600 dark:text-sky-400">
-                que nunca para
+                No con Excel.
               </span>
             </motion.h1>
 
@@ -94,7 +94,7 @@ export default function Hero() {
               variants={itemVariants}
               className="text-lg sm:text-xl text-gray-600 dark:text-gray-300 mb-7 max-w-xl mx-auto lg:mx-0 leading-relaxed text-center lg:text-left"
             >
-              Gestiona tus atletas, diseña planes personalizados y recibe análisis IA cada semana — sin hacer nada. Integrado con Strava.
+              Strava sincronizado, ACWR e informes IA automáticos cada semana. Todo lo que necesitas para entrenar a tus atletas — en un solo lugar.
             </motion.p>
 
             {/* Feature list */}

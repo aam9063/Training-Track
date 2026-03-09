@@ -1,8 +1,13 @@
 import { motion } from 'framer-motion';
 import { Link } from 'react-router-dom';
 import { HiHome, HiArrowLeft, HiMail } from 'react-icons/hi';
+import useSEO from '../hooks/useSEO';
 
 export default function NotFound() {
+  useSEO({
+    title: 'Página no encontrada',
+    description: 'La página que buscas no existe o está en construcción. Vuelve al inicio de TrainingTrack.',
+  });
   return (
     <div className="min-h-screen bg-gradient-to-br from-gray-50 via-white to-sky-50 dark:from-gray-900 dark:via-gray-900 dark:to-gray-800 flex items-center justify-center px-4 relative overflow-hidden">
       {/* Background decorations */}
@@ -100,7 +105,7 @@ export default function NotFound() {
           className="mt-12 text-sm text-gray-400 dark:text-gray-500 flex items-center justify-center gap-2"
         >
           <HiMail className="w-4 h-4" />
-          ¿Necesitas ayuda? Escríbenos a contacto@trainingtrack.com
+          ¿Necesitas ayuda? Escríbenos a info@trainingtrack.es
         </motion.p>
       </div>
     </div>

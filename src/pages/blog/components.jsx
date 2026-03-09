@@ -40,7 +40,7 @@ export function H3({ children }) {
 
 export function P({ children }) {
   return (
-    <p className="text-gray-600 dark:text-gray-300 leading-relaxed mb-5">
+    <p className="text-gray-600 dark:text-gray-300 leading-relaxed mb-5 text-justify">
       {children}
     </p>
   );
@@ -59,7 +59,7 @@ export function OL({ children }) {
 }
 
 export function LI({ children }) {
-  return <li className="leading-relaxed pl-1">{children}</li>;
+  return <li className="leading-relaxed pl-1 text-justify">{children}</li>;
 }
 
 export function Blockquote({ children }) {

@@ -155,6 +155,7 @@ export default function MobileShowcase() {
                   <img
                     src="/img/mobile-pwa.jpg"
                     alt="TrainingTrack instalada en móvil"
+                    loading="lazy"
                     className="w-full h-full object-cover"
                   />
                 </div>

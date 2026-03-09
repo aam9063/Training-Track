@@ -49,6 +49,66 @@ const blogArticles = [
     readTime: '7 min',
     Component: lazy(() => import('./articles/importancia-fuerza-corredores-fondo')),
   },
+  {
+    slug: 'zonas-entrenamiento-running',
+    title: 'Zonas de entrenamiento en running: guía completa para entrenadores',
+    excerpt:
+      'Aprende a definir las 5 zonas de entrenamiento por frecuencia cardíaca, ritmo y RPE. Descubre cómo calcularlas, evitar la zona gris y aplicar el modelo polarizado para maximizar el rendimiento.',
+    image: `${STORAGE_BASE}/portada-zonas.png`,
+    date: '2026-03-01',
+    author: 'Training Track',
+    category: 'Fisiología',
+    readTime: '9 min',
+    Component: lazy(() => import('./articles/zonas-entrenamiento-running')),
+  },
+  {
+    slug: 'plan-entrenamiento-media-maraton',
+    title: 'Plan de entrenamiento para media maratón: 12 semanas paso a paso',
+    excerpt:
+      'Guía completa para preparar una media maratón con un plan de 12 semanas estructurado en fases de base, específico y tapering. Sesiones clave, errores comunes y estrategia de carrera.',
+    image: `${STORAGE_BASE}/portada-media-maraton.png`,
+    date: '2026-03-03',
+    author: 'Training Track',
+    category: 'Entrenamiento',
+    readTime: '10 min',
+    Component: lazy(() => import('./articles/plan-entrenamiento-media-maraton')),
+  },
+  {
+    slug: 'como-interpretar-acwr-carga-entrenamiento',
+    title: 'ACWR y TSB: cómo interpretar la carga de entrenamiento en running',
+    excerpt:
+      'Guía práctica para entender el ACWR (Acute:Chronic Workload Ratio) y el TSB (Training Stress Balance). Aprende a monitorizar la carga, prevenir lesiones y optimizar el tapering pre-competición.',
+    image: `${STORAGE_BASE}/portada-acwr.png`,
+    date: '2026-03-05',
+    author: 'Training Track',
+    category: 'Métricas',
+    readTime: '8 min',
+    Component: lazy(() => import('./articles/como-interpretar-acwr-carga-entrenamiento')),
+  },
+  {
+    slug: 'prevenir-lesiones-corredores-fondo',
+    title: 'Prevenir lesiones en corredores de fondo: las 5 claves imprescindibles',
+    excerpt:
+      'El 50-75% de los corredores se lesionan cada año. Descubre las 5 estrategias clave para prevenir lesiones: progresión de carga, fuerza, movilidad, RPE y nutrición.',
+    image: `${STORAGE_BASE}/portada-lesiones.png`,
+    date: '2026-03-07',
+    author: 'Training Track',
+    category: 'Salud',
+    readTime: '9 min',
+    Component: lazy(() => import('./articles/prevenir-lesiones-corredores-fondo')),
+  },
+  {
+    slug: 'strava-entrenador-atletismo',
+    title: 'Strava para entrenadores de atletismo: cómo aprovechar la integración',
+    excerpt:
+      'Strava registra los datos, pero el entrenador necesita más. Descubre cómo la integración Strava + Training Track automatiza el seguimiento, cruza datos con la planificación y genera informes IA.',
+    image: `${STORAGE_BASE}/portada-strava.png`,
+    date: '2026-03-09',
+    author: 'Training Track',
+    category: 'Tecnología',
+    readTime: '8 min',
+    Component: lazy(() => import('./articles/strava-entrenador-atletismo')),
+  },
 ];
 
 export default blogArticles;

@@ -12,7 +12,7 @@ export default function Navbar() {
   const navigate = useNavigate();
 
   const isLanding = location.pathname === '/';
-  const hasDarkHero = location.pathname.startsWith('/blog') || location.pathname === '/casos-de-uso';
+  const hasDarkHero = location.pathname.startsWith('/blog');
 
   useEffect(() => {
     const handleScroll = () => {

@@ -1,10 +1,16 @@
 import { motion } from 'framer-motion';
 import { Link } from 'react-router-dom';
 import { HiArrowLeft } from 'react-icons/hi';
+import useSEO from '../hooks/useSEO';
 import Navbar from '../components/landing/Navbar';
 import Footer from '../components/landing/Footer';
 
 export default function PrivacyPolicy() {
+  useSEO({
+    title: 'Política de Privacidad',
+    description: 'Política de privacidad de TrainingTrack. Información sobre el tratamiento de datos personales, derechos RGPD, integraciones con terceros y medidas de seguridad.',
+    path: '/privacidad',
+  });
   return (
     <div className="min-h-screen bg-white dark:bg-gray-900">
       <Navbar />
@@ -39,7 +45,7 @@ export default function PrivacyPolicy() {
               </h2>
               <ul className="list-none space-y-1 pl-0">
                 <li><strong>Titular:</strong> Training Track</li>
-                <li><strong>Correo electronico:</strong> contacto@trainingtrack.com</li>
+                <li><strong>Correo electronico:</strong> info@trainingtrack.es</li>
                 <li><strong>Domicilio:</strong> Alicante, Espana</li>
                 <li><strong>Sitio web:</strong> https://trainingtrack.es</li>
               </ul>
@@ -357,8 +363,8 @@ export default function PrivacyPolicy() {
               </ul>
               <p className="mt-3">
                 Para ejercer cualquiera de estos derechos, puedes contactar con nosotros en{' '}
-                <a href="mailto:contacto@trainingtrack.com" className="text-sky-600 dark:text-sky-400 underline">
-                  contacto@trainingtrack.com
+                <a href="mailto:info@trainingtrack.es" className="text-sky-600 dark:text-sky-400 underline">
+                  info@trainingtrack.es
                 </a>
                 , indicando tu nombre completo, correo electronico asociado a tu cuenta y el derecho que deseas ejercer.
                 Responderemos en un plazo maximo de 30 dias.
@@ -449,7 +455,7 @@ export default function PrivacyPolicy() {
                 personales, puedes contactar con nosotros en:
               </p>
               <ul className="list-none pl-0 space-y-1 mt-2">
-                <li><strong>Email:</strong> contacto@trainingtrack.com</li>
+                <li><strong>Email:</strong> info@trainingtrack.es</li>
                 <li><strong>Direccion:</strong> Alicante, Espana</li>
               </ul>
             </section>

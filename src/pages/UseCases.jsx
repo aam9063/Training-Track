@@ -1,5 +1,6 @@
 import { motion } from 'framer-motion';
 import { Link } from 'react-router-dom';
+import useSEO from '../hooks/useSEO';
 import {
   HiCalendar,
   HiChartBar,
@@ -209,6 +210,12 @@ function UseCaseCard({ useCase, index }) {
 }
 
 export default function UseCases() {
+  useSEO({
+    title: 'Casos de Uso — Funcionalidades para entrenadores y atletas',
+    description: 'Descubre todas las funcionalidades de TrainingTrack: planificación semanal, informes IA, integración con Strava, tests fisiológicos, mensajería y más. Para entrenadores de atletismo y sus atletas.',
+    path: '/casos-de-uso',
+  });
+
   return (
     <div className="min-h-screen bg-white dark:bg-gray-900">
       <Navbar />

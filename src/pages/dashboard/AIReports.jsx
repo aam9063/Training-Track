@@ -15,6 +15,7 @@ import {
   triggerWeeklyReports,
 } from '../../services/aiReportService';
 import { sendMessage } from '../../services/chatService';
+import { getWeeklyDiaryForCoach } from '../../services/weeklyDiaryService';
 import { showSuccess, showError } from '../../lib/toast';
 
 // ─── Helpers ──────────────────────────────────────────────────────────────────
@@ -226,6 +227,14 @@ function ReportDetailView({ report, onBack, coachId }) {
   const [noteText, setNoteText] = useState('');
   const [sendingNote, setSendingNote] = useState(false);
   const noteRef = useRef(null);
+  const [diary, setDiary] = useState(undefined); // undefined=loading, null=no entry, object=entry
+
+  useEffect(() => {
+    if (athlete.id && report.week_start) {
+      getWeeklyDiaryForCoach(athlete.id, report.week_start)
+        .then(({ data }) => setDiary(data));
+    }
+  }, [athlete.id, report.week_start]);
 
   const handleSendNote = async () => {
     if (!noteText.trim() || !coachId || !athlete.id) return;
@@ -461,9 +470,57 @@ function ReportDetailView({ report, onBack, coachId }) {
               <FiZap className="w-4 h-4" style={{ color: '#1A6BFF' }} />
             </div>
             <div className="min-w-0">
-              <p className="text-[10px] font-bold uppercase tracking-widest mb-1" style={{ color: '#1A6BFF' }}>Análisis IA</p>
+              <p className="text-[10px] font-bold uppercase tracking-widest mb-1" style={{ color: '#1A6BFF' }}>Hermes · IA</p>
               <p className="text-sm leading-relaxed break-words" style={{ color: '#e2e8f0' }}>{ai.resumen}</p>
             </div>
+          </div>
+        )}
+
+        {/* Diario del atleta */}
+        {diary !== undefined && (
+          <div>
+            <p className="text-xs font-semibold text-slate-500 dark:text-slate-400 uppercase tracking-widest mb-2.5 flex items-center gap-1">
+              <FiInfo className="w-3.5 h-3.5" /> Diario del atleta
+            </p>
+            {diary === null ? (
+              <p className="text-xs text-slate-400 dark:text-slate-500 italic">El atleta no rellenó el diario esta semana.</p>
+            ) : (
+              <div className="bg-slate-50 dark:bg-gray-900/50 rounded-xl p-3 space-y-3">
+                {/* Overall */}
+                <div>
+                  <p className="text-[11px] font-semibold text-slate-500 uppercase tracking-wider mb-1">Semana en general</p>
+                  <div className="flex items-center gap-1.5">
+                    {['😩','😕','😐','🙂','💪'].map((emoji, i) => (
+                      <span key={i} className={`text-lg ${diary.overall_rating === i + 1 ? 'opacity-100 scale-125' : 'opacity-25'} transition-all`}>{emoji}</span>
+                    ))}
+                    <span className="ml-2 text-sm font-semibold text-slate-700 dark:text-slate-300">{diary.overall_rating}/5</span>
+                  </div>
+                  {diary.overall_notes && (
+                    <p className="text-xs text-slate-600 dark:text-slate-400 mt-1 italic">"{diary.overall_notes}"</p>
+                  )}
+                </div>
+                {/* Pain */}
+                {diary.pain_notes && (
+                  <div className="bg-amber-50 dark:bg-amber-900/20 border border-amber-200 dark:border-amber-700 rounded-lg px-3 py-2">
+                    <p className="text-[11px] font-semibold text-amber-700 dark:text-amber-400 uppercase tracking-wider mb-0.5">Molestias</p>
+                    <p className="text-xs text-amber-800 dark:text-amber-300">"{diary.pain_notes}"</p>
+                  </div>
+                )}
+                {/* Next week */}
+                <div>
+                  <p className="text-[11px] font-semibold text-slate-500 uppercase tracking-wider mb-1">Confianza próxima semana</p>
+                  <div className="flex items-center gap-1.5">
+                    {['😰','😟','😐','😊','🔥'].map((emoji, i) => (
+                      <span key={i} className={`text-lg ${diary.next_week_rating === i + 1 ? 'opacity-100 scale-125' : 'opacity-25'} transition-all`}>{emoji}</span>
+                    ))}
+                    <span className="ml-2 text-sm font-semibold text-slate-700 dark:text-slate-300">{diary.next_week_rating}/5</span>
+                  </div>
+                  {diary.next_week_notes && (
+                    <p className="text-xs text-slate-600 dark:text-slate-400 mt-1 italic">"{diary.next_week_notes}"</p>
+                  )}
+                </div>
+              </div>
+            )}
           </div>
         )}
 
@@ -793,7 +850,7 @@ function exportReportPDF(report) {
   doc.setFont('helvetica', 'normal');
   doc.setTextColor(148, 163, 184);
   doc.text(
-    `Generado el ${new Date().toLocaleDateString('es-ES')} | Training Track · Análisis IA`,
+    `Generado el ${new Date().toLocaleDateString('es-ES')} | Training Track · Hermes`,
     PW / 2,
     290,
     { align: 'center' }

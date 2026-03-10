@@ -18,6 +18,7 @@ import {
   FiMessageSquare,
   FiSun,
   FiMoon,
+  FiZap,
 } from 'react-icons/fi';
 
 const AthleteSidebar = ({ onCollapse }) => {
@@ -52,6 +53,7 @@ const AthleteSidebar = ({ onCollapse }) => {
     { path: '/athlete/training', icon: FiActivity, label: 'Mis Entrenamientos' },
     { path: '/athlete/calendar', icon: FiCalendar, label: 'Calendario' },
     { path: '/athlete/metrics', icon: FiBarChart2, label: 'Mis Métricas' },
+    { path: '/athlete/my-reports', icon: FiZap, label: 'Mis Informes IA' },
     { path: '/athlete/devices', icon: FiWatch, label: 'Dispositivos' },
     { path: '/athlete/messages', icon: FiMessageSquare, label: 'Mensajes', badge: unreadMessages },
   ];

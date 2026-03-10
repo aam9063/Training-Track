@@ -1,5 +1,6 @@
 import { motion, useInView } from 'framer-motion';
 import { useRef, useState } from 'react';
+import { Link } from 'react-router-dom';
 import { HiCheck, HiX, HiSparkles, HiLightningBolt } from 'react-icons/hi';
 
 export default function Pricing() {
@@ -122,12 +123,12 @@ export default function Pricing() {
             Todas las funcionalidades de todos los planes disponibles sin coste.
             Acceso completo mientras dure la fase beta.
           </p>
-          <a
-            href="/register"
+          <Link
+            to="/register"
             className="inline-flex items-center gap-2 px-8 py-3 bg-white text-sky-700 font-semibold rounded-xl hover:bg-sky-50 transition-colors shadow-lg"
           >
             Empezar gratis
-          </a>
+          </Link>
         </motion.div>
 
         {/* Future Plans Label */}
@@ -248,8 +249,8 @@ export default function Pricing() {
               </ul>
 
               {/* CTA Button - All go to register (free during beta) */}
-              <a
-                href="/register"
+              <Link
+                to="/register"
                 className={`block w-full py-4 rounded-xl font-semibold text-lg text-center transition-all duration-200 ${
                   plan.popular
                     ? `bg-gradient-to-r ${plan.gradient} text-white shadow-lg hover:shadow-xl hover:opacity-90`
@@ -257,7 +258,7 @@ export default function Pricing() {
                 }`}
               >
                 Empezar gratis
-              </a>
+              </Link>
             </motion.div>
           ))}
         </div>

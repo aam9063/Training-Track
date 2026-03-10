@@ -20,7 +20,18 @@ import {
   FiDownload,
   FiEye,
   FiPackage,
+  FiCopy,
+  FiBookmark,
+  FiList,
 } from 'react-icons/fi';
+import {
+  saveMesocycleAsTemplate,
+  listMesocycleTemplates,
+  deleteMesocycleTemplate,
+  copyMesocycleContent,
+  applyMesocycleTemplate,
+  duplicateMesocycle,
+} from '../../services/mesocycleTemplateService';
 import {
   uploadGymFile,
   listGymFiles,
@@ -152,6 +163,18 @@ const Planning = () => {
   // Create mesocycle form
   const [newMesoForm, setNewMesoForm] = useState({ name: '', phase: 'base', weeks: 4 });
 
+  // Mesocycle copy/template state
+  const [mesoAction, setMesoAction] = useState(null); // { type: 'copy'|'saveTemplate'|'applyTemplate', meso }
+  const [mesoTemplateName, setMesoTemplateName] = useState('');
+  const [mesoTemplates, setMesoTemplates] = useState([]);
+  const [loadingMesoTemplates, setLoadingMesoTemplates] = useState(false);
+  const [savingMesoTemplate, setSavingMesoTemplate] = useState(false);
+  const [mesoCopyTargetId, setMesoCopyTargetId] = useState('');
+  const [mesoCopyMode, setMesoCopyMode] = useState('existing'); // 'existing' | 'duplicate'
+  const [mesoDuplicateName, setMesoDuplicateName] = useState('');
+  const [applyMesoTemplateId, setApplyMesoTemplateId] = useState('');
+  const [deleteConfirmMesoTemplate, setDeleteConfirmMesoTemplate] = useState(null);
+
   useEffect(() => {
     loadPlans();
   }, [loadPlans]);
@@ -206,15 +229,120 @@ const Planning = () => {
     }
   }, [removeMesocycle]);
 
-  const handleSaveWeek = useCallback(async (microcycleId, content, plannedKm) => {
+  const handleSaveWeek = useCallback(async (microcycleId, content, plannedKm, opts = {}) => {
     const { error } = await updateWeekContent(microcycleId, content, plannedKm);
     if (error) {
       showError('Error al guardar la semana');
     } else {
-      showSuccess('Semana guardada');
-      setEditingWeek(null);
+      showSuccess(opts.successMsg || 'Semana guardada');
+      if (!opts.keepOpen) setEditingWeek(null);
     }
   }, [updateWeekContent]);
+
+  const loadMesoTemplates = useCallback(async () => {
+    setLoadingMesoTemplates(true);
+    const { data } = await listMesocycleTemplates(coachId);
+    setMesoTemplates(data || []);
+    setLoadingMesoTemplates(false);
+  }, [coachId]);
+
+  const handleOpenMesoAction = useCallback(async (type, meso) => {
+    setMesoAction({ type, meso });
+    setMesoTemplateName(meso.name || '');
+    setMesoCopyTargetId('');
+    setMesoCopyMode('existing');
+    setMesoDuplicateName(`${meso.name} (copia)`);
+    setApplyMesoTemplateId('');
+    setDeleteConfirmMesoTemplate(null);
+    if (type === 'applyTemplate') {
+      setLoadingMesoTemplates(true);
+      const { data } = await listMesocycleTemplates(coachId);
+      setMesoTemplates(data || []);
+      setLoadingMesoTemplates(false);
+    }
+  }, [coachId]);
+
+  const handleSaveMesoTemplate = useCallback(async () => {
+    if (!mesoTemplateName.trim() || !mesoAction?.meso) return;
+    setSavingMesoTemplate(true);
+    const { error } = await saveMesocycleAsTemplate(coachId, mesoTemplateName, mesoAction.meso);
+    setSavingMesoTemplate(false);
+    if (error) {
+      showError('Error al guardar la plantilla');
+    } else {
+      showSuccess('Plantilla de mesociclo guardada');
+      setMesoAction(null);
+    }
+  }, [coachId, mesoTemplateName, mesoAction]);
+
+  const handleCopyMeso = useCallback(async () => {
+    if (!mesoCopyTargetId || !mesoAction?.meso) return;
+    const targetMeso = (selectedPlan?.mesocycles || []).find(m => m.id === mesoCopyTargetId);
+    if (!targetMeso) return;
+    setSavingMesoTemplate(true);
+    const { updated, error } = await copyMesocycleContent(mesoAction.meso, targetMeso);
+    setSavingMesoTemplate(false);
+    if (error) {
+      showError('Error al copiar el mesociclo');
+    } else {
+      showSuccess(`Mesociclo copiado (${updated} semana${updated !== 1 ? 's' : ''})`);
+      setMesoAction(null);
+      // Reload so updated content appears
+      loadPlans();
+    }
+  }, [mesoCopyTargetId, mesoAction, selectedPlan, loadPlans]);
+
+  const handleDuplicateMeso = useCallback(async () => {
+    if (!mesoAction?.meso || !selectedPlan) return;
+    setSavingMesoTemplate(true);
+    const sortOrder = (selectedPlan.mesocycles || []).length;
+    const { data, error } = await duplicateMesocycle(
+      selectedPlan.id,
+      mesoAction.meso,
+      mesoDuplicateName,
+      sortOrder,
+    );
+    setSavingMesoTemplate(false);
+    if (error) {
+      showError('Error al duplicar el mesociclo');
+    } else {
+      showSuccess('Mesociclo duplicado');
+      setMesoAction(null);
+      // Optimistic: reload plans so new meso appears
+      loadPlans();
+      // Keep the plan selected after reload
+      const planId = selectedPlan.id;
+      setTimeout(() => selectPlan(planId), 300);
+      void data;
+    }
+  }, [mesoAction, selectedPlan, mesoDuplicateName, loadPlans, selectPlan]);
+
+  const handleApplyMesoTemplate = useCallback(async () => {
+    if (!applyMesoTemplateId || !mesoAction?.meso) return;
+    const template = mesoTemplates.find(t => t.id === applyMesoTemplateId);
+    if (!template) return;
+    setSavingMesoTemplate(true);
+    const { updated, error } = await applyMesocycleTemplate(template, mesoAction.meso);
+    setSavingMesoTemplate(false);
+    if (error) {
+      showError('Error al aplicar la plantilla');
+    } else {
+      showSuccess(`Plantilla aplicada (${updated} semana${updated !== 1 ? 's' : ''})`);
+      setMesoAction(null);
+      loadPlans();
+    }
+  }, [applyMesoTemplateId, mesoAction, mesoTemplates, loadPlans]);
+
+  const handleDeleteMesoTemplate = useCallback(async (templateId) => {
+    const { error } = await deleteMesocycleTemplate(templateId);
+    if (error) {
+      showError('Error al eliminar la plantilla');
+    } else {
+      showSuccess('Plantilla eliminada');
+      setDeleteConfirmMesoTemplate(null);
+      setMesoTemplates(prev => prev.filter(t => t.id !== templateId));
+    }
+  }, []);
 
   const getWeekDaysPreview = (content) => {
     if (!content?.days) return null;
@@ -918,6 +1046,27 @@ const Planning = () => {
               </div>
               <div className="flex items-center gap-1">
                 <button
+                  onClick={e => { e.stopPropagation(); handleOpenMesoAction('copy', meso); }}
+                  title="Copiar mesociclo a otro"
+                  className="p-1.5 rounded-lg transition-colors text-blue-400 hover:text-blue-600 hover:bg-blue-50 dark:hover:bg-blue-900/20"
+                >
+                  <FiCopy className="w-3.5 h-3.5" />
+                </button>
+                <button
+                  onClick={e => { e.stopPropagation(); handleOpenMesoAction('saveTemplate', meso); }}
+                  title="Guardar como plantilla"
+                  className="p-1.5 rounded-lg transition-colors text-purple-400 hover:text-purple-600 hover:bg-purple-50 dark:hover:bg-purple-900/20"
+                >
+                  <FiBookmark className="w-3.5 h-3.5" />
+                </button>
+                <button
+                  onClick={e => { e.stopPropagation(); handleOpenMesoAction('applyTemplate', meso); }}
+                  title="Aplicar plantilla"
+                  className="p-1.5 rounded-lg transition-colors text-green-400 hover:text-green-600 hover:bg-green-50 dark:hover:bg-green-900/20"
+                >
+                  <FiList className="w-3.5 h-3.5" />
+                </button>
+                <button
                   onClick={e => {
                     e.stopPropagation();
                     setDeleteConfirm({ type: 'meso', id: meso.id, name: meso.name });
@@ -1005,6 +1154,10 @@ const Planning = () => {
                               onSave={handleSaveWeek}
                               onClose={() => setEditingWeek(null)}
                               saving={saving}
+                              coachId={coachId}
+                              allMicrocycles={(selectedPlan.mesocycles || []).flatMap(m =>
+                                (m.microcycles || []).map(mc => ({ ...mc, mesoName: m.name }))
+                              )}
                             />
                           )}
                         </div>
@@ -1077,6 +1230,226 @@ const Planning = () => {
           )}
         </AnimatePresence>
       </div>
+
+      {/* ===== MESOCYCLE ACTION MODALS ===== */}
+      <AnimatePresence>
+        {mesoAction && (
+          <div className="fixed inset-0 bg-black/50 flex items-center justify-center z-50 p-4">
+            <motion.div
+              initial={{ opacity: 0, scale: 0.95 }}
+              animate={{ opacity: 1, scale: 1 }}
+              exit={{ opacity: 0, scale: 0.95 }}
+              className="bg-white dark:bg-gray-800 rounded-2xl shadow-xl max-w-md w-full p-6"
+              onClick={e => e.stopPropagation()}
+            >
+              {/* COPY modal */}
+              {mesoAction.type === 'copy' && (
+                <>
+                  <h3 className="text-lg font-bold text-gray-900 dark:text-white mb-1">Copiar mesociclo</h3>
+                  <p className="text-sm text-gray-500 dark:text-gray-400 mb-4">
+                    Copia el contenido de <strong>"{mesoAction.meso.name}"</strong>.
+                  </p>
+
+                  {/* Mode toggle */}
+                  <div className="flex gap-2 mb-4">
+                    {[
+                      { key: 'existing', label: 'Sobre uno existente' },
+                      { key: 'duplicate', label: 'Duplicar (nuevo)' },
+                    ].map(opt => (
+                      <button
+                        key={opt.key}
+                        onClick={() => setMesoCopyMode(opt.key)}
+                        className={`flex-1 px-3 py-2 rounded-xl text-sm font-medium border-2 transition-colors ${
+                          mesoCopyMode === opt.key
+                            ? 'border-blue-500 bg-blue-50 dark:bg-blue-900/20 text-blue-700 dark:text-blue-400'
+                            : 'border-gray-200 dark:border-gray-600 text-gray-600 dark:text-gray-400 hover:border-gray-300'
+                        }`}
+                      >
+                        {opt.label}
+                      </button>
+                    ))}
+                  </div>
+
+                  {mesoCopyMode === 'existing' ? (
+                    <>
+                      <label className="block text-sm font-medium text-gray-700 dark:text-gray-300 mb-1.5">
+                        Destino
+                      </label>
+                      <select
+                        value={mesoCopyTargetId}
+                        onChange={e => setMesoCopyTargetId(e.target.value)}
+                        className="w-full px-3 py-2.5 bg-gray-50 dark:bg-gray-700 border border-gray-200 dark:border-gray-600 rounded-xl text-sm text-gray-900 dark:text-white focus:ring-2 focus:ring-blue-500 outline-none mb-4"
+                      >
+                        <option value="">— Selecciona mesociclo destino —</option>
+                        {(selectedPlan?.mesocycles || [])
+                          .filter(m => m.id !== mesoAction.meso.id)
+                          .map(m => (
+                            <option key={m.id} value={m.id}>
+                              {m.name} ({m.weeks} sem · {PHASES[m.phase] || m.phase})
+                            </option>
+                          ))}
+                      </select>
+                    </>
+                  ) : (
+                    <>
+                      <label className="block text-sm font-medium text-gray-700 dark:text-gray-300 mb-1.5">
+                        Nombre del nuevo mesociclo
+                      </label>
+                      <input
+                        type="text"
+                        value={mesoDuplicateName}
+                        onChange={e => setMesoDuplicateName(e.target.value)}
+                        className="w-full px-3 py-2.5 bg-gray-50 dark:bg-gray-700 border border-gray-200 dark:border-gray-600 rounded-xl text-sm text-gray-900 dark:text-white focus:ring-2 focus:ring-blue-500 outline-none mb-4"
+                        style={{ fontSize: '16px' }}
+                        onKeyDown={e => e.key === 'Enter' && handleDuplicateMeso()}
+                      />
+                      <p className="text-xs text-gray-400 dark:text-gray-500 mb-4 -mt-2">
+                        Se creará con la misma fase ({PHASES[mesoAction.meso.phase] || mesoAction.meso.phase}) y {mesoAction.meso.weeks} semanas, copiando todo el contenido.
+                      </p>
+                    </>
+                  )}
+
+                  <div className="flex justify-end gap-3">
+                    <button
+                      onClick={() => setMesoAction(null)}
+                      className="px-4 py-2 text-sm text-gray-600 dark:text-gray-400 hover:bg-gray-100 dark:hover:bg-gray-700 rounded-xl transition-colors"
+                    >
+                      Cancelar
+                    </button>
+                    <button
+                      onClick={mesoCopyMode === 'existing' ? handleCopyMeso : handleDuplicateMeso}
+                      disabled={
+                        savingMesoTemplate ||
+                        (mesoCopyMode === 'existing' ? !mesoCopyTargetId : !mesoDuplicateName.trim())
+                      }
+                      className="px-5 py-2 text-sm bg-blue-600 text-white rounded-xl hover:bg-blue-700 transition-colors disabled:opacity-50 font-medium"
+                    >
+                      {savingMesoTemplate
+                        ? (mesoCopyMode === 'duplicate' ? 'Duplicando...' : 'Copiando...')
+                        : (mesoCopyMode === 'duplicate' ? 'Duplicar' : 'Copiar')}
+                    </button>
+                  </div>
+                </>
+              )}
+
+              {/* SAVE TEMPLATE modal */}
+              {mesoAction.type === 'saveTemplate' && (
+                <>
+                  <h3 className="text-lg font-bold text-gray-900 dark:text-white mb-1">Guardar plantilla</h3>
+                  <p className="text-sm text-gray-500 dark:text-gray-400 mb-4">
+                    Guarda <strong>"{mesoAction.meso.name}"</strong> como plantilla reutilizable.
+                  </p>
+                  <label className="block text-sm font-medium text-gray-700 dark:text-gray-300 mb-1.5">
+                    Nombre de la plantilla
+                  </label>
+                  <input
+                    type="text"
+                    value={mesoTemplateName}
+                    onChange={e => setMesoTemplateName(e.target.value)}
+                    placeholder="Ej: Mesociclo Base 4 semanas"
+                    className="w-full px-3 py-2.5 bg-gray-50 dark:bg-gray-700 border border-gray-200 dark:border-gray-600 rounded-xl text-sm text-gray-900 dark:text-white focus:ring-2 focus:ring-purple-500 outline-none mb-4"
+                    style={{ fontSize: '16px' }}
+                    onKeyDown={e => e.key === 'Enter' && handleSaveMesoTemplate()}
+                  />
+                  <div className="flex justify-end gap-3">
+                    <button
+                      onClick={() => setMesoAction(null)}
+                      className="px-4 py-2 text-sm text-gray-600 dark:text-gray-400 hover:bg-gray-100 dark:hover:bg-gray-700 rounded-xl transition-colors"
+                    >
+                      Cancelar
+                    </button>
+                    <button
+                      onClick={handleSaveMesoTemplate}
+                      disabled={!mesoTemplateName.trim() || savingMesoTemplate}
+                      className="px-5 py-2 text-sm bg-purple-600 text-white rounded-xl hover:bg-purple-700 transition-colors disabled:opacity-50 font-medium"
+                    >
+                      {savingMesoTemplate ? 'Guardando...' : 'Guardar'}
+                    </button>
+                  </div>
+                </>
+              )}
+
+              {/* APPLY TEMPLATE modal */}
+              {mesoAction.type === 'applyTemplate' && (
+                <>
+                  <h3 className="text-lg font-bold text-gray-900 dark:text-white mb-1">Aplicar plantilla</h3>
+                  <p className="text-sm text-gray-500 dark:text-gray-400 mb-4">
+                    Aplica una plantilla sobre <strong>"{mesoAction.meso.name}"</strong>. Sobreescribe el contenido de las semanas existentes.
+                  </p>
+                  {loadingMesoTemplates ? (
+                    <div className="flex items-center justify-center py-8">
+                      <div className="w-6 h-6 border-2 border-green-500 border-t-transparent rounded-full animate-spin" />
+                    </div>
+                  ) : mesoTemplates.length === 0 ? (
+                    <div className="text-center py-6 text-sm text-gray-400 dark:text-gray-500">
+                      No tienes plantillas guardadas todavía.
+                    </div>
+                  ) : (
+                    <div className="space-y-2 max-h-60 overflow-y-auto mb-4">
+                      {mesoTemplates.map(t => (
+                        <div
+                          key={t.id}
+                          className={`flex items-center justify-between p-3 rounded-xl border-2 cursor-pointer transition-colors ${
+                            applyMesoTemplateId === t.id
+                              ? 'border-green-400 bg-green-50 dark:bg-green-900/20'
+                              : 'border-gray-200 dark:border-gray-600 hover:border-gray-300 dark:hover:border-gray-500'
+                          }`}
+                          onClick={() => setApplyMesoTemplateId(t.id)}
+                        >
+                          <div>
+                            <p className="text-sm font-medium text-gray-900 dark:text-white">{t.name}</p>
+                            <p className="text-xs text-gray-500 dark:text-gray-400 mt-0.5">
+                              {PHASES[t.phase] || t.phase} · {t.weeks} sem. · {(t.mesocycle_template_weeks || []).length} semanas con contenido
+                            </p>
+                          </div>
+                          {deleteConfirmMesoTemplate === t.id ? (
+                            <div className="flex gap-1 ml-2" onClick={e => e.stopPropagation()}>
+                              <button
+                                onClick={() => handleDeleteMesoTemplate(t.id)}
+                                className="px-2 py-0.5 text-[10px] font-semibold bg-red-600 text-white rounded-lg"
+                              >
+                                Sí
+                              </button>
+                              <button
+                                onClick={() => setDeleteConfirmMesoTemplate(null)}
+                                className="px-2 py-0.5 text-[10px] font-semibold bg-gray-200 dark:bg-gray-600 text-gray-700 dark:text-gray-300 rounded-lg"
+                              >
+                                No
+                              </button>
+                            </div>
+                          ) : (
+                            <button
+                              onClick={e => { e.stopPropagation(); setDeleteConfirmMesoTemplate(t.id); }}
+                              className="ml-2 p-1.5 text-gray-300 dark:text-gray-600 hover:text-red-500 hover:bg-red-50 dark:hover:bg-red-900/20 rounded-lg transition-colors flex-shrink-0"
+                            >
+                              <FiTrash2 className="w-3.5 h-3.5" />
+                            </button>
+                          )}
+                        </div>
+                      ))}
+                    </div>
+                  )}
+                  <div className="flex justify-end gap-3">
+                    <button
+                      onClick={() => setMesoAction(null)}
+                      className="px-4 py-2 text-sm text-gray-600 dark:text-gray-400 hover:bg-gray-100 dark:hover:bg-gray-700 rounded-xl transition-colors"
+                    >
+                      Cancelar
+                    </button>
+                    <button
+                      onClick={handleApplyMesoTemplate}
+                      disabled={!applyMesoTemplateId || savingMesoTemplate}
+                      className="px-5 py-2 text-sm bg-green-600 text-white rounded-xl hover:bg-green-700 transition-colors disabled:opacity-50 font-medium"
+                    >
+                      {savingMesoTemplate ? 'Aplicando...' : 'Aplicar'}
+                    </button>
+                  </div>
+                </>
+              )}
+            </motion.div>
+          </div>
+        )}
+      </AnimatePresence>
 
       {/* Plan Assignment Modal */}
       <AnimatePresence>

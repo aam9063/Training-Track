@@ -85,7 +85,7 @@ export default function Hero() {
               Entrena con datos.
               <br />
               <span className="text-sky-600 dark:text-sky-400">
-                No con Excel.
+                No con Excel
               </span>
             </motion.h1>
 

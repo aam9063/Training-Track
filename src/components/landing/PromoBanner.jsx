@@ -1,4 +1,5 @@
 import { useState, useEffect } from 'react';
+import { Link } from 'react-router-dom';
 import { motion, AnimatePresence } from 'framer-motion';
 import { HiX, HiArrowRight } from 'react-icons/hi';
 import { BsStars } from 'react-icons/bs';
@@ -67,19 +68,19 @@ export default function PromoBanner() {
               </p>
 
               <div className="flex items-center gap-3">
-                <a
-                  href="/register"
+                <Link
+                  to="/register"
                   className="flex-1 flex items-center justify-center gap-2 px-4 py-2.5 bg-sky-600 hover:bg-sky-700 text-white font-semibold text-sm rounded-xl transition-colors"
                 >
                   Crear cuenta gratis
                   <HiArrowRight className="w-4 h-4" />
-                </a>
-                <a
-                  href="/login"
+                </Link>
+                <Link
+                  to="/login"
                   className="px-4 py-2.5 text-gray-600 dark:text-gray-400 hover:text-gray-900 dark:hover:text-white font-medium text-sm transition-colors"
                 >
                   Iniciar sesión
-                </a>
+                </Link>
               </div>
             </div>
           </div>

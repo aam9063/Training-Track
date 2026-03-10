@@ -36,23 +36,32 @@ const DashboardLayout = () => {
 
   // Coach dashboard
   return (
-    <div className="min-h-screen bg-brand-bg dark:bg-gray-900 overflow-x-hidden">
+    <div className="min-h-screen bg-brand-bg dark:bg-gray-900">
       <Sidebar onCollapse={setSidebarCollapsed} />
       <BottomNav />
       <MobileHeader />
+
+      {/* Desktop top bar — fixed, visible en todas las vistas */}
+      <div
+        className={`
+          hidden lg:flex items-center justify-end px-8
+          bg-white dark:bg-gray-800 border-b border-[#E2E8F0] dark:border-gray-700
+          h-[52px] fixed top-0 right-0 z-20
+          transition-all duration-300
+          ${sidebarCollapsed ? 'lg:left-20' : 'lg:left-64'}
+        `}
+      >
+        <NotificationPanel accentColor="#1A6BFF" isCoach={true} />
+      </div>
 
       {/* Main Content */}
       <div
         className={`
           transition-all duration-300
-          pt-[62px] lg:pt-0
+          pt-[62px] lg:pt-[52px]
           ${sidebarCollapsed ? 'lg:pl-20' : 'lg:pl-64'}
         `}
       >
-        {/* Desktop top bar — visible en todas las vistas */}
-        <div className="hidden lg:flex items-center justify-end px-8 py-3 bg-white dark:bg-gray-800 border-b border-[#E2E8F0] dark:border-gray-700">
-          <NotificationPanel accentColor="#1A6BFF" isCoach={true} />
-        </div>
         <main className="overflow-x-hidden pb-[72px] lg:pb-0">
           <PushNotificationBanner />
           <Outlet />

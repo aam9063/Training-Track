@@ -14,6 +14,7 @@ import {
   FiCheckCircle,
   FiClock,
   FiCalendar,
+  FiHeart,
 } from 'react-icons/fi';
 import { Bar } from 'react-chartjs-2';
 import {
@@ -27,6 +28,8 @@ import {
 } from 'chart.js';
 import InfoTooltip from '../../components/common/InfoTooltip';
 import useCoachMetrics from '../../hooks/useCoachMetrics';
+import useTeamHealth from '../../hooks/useTeamHealth';
+import TeamHealthTable from '../../components/dashboard/TeamHealthTable';
 import { toLocalDateStr } from '../../lib/dateUtils';
 
 ChartJS.register(CategoryScale, LinearScale, BarElement, Title, Tooltip, Legend);
@@ -56,12 +59,23 @@ const formatWeekLabel = (weekStart) => {
 
 // ─── Component ────────────────────────────────────────────────────────────────
 
+const TABS = [
+  { id: 'stats',  label: 'Estadísticas', icon: FiTrendingUp },
+  { id: 'health', label: 'Estado',       icon: FiHeart },
+];
+
 const Metrics = () => {
   const { profile } = useAuth();
   const {
     athletes, loading, dateRange, setDateRange,
     sessionsByAthlete, pmcByAthlete, weeklyVolumeByAthlete,
   } = useCoachMetrics(profile?.id);
+
+  // Tab
+  const [activeTab, setActiveTab] = useState('stats');
+
+  // Team health
+  const { athletes: healthAthletes, loading: healthLoading, updatingId, refresh: refreshHealth, updateInjury } = useTeamHealth(profile?.id);
 
   // Ranking
   const [sortKey, setSortKey] = useState('totalSessions');
@@ -392,29 +406,78 @@ const Metrics = () => {
   }
 
   return (
-    <div className="p-4 sm:p-4 sm:p-6 lg:p-8">
+    <div className="p-4 sm:p-6 lg:p-8">
       {/* Header */}
-      <div className="flex flex-col sm:flex-row sm:items-center sm:justify-between mb-6 sm:mb-8 gap-4">
-        <div>
-          <h1 className="text-2xl sm:text-3xl font-bold text-gray-900 dark:text-white mb-1">
-            Panel del Equipo
-          </h1>
-          <p className="text-sm text-gray-600 dark:text-gray-400">
-            Visión general del rendimiento y cumplimiento de tus atletas
-          </p>
-        </div>
-        <select
-          value={dateRange}
-          onChange={(e) => setDateRange(e.target.value)}
-          className="w-full sm:w-auto px-4 py-2 border border-gray-300 dark:border-gray-600 rounded-lg bg-white dark:bg-gray-700 text-gray-900 dark:text-white text-sm focus:ring-2 focus:ring-blue-500 focus:border-transparent"
-        >
-          <option value="7">Últimos 7 días</option>
-          <option value="30">Últimos 30 días</option>
-          <option value="90">Últimos 3 meses</option>
-          <option value="180">Últimos 6 meses</option>
-        </select>
+      <div className="mb-5">
+        <h1 className="text-2xl sm:text-3xl font-bold text-gray-900 dark:text-white mb-1">
+          Panel del Equipo
+        </h1>
+        <p className="text-sm text-gray-600 dark:text-gray-400">
+          Visión general del rendimiento y cumplimiento de tus atletas
+        </p>
       </div>
 
+      {/* Tabs + selector de rango en la misma fila */}
+      <div className="flex items-center justify-between gap-3 mb-6">
+        <div className="flex gap-1 p-1 bg-gray-100 dark:bg-gray-800 rounded-xl">
+          {TABS.map(tab => {
+            const Icon = tab.icon;
+            return (
+              <button
+                key={tab.id}
+                onClick={() => setActiveTab(tab.id)}
+                className={`flex items-center justify-center gap-2 px-4 py-2 rounded-lg text-sm font-medium transition-all ${
+                  activeTab === tab.id
+                    ? 'bg-white dark:bg-gray-700 text-gray-900 dark:text-white shadow-sm'
+                    : 'text-gray-500 dark:text-gray-400 hover:text-gray-700 dark:hover:text-gray-200'
+                }`}
+              >
+                <Icon className="w-4 h-4" />
+                <span className="hidden xs:inline">{tab.label}</span>
+              </button>
+            );
+          })}
+        </div>
+
+        {activeTab === 'stats' && (
+          <select
+            value={dateRange}
+            onChange={(e) => setDateRange(e.target.value)}
+            className="px-3 py-2 border border-gray-300 dark:border-gray-600 rounded-lg bg-white dark:bg-gray-700 text-gray-900 dark:text-white text-sm focus:ring-2 focus:ring-blue-500 focus:border-transparent"
+          >
+            <option value="7">7 días</option>
+            <option value="30">30 días</option>
+            <option value="90">3 meses</option>
+            <option value="180">6 meses</option>
+          </select>
+        )}
+      </div>
+
+      {/* ── Tab: Estado del equipo ─────────────────────────── */}
+      {activeTab === 'health' && (
+        <motion.div
+          initial={{ opacity: 0, y: 12 }}
+          animate={{ opacity: 1, y: 0 }}
+          transition={{ duration: 0.25 }}
+          className="bg-white dark:bg-gray-800 rounded-xl shadow-sm border border-gray-200 dark:border-gray-700 p-4 sm:p-6"
+        >
+          <h3 className="text-base sm:text-lg font-bold text-gray-900 dark:text-white mb-4 flex items-center gap-2">
+            <FiHeart className="w-5 h-5 text-rose-500 flex-shrink-0" />
+            Estado del Equipo
+            <InfoTooltip text="Semáforo por atleta: verde = ACWR óptimo (0.8–1.3), amarillo = baja carga o carga alta (1.3–1.5), rojo = riesgo lesión (ACWR >1.5 o TSB <−30). El estado de lesión sobreescribe el semáforo." />
+          </h3>
+          <TeamHealthTable
+            athletes={healthAthletes}
+            loading={healthLoading}
+            updatingId={updatingId}
+            onUpdateInjury={updateInjury}
+            onRefresh={refreshHealth}
+          />
+        </motion.div>
+      )}
+
+      {/* ── Tab: Estadísticas ──────────────────────────────── */}
+      {activeTab === 'stats' && <>
       {/* Summary Cards */}
       <div className="grid grid-cols-2 lg:grid-cols-4 gap-3 sm:gap-4 mb-6 sm:mb-8">
         <motion.div
@@ -903,6 +966,7 @@ const Metrics = () => {
           })()}
         </motion.div>
       )}
+      </>}
     </div>
   );
 };

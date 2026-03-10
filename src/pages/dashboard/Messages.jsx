@@ -10,6 +10,7 @@ import {
   FiUser,
   FiArrowLeft,
   FiSearch,
+  FiZap,
 } from 'react-icons/fi';
 import { showError } from '../../lib/toast';
 import { useAuth } from '../../contexts/AuthContext';
@@ -24,6 +25,11 @@ import {
   subscribeToConversation,
 } from '../../services/chatService';
 import { supabase } from '../../lib/supabase';
+
+function parseReport(content) {
+  if (!content?.startsWith('__REPORT__:')) return null;
+  try { return JSON.parse(content.slice('__REPORT__:'.length)); } catch { return null; }
+}
 
 const CoachMessages = () => {
   const { profile } = useAuth();
@@ -298,7 +304,7 @@ const CoachMessages = () => {
   }
 
   return (
-    <div className="flex h-[calc(100vh-62px-72px)] lg:h-screen overflow-hidden -mb-[72px] lg:mb-0">
+    <div className="flex h-[calc(100dvh-62px-72px)] lg:h-[calc(100vh-52px)] overflow-hidden -mb-[72px] lg:mb-0">
       {/* Left Panel — Conversation List */}
       <div
         className={`
@@ -370,7 +376,8 @@ const CoachMessages = () => {
                     <div className="flex items-center justify-between mt-0.5">
                       <p className={`text-sm truncate ${conv.unreadCount > 0 ? 'text-gray-800 dark:text-gray-200 font-medium' : 'text-gray-500 dark:text-gray-400'}`}>
                         {conv.lastMessage
-                          ? (conv.lastMessage.sender_id === profile.id ? 'Tú: ' : '') + conv.lastMessage.content
+                          ? (conv.lastMessage.sender_id === profile.id ? 'Tú: ' : '') +
+                            (parseReport(conv.lastMessage.content) ? '📊 Informe IA semanal' : conv.lastMessage.content)
                           : 'Empieza a chatear'
                         }
                       </p>
@@ -477,25 +484,43 @@ const CoachMessages = () => {
                           </div>
                         )}
                         <div className={`flex ${isMine ? 'justify-end' : 'justify-start'} mb-1`}>
-                          <div
-                            className={`
-                              max-w-[75%] sm:max-w-[65%] px-3 py-2 rounded-2xl
-                              ${isMine
-                                ? 'bg-sky-500 text-white rounded-br-md'
-                                : 'bg-white dark:bg-gray-800 text-gray-900 dark:text-white rounded-bl-md shadow-sm'
-                              }
-                            `}
-                          >
-                            <p className="text-sm whitespace-pre-wrap break-words">{msg.content}</p>
-                            <div className={`flex items-center justify-end space-x-1 mt-1 ${isMine ? 'text-sky-100' : 'text-gray-400 dark:text-gray-500'}`}>
-                              <span className="text-[11px]">{formatTime(msg.created_at)}</span>
-                              {isMine && (
-                                msg.read
-                                  ? <FiCheckCircle className="w-3 h-3" />
-                                  : <FiCheck className="w-3 h-3" />
-                              )}
+                          {parseReport(msg.content) ? (
+                            <div className="max-w-[75%] sm:max-w-[65%]">
+                              <div className="flex items-center gap-2 px-3 py-2.5 bg-white dark:bg-gray-800 border border-gray-200 dark:border-gray-700 rounded-2xl shadow-sm">
+                                <div className="w-7 h-7 rounded-lg flex items-center justify-center flex-shrink-0" style={{ background: 'rgba(26,107,255,0.12)' }}>
+                                  <FiZap className="w-3.5 h-3.5" style={{ color: '#1A6BFF' }} />
+                                </div>
+                                <div>
+                                  <p className="text-xs font-semibold text-gray-800 dark:text-gray-200">Informe IA enviado</p>
+                                  <p className="text-[11px] text-gray-400">El atleta puede verlo en su chat</p>
+                                </div>
+                              </div>
+                              <div className="flex items-center justify-end gap-1 mt-1 text-gray-400">
+                                <span className="text-[11px]">{formatTime(msg.created_at)}</span>
+                                {msg.read ? <FiCheckCircle className="w-3 h-3" /> : <FiCheck className="w-3 h-3" />}
+                              </div>
                             </div>
-                          </div>
+                          ) : (
+                            <div
+                              className={`
+                                max-w-[75%] sm:max-w-[65%] px-3 py-2 rounded-2xl
+                                ${isMine
+                                  ? 'bg-sky-500 text-white rounded-br-md'
+                                  : 'bg-white dark:bg-gray-800 text-gray-900 dark:text-white rounded-bl-md shadow-sm'
+                                }
+                              `}
+                            >
+                              <p className="text-sm whitespace-pre-wrap break-words">{msg.content}</p>
+                              <div className={`flex items-center justify-end space-x-1 mt-1 ${isMine ? 'text-sky-100' : 'text-gray-400 dark:text-gray-500'}`}>
+                                <span className="text-[11px]">{formatTime(msg.created_at)}</span>
+                                {isMine && (
+                                  msg.read
+                                    ? <FiCheckCircle className="w-3 h-3" />
+                                    : <FiCheck className="w-3 h-3" />
+                                )}
+                              </div>
+                            </div>
+                          )}
                         </div>
                       </div>
                     );

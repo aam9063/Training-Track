@@ -1,6 +1,7 @@
 import { useState, useMemo, useCallback } from 'react';
-import { FiSave, FiX, FiCheck, FiEdit3 } from 'react-icons/fi';
+import { FiSave, FiX, FiCheck, FiEdit3, FiCopy, FiBookmark, FiList, FiTrash2, FiChevronDown } from 'react-icons/fi';
 import { motion, AnimatePresence } from 'framer-motion';
+import { listWeekTemplates, saveWeekAsTemplate, deleteWeekTemplate, templateToContent } from '../../services/weekTemplateService';
 
 const DAYS = ['Lunes', 'Martes', 'Miércoles', 'Jueves', 'Viernes', 'Sábado', 'Domingo'];
 const DAY_SHORTS = ['L', 'M', 'X', 'J', 'V', 'S', 'D'];
@@ -67,7 +68,7 @@ function parseKmFromText(text) {
   return Math.round(totalKm * 10) / 10;
 }
 
-const WeeklyPlanEditor = ({ microcycle, onSave, onClose, saving }) => {
+const WeeklyPlanEditor = ({ microcycle, onSave, onClose, saving, coachId, allMicrocycles = [] }) => {
   const initialDays = useMemo(() => {
     if (microcycle?.content?.days) {
       return DAYS.map((_, i) => {
@@ -84,6 +85,18 @@ const WeeklyPlanEditor = ({ microcycle, onSave, onClose, saving }) => {
 
   const [days, setDays] = useState(initialDays);
   const [editingDay, setEditingDay] = useState(null);
+
+  // Template & copy state
+  const [showCopyModal, setShowCopyModal] = useState(false);
+  const [copyTargetId, setCopyTargetId] = useState('');
+  const [showSaveTemplateModal, setShowSaveTemplateModal] = useState(false);
+  const [templateName, setTemplateName] = useState('');
+  const [savingTemplate, setSavingTemplate] = useState(false);
+  const [showTemplatesModal, setShowTemplatesModal] = useState(false);
+  const [templates, setTemplates] = useState([]);
+  const [loadingTemplates, setLoadingTemplates] = useState(false);
+  const [applyTemplateId, setApplyTemplateId] = useState(null);
+  const [deleteTemplateId, setDeleteTemplateId] = useState(null);
 
   const totalKm = useMemo(() =>
     days.reduce((sum, d) => sum + (parseFloat(d.km) || 0), 0),
@@ -103,17 +116,61 @@ const WeeklyPlanEditor = ({ microcycle, onSave, onClose, saving }) => {
     ));
   }, []);
 
+  const currentContent = useMemo(() => ({
+    days: days.map(d => ({
+      dayIndex: d.dayIndex,
+      type: d.description.trim() ? 'running' : 'rest',
+      title: '',
+      description: d.description.trim(),
+      km: parseFloat(d.km) || 0,
+    })),
+  }), [days]);
+
   const handleSave = () => {
-    const content = {
-      days: days.map(d => ({
-        dayIndex: d.dayIndex,
-        type: d.description.trim() ? 'running' : 'rest',
-        title: '',
-        description: d.description.trim(),
-        km: parseFloat(d.km) || 0,
-      })),
-    };
-    onSave(microcycle.id, content, totalKm);
+    onSave(microcycle.id, currentContent, totalKm);
+  };
+
+  const handleCopyToWeek = () => {
+    if (!copyTargetId) return;
+    onSave(copyTargetId, currentContent, totalKm, { keepOpen: true, successMsg: 'Semana copiada' });
+    setShowCopyModal(false);
+    setCopyTargetId('');
+  };
+
+  const handleSaveTemplate = async () => {
+    if (!templateName.trim() || !coachId) return;
+    setSavingTemplate(true);
+    await saveWeekAsTemplate(coachId, templateName, currentContent);
+    setSavingTemplate(false);
+    setTemplateName('');
+    setShowSaveTemplateModal(false);
+  };
+
+  const openTemplatesModal = async () => {
+    setShowTemplatesModal(true);
+    setLoadingTemplates(true);
+    const { data } = await listWeekTemplates(coachId);
+    setTemplates(data);
+    setLoadingTemplates(false);
+  };
+
+  const handleApplyTemplate = () => {
+    const template = templates.find(t => t.id === applyTemplateId);
+    if (!template) return;
+    const content = templateToContent(template);
+    const newDays = Array.from({ length: 7 }, (_, i) => {
+      const existing = content.days.find(d => d.dayIndex === i);
+      return { dayIndex: i, description: existing?.description || '', km: existing?.km || 0 };
+    });
+    setDays(newDays);
+    setApplyTemplateId(null);
+    setShowTemplatesModal(false);
+  };
+
+  const handleDeleteTemplate = async (id) => {
+    await deleteWeekTemplate(id);
+    setTemplates(prev => prev.filter(t => t.id !== id));
+    setDeleteTemplateId(null);
   };
 
   return (
@@ -205,33 +262,230 @@ const WeeklyPlanEditor = ({ microcycle, onSave, onClose, saving }) => {
       </div>
 
       {/* Footer */}
-      <div className="flex items-center justify-between px-4 py-3 border-t border-gray-200 dark:border-gray-700 bg-white dark:bg-gray-800">
-        <div className="flex items-center gap-4">
-          <span className="text-sm font-semibold text-blue-600 dark:text-blue-400">
-            {totalKm} km total
-          </span>
-          <span className="text-xs text-gray-400 dark:text-gray-500">
-            {days.filter(d => d.description.trim()).length}/7 días con entreno
-          </span>
+      <div className="border-t border-gray-200 dark:border-gray-700 bg-white dark:bg-gray-800">
+        {/* Template actions row */}
+        <div className="flex items-center gap-2 px-4 py-2 border-b border-gray-100 dark:border-gray-700/50">
+          <button
+            onClick={() => setShowCopyModal(true)}
+            className="flex items-center gap-1.5 px-2.5 py-1 text-[11px] font-medium text-blue-600 dark:text-blue-400 bg-blue-50 dark:bg-blue-900/20 hover:bg-blue-100 dark:hover:bg-blue-900/40 rounded-lg transition-colors"
+            title="Copiar semana a otra semana del plan"
+          >
+            <FiCopy className="w-3 h-3" />
+            Copiar semana
+          </button>
+          <button
+            onClick={() => setShowSaveTemplateModal(true)}
+            className="flex items-center gap-1.5 px-2.5 py-1 text-[11px] font-medium text-purple-600 dark:text-purple-400 bg-purple-50 dark:bg-purple-900/20 hover:bg-purple-100 dark:hover:bg-purple-900/40 rounded-lg transition-colors"
+            title="Guardar semana como plantilla reutilizable"
+          >
+            <FiBookmark className="w-3 h-3" />
+            Guardar plantilla
+          </button>
+          {coachId && (
+            <button
+              onClick={openTemplatesModal}
+              className="flex items-center gap-1.5 px-2.5 py-1 text-[11px] font-medium text-green-600 dark:text-green-400 bg-green-50 dark:bg-green-900/20 hover:bg-green-100 dark:hover:bg-green-900/40 rounded-lg transition-colors"
+              title="Aplicar una plantilla guardada"
+            >
+              <FiList className="w-3 h-3" />
+              Plantillas
+            </button>
+          )}
         </div>
-        <div className="flex items-center gap-2">
-          <button
-            onClick={onClose}
-            className="flex items-center gap-1.5 px-3 py-1.5 text-xs text-gray-500 dark:text-gray-400 hover:bg-gray-100 dark:hover:bg-gray-700 rounded-lg transition-colors"
-          >
-            <FiX className="w-3.5 h-3.5" />
-            Cerrar
-          </button>
-          <button
-            onClick={handleSave}
-            disabled={saving}
-            className="flex items-center gap-1.5 px-3 py-1.5 text-xs bg-blue-600 text-white rounded-lg hover:bg-blue-700 transition-colors disabled:opacity-50 font-medium"
-          >
-            <FiSave className="w-3.5 h-3.5" />
-            {saving ? 'Guardando...' : 'Guardar'}
-          </button>
+        {/* Main footer */}
+        <div className="flex items-center justify-between px-4 py-3">
+          <div className="flex items-center gap-4">
+            <span className="text-sm font-semibold text-blue-600 dark:text-blue-400">
+              {totalKm} km total
+            </span>
+            <span className="text-xs text-gray-400 dark:text-gray-500">
+              {days.filter(d => d.description.trim()).length}/7 días con entreno
+            </span>
+          </div>
+          <div className="flex items-center gap-2">
+            <button
+              onClick={onClose}
+              className="flex items-center gap-1.5 px-3 py-1.5 text-xs text-gray-500 dark:text-gray-400 hover:bg-gray-100 dark:hover:bg-gray-700 rounded-lg transition-colors"
+            >
+              <FiX className="w-3.5 h-3.5" />
+              Cerrar
+            </button>
+            <button
+              onClick={handleSave}
+              disabled={saving}
+              className="flex items-center gap-1.5 px-3 py-1.5 text-xs bg-blue-600 text-white rounded-lg hover:bg-blue-700 transition-colors disabled:opacity-50 font-medium"
+            >
+              <FiSave className="w-3.5 h-3.5" />
+              {saving ? 'Guardando...' : 'Guardar'}
+            </button>
+          </div>
         </div>
       </div>
+
+      {/* Copy week modal */}
+      <AnimatePresence>
+        {showCopyModal && (
+          <div className="fixed inset-0 bg-black/50 flex items-center justify-center z-50 p-4" onClick={() => setShowCopyModal(false)}>
+            <motion.div
+              initial={{ opacity: 0, scale: 0.95 }}
+              animate={{ opacity: 1, scale: 1 }}
+              exit={{ opacity: 0, scale: 0.95 }}
+              transition={{ duration: 0.15 }}
+              className="bg-white dark:bg-gray-800 rounded-2xl shadow-xl w-full max-w-sm p-5"
+              onClick={e => e.stopPropagation()}
+            >
+              <h3 className="text-base font-bold text-gray-900 dark:text-white mb-1">Copiar semana</h3>
+              <p className="text-xs text-gray-500 dark:text-gray-400 mb-4">Elige la semana destino dentro de este plan.</p>
+              {allMicrocycles.filter(m => m.id !== microcycle.id).length === 0 ? (
+                <p className="text-sm text-gray-400 dark:text-gray-500 italic">No hay otras semanas en el plan.</p>
+              ) : (
+                <select
+                  value={copyTargetId}
+                  onChange={e => setCopyTargetId(e.target.value)}
+                  className="w-full px-3 py-2 bg-gray-50 dark:bg-gray-700 border border-gray-200 dark:border-gray-600 rounded-xl text-sm text-gray-900 dark:text-white focus:ring-2 focus:ring-blue-500 outline-none mb-4"
+                >
+                  <option value="">— Selecciona semana destino —</option>
+                  {allMicrocycles
+                    .filter(m => m.id !== microcycle.id)
+                    .map(m => (
+                      <option key={m.id} value={m.id}>
+                        Semana {m.week_number}{m.mesoName ? ` · ${m.mesoName}` : ''}
+                      </option>
+                    ))}
+                </select>
+              )}
+              <div className="flex justify-end gap-2">
+                <button onClick={() => setShowCopyModal(false)} className="px-3 py-1.5 text-sm text-gray-600 dark:text-gray-400 hover:bg-gray-100 dark:hover:bg-gray-700 rounded-xl transition-colors">Cancelar</button>
+                <button
+                  onClick={handleCopyToWeek}
+                  disabled={!copyTargetId}
+                  className="px-4 py-1.5 text-sm bg-blue-600 text-white rounded-xl hover:bg-blue-700 transition-colors disabled:opacity-40 font-medium"
+                >
+                  Copiar
+                </button>
+              </div>
+            </motion.div>
+          </div>
+        )}
+      </AnimatePresence>
+
+      {/* Save template modal */}
+      <AnimatePresence>
+        {showSaveTemplateModal && (
+          <div className="fixed inset-0 bg-black/50 flex items-center justify-center z-50 p-4" onClick={() => setShowSaveTemplateModal(false)}>
+            <motion.div
+              initial={{ opacity: 0, scale: 0.95 }}
+              animate={{ opacity: 1, scale: 1 }}
+              exit={{ opacity: 0, scale: 0.95 }}
+              transition={{ duration: 0.15 }}
+              className="bg-white dark:bg-gray-800 rounded-2xl shadow-xl w-full max-w-sm p-5"
+              onClick={e => e.stopPropagation()}
+            >
+              <h3 className="text-base font-bold text-gray-900 dark:text-white mb-1">Guardar como plantilla</h3>
+              <p className="text-xs text-gray-500 dark:text-gray-400 mb-4">Ponle un nombre para reutilizarla en otras semanas.</p>
+              <input
+                type="text"
+                autoFocus
+                value={templateName}
+                onChange={e => setTemplateName(e.target.value)}
+                onKeyDown={e => e.key === 'Enter' && handleSaveTemplate()}
+                placeholder="Ej: Semana base rodaje"
+                className="w-full px-3 py-2.5 bg-gray-50 dark:bg-gray-700 border border-gray-200 dark:border-gray-600 rounded-xl text-sm text-gray-900 dark:text-white placeholder-gray-400 focus:ring-2 focus:ring-blue-500 outline-none mb-4"
+                style={{ fontSize: '16px' }}
+              />
+              <div className="flex justify-end gap-2">
+                <button onClick={() => setShowSaveTemplateModal(false)} className="px-3 py-1.5 text-sm text-gray-600 dark:text-gray-400 hover:bg-gray-100 dark:hover:bg-gray-700 rounded-xl transition-colors">Cancelar</button>
+                <button
+                  onClick={handleSaveTemplate}
+                  disabled={savingTemplate || !templateName.trim()}
+                  className="px-4 py-1.5 text-sm bg-blue-600 text-white rounded-xl hover:bg-blue-700 transition-colors disabled:opacity-40 font-medium"
+                >
+                  {savingTemplate ? 'Guardando...' : 'Guardar'}
+                </button>
+              </div>
+            </motion.div>
+          </div>
+        )}
+      </AnimatePresence>
+
+      {/* Templates list modal */}
+      <AnimatePresence>
+        {showTemplatesModal && (
+          <div className="fixed inset-0 bg-black/50 flex items-center justify-center z-50 p-4" onClick={() => setShowTemplatesModal(false)}>
+            <motion.div
+              initial={{ opacity: 0, scale: 0.95 }}
+              animate={{ opacity: 1, scale: 1 }}
+              exit={{ opacity: 0, scale: 0.95 }}
+              transition={{ duration: 0.15 }}
+              className="bg-white dark:bg-gray-800 rounded-2xl shadow-xl w-full max-w-sm overflow-hidden"
+              onClick={e => e.stopPropagation()}
+            >
+              <div className="flex items-center justify-between px-5 py-4 border-b border-gray-200 dark:border-gray-700">
+                <h3 className="text-base font-bold text-gray-900 dark:text-white">Plantillas guardadas</h3>
+                <button onClick={() => setShowTemplatesModal(false)} className="p-1.5 hover:bg-gray-100 dark:hover:bg-gray-700 rounded-lg">
+                  <FiX className="w-4 h-4 text-gray-500" />
+                </button>
+              </div>
+              <div className="overflow-y-auto max-h-72">
+                {loadingTemplates ? (
+                  <div className="flex items-center justify-center py-10">
+                    <div className="w-5 h-5 border-2 border-blue-500 border-t-transparent rounded-full animate-spin" />
+                  </div>
+                ) : templates.length === 0 ? (
+                  <div className="py-10 text-center">
+                    <FiBookmark className="w-8 h-8 text-gray-300 dark:text-gray-600 mx-auto mb-2" />
+                    <p className="text-sm text-gray-400 dark:text-gray-500">No tienes plantillas guardadas todavía.</p>
+                  </div>
+                ) : (
+                  <div className="divide-y divide-gray-100 dark:divide-gray-700">
+                    {templates.map(t => (
+                      <div key={t.id} className="flex items-center justify-between px-5 py-3 hover:bg-gray-50 dark:hover:bg-gray-700/50">
+                        <div className="flex-1 min-w-0">
+                          <p className="text-sm font-medium text-gray-900 dark:text-white truncate">{t.name}</p>
+                          <p className="text-xs text-gray-400 dark:text-gray-500 mt-0.5">
+                            {(t.week_template_sessions || []).filter(s => s.description).length} días con entreno
+                          </p>
+                        </div>
+                        <div className="flex items-center gap-1 ml-2">
+                          {deleteTemplateId === t.id ? (
+                            <>
+                              <button onClick={() => handleDeleteTemplate(t.id)} className="px-2 py-1 text-xs bg-red-500 text-white rounded-lg hover:bg-red-600">Eliminar</button>
+                              <button onClick={() => setDeleteTemplateId(null)} className="px-2 py-1 text-xs text-gray-500 hover:bg-gray-100 dark:hover:bg-gray-700 rounded-lg">No</button>
+                            </>
+                          ) : (
+                            <>
+                              <button
+                                onClick={() => { setApplyTemplateId(t.id); }}
+                                className={`px-2.5 py-1 text-xs rounded-lg font-medium transition-colors ${applyTemplateId === t.id ? 'bg-blue-600 text-white' : 'bg-blue-50 dark:bg-blue-900/20 text-blue-600 dark:text-blue-400 hover:bg-blue-100'}`}
+                              >
+                                {applyTemplateId === t.id ? 'Seleccionada' : 'Usar'}
+                              </button>
+                              <button onClick={() => setDeleteTemplateId(t.id)} className="p-1.5 text-gray-300 dark:text-gray-600 hover:text-red-500 hover:bg-red-50 dark:hover:bg-red-900/20 rounded-lg transition-colors">
+                                <FiTrash2 className="w-3.5 h-3.5" />
+                              </button>
+                            </>
+                          )}
+                        </div>
+                      </div>
+                    ))}
+                  </div>
+                )}
+              </div>
+              {applyTemplateId && (
+                <div className="px-5 py-3 border-t border-gray-200 dark:border-gray-700 bg-gray-50 dark:bg-gray-800/50 flex items-center justify-between gap-3">
+                  <p className="text-xs text-amber-600 dark:text-amber-400">El contenido actual se reemplazará.</p>
+                  <button
+                    onClick={handleApplyTemplate}
+                    className="px-4 py-1.5 text-sm bg-blue-600 text-white rounded-xl hover:bg-blue-700 transition-colors font-medium"
+                  >
+                    Aplicar
+                  </button>
+                </div>
+              )}
+            </motion.div>
+          </div>
+        )}
+      </AnimatePresence>
 
       {/* Day Edit Overlay (both mobile & desktop) */}
       <AnimatePresence>

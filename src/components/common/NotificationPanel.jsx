@@ -146,7 +146,9 @@ const NotificationPanel = ({ accentColor = '#1A6BFF', isCoach = true }) => {
                             <span className="text-[10px] text-slate-400 flex-shrink-0 mt-0.5">{timeAgo(notif.created_at)}</span>
                           </div>
                           {notif.message && (
-                            <p className="text-xs text-slate-500 dark:text-slate-400 mt-0.5 truncate">{notif.message}</p>
+                            <p className="text-xs text-slate-500 dark:text-slate-400 mt-0.5 truncate">
+                              {notif.message.startsWith('__REPORT__:') ? '📊 Informe IA semanal' : notif.message}
+                            </p>
                           )}
                         </div>
                         {isUnread && (

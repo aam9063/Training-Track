@@ -1,10 +1,10 @@
-import { useState, useEffect, useCallback, useMemo } from 'react';
+import { useState, useEffect, useCallback, useMemo, useRef } from 'react';
 import { motion, AnimatePresence } from 'framer-motion';
 import {
   FiZap, FiChevronLeft, FiChevronRight, FiX, FiRefreshCw,
   FiLoader, FiBarChart2, FiAlertTriangle, FiCheckCircle,
   FiArrowRight, FiCalendar, FiTarget, FiSend,
-  FiDownload, FiInfo, FiArrowLeft,
+  FiDownload, FiInfo, FiArrowLeft, FiMessageCircle,
 } from 'react-icons/fi';
 import { jsPDF } from 'jspdf';
 import autoTable from 'jspdf-autotable';
@@ -14,6 +14,7 @@ import {
   getCoachReportWeeks,
   triggerWeeklyReports,
 } from '../../services/aiReportService';
+import { sendMessage } from '../../services/chatService';
 import { showSuccess, showError } from '../../lib/toast';
 
 // ─── Helpers ──────────────────────────────────────────────────────────────────
@@ -100,7 +101,7 @@ function AlertBadge({ level }) {
 }
 
 function AthleteAvatar({ firstName, lastName, image, size = 'md' }) {
-  const sizeClass = size === 'lg' ? 'w-12 h-12 text-base' : 'w-9 h-9 text-sm';
+  const sizeClass = size === 'lg' ? 'w-12 h-12 text-base' : size === 'sm' ? 'w-7 h-7 text-xs' : 'w-9 h-9 text-sm';
   const fullName = `${firstName || ''} ${lastName || ''}`.trim();
   if (image) {
     return <img src={image} alt={fullName} className={`${sizeClass} rounded-full object-cover flex-shrink-0`} />;
@@ -212,13 +213,68 @@ function ReportCard({ report, onClick }) {
 
 // ─── Report Detail View (full page) ──────────────────────────────────────────
 
-function ReportDetailView({ report, onBack }) {
+function ReportDetailView({ report, onBack, coachId }) {
   const ai = report.ai_analysis || {};
   const athlete = report.users || {};
   const alertas = ai.alertas || [];
   const recomendaciones = ai.recomendaciones || [];
   const prediccion = ai.prediccion_competicion;
   const comparativa = ai.comparativa || {};
+
+  const [showNoteInput, setShowNoteInput] = useState(false);
+  const [noteTab, setNoteTab] = useState('note');
+  const [noteText, setNoteText] = useState('');
+  const [sendingNote, setSendingNote] = useState(false);
+  const noteRef = useRef(null);
+
+  const handleSendNote = async () => {
+    if (!noteText.trim() || !coachId || !athlete.id) return;
+    setSendingNote(true);
+    try {
+      const { error } = await sendMessage(coachId, athlete.id, noteText.trim());
+      if (error) throw error;
+      showSuccess('Nota enviada al atleta');
+      setNoteText('');
+      setShowNoteInput(false);
+    } catch (err) {
+      showError('Error al enviar la nota');
+    } finally {
+      setSendingNote(false);
+    }
+  };
+
+  const handleSendReport = async () => {
+    if (!coachId || !athlete.id) return;
+    setSendingNote(true);
+    try {
+      const payload = {
+        week_start: report.week_start,
+        week_end: report.week_end,
+        alert_level: report.alert_level,
+        summary: report.summary,
+        sessions_done: report.sessions_done,
+        sessions_planned: report.sessions_planned,
+        actual_km: report.actual_km,
+        acwr: report.acwr,
+        tsb: report.tsb,
+        avg_rpe: report.avg_rpe,
+        ai_analysis: report.ai_analysis,
+      };
+      const content = `__REPORT__:${JSON.stringify(payload)}`;
+      const { error } = await sendMessage(coachId, athlete.id, content);
+      if (error) throw error;
+      showSuccess(`Informe enviado a ${athlete.first_name}`);
+      setShowNoteInput(false);
+    } catch (err) {
+      showError('Error al enviar el informe');
+    } finally {
+      setSendingNote(false);
+    }
+  };
+
+  useEffect(() => {
+    if (showNoteInput && noteTab === 'note') noteRef.current?.focus();
+  }, [showNoteInput, noteTab]);
 
   const kmExec = comparativa.km_ejecutado ?? report.actual_km ?? 0;
   const kmPlan = comparativa.km_planificado ?? report.planned_km ?? 0;
@@ -237,12 +293,106 @@ function ReportDetailView({ report, onBack }) {
   };
 
   return (
+    <>
+    {/* Note / Report modal */}
+    {showNoteInput && (
+      <div className="fixed inset-0 z-50 flex items-center justify-center p-4">
+        <div className="absolute inset-0 bg-black/40 backdrop-blur-sm" onClick={() => { setShowNoteInput(false); setNoteText(''); }} />
+        <div className="relative w-full max-w-lg bg-white dark:bg-gray-800 rounded-2xl shadow-2xl overflow-hidden">
+          {/* Modal header */}
+          <div className="flex items-center justify-between px-5 pt-5 pb-4 border-b border-slate-100 dark:border-gray-700">
+            <div className="flex items-center gap-3">
+              <AthleteAvatar firstName={athlete.first_name} lastName={athlete.last_name} image={athlete.profile_image} size="md" />
+              <div>
+                <p className="text-base font-bold text-slate-800 dark:text-white">{athlete.first_name} {athlete.last_name}</p>
+                <p className="text-xs text-slate-400">Informe semanal · {formatDate(report.week_start)} – {formatDate(report.week_end)}</p>
+              </div>
+            </div>
+            <button onClick={() => { setShowNoteInput(false); setNoteText(''); }} className="w-8 h-8 flex items-center justify-center rounded-lg text-slate-400 hover:bg-slate-100 dark:hover:bg-gray-700 transition-colors">
+              <FiX className="w-4 h-4" />
+            </button>
+          </div>
+          {/* Tabs */}
+          <div className="flex border-b border-slate-100 dark:border-gray-700">
+            {[{ id: 'note', label: 'Nota rápida' }, { id: 'report', label: 'Enviar informe' }].map(tab => (
+              <button
+                key={tab.id}
+                onClick={() => setNoteTab(tab.id)}
+                className={`flex-1 py-3 text-sm font-semibold transition-colors ${noteTab === tab.id ? 'text-brand-primary border-b-2 border-brand-primary' : 'text-slate-400 hover:text-slate-600 dark:hover:text-slate-300'}`}
+              >
+                {tab.label}
+              </button>
+            ))}
+          </div>
+          {/* Content */}
+          <div className="p-5">
+            {noteTab === 'note' ? (
+              <>
+                <textarea
+                  ref={noteRef}
+                  value={noteText}
+                  onChange={e => setNoteText(e.target.value)}
+                  onKeyDown={e => { if (e.key === 'Enter' && (e.metaKey || e.ctrlKey)) handleSendNote(); }}
+                  placeholder={`Escribe una nota para ${athlete.first_name}...`}
+                  rows={5}
+                  className="w-full text-sm text-slate-700 dark:text-slate-200 bg-slate-50 dark:bg-gray-900 border border-slate-200 dark:border-gray-700 rounded-xl px-4 py-3 outline-none focus:ring-2 focus:ring-brand-primary/30 resize-none placeholder-slate-400 leading-relaxed"
+                />
+                <div className="flex justify-end gap-2 mt-4">
+                  <button onClick={() => { setShowNoteInput(false); setNoteText(''); }} className="text-sm text-slate-400 hover:text-slate-600 px-4 py-2 rounded-xl transition-colors">
+                    Cancelar
+                  </button>
+                  <button
+                    onClick={handleSendNote}
+                    disabled={!noteText.trim() || sendingNote}
+                    className="flex items-center gap-2 px-5 py-2.5 rounded-xl text-sm font-semibold text-white disabled:opacity-50 transition-opacity"
+                    style={{ background: '#1A6BFF' }}
+                  >
+                    {sendingNote ? <FiLoader className="w-4 h-4 animate-spin" /> : <FiSend className="w-4 h-4" />}
+                    Enviar nota
+                  </button>
+                </div>
+              </>
+            ) : (
+              <>
+                <div className="flex gap-4 p-4 bg-slate-50 dark:bg-gray-900 rounded-xl mb-4 border border-slate-200 dark:border-gray-700">
+                  <div className="w-10 h-10 rounded-xl flex items-center justify-center flex-shrink-0" style={{ background: 'rgba(26,107,255,0.15)' }}>
+                    <FiZap className="w-5 h-5" style={{ color: '#1A6BFF' }} />
+                  </div>
+                  <div className="min-w-0">
+                    <p className="text-sm font-semibold text-slate-700 dark:text-slate-200">Informe IA · {formatDate(report.week_start)} – {formatDate(report.week_end)}</p>
+                    <p className="text-xs text-slate-400 mt-1 line-clamp-3 leading-relaxed">{ai.resumen || `${report.sessions_done}/${report.sessions_planned} sesiones completadas`}</p>
+                  </div>
+                </div>
+                <p className="text-sm text-slate-500 dark:text-slate-400 mb-5 leading-relaxed">
+                  {athlete.first_name} recibirá el informe completo en su chat con métricas, alertas y recomendaciones de la IA.
+                </p>
+                <div className="flex justify-end gap-2">
+                  <button onClick={() => setShowNoteInput(false)} className="text-sm text-slate-400 hover:text-slate-600 px-4 py-2 rounded-xl transition-colors">
+                    Cancelar
+                  </button>
+                  <button
+                    onClick={handleSendReport}
+                    disabled={sendingNote}
+                    className="flex items-center gap-2 px-5 py-2.5 rounded-xl text-sm font-semibold text-white disabled:opacity-50 transition-opacity"
+                    style={{ background: '#1A6BFF' }}
+                  >
+                    {sendingNote ? <FiLoader className="w-4 h-4 animate-spin" /> : <FiSend className="w-4 h-4" />}
+                    Enviar informe
+                  </button>
+                </div>
+              </>
+            )}
+          </div>
+        </div>
+      </div>
+    )}
+
     <motion.div
       initial={{ opacity: 0, x: 24 }}
       animate={{ opacity: 1, x: 0 }}
       exit={{ opacity: 0, x: 24 }}
       transition={{ type: 'spring', stiffness: 300, damping: 30 }}
-      className="px-4 lg:px-8 py-6 lg:py-8 overflow-hidden"
+      className="px-4 lg:px-8 py-6 lg:py-8"
     >
       {/* Back button */}
       <button
@@ -264,6 +414,22 @@ function ReportDetailView({ report, onBack }) {
           <p className="text-xs text-slate-500 dark:text-gray-400 mt-0.5">
             Informe semanal · {formatDate(report.week_start)} – {formatDate(report.week_end)}
           </p>
+        </div>
+        <div className="flex items-center gap-1.5 flex-shrink-0">
+          <button
+            onClick={() => setShowNoteInput(v => !v)}
+            title="Nota rápida"
+            className={`w-9 h-9 flex items-center justify-center rounded-xl transition-all ${showNoteInput ? 'bg-brand-primary text-white shadow-md' : 'bg-brand-primary/10 text-brand-primary hover:bg-brand-primary hover:text-white'}`}
+          >
+            <FiMessageCircle className="w-4 h-4" />
+          </button>
+          <button
+            onClick={() => exportReportPDF(report)}
+            title="Exportar PDF"
+            className="w-9 h-9 flex items-center justify-center rounded-xl bg-slate-100 dark:bg-gray-700 text-slate-500 dark:text-slate-300 hover:bg-slate-200 dark:hover:bg-gray-600 transition-all"
+          >
+            <FiDownload className="w-4 h-4" />
+          </button>
         </div>
       </div>
 
@@ -410,17 +576,9 @@ function ReportDetailView({ report, onBack }) {
           </div>
         )}
 
-        {/* Actions */}
-        <div className="pt-1 pb-6 flex gap-2">
-          <button style={{ background: '#1A6BFF', color: '#fff' }} className="flex-1 flex items-center justify-center gap-1.5 py-2.5 rounded-xl font-semibold text-sm hover:opacity-90 transition-opacity">
-            <FiSend className="w-3.5 h-3.5" /> Enviar al atleta
-          </button>
-          <button onClick={() => exportReportPDF(report)} style={{ color: '#334155', border: '1px solid #e2e8f0' }} className="flex-1 flex items-center justify-center gap-1.5 py-2.5 rounded-xl font-medium text-sm hover:bg-slate-50 transition-colors dark:text-slate-300 dark:border-gray-700">
-            <FiDownload className="w-3.5 h-3.5" /> Exportar PDF
-          </button>
-        </div>
       </div>
     </motion.div>
+    </>
   );
 }
 
@@ -737,7 +895,7 @@ export default function AIReports() {
   if (selectedReport) {
     return (
       <AnimatePresence mode="wait">
-        <ReportDetailView key={selectedReport.id} report={selectedReport} onBack={() => setSelectedReport(null)} />
+        <ReportDetailView key={selectedReport.id} report={selectedReport} onBack={() => setSelectedReport(null)} coachId={coachId} />
       </AnimatePresence>
     );
   }

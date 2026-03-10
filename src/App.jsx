@@ -49,6 +49,7 @@ const AthleteMetrics = lazy(() => import('./pages/athlete/Metrics'));
 const Devices = lazy(() => import('./pages/athlete/Devices'));
 const AthleteMessages = lazy(() => import('./pages/athlete/Messages'));
 const GymFiles = lazy(() => import('./pages/athlete/GymFiles'));
+const MyReports = lazy(() => import('./pages/athlete/MyReports'));
 
 // Loading fallback
 const PageLoader = () => (
@@ -104,6 +105,7 @@ function App() {
                   <Route path="devices" element={<Devices />} />
                   <Route path="messages" element={<AthleteMessages />} />
                   <Route path="gym-files" element={<GymFiles />} />
+                  <Route path="my-reports" element={<MyReports />} />
                   <Route path="profile" element={<Profile />} />
                 </Route>
 

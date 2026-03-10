@@ -24,6 +24,8 @@ import { getAthleteCompetitions } from '../../services/athleteService';
 import { getCachedActivities } from '../../services/stravaCacheService';
 import WellnessForm from '../../components/athlete/WellnessForm';
 import ReadinessScore from '../../components/athlete/ReadinessScore';
+import WeeklyDiaryForm from '../../components/athlete/WeeklyDiaryForm';
+import { getCurrentWeekDiary } from '../../services/weeklyDiaryService';
 
 // ---------------------------------------------------------------------------
 // Sub-componentes
@@ -62,12 +64,14 @@ const AthleteDashboard = () => {
   const { user, profile } = useAuth();
   const [wellnessRefreshKey, setWellnessRefreshKey] = useState(0);
   const [loading, setLoading] = useState(true);
+  const [hasDiaryThisWeek, setHasDiaryThisWeek] = useState(true); // optimistic: hide banner until loaded
+  const isSunday = new Date().getDay() === 0;
   const [weekStats, setWeekStats] = useState({
     totalKm: 0,
     totalTime: '0h 0m',
     sessions: 0,
-    avgPace: '-',
   });
+  const [streak, setStreak] = useState(0);
   const [upcomingSessions, setUpcomingSessions] = useState([]);
   const [upcomingCompetitions, setUpcomingCompetitions] = useState([]);
 
@@ -78,6 +82,8 @@ const AthleteDashboard = () => {
       setLoading(false);
       return;
     }
+    // Check if diary filled this week (for Sunday banner)
+    getCurrentWeekDiary(profile.id).then(({ data }) => setHasDiaryThisWeek(!!data));
 
     setLoading(true);
     try {
@@ -166,24 +172,10 @@ const AthleteDashboard = () => {
       const minutes = totalDurationMinutes % 60;
       const totalTime = `${hours}h ${minutes}m`;
 
-      let avgPace = '-';
-      if (hasStrava && stravaDistanceMeters > 0 && stravaMovingTimeSeconds > 0) {
-        const paceMinPerKm = (stravaMovingTimeSeconds / 60) / (stravaDistanceMeters / 1000);
-        const paceMin = Math.floor(paceMinPerKm);
-        const paceSec = Math.round((paceMinPerKm - paceMin) * 60);
-        avgPace = `${paceMin}:${paceSec.toString().padStart(2, '0')}`;
-      } else if (!hasStrava && totalDistanceMeters > 0 && totalDurationMinutes > 0) {
-        const paceMinPerKm = totalDurationMinutes / (totalDistanceMeters / 1000);
-        const paceMin = Math.floor(paceMinPerKm);
-        const paceSec = Math.round((paceMinPerKm - paceMin) * 60);
-        avgPace = `${paceMin}:${paceSec.toString().padStart(2, '0')}`;
-      }
-
       setWeekStats({
         totalKm: parseFloat(totalKm),
         totalTime,
         sessions: weekSessionsWithExercises.filter(s => s.training_type !== 'rest').length,
-        avgPace,
       });
 
       const upcoming = (upcomingData || []).map(session => ({
@@ -198,6 +190,31 @@ const AthleteDashboard = () => {
 
       const { data: competitions } = await getAthleteCompetitions(profile.id);
       setUpcomingCompetitions((competitions || []).slice(0, 1));
+
+      // Streak: count consecutive days with completed sessions going back from today
+      const streakStart = new Date();
+      streakStart.setDate(streakStart.getDate() - 60);
+      const { data: recentSessions } = await supabase
+        .from('training_sessions')
+        .select('scheduled_date, status')
+        .eq('athlete_id', profile.id)
+        .eq('status', 'completed')
+        .neq('training_type', 'rest')
+        .gte('scheduled_date', toLocalDateStr(streakStart))
+        .order('scheduled_date', { ascending: false });
+
+      if (recentSessions?.length > 0) {
+        const completedDates = new Set(recentSessions.map(s => s.scheduled_date));
+        let count = 0;
+        const cursor = new Date();
+        // If today has no completed session yet, start counting from yesterday
+        if (!completedDates.has(toLocalDateStr(cursor))) cursor.setDate(cursor.getDate() - 1);
+        while (completedDates.has(toLocalDateStr(cursor))) {
+          count++;
+          cursor.setDate(cursor.getDate() - 1);
+        }
+        setStreak(count);
+      }
     } catch (error) {
       console.error('Error loading dashboard data:', error);
     } finally {
@@ -241,12 +258,6 @@ const AthleteDashboard = () => {
           </p>
         </div>
 
-        {/* WELLNESS + READINESS */}
-        <div className="grid grid-cols-1 lg:grid-cols-2 gap-4">
-          <WellnessForm compact onSaved={() => setWellnessRefreshKey(k => k + 1)} />
-          <ReadinessScore onRefresh={wellnessRefreshKey} />
-        </div>
-
         {/* STATS 2×2 mobile / 4 cols desktop */}
         <div className="grid grid-cols-2 lg:grid-cols-4 gap-2.5">
           <StatCard
@@ -266,11 +277,11 @@ const AthleteDashboard = () => {
           />
           <StatCard
             icon={FiTrendingUp}
-            label="Ritmo promedio"
-            value={weekStats.avgPace}
-            sub="min/km"
-            iconBg="bg-green-50 dark:bg-green-900/30"
-            iconColor="text-green-600 dark:text-green-400"
+            label="Racha"
+            value={streak > 0 ? `${streak}d` : '—'}
+            sub={streak >= 3 ? '🔥 ¡Sigue así!' : streak > 0 ? 'días seguidos' : 'Sin racha aún'}
+            iconBg="bg-orange-50 dark:bg-orange-900/30"
+            iconColor="text-orange-500 dark:text-orange-400"
           />
           <StatCard
             icon={FiCalendar}
@@ -282,8 +293,31 @@ const AthleteDashboard = () => {
           />
         </div>
 
+        {/* SUNDAY BANNER — only on Sunday if diary not yet filled */}
+        {isSunday && !hasDiaryThisWeek && (
+          <div className="flex items-start gap-3 bg-amber-50 dark:bg-amber-900/20 border border-amber-200 dark:border-amber-700 rounded-xl px-4 py-3">
+            <span className="text-lg">📅</span>
+            <div>
+              <p className="text-sm font-semibold text-amber-800 dark:text-amber-300">Es domingo — rellena tu diario semanal</p>
+              <p className="text-xs text-amber-700 dark:text-amber-400 mt-0.5">Tu entrenador lo tendrá en cuenta en el informe del lunes.</p>
+            </div>
+          </div>
+        )}
+
+        {/* WELLNESS + READINESS — en columna para que el wellness expandido no rompa el layout */}
+        <div className="space-y-4">
+          <WellnessForm compact onSaved={() => setWellnessRefreshKey(k => k + 1)} />
+          <ReadinessScore onRefresh={wellnessRefreshKey} />
+        </div>
+
+        {/* DIARIO SEMANAL */}
+        <WeeklyDiaryForm
+          compact
+          onSaved={() => setHasDiaryThisWeek(true)}
+        />
+
         {/* IA CARD */}
-        <div className="relative bg-slate-900 rounded-2xl p-4 overflow-hidden flex gap-3">
+        <Link to="/athlete/my-reports" className="relative bg-slate-900 rounded-2xl p-4 overflow-hidden flex gap-3 hover:bg-slate-800 transition-colors">
           <div className="absolute inset-0 pointer-events-none">
             <div className="absolute -top-8 -right-8 w-40 h-40 rounded-full opacity-20" style={{ background: 'radial-gradient(circle, #16a34a, transparent)' }} />
           </div>
@@ -295,9 +329,9 @@ const AthleteDashboard = () => {
             <p className="text-sm text-white font-semibold mt-0.5 leading-snug">
               Análisis de tu carga semanal disponible
             </p>
-            <p className="text-xs text-slate-400 mt-1">Ver plan completo →</p>
+            <p className="text-xs text-slate-400 mt-1">Ver mis informes →</p>
           </div>
-        </div>
+        </Link>
 
         {/* ENTRENAMIENTOS DE LA SEMANA */}
         <section>

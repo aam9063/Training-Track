@@ -527,3 +527,226 @@ export const generateWeeklyPDF = ({
   const fileName = `plan-${(athleteName || 'entrenamiento').toLowerCase().replace(/\s+/g, '-')}-sem${getISOWeekNumber(weekDays[0])}.pdf`;
   doc.save(fileName);
 };
+
+// ==================== AI Report PDF Export ====================
+
+const ALERT_LEVEL_LABELS = { critical: 'Crítico', attention: 'Atención', ok: 'En forma' };
+const ALERT_LEVEL_COLORS = {
+  critical: [220, 38, 38],
+  attention: [217, 119, 6],
+  ok: [22, 163, 74],
+};
+
+const addSectionTitle = (doc, text, y, icon = '') => {
+  doc.setFontSize(7);
+  doc.setFont('helvetica', 'bold');
+  doc.setTextColor(100, 116, 139);
+  doc.text((icon ? icon + '  ' : '') + text.toUpperCase(), 14, y);
+  doc.setDrawColor(226, 232, 240);
+  doc.setLineWidth(0.3);
+  doc.line(14, y + 1, 196, y + 1);
+  return y + 5;
+};
+
+export const generateAIReportPDF = ({ report, athleteName }) => {
+  const doc = new jsPDF({ orientation: 'portrait', unit: 'mm', format: 'a4' });
+  const ai = report.ai_analysis || {};
+  const alertas = ai.alertas || [];
+  const recomendaciones = ai.recomendaciones || [];
+  const comparativa = ai.comparativa || {};
+  const level = report.alert_level || 'ok';
+  const levelColor = ALERT_LEVEL_COLORS[level] || ALERT_LEVEL_COLORS.ok;
+  const levelLabel = ALERT_LEVEL_LABELS[level] || 'En forma';
+
+  const fmtDate = (d) => d ? new Date(d + 'T00:00:00').toLocaleDateString('es-ES', { day: 'numeric', month: 'short', year: 'numeric' }) : '';
+
+  const pageW = 210;
+  const margin = 14;
+  const contentW = pageW - margin * 2;
+  let y = 14;
+
+  // ── Header bar ──
+  doc.setFillColor(15, 23, 42);
+  doc.rect(0, 0, pageW, 22, 'F');
+
+  doc.setFontSize(14);
+  doc.setFont('helvetica', 'bold');
+  doc.setTextColor(255, 255, 255);
+  doc.text('Informe IA Semanal', margin, 10);
+
+  doc.setFontSize(8);
+  doc.setFont('helvetica', 'normal');
+  doc.setTextColor(148, 163, 184);
+  doc.text(`${athleteName || 'Atleta'}  ·  ${fmtDate(report.week_start)} – ${fmtDate(report.week_end)}`, margin, 17);
+
+  // Alert badge
+  doc.setFillColor(...levelColor);
+  doc.roundedRect(pageW - margin - 28, 5, 28, 10, 2, 2, 'F');
+  doc.setFontSize(8);
+  doc.setFont('helvetica', 'bold');
+  doc.setTextColor(255, 255, 255);
+  doc.text(levelLabel, pageW - margin - 14, 11.5, { align: 'center' });
+
+  y = 30;
+
+  // ── Stats row ──
+  const statCols = [
+    { label: 'Km realizados', value: `${report.actual_km ?? '—'} km` },
+    { label: 'Sesiones', value: `${report.sessions_done ?? '—'}/${report.sessions_planned ?? '—'}` },
+    { label: 'RPE medio', value: report.avg_rpe ? `${report.avg_rpe}/10` : '—' },
+    { label: 'ACWR', value: report.acwr ? report.acwr.toFixed(2) : '—' },
+  ];
+  const colW = contentW / statCols.length;
+
+  doc.setFillColor(248, 250, 252);
+  doc.setDrawColor(226, 232, 240);
+  doc.setLineWidth(0.3);
+  doc.rect(margin, y, contentW, 16, 'FD');
+
+  statCols.forEach((s, i) => {
+    const cx = margin + i * colW + colW / 2;
+    doc.setFontSize(12);
+    doc.setFont('helvetica', 'bold');
+    doc.setTextColor(15, 23, 42);
+    doc.text(s.value, cx, y + 8, { align: 'center' });
+    doc.setFontSize(7);
+    doc.setFont('helvetica', 'normal');
+    doc.setTextColor(100, 116, 139);
+    doc.text(s.label, cx, y + 13, { align: 'center' });
+    if (i < statCols.length - 1) {
+      doc.setDrawColor(226, 232, 240);
+      doc.line(margin + (i + 1) * colW, y + 2, margin + (i + 1) * colW, y + 14);
+    }
+  });
+
+  y += 22;
+
+  // ── AI Summary ──
+  if (ai.resumen) {
+    y = addSectionTitle(doc, 'Análisis IA', y);
+    doc.setFillColor(15, 23, 42);
+    doc.roundedRect(margin, y, contentW, 6, 1.5, 1.5, 'F'); // placeholder, will resize
+    // Measure text height
+    doc.setFontSize(8.5);
+    doc.setFont('helvetica', 'normal');
+    const lines = doc.splitTextToSize(ai.resumen, contentW - 8);
+    const boxH = lines.length * 4.5 + 6;
+    doc.setFillColor(15, 23, 42);
+    doc.roundedRect(margin, y, contentW, boxH, 2, 2, 'F');
+    doc.setTextColor(226, 232, 240);
+    doc.text(lines, margin + 4, y + 6);
+    y += boxH + 6;
+  }
+
+  // ── Alertas ──
+  const ALERT_BG = { critical: [255, 241, 241], attention: [255, 247, 235], ok: [240, 253, 244] };
+
+  if (alertas.length > 0) {
+    y = addSectionTitle(doc, 'Alertas', y);
+    alertas.forEach((a) => {
+      const lvl = a.nivel || 'ok';
+      const c = ALERT_LEVEL_COLORS[lvl] || ALERT_LEVEL_COLORS.ok;
+      const bg = ALERT_BG[lvl] || ALERT_BG.ok;
+      const descLines = doc.splitTextToSize(a.descripcion || '', contentW - 14);
+      const boxH = descLines.length * 4 + 10;
+
+      // White-ish background
+      doc.setFillColor(...bg);
+      doc.setDrawColor(226, 232, 240);
+      doc.setLineWidth(0.3);
+      doc.roundedRect(margin, y, contentW, boxH, 2, 2, 'FD');
+      // Left accent bar
+      doc.setFillColor(...c);
+      doc.rect(margin, y, 2.5, boxH, 'F');
+
+      doc.setFontSize(8.5);
+      doc.setFont('helvetica', 'bold');
+      doc.setTextColor(...c);
+      doc.text(a.tipo || '', margin + 6, y + 6);
+
+      doc.setFontSize(7.5);
+      doc.setFont('helvetica', 'normal');
+      doc.setTextColor(51, 65, 85);
+      doc.text(descLines, margin + 6, y + 11);
+
+      y += boxH + 3;
+    });
+    y += 2;
+  }
+
+  // ── Comparativa ──
+  const kmExec = comparativa.km_ejecutado ?? report.actual_km ?? 0;
+  const kmPlan = comparativa.km_planificado ?? report.planned_km ?? 0;
+  const sessExec = comparativa.sesiones_ejecutadas ?? report.sessions_done ?? 0;
+  const sessPlan = comparativa.sesiones_planificadas ?? report.sessions_planned ?? 0;
+
+  y = addSectionTitle(doc, 'Ejecutado vs Planificado', y);
+  [
+    { label: 'Kilómetros', exec: kmExec, plan: kmPlan, unit: ' km' },
+    { label: 'Sesiones', exec: sessExec, plan: sessPlan, unit: '' },
+  ].forEach(({ label, exec, plan, unit }) => {
+    const pct = plan > 0 ? Math.min(100, Math.round((exec / plan) * 100)) : 0;
+    const barColor = pct > 100 ? [217, 119, 6] : [22, 163, 74];
+
+    doc.setFontSize(8);
+    doc.setFont('helvetica', 'normal');
+    doc.setTextColor(71, 85, 105);
+    doc.text(label, margin, y + 3);
+    doc.setFont('helvetica', 'bold');
+    doc.setTextColor(15, 23, 42);
+    doc.text(`${exec}${unit} / ${plan}${unit}`, margin + contentW, y + 3, { align: 'right' });
+
+    // Bar background
+    doc.setFillColor(241, 245, 249);
+    doc.roundedRect(margin, y + 5, contentW, 4, 1, 1, 'F');
+    // Bar fill
+    if (pct > 0) {
+      doc.setFillColor(...barColor);
+      doc.roundedRect(margin, y + 5, contentW * (pct / 100), 4, 1, 1, 'F');
+    }
+    y += 14;
+  });
+  y += 2;
+
+  // ── Recomendaciones ──
+  if (recomendaciones.length > 0) {
+    y = addSectionTitle(doc, 'Recomendaciones', y);
+    recomendaciones.forEach((r, i) => {
+      const lines = doc.splitTextToSize(r, contentW - 12);
+      const boxH = lines.length * 4.5 + 6;
+
+      doc.setFillColor(240, 253, 244);
+      doc.setDrawColor(187, 247, 208);
+      doc.setLineWidth(0.3);
+      doc.roundedRect(margin, y, contentW, boxH, 2, 2, 'FD');
+
+      doc.setFillColor(22, 163, 74);
+      doc.circle(margin + 5, y + boxH / 2, 3, 'F');
+      doc.setFontSize(7);
+      doc.setFont('helvetica', 'bold');
+      doc.setTextColor(255, 255, 255);
+      doc.text(String(i + 1), margin + 5, y + boxH / 2 + 1, { align: 'center' });
+
+      doc.setFontSize(8);
+      doc.setFont('helvetica', 'normal');
+      doc.setTextColor(15, 23, 42);
+      doc.text(lines, margin + 12, y + 6);
+
+      y += boxH + 3;
+    });
+  }
+
+  // ── Footer ──
+  doc.setFontSize(6);
+  doc.setFont('helvetica', 'normal');
+  doc.setTextColor(148, 163, 184);
+  doc.text(
+    `Generado el ${new Date().toLocaleDateString('es-ES')} | Training Track`,
+    pageW / 2,
+    290,
+    { align: 'center' }
+  );
+
+  const fileName = `informe-ia-${fmtDate(report.week_start).replace(/ /g, '-')}.pdf`;
+  doc.save(fileName);
+};

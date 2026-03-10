@@ -5,6 +5,9 @@ import {
   FiSend,
   FiCheck,
   FiCheckCircle,
+  FiZap,
+  FiAlertTriangle,
+  FiBarChart2,
 } from 'react-icons/fi';
 import { showError } from '../../lib/toast';
 import { useAuth } from '../../contexts/AuthContext';
@@ -17,6 +20,110 @@ import {
   subscribeToConversation,
 } from '../../services/chatService';
 import { supabase } from '../../lib/supabase';
+
+// ─── AI Report Message Card ───────────────────────────────────────────────────
+
+const ALERT_LABEL = { critical: 'Crítico', attention: 'Atención', ok: 'En forma' };
+const ALERT_DOT   = { critical: 'bg-red-500', attention: 'bg-amber-400', ok: 'bg-green-500' };
+const ALERT_BORDER = { critical: 'border-red-400', attention: 'border-amber-400', ok: 'border-green-400' };
+
+function parseReport(content) {
+  if (!content?.startsWith('__REPORT__:')) return null;
+  try { return JSON.parse(content.slice('__REPORT__:'.length)); } catch { return null; }
+}
+
+const fmtDate = (d) => new Date(d + 'T12:00:00').toLocaleDateString('es-ES', { day: 'numeric', month: 'short' });
+
+function ReportMessageCard({ data }) {
+  const [expanded, setExpanded] = useState(false);
+  const ai = data.ai_analysis || {};
+  const level = data.alert_level || 'ok';
+  const recomendaciones = ai.recomendaciones || [];
+  const alertas = ai.alertas || [];
+
+  return (
+    <div className={`w-full bg-white dark:bg-gray-800 rounded-2xl border-l-4 ${ALERT_BORDER[level] || ALERT_BORDER.ok} border border-gray-200 dark:border-gray-700 overflow-hidden shadow-sm`}>
+      {/* Header */}
+      <div className="flex items-center gap-2 px-3 pt-3 pb-2">
+        <div className="w-7 h-7 rounded-lg flex items-center justify-center flex-shrink-0" style={{ background: 'rgba(26,107,255,0.12)' }}>
+          <FiZap className="w-3.5 h-3.5" style={{ color: '#1A6BFF' }} />
+        </div>
+        <div className="flex-1 min-w-0">
+          <p className="text-[10px] font-bold uppercase tracking-widest" style={{ color: '#1A6BFF' }}>Informe IA</p>
+          <p className="text-xs text-gray-500 dark:text-gray-400">{fmtDate(data.week_start)} – {fmtDate(data.week_end)}</p>
+        </div>
+        <span className={`flex items-center gap-1 px-2 py-0.5 rounded-full text-[10px] font-semibold bg-gray-50 dark:bg-gray-900 border border-gray-200 dark:border-gray-700`}>
+          <span className={`w-1.5 h-1.5 rounded-full ${ALERT_DOT[level]}`} />
+          {ALERT_LABEL[level]}
+        </span>
+      </div>
+
+      {/* Metrics row */}
+      <div className="grid grid-cols-3 gap-px bg-gray-100 dark:bg-gray-700 border-t border-gray-100 dark:border-gray-700 text-center">
+        {[
+          { label: 'ACWR', value: data.acwr != null ? data.acwr.toFixed(2) : '—' },
+          { label: 'Sesiones', value: `${data.sessions_done}/${data.sessions_planned}` },
+          { label: 'Km', value: data.actual_km != null ? `${data.actual_km}` : '—' },
+        ].map(m => (
+          <div key={m.label} className="bg-white dark:bg-gray-800 py-2">
+            <p className="text-sm font-bold text-gray-900 dark:text-white leading-none">{m.value}</p>
+            <p className="text-[10px] text-gray-400 mt-0.5 uppercase tracking-wide">{m.label}</p>
+          </div>
+        ))}
+      </div>
+
+      {/* Summary */}
+      {ai.resumen && (
+        <div className="px-3 py-2 border-t border-gray-100 dark:border-gray-700">
+          <p className="text-xs text-gray-600 dark:text-gray-300 leading-relaxed line-clamp-3">{ai.resumen}</p>
+        </div>
+      )}
+
+      {/* Expand toggle */}
+      {(recomendaciones.length > 0 || alertas.length > 0) && (
+        <button
+          onClick={() => setExpanded(v => !v)}
+          className="w-full px-3 py-2 text-[11px] font-semibold border-t border-gray-100 dark:border-gray-700 text-blue-600 dark:text-blue-400 hover:bg-gray-50 dark:hover:bg-gray-700 transition-colors text-left"
+        >
+          {expanded ? 'Ver menos ↑' : `Ver detalles ↓ (${recomendaciones.length} recomendaciones)`}
+        </button>
+      )}
+
+      {/* Expanded content */}
+      {expanded && (
+        <div className="px-3 pb-3 space-y-2 border-t border-gray-100 dark:border-gray-700 pt-2">
+          {alertas.length > 0 && (
+            <div>
+              <p className="text-[10px] font-bold uppercase tracking-widest text-gray-400 mb-1.5 flex items-center gap-1">
+                <FiAlertTriangle className="w-3 h-3" /> Alertas
+              </p>
+              {alertas.map((a, i) => (
+                <div key={i} className="text-xs text-gray-600 dark:text-gray-300 mb-1">
+                  <span className="font-semibold">{a.tipo}: </span>{a.descripcion}
+                </div>
+              ))}
+            </div>
+          )}
+          {recomendaciones.length > 0 && (
+            <div>
+              <p className="text-[10px] font-bold uppercase tracking-widest text-gray-400 mb-1.5 flex items-center gap-1">
+                <FiBarChart2 className="w-3 h-3" /> Recomendaciones
+              </p>
+              {recomendaciones.map((r, i) => (
+                <div key={i} className="flex gap-1.5 text-xs text-gray-600 dark:text-gray-300 mb-1">
+                  <span className="w-4 h-4 rounded-full bg-blue-100 dark:bg-blue-900 text-blue-600 dark:text-blue-300 text-[10px] font-bold flex items-center justify-center flex-shrink-0 mt-0.5">{i + 1}</span>
+                  <span>{r}</span>
+                </div>
+              ))}
+            </div>
+          )}
+        </div>
+      )}
+    </div>
+  );
+}
+
+// ─── Main Component ───────────────────────────────────────────────────────────
 
 const AthleteMessages = () => {
   const { profile, getMyCoach } = useAuth();
@@ -198,7 +305,7 @@ const AthleteMessages = () => {
   }
 
   return (
-    <div className="flex flex-col h-[calc(100vh-62px-72px)] lg:h-screen overflow-hidden -mb-[72px] lg:mb-0">
+    <div className="flex flex-col h-[calc(100dvh-62px-72px)] lg:h-[calc(100vh-52px)] overflow-hidden -mb-[72px] lg:mb-0">
       {/* Chat Header */}
       <div className="px-4 py-3 border-b border-gray-200 dark:border-gray-700 bg-white dark:bg-gray-800 flex items-center space-x-3">
         {coachInfo.profile_image ? (
@@ -255,25 +362,40 @@ const AthleteMessages = () => {
                     </div>
                   )}
                   <div className={`flex ${isMine ? 'justify-end' : 'justify-start'} mb-1`}>
-                    <div
-                      className={`
-                        max-w-[75%] sm:max-w-[65%] px-3 py-2 rounded-2xl
-                        ${isMine
-                          ? 'bg-green-600 text-white rounded-br-md'
-                          : 'bg-white dark:bg-gray-800 text-gray-900 dark:text-white rounded-bl-md shadow-sm'
-                        }
-                      `}
-                    >
-                      <p className="text-sm whitespace-pre-wrap break-words">{msg.content}</p>
-                      <div className={`flex items-center justify-end space-x-1 mt-1 ${isMine ? 'text-green-200' : 'text-gray-400 dark:text-gray-500'}`}>
-                        <span className="text-[11px]">{formatTime(msg.created_at)}</span>
-                        {isMine && (
-                          msg.read
-                            ? <FiCheckCircle className="w-3 h-3" />
-                            : <FiCheck className="w-3 h-3" />
-                        )}
-                      </div>
-                    </div>
+                    {(() => {
+                      const reportData = parseReport(msg.content);
+                      if (reportData) {
+                        return (
+                          <div className="max-w-[85%] sm:max-w-[75%]">
+                            <ReportMessageCard data={reportData} />
+                            <div className="flex items-center justify-end gap-1 mt-1 text-gray-400 dark:text-gray-500">
+                              <span className="text-[11px]">{formatTime(msg.created_at)}</span>
+                            </div>
+                          </div>
+                        );
+                      }
+                      return (
+                        <div
+                          className={`
+                            max-w-[75%] sm:max-w-[65%] px-3 py-2 rounded-2xl
+                            ${isMine
+                              ? 'bg-green-600 text-white rounded-br-md'
+                              : 'bg-white dark:bg-gray-800 text-gray-900 dark:text-white rounded-bl-md shadow-sm'
+                            }
+                          `}
+                        >
+                          <p className="text-sm whitespace-pre-wrap break-words">{msg.content}</p>
+                          <div className={`flex items-center justify-end space-x-1 mt-1 ${isMine ? 'text-green-200' : 'text-gray-400 dark:text-gray-500'}`}>
+                            <span className="text-[11px]">{formatTime(msg.created_at)}</span>
+                            {isMine && (
+                              msg.read
+                                ? <FiCheckCircle className="w-3 h-3" />
+                                : <FiCheck className="w-3 h-3" />
+                            )}
+                          </div>
+                        </div>
+                      );
+                    })()}
                   </div>
                 </div>
               );

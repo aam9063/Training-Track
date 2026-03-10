@@ -325,7 +325,7 @@ const AthleteDashboard = () => {
             <FiZap className="w-4 h-4 text-white" />
           </div>
           <div className="z-10 min-w-0">
-            <p className="text-[10px] uppercase tracking-widest text-green-400 font-semibold">IA · Tu entrenador dice</p>
+            <p className="text-[10px] uppercase tracking-widest text-green-400 font-semibold">Hermes · IA</p>
             <p className="text-sm text-white font-semibold mt-0.5 leading-snug">
               Análisis de tu carga semanal disponible
             </p>

@@ -470,7 +470,7 @@ function ReportDetailView({ report, onBack, coachId }) {
               <FiZap className="w-4 h-4" style={{ color: '#1A6BFF' }} />
             </div>
             <div className="min-w-0">
-              <p className="text-[10px] font-bold uppercase tracking-widest mb-1" style={{ color: '#1A6BFF' }}>Análisis IA</p>
+              <p className="text-[10px] font-bold uppercase tracking-widest mb-1" style={{ color: '#1A6BFF' }}>Hermes · IA</p>
               <p className="text-sm leading-relaxed break-words" style={{ color: '#e2e8f0' }}>{ai.resumen}</p>
             </div>
           </div>
@@ -850,7 +850,7 @@ function exportReportPDF(report) {
   doc.setFont('helvetica', 'normal');
   doc.setTextColor(148, 163, 184);
   doc.text(
-    `Generado el ${new Date().toLocaleDateString('es-ES')} | Training Track · Análisis IA`,
+    `Generado el ${new Date().toLocaleDateString('es-ES')} | Training Track · Hermes`,
     PW / 2,
     290,
     { align: 'center' }

@@ -513,7 +513,7 @@ const Dashboard = () => {
             <FiZap className="w-4 h-4 text-white" />
           </div>
           <div>
-            <p className="text-[10px] font-bold tracking-widest uppercase mb-1" style={{ color: '#1A6BFF' }}>IA · Análisis</p>
+            <p className="text-[10px] font-bold tracking-widest uppercase mb-1" style={{ color: '#1A6BFF' }}>Hermes · IA</p>
             <p className="text-sm font-semibold text-white leading-snug">Análisis de carga disponible. Consulta el informe de esta semana.</p>
             <p className="text-xs mt-1" style={{ color: '#64748B' }}>Ver informe completo →</p>
           </div>
@@ -536,7 +536,7 @@ const Dashboard = () => {
                 <FiZap className="w-4 h-4 text-white" />
               </div>
               <div>
-                <p className="text-[10px] font-bold tracking-widest uppercase mb-1" style={{ color: '#1A6BFF' }}>IA · Análisis</p>
+                <p className="text-[10px] font-bold tracking-widest uppercase mb-1" style={{ color: '#1A6BFF' }}>Hermes · IA</p>
                 <p className="text-sm font-semibold text-white leading-snug">Análisis de carga disponible. Consulta el informe de esta semana.</p>
                 <p className="text-xs mt-1" style={{ color: '#64748B' }}>Ver informe completo →</p>
               </div>

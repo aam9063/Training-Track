@@ -118,7 +118,7 @@ function ReportDetail({ report, onBack, athleteName }) {
             <FiZap className="w-4 h-4 text-green-400" />
           </div>
           <div className="min-w-0">
-            <p className="text-[10px] font-bold uppercase tracking-widest mb-1 text-green-400">Análisis IA</p>
+            <p className="text-[10px] font-bold uppercase tracking-widest mb-1 text-green-400">Hermes · IA</p>
             <p className="text-sm leading-relaxed text-slate-200">{ai.resumen}</p>
           </div>
         </div>

@@ -72,6 +72,7 @@ import useWeeklyTrainings from '../../hooks/useWeeklyTrainings';
 import useCoachStravaData from '../../hooks/useCoachStravaData';
 import ConconiTestModal from '../../components/dashboard/ConconiTestModal';
 import VAMTestModal from '../../components/dashboard/VAMTestModal';
+import AthleteAIChat from '../../components/dashboard/AthleteAIChat';
 
 const AthleteProfile = () => {
   const { athleteId } = useParams();
@@ -139,6 +140,7 @@ const AthleteProfile = () => {
   const [showConconiTable, setShowConconiTable] = useState(false);
   const [showVamTable, setShowVamTable] = useState(false);
   const [selectedTraining, setSelectedTraining] = useState(null);
+  const [showAIChat, setShowAIChat] = useState(false);
 
   // Load athlete data
   useEffect(() => {
@@ -390,6 +392,13 @@ const AthleteProfile = () => {
           {/* Action buttons — mobile only: below name */}
           <div className="flex items-center gap-1.5 mt-2 lg:hidden">
             <button
+              onClick={() => setShowAIChat(true)}
+              className="p-2 bg-blue-600 hover:bg-blue-500 rounded-xl shadow-sm transition-all group"
+              title="Hermes"
+            >
+              <FiZap className="w-4 h-4 text-white" />
+            </button>
+            <button
               onClick={() => navigate('/dashboard/planning')}
               className="p-2 bg-white dark:bg-gray-800 rounded-xl shadow-sm hover:shadow-md transition-all border border-gray-200 dark:border-gray-700 group"
               title="Planificación"
@@ -438,6 +447,14 @@ const AthleteProfile = () => {
 
         {/* Action buttons — desktop only: right side of header */}
         <div className="hidden lg:flex items-center gap-1.5 flex-shrink-0">
+          <button
+            onClick={() => setShowAIChat(true)}
+            className="flex items-center gap-2 px-3 py-2 bg-blue-600 hover:bg-blue-500 text-white rounded-xl shadow-sm transition-all text-sm font-medium"
+            title="Hermes"
+          >
+            <FiZap className="w-4 h-4" />
+            <span>Hermes</span>
+          </button>
           <button
             onClick={() => navigate('/dashboard/planning')}
             className="p-2.5 bg-white dark:bg-gray-800 rounded-xl shadow-sm hover:shadow-md transition-all border border-gray-200 dark:border-gray-700 group"
@@ -1848,6 +1865,53 @@ const AthleteProfile = () => {
               </div>
             </motion.div>
           </div>
+        )}
+      </AnimatePresence>
+
+      {/* AI Chat Slide-over */}
+      <AnimatePresence>
+        {showAIChat && (
+          <>
+            {/* Backdrop */}
+            <motion.div
+              initial={{ opacity: 0 }}
+              animate={{ opacity: 1 }}
+              exit={{ opacity: 0 }}
+              className="fixed top-[62px] bottom-[72px] left-0 right-0 lg:inset-0 z-40 bg-black/40 backdrop-blur-sm"
+              onClick={() => setShowAIChat(false)}
+            />
+            {/* Panel */}
+            <motion.div
+              initial={{ x: '100%' }}
+              animate={{ x: 0 }}
+              exit={{ x: '100%' }}
+              transition={{ type: 'spring', damping: 28, stiffness: 300 }}
+              className="fixed right-0 top-[62px] bottom-[72px] lg:top-0 lg:bottom-0 z-50 w-full max-w-md flex flex-col bg-white dark:bg-slate-950 shadow-2xl"
+            >
+              {/* Panel header */}
+              <div className="flex items-center justify-between px-4 py-3 border-b border-gray-200 dark:border-slate-800">
+                <div className="flex items-center gap-2.5">
+                  <div className="w-8 h-8 rounded-lg bg-blue-600 flex items-center justify-center flex-shrink-0">
+                    <FiZap className="w-4 h-4 text-white" />
+                  </div>
+                  <div>
+                    <p className="text-[10px] uppercase tracking-widest text-blue-600 dark:text-blue-400 font-semibold leading-none">Hermes</p>
+                    <p className="text-sm text-gray-900 dark:text-white font-medium mt-0.5">{athleteName}</p>
+                  </div>
+                </div>
+                <button
+                  onClick={() => setShowAIChat(false)}
+                  className="p-1.5 rounded-lg text-gray-400 hover:text-gray-700 dark:hover:text-white hover:bg-gray-100 dark:hover:bg-slate-800 transition-colors"
+                >
+                  <FiX className="w-5 h-5" />
+                </button>
+              </div>
+              {/* Chat component fills the rest */}
+              <div className="flex-1 min-h-0">
+                <AthleteAIChat athleteId={athleteId} athleteName={athleteName} inline />
+              </div>
+            </motion.div>
+          </>
         )}
       </AnimatePresence>
 

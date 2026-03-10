@@ -623,7 +623,7 @@ export const generateAIReportPDF = ({ report, athleteName }) => {
 
   // ── AI Summary ──
   if (ai.resumen) {
-    y = addSectionTitle(doc, 'Análisis IA', y);
+    y = addSectionTitle(doc, 'Hermes · IA', y);
     doc.setFillColor(15, 23, 42);
     doc.roundedRect(margin, y, contentW, 6, 1.5, 1.5, 'F'); // placeholder, will resize
     // Measure text height

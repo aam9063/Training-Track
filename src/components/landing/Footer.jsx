@@ -1,7 +1,8 @@
 import { motion } from 'framer-motion';
-import { HiMail, HiPhone, HiLocationMarker } from 'react-icons/hi';
+import { HiMail, HiLocationMarker } from 'react-icons/hi';
 import { FaFacebook, FaInstagram, FaLinkedin, FaYoutube, FaTiktok } from 'react-icons/fa';
 import { FaXTwitter } from "react-icons/fa6";
+import WaitlistForm from './WaitlistForm';
 
 export default function Footer() {
   const currentYear = new Date().getFullYear();
@@ -154,24 +155,11 @@ export default function Footer() {
           className="border-t border-gray-200 dark:border-gray-800 pt-8 mb-8"
         >
           <div className="max-w-md mx-auto text-center">
-            <h3 className="text-gray-900 dark:text-white font-semibold mb-2">Mantente actualizado</h3>
+            <h3 className="text-gray-900 dark:text-white font-semibold mb-2">Únete a la lista de espera</h3>
             <p className="text-gray-500 dark:text-gray-400 text-sm mb-4">
-              Recibe las últimas noticias y actualizaciones directamente en tu correo
+              Te avisaremos en cuanto lancemos. Sin spam, lo prometemos.
             </p>
-            <div className="flex gap-2">
-              <input
-                type="email"
-                placeholder="tu@email.com"
-                className="flex-1 px-4 py-3 rounded-lg bg-white dark:bg-gray-800 border border-gray-300 dark:border-gray-700 text-gray-900 dark:text-white placeholder-gray-400 dark:placeholder-gray-500 focus:outline-none focus:border-sky-500 transition-colors"
-              />
-              <motion.button
-                whileHover={{ scale: 1.05 }}
-                whileTap={{ scale: 0.95 }}
-                className="px-6 py-3 bg-sky-600 hover:bg-sky-700 text-white rounded-lg font-semibold hover:shadow-lg transition-all duration-200"
-              >
-                Suscribirse
-              </motion.button>
-            </div>
+            <WaitlistForm source="footer" variant="light" />
           </div>
         </motion.div>
 

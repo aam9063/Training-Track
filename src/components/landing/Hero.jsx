@@ -2,8 +2,8 @@ import { useState } from 'react';
 import { motion, AnimatePresence } from 'framer-motion';
 import { HiPlay, HiX } from 'react-icons/hi';
 import { FiZap, FiCalendar, FiTrendingUp, FiSmartphone } from 'react-icons/fi';
-import { Link } from 'react-router-dom';
 import { useTheme } from '../../contexts/ThemeContext';
+import WaitlistForm from './WaitlistForm';
 
 const YOUTUBE_VIDEO_ID = 'TU_VIDEO_ID';
 
@@ -35,7 +35,7 @@ export default function Hero() {
   const stats = [
     { value: 'Strava + IA', label: 'Datos automáticos', sub: 'Sin copiar nada a mano' },
     { value: 'ACWR · TSB', label: 'Control de carga real', sub: 'Prevén lesiones antes de que ocurran' },
-    { value: '100% gratis', label: 'Durante la Beta', sub: 'Sin tarjeta de crédito' },
+    { value: 'Lanzamiento pronto', label: 'Apúntate hoy', sub: 'Serás de los primeros en probarlo' },
   ];
 
   return (
@@ -72,7 +72,7 @@ export default function Hero() {
               <div className="inline-flex items-center gap-2 px-4 py-2 bg-sky-100 dark:bg-sky-900/30 rounded-full">
                 <span className="w-2 h-2 bg-sky-600 rounded-full animate-pulse" />
                 <span className="text-sm font-medium text-sky-600 dark:text-sky-400">
-                  La plataforma inteligente para entrenadores de running · Beta gratuita
+                  Próximo lanzamiento · ¡Únete a la lista de espera!
                 </span>
               </div>
             </motion.div>
@@ -112,33 +112,9 @@ export default function Hero() {
               })}
             </motion.div>
 
-            {/* CTAs */}
-            <motion.div variants={itemVariants} className="flex flex-col sm:flex-row items-center lg:items-start gap-4">
-              <Link to="/register">
-                <motion.button
-                  whileHover={{ scale: 1.05 }}
-                  whileTap={{ scale: 0.95 }}
-                  className="px-8 py-4 bg-sky-600 hover:bg-sky-700 text-white rounded-xl font-semibold text-lg shadow-xl hover:shadow-2xl transition-all duration-200 flex items-center gap-2"
-                >
-                  <span>Empieza gratis</span>
-                  <motion.span
-                    animate={{ x: [0, 5, 0] }}
-                    transition={{ duration: 1.5, repeat: Infinity }}
-                  >
-                    →
-                  </motion.span>
-                </motion.button>
-              </Link>
-
-              <motion.button
-                whileHover={{ scale: 1.05 }}
-                whileTap={{ scale: 0.95 }}
-                onClick={() => setShowDemo(true)}
-                className="px-8 py-4 bg-white dark:bg-gray-800 text-gray-900 dark:text-white rounded-xl font-semibold text-lg border-2 border-gray-200 dark:border-gray-700 hover:border-sky-600 dark:hover:border-sky-400 transition-all duration-200 flex items-center gap-2"
-              >
-                <HiPlay className="w-5 h-5" />
-                <span>Ver demo</span>
-              </motion.button>
+            {/* Waitlist CTA */}
+            <motion.div variants={itemVariants} className="w-full max-w-lg">
+              <WaitlistForm source="hero" variant="light" />
             </motion.div>
           </motion.div>
 

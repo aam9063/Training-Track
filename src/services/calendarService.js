@@ -7,15 +7,16 @@ import { toLocalDateStr } from '../lib/dateUtils';
  */
 
 // Get sessions for a specific month
-export const getMonthSessions = async (coachId, year, month) => {
+export const getMonthSessions = async (coachId, year, month, overrideStart, overrideEnd) => {
   if (!coachId) {
     console.warn('getMonthSessions: No coachId provided');
     return { data: [], error: null };
   }
 
   try {
-    const startDate = toLocalDateStr(new Date(year, month - 1, 1));
-    const endDate = toLocalDateStr(new Date(year, month, 0));
+    // Use overridden range if provided (for weekly views crossing month boundaries)
+    const startDate = overrideStart || toLocalDateStr(new Date(year, month - 1, 1));
+    const endDate = overrideEnd || toLocalDateStr(new Date(year, month, 0));
 
     // Step 1: Get sessions
     const { data: sessions, error: sessionsError } = await supabase
@@ -190,15 +191,16 @@ export const deleteSession = async (sessionId) => {
 };
 
 // Get sessions for a specific month (athlete perspective)
-export const getAthleteMonthSessions = async (athleteId, year, month) => {
+export const getAthleteMonthSessions = async (athleteId, year, month, overrideStart, overrideEnd) => {
   if (!athleteId) {
     console.warn('getAthleteMonthSessions: No athleteId provided');
     return { data: [], error: null };
   }
 
   try {
-    const startDate = toLocalDateStr(new Date(year, month - 1, 1));
-    const endDate = toLocalDateStr(new Date(year, month, 0));
+    // Use overridden range if provided (for weekly views crossing month boundaries)
+    const startDate = overrideStart || toLocalDateStr(new Date(year, month - 1, 1));
+    const endDate = overrideEnd || toLocalDateStr(new Date(year, month, 0));
 
     const { data: sessions, error: sessionsError } = await supabase
       .from('training_sessions')

@@ -159,20 +159,19 @@ export default function FAQ() {
             Nuestro equipo está aquí para ayudarte. Contáctanos y te responderemos lo antes posible.
           </p>
           <div className="flex flex-col sm:flex-row items-center justify-center gap-4">
-            <motion.button
-              whileHover={{ scale: 1.05 }}
-              whileTap={{ scale: 0.95 }}
-              className="px-8 py-3 bg-sky-600 hover:bg-sky-700 text-white rounded-xl font-semibold hover:shadow-lg transition-all duration-200"
+            <button
+              type="button"
+              onClick={() => window.open('mailto:info@trainingtrack.es', '_self')}
+              className="px-8 py-3 bg-sky-600 hover:bg-sky-700 text-white rounded-xl font-semibold hover:shadow-lg transition-all duration-200 cursor-pointer"
             >
               Contactar Soporte
-            </motion.button>
-            <motion.button
-              whileHover={{ scale: 1.05 }}
-              whileTap={{ scale: 0.95 }}
-              className="px-8 py-3 bg-gray-100 dark:bg-gray-700 text-gray-900 dark:text-white rounded-xl font-semibold hover:bg-gray-200 dark:hover:bg-gray-600 transition-all duration-200"
+            </button>
+            <a
+              href="/casos-de-uso"
+              className="px-8 py-3 bg-gray-100 dark:bg-gray-700 text-gray-900 dark:text-white rounded-xl font-semibold hover:bg-gray-200 dark:hover:bg-gray-600 transition-all duration-200 hover:scale-105 active:scale-95 transform"
             >
-              Ver Documentación
-            </motion.button>
+              Ver Casos de Uso
+            </a>
           </div>
         </motion.div>
       </div>

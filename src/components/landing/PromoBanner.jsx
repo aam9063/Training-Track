@@ -1,9 +1,9 @@
 import { useState, useEffect } from 'react';
-import { Link } from 'react-router-dom';
 import { motion, AnimatePresence } from 'framer-motion';
-import { HiX, HiArrowRight } from 'react-icons/hi';
+import { HiX } from 'react-icons/hi';
 import { BsStars } from 'react-icons/bs';
 import { supabase } from '../../lib/supabase';
+import WaitlistForm from './WaitlistForm';
 
 export default function PromoBanner() {
   const [show, setShow] = useState(false);
@@ -47,7 +47,7 @@ export default function PromoBanner() {
               <div className="flex items-center gap-2">
                 <BsStars className="w-4 h-4 text-sky-200" />
                 <span className="text-white font-semibold text-sm">
-                  Hola, bienvenido a Training Track
+                  ¡Próximo lanzamiento!
                 </span>
               </div>
               <button
@@ -61,27 +61,13 @@ export default function PromoBanner() {
             {/* Content */}
             <div className="px-5 py-4">
               <h4 className="text-gray-900 dark:text-white font-bold text-lg mb-1">
-                Acceso gratuito completo
+                Únete a la lista de espera
               </h4>
               <p className="text-gray-600 dark:text-gray-400 text-sm mb-4 leading-relaxed">
-                Regístrate ahora y accede a todas las funcionalidades sin coste mientras dure la fase beta. Incluye informes IA, métricas de Strava y mucho más.
+                Estamos preparando la plataforma definitiva para entrenadores de running: IA, Strava, métricas avanzadas y mucho más. ¡Sé de los primeros!
               </p>
 
-              <div className="flex items-center gap-3">
-                <Link
-                  to="/register"
-                  className="flex-1 flex items-center justify-center gap-2 px-4 py-2.5 bg-sky-600 hover:bg-sky-700 text-white font-semibold text-sm rounded-xl transition-colors"
-                >
-                  Crear cuenta gratis
-                  <HiArrowRight className="w-4 h-4" />
-                </Link>
-                <Link
-                  to="/login"
-                  className="px-4 py-2.5 text-gray-600 dark:text-gray-400 hover:text-gray-900 dark:hover:text-white font-medium text-sm transition-colors"
-                >
-                  Iniciar sesión
-                </Link>
-              </div>
+              <WaitlistForm source="promo" variant="light" />
             </div>
           </div>
         </motion.div>

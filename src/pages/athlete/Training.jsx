@@ -46,6 +46,7 @@ import {
 import { getCachedActivityByStravaId } from '../../services/stravaCacheService';
 import { getRPEEmoji, RPE_OPTIONS } from '../../services/rpeService';
 import { showSuccess, showError } from '../../lib/toast';
+import { inferTrainingType } from '../../lib/dateUtils';
 import RPEModal from '../../components/athlete/RPEModal';
 import useMapbox from '../../hooks/useMapbox';
 import useAthleteTestData from '../../hooks/useAthleteTestData';
@@ -245,24 +246,28 @@ const Training = () => {
     });
   };
 
-  const getTypeLabel = (type) => {
+  const getTypeLabel = (session) => {
+    const t = typeof session === 'string' ? session : inferTrainingType(session);
     const labels = {
       running: 'Carrera',
       gym: 'Gimnasio',
       rest: 'Descanso',
       cross_training: 'Cross Training',
+      bike: 'Bici / Rodillo',
     };
-    return labels[type] || type;
+    return labels[t] || t;
   };
 
-  const getTypeColor = (type) => {
+  const getTypeColor = (session) => {
+    const t = typeof session === 'string' ? session : inferTrainingType(session);
     const colors = {
       running: 'bg-blue-100 text-blue-700 dark:bg-blue-900/30 dark:text-blue-400',
       gym: 'bg-purple-100 text-purple-700 dark:bg-purple-900/30 dark:text-purple-400',
       rest: 'bg-gray-100 text-gray-700 dark:bg-gray-700 dark:text-gray-400',
       cross_training: 'bg-orange-100 text-orange-700 dark:bg-orange-900/30 dark:text-orange-400',
+      bike: 'bg-yellow-100 text-yellow-700 dark:bg-yellow-900/30 dark:text-yellow-400',
     };
-    return colors[type] || colors.running;
+    return colors[t] || colors.running;
   };
 
   const getPaceLabel = (paceCode) => {
@@ -703,8 +708,8 @@ const Training = () => {
                           </div>
                           {!isRest && (
                             <div className="flex items-center gap-2 mt-0.5">
-                              <span className={`text-[11px] px-1.5 py-0.5 rounded-md font-medium ${getTypeColor(training.type)}`}>
-                                {getTypeLabel(training.type)}
+                              <span className={`text-[11px] px-1.5 py-0.5 rounded-md font-medium ${getTypeColor(training)}`}>
+                                {getTypeLabel(training)}
                               </span>
                               {training.totalDistance && (
                                 <span className="text-[11px] text-slate-500 dark:text-slate-400">{training.totalDistance}</span>
@@ -829,8 +834,8 @@ const Training = () => {
                   {training ? (
                     <div className="space-y-3">
                       <div className="flex items-center gap-2 flex-wrap">
-                        <span className={`inline-block text-xs px-2 py-1 rounded-full ${getTypeColor(training.type)}`}>
-                          {getTypeLabel(training.type)}
+                        <span className={`inline-block text-xs px-2 py-1 rounded-full ${getTypeColor(training)}`}>
+                          {getTypeLabel(training)}
                         </span>
                         {isCompleted && (
                           <span className="inline-block text-xs px-2 py-1 rounded-full bg-green-100 text-green-700 dark:bg-green-900/30 dark:text-green-400">
@@ -1268,8 +1273,8 @@ const Training = () => {
                       {selectedDay.title}
                     </h2>
                     <div className="flex items-center gap-2 mt-2">
-                      <span className={`inline-block text-xs px-3 py-1 rounded-full ${getTypeColor(selectedDay.type)}`}>
-                        {getTypeLabel(selectedDay.type)}
+                      <span className={`inline-block text-xs px-3 py-1 rounded-full ${getTypeColor(selectedDay)}`}>
+                        {getTypeLabel(selectedDay)}
                       </span>
                       {selectedDay.status === 'completed' && (
                         <span className="inline-block text-xs px-3 py-1 rounded-full bg-green-100 text-green-700 dark:bg-green-900/30 dark:text-green-400">

@@ -1,7 +1,7 @@
 import { motion, useInView } from 'framer-motion';
 import { useRef } from 'react';
-import { Link } from 'react-router-dom';
 import { HiRefresh, HiTrendingUp } from 'react-icons/hi';
+import WaitlistForm from './WaitlistForm';
 
 export default function FinalCTA() {
   const ref = useRef(null);
@@ -37,38 +37,16 @@ export default function FinalCTA() {
             transition={{ duration: 0.6 }}
           >
             <h2 className="text-4xl sm:text-5xl font-bold text-white mb-6 leading-tight">
-              Comienza hoy a transformar tu rendimiento como corredor
+              Sé de los primeros en usar Training Track
             </h2>
 
             <p className="text-xl text-sky-100 mb-8 leading-relaxed">
-              Únete a miles de atletas que ya han mejorado sus marcas con Training Track.
-              Prueba gratis durante 14 días, sin compromiso.
+              Estamos preparando algo grande para entrenadores de running.
+              Apúntate a la lista de espera y te avisaremos en cuanto lancemos.
             </p>
 
-            {/* CTA Buttons */}
-            <div className="flex flex-col sm:flex-row gap-4 mb-6">
-              <Link to="/register">
-                <motion.button
-                  whileHover={{ scale: 1.05 }}
-                  whileTap={{ scale: 0.95 }}
-                  className="px-8 py-4 bg-white text-sky-600 rounded-full font-semibold text-lg shadow-xl hover:shadow-2xl transition-all duration-200 text-center"
-                >
-                  Comenzar prueba gratuita
-                </motion.button>
-              </Link>
-
-              <motion.button
-                whileHover={{ scale: 1.05 }}
-                whileTap={{ scale: 0.95 }}
-                className="px-8 py-4 bg-transparent text-white border-2 border-white/50 rounded-full font-semibold text-lg hover:bg-white/10 transition-all duration-200"
-              >
-                Ver demostración
-              </motion.button>
-            </div>
-
-            <p className="text-sky-100 text-sm">
-              No se requiere tarjeta de crédito. Cancela cuando quieras.
-            </p>
+            {/* Waitlist form */}
+            <WaitlistForm source="cta" variant="on-blue" className="max-w-lg" />
           </motion.div>
 
           {/* Right Content - Progress Card */}

@@ -157,7 +157,7 @@ export default function Navbar() {
               </motion.button>
             </Link>
 
-            {/* CTA Button */}
+            {/* Register CTA */}
             <Link to="/register">
               <motion.button
                 initial={{ opacity: 0, x: 20 }}
@@ -165,7 +165,7 @@ export default function Navbar() {
                 transition={{ delay: 0.5 }}
                 className="px-6 py-2.5 bg-sky-600 hover:bg-sky-700 text-white rounded-lg font-medium hover:shadow-lg hover:scale-105 transition-all duration-200"
               >
-                Empieza Gratis
+                Regístrate
               </motion.button>
             </Link>
           </div>
@@ -236,7 +236,7 @@ export default function Navbar() {
                 </Link>
                 <Link to="/register" onClick={() => setIsMobileMenuOpen(false)}>
                   <button className="w-full px-6 py-3 bg-sky-600 hover:bg-sky-700 text-white rounded-lg font-medium hover:shadow-lg transition-all duration-200">
-                    Empieza Gratis
+                    Regístrate
                   </button>
                 </Link>
               </div>

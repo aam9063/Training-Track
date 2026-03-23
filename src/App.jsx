@@ -40,6 +40,7 @@ const AdminLogin = lazy(() => import('./pages/admin/AdminLogin'));
 const AdminDashboard = lazy(() => import('./pages/admin/AdminDashboard'));
 const AdminUsers = lazy(() => import('./pages/admin/Users'));
 const AdminUserDetail = lazy(() => import('./pages/admin/UserDetail'));
+const AdminWaitlist = lazy(() => import('./pages/admin/Waitlist'));
 
 // Athlete pages
 const AthleteDashboard = lazy(() => import('./pages/athlete/Dashboard'));
@@ -117,6 +118,7 @@ function App() {
                   <Route index element={<AdminDashboard />} />
                   <Route path="users" element={<AdminUsers />} />
                   <Route path="users/:userId" element={<AdminUserDetail />} />
+                  <Route path="waitlist" element={<AdminWaitlist />} />
                 </Route>
 
                 {/* 404 */}

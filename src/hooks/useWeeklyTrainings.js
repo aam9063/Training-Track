@@ -1,56 +1,10 @@
-import { useState, useEffect, useCallback } from 'react';
+import { useState, useEffect, useCallback, useRef } from 'react';
 import { getWeekStartDate } from '../services/weeklyTrainingService';
+import { parseKmFromDescription } from '../lib/trainingUtils';
+import { showError } from '../lib/toast';
 
-/**
- * Parses km from free-text training descriptions.
- * Recognizes: "8km", "10x400m", "2km + 6x1000m", standalone "1500m", etc.
- */
-export function parseKmFromDescription(text) {
-  if (!text || !text.trim()) return 0;
-  const normalized = text.toLowerCase().replace(/,/g, '.');
-  let totalKm = 0;
-  const usedRanges = [];
-
-  // Repetitions: "10x400m", "8 x 1000"
-  const repRegex = /(\d+)\s*x\s*(\d+)\s*m?\b/g;
-  let match;
-  while ((match = repRegex.exec(normalized)) !== null) {
-    const reps = parseInt(match[1]);
-    const meters = parseInt(match[2]);
-    if (reps > 0 && reps <= 100 && meters > 0 && meters <= 50000) {
-      totalKm += (reps * meters) / 1000;
-      usedRanges.push([match.index, match.index + match[0].length]);
-    }
-  }
-
-  // Direct km: "8km", "8 km", "8k", "12.5km"
-  const kmRegex = /(\d+(?:\.\d+)?)\s*k(?:m)?\b/g;
-  while ((match = kmRegex.exec(normalized)) !== null) {
-    const overlaps = usedRanges.some(([s, e]) => match.index >= s && match.index < e);
-    if (!overlaps) {
-      const km = parseFloat(match[1]);
-      if (km > 0 && km <= 300) {
-        totalKm += km;
-        usedRanges.push([match.index, match.index + match[0].length]);
-      }
-    }
-  }
-
-  // Standalone meters: "1500m", "800m"
-  const mRegex = /(?<!\dx?\s*)(\d+)\s*m\b/g;
-  while ((match = mRegex.exec(normalized)) !== null) {
-    const overlaps = usedRanges.some(([s, e]) => match.index >= s && match.index < e);
-    if (!overlaps) {
-      const meters = parseInt(match[1]);
-      if (meters >= 200 && meters <= 50000) {
-        totalKm += meters / 1000;
-        usedRanges.push([match.index, match.index + match[0].length]);
-      }
-    }
-  }
-
-  return Math.round(totalKm * 10) / 10;
-}
+// Re-export so existing consumers don't break
+export { parseKmFromDescription } from '../lib/trainingUtils';
 
 /**
  * Hook for week navigation + training session loading.
@@ -130,27 +84,38 @@ export default function useWeeklyTrainings({ fetchFn, deps = [], transformFn }) 
     return trainingsByDay;
   }, []);
 
-  const transform = transformFn || defaultTransform;
+  // Use refs for callback deps that shouldn't trigger re-renders on identity change
+  const fetchFnRef = useRef(fetchFn);
+  const transformFnRef = useRef(transformFn);
+  const depsRef = useRef(deps);
+  useEffect(() => { fetchFnRef.current = fetchFn; }, [fetchFn]);
+  useEffect(() => { transformFnRef.current = transformFn; }, [transformFn]);
+  useEffect(() => { depsRef.current = deps; }, [deps]);
+
+  // Serialize deps to a stable string so we can use it as a real dependency
+  const depsKey = JSON.stringify(deps);
 
   const loadTrainings = useCallback(async () => {
-    if (deps.some(d => !d)) {
+    if (depsRef.current.some(d => !d)) {
       setTrainings({});
       setLoading(false);
       return;
     }
 
+    const transform = transformFnRef.current || defaultTransform;
+
     setLoading(true);
     try {
-      const { data, error } = await fetchFn(currentWeek);
+      const { data, error } = await fetchFnRef.current(currentWeek);
       if (error) throw error;
       setTrainings(transform(data));
-    } catch (error) {
-      console.error('Error loading trainings:', error);
+    } catch {
+      showError('Error al cargar entrenamientos');
       setTrainings({});
     } finally {
       setLoading(false);
     }
-  }, [currentWeek, ...deps]);
+  }, [currentWeek, depsKey, defaultTransform]);
 
   useEffect(() => {
     loadTrainings();

@@ -1,5 +1,5 @@
-import { useState, useEffect, useCallback } from 'react';
-import { showSuccess, showError } from '../../lib/toast';
+import { useState } from 'react';
+import { showError } from '../../lib/toast';
 import { useParams, useNavigate } from 'react-router-dom';
 import { motion, AnimatePresence } from 'framer-motion';
 import {
@@ -49,16 +49,7 @@ ChartJS.register(
   Legend,
   Filler
 );
-import { useAuth } from '../../contexts/AuthContext';
 import {
-  getAthleteDetails,
-  getAthleteMetrics,
-  getAthleteCompetitions,
-  createAthleteCompetition,
-  deleteAthleteCompetition,
-} from '../../services/athleteService';
-import {
-  getAthleteWeeklyTraining,
   DAYS_OF_WEEK,
 } from '../../services/weeklyTrainingService';
 import {
@@ -67,73 +58,78 @@ import {
   getActivityTypeLabel,
 } from '../../services/stravaService';
 import { getRPEEmoji, getRPELabel, RPE_OPTIONS } from '../../services/rpeService';
-import useMapbox from '../../hooks/useMapbox';
-import useWeeklyTrainings from '../../hooks/useWeeklyTrainings';
-import useCoachStravaData from '../../hooks/useCoachStravaData';
 import ConconiTestModal from '../../components/dashboard/ConconiTestModal';
 import VAMTestModal from '../../components/dashboard/VAMTestModal';
 import AthleteAIChat from '../../components/dashboard/AthleteAIChat';
+import { generateAIPlanWithCallbacks } from '../../services/aiPlanService';
+import AIPlanReviewModal from '../../components/dashboard/AIPlanReviewModal';
+
+// Extracted utilities and hook
+import {
+  computeBMI,
+  fmtPaceProfile,
+  fmtRecProfile,
+  fmtVamProfile,
+  modalityLabels,
+  goalLabels,
+  getTypeColor,
+  getTypeLabel,
+  getWeekNumber,
+  PACE_BG_COLORS,
+  PACE_PCT_LABELS,
+  getConconiSorted,
+  getConconiSeriesRecovery,
+  computeVamValues,
+  computeConconiVars,
+  computeVo2maxGauge,
+} from '../../lib/athleteUtils';
+import useAthleteProfileData from '../../hooks/useAthleteProfileData';
 
 const AthleteProfile = () => {
   const { athleteId } = useParams();
   const navigate = useNavigate();
-  const { profile } = useAuth();
 
-  // States
-  const [athlete, setAthlete] = useState(null);
-  const [loading, setLoading] = useState(true);
-  const coachTrainingTransform = useCallback((data) => {
-    const trainingsByDay = {};
-    if (data?.length > 0) {
-      data.forEach((session) => {
-        const sessionDate = new Date(session.scheduled_date);
-        const dayIndex = (sessionDate.getDay() + 6) % 7;
-        const exercises = session.exercises?.map((ex) => {
-          const exercise = ex.running_exercise || ex.gym_exercise;
-          return {
-            name: exercise?.name || 'Ejercicio',
-            sets: ex.planned_sets,
-            reps: ex.planned_reps,
-            distance: ex.planned_distance_meters,
-            paceCode: ex.pace_code,
-          };
-        }) || [];
-        trainingsByDay[dayIndex] = {
-          id: session.id,
-          title: session.title || 'Entrenamiento',
-          type: session.training_type,
-          description: session.description,
-          duration: session.estimated_duration_minutes,
-          exercises,
-          status: session.status,
-          rpe_score: session.rpe_score,
-        };
-      });
-    }
-    return trainingsByDay;
-  }, []);
+  // All data fetching and state from the custom hook
+  const {
+    profile,
+    athlete,
+    loading,
+    metrics,
+    events,
+    athleteName,
+    initials,
+    currentWeek,
+    trainings,
+    trainingsLoading,
+    loadTrainings,
+    goToPreviousWeek,
+    goToNextWeek,
+    weekDays,
+    stravaActivities,
+    stravaLoading,
+    stravaConnected,
+    visibleActivities,
+    stravaMetrics,
+    stravaBestEfforts,
+    activitiesRPE,
+    rpeDetailActivity,
+    setRpeDetailActivity,
+    selectedActivity,
+    setSelectedActivity,
+    loadActivityDetail,
+    showMoreActivities,
+    mapContainerRef,
+    athleteProfile,
+    profileLoading,
+    handleSaveEvent,
+    handleDeleteEvent,
+    refreshAthlete,
+  } = useAthleteProfileData(athleteId);
 
-  const {
-    currentWeek, trainings, loading: trainingsLoading,
-    loadTrainings, goToPreviousWeek, goToNextWeek, getWeekDays,
-  } = useWeeklyTrainings({
-    fetchFn: (weekStart) => getAthleteWeeklyTraining(profile?.id, athleteId, weekStart),
-    deps: [profile?.id, athleteId],
-    transformFn: coachTrainingTransform,
-  });
-  const {
-    stravaActivities, stravaLoading, stravaConnected, visibleActivities,
-    stravaMetrics, stravaBestEfforts, activitiesRPE,
-    rpeDetailActivity, setRpeDetailActivity,
-    selectedActivity, setSelectedActivity,
-    loadActivityDetail, showMoreActivities,
-  } = useCoachStravaData(athleteId);
-  const [metrics, setMetrics] = useState([]);
-  const [events, setEvents] = useState([]);
+  // UI-only state (modals, forms, etc.)
   const [showEventModal, setShowEventModal] = useState(false);
   const [newEvent, setNewEvent] = useState({ name: '', date: '', distance: '', location: '', notes: '' });
   const [savingEvent, setSavingEvent] = useState(false);
-  const { mapContainerRef } = useMapbox(selectedActivity?.polyline, selectedActivity?.loading);
   const [showConconiModal, setShowConconiModal] = useState(false);
   const [showVAMModal, setShowVAMModal] = useState(false);
   const [showTestMenu, setShowTestMenu] = useState(false);
@@ -142,141 +138,33 @@ const AthleteProfile = () => {
   const [selectedTraining, setSelectedTraining] = useState(null);
   const [showAIChat, setShowAIChat] = useState(false);
 
-  // Load athlete data
-  useEffect(() => {
-    const loadAthlete = async () => {
-      if (!athleteId) return;
+  // AI plan generation state (tightly coupled to modal UI)
+  const [generatingPlan, setGeneratingPlan] = useState(false);
+  const [aiPlanResult, setAiPlanResult] = useState(null);
+  const [showAIPlanModal, setShowAIPlanModal] = useState(false);
 
-      setLoading(true);
-      try {
-        const { data, error } = await getAthleteDetails(athleteId);
-        if (error) throw error;
-        setAthlete(data);
-      } catch (error) {
-        console.error('Error loading athlete:', error);
-      } finally {
-        setLoading(false);
-      }
-    };
+  // Handle AI plan generation — core logic in aiPlanService
+  const handleGenerateAIPlan = () => {
+    if (!athleteProfile || generatingPlan) return;
 
-    loadAthlete();
-  }, [athleteId]);
-
-
-  // Load competitions
-  const loadCompetitions = useCallback(async () => {
-    if (!athleteId) return;
-    try {
-      const { data, error } = await getAthleteCompetitions(athleteId);
-      if (error) throw error;
-      setEvents(data || []);
-    } catch (error) {
-      console.error('Error loading competitions:', error);
-    }
-  }, [athleteId]);
-
-  // Load metrics and competitions
-  useEffect(() => {
-    const loadAdditionalData = async () => {
-      if (!athleteId) return;
-
-      try {
-        const [metricsRes, competitionsRes] = await Promise.all([
-          getAthleteMetrics(athleteId),
-          getAthleteCompetitions(athleteId),
-        ]);
-
-        setMetrics(metricsRes.data || []);
-        setEvents(competitionsRes.data || []);
-      } catch (error) {
-        console.error('Error loading additional data:', error);
-      }
-    };
-
-    loadAdditionalData();
-  }, [athleteId]);
-
-  // Handle save competition
-  const handleSaveEvent = async () => {
-    if (!newEvent.name || !newEvent.date) return;
-
-    setSavingEvent(true);
-    try {
-      const competitionData = {
-        name: newEvent.name,
-        event_date: newEvent.date,
-        distance_km: newEvent.distance ? parseFloat(newEvent.distance) : null,
-        location: newEvent.location || null,
-        notes: newEvent.notes || null,
-      };
-
-      const { error } = await createAthleteCompetition(profile.id, athleteId, competitionData);
-      if (error) throw error;
-
-      // Reset form and close modal
-      setNewEvent({ name: '', date: '', distance: '', location: '', notes: '' });
-      setShowEventModal(false);
-
-      // Reload competitions
-      await loadCompetitions();
-      showSuccess('Competicion guardada correctamente');
-    } catch (error) {
-      console.error('Error saving competition:', error);
-      showError('Error al guardar la competicion');
-    } finally {
-      setSavingEvent(false);
-    }
+    generateAIPlanWithCallbacks(athleteId, {
+      onStart: () => setGeneratingPlan(true),
+      onSuccess: (plan) => {
+        setAiPlanResult(plan);
+        setShowAIPlanModal(true);
+      },
+      onError: (err) => showError(err.message || 'Error al generar el plan'),
+      onFinally: () => setGeneratingPlan(false),
+    });
   };
 
-  // Handle delete competition
-  const handleDeleteEvent = async (competitionId) => {
-    if (!confirm('¿Eliminar esta competición?')) return;
-
-    try {
-      const { error } = await deleteAthleteCompetition(competitionId);
-      if (error) throw error;
-
-      // Reload competitions
-      await loadCompetitions();
-      showSuccess('Competicion eliminada');
-    } catch (error) {
-      console.error('Error deleting competition:', error);
-      showError('Error al eliminar la competicion');
-    }
-  };
-
-  // Week navigation
-  const weekDays = getWeekDays(currentWeek);
-
-  const getTypeColor = (type) => {
-    const colors = {
-      running: 'bg-blue-500',
-      gym: 'bg-purple-500',
-      rest: 'bg-gray-400',
-      cross_training: 'bg-orange-500',
-      race: 'bg-red-500',
-    };
-    return colors[type] || 'bg-gray-400';
-  };
-
-  const getTypeLabel = (type) => {
-    const labels = {
-      running: 'Carrera',
-      gym: 'Gimnasio',
-      rest: 'Descanso',
-      cross_training: 'Cross',
-      race: 'Competición',
-    };
-    return labels[type] || type;
-  };
-
-  // Get week number
-  const getWeekNumber = (date) => {
-    const d = new Date(date);
-    d.setHours(0, 0, 0, 0);
-    d.setDate(d.getDate() + 4 - (d.getDay() || 7));
-    const yearStart = new Date(d.getFullYear(), 0, 1);
-    return Math.ceil((((d - yearStart) / 86400000) + 1) / 7);
+  // Wrapper for handleSaveEvent that passes UI callbacks
+  const onSaveEvent = () => {
+    handleSaveEvent(newEvent, {
+      setSavingEvent,
+      resetForm: () => setNewEvent({ name: '', date: '', distance: '', location: '', notes: '' }),
+      closeModal: () => setShowEventModal(false),
+    });
   };
 
   if (loading) {
@@ -302,50 +190,11 @@ const AthleteProfile = () => {
   }
 
   // Conconi computed vars
-  const paceOrder = ['RM', 'R10', 'R9', 'R8', 'R7', 'R6', 'R5', 'R4', 'R3', 'R2', 'R1', 'RR'];
-  const conconiSorted = paceOrder.map(code => athlete?.athlete_paces?.find(p => p.pace_code === code)).filter(Boolean);
-  const bgColors = {
-    RM: 'bg-red-600', R10: 'bg-red-500', R9: 'bg-red-400', R8: 'bg-orange-500',
-    R7: 'bg-orange-400', R6: 'bg-yellow-500', R5: 'bg-yellow-400', R4: 'bg-lime-400',
-    R3: 'bg-lime-500', R2: 'bg-green-400', R1: 'bg-green-500', RR: 'bg-emerald-600',
-  };
-  const pctLabels = {
-    RM: '100%', R10: '92%', R9: '90%', R8: '88%', R7: '86%', R6: '84%',
-    R5: '82%', R4: '78%', R3: '72%', R2: '62%', R1: '50%', RR: '42%',
-  };
-  const conconiSeriesRecovery = (() => {
-    const recovery = {};
-    if (athlete?.latest_conconi?.conconi_test_series) {
-      const series = [...athlete.latest_conconi.conconi_test_series].sort((a, b) => a.series_number - b.series_number);
-      const totalSeries = series.length;
-      const totalPaces = conconiSorted.length;
-      conconiSorted.forEach((pace, i) => {
-        if (pace.pace_code === 'RR') return;
-        const seriesIdx = Math.round((i / (totalPaces - 1)) * (totalSeries - 1));
-        const s = series[Math.min(seriesIdx, totalSeries - 1)];
-        if (s?.recovery_time_seconds) recovery[pace.pace_code] = s.recovery_time_seconds;
-      });
-    }
-    return recovery;
-  })();
-  const conconiMaxHr = athlete?.latest_conconi?.max_hr_reached;
-  const conconiR10 = athlete?.athlete_paces?.find(p => p.pace_code === 'R10');
-  const conconiFirstRecov = Object.values(conconiSeriesRecovery)[0] ?? null;
-  const fmtPaceProfile = (secs) => { const m = Math.floor(secs / 60); const s = Math.round(secs % 60); return `${m}'${String(s).padStart(2, '0')}"`; };
-  const fmtRecProfile = (secs) => { if (!secs) return ''; const m = Math.floor(secs / 60); const s = secs % 60; return s > 0 ? `${m}'${String(s).padStart(2, '0')}"` : `${m}'`; };
+  const { conconiSorted, conconiSeriesRecovery, conconiMaxHr, conconiR10, conconiFirstRecov } = computeConconiVars(athlete?.athlete_paces, athlete?.latest_conconi);
 
   // VAM computed vars
   const vamData = athlete?.latest_vam;
-  const vamKmhVal = vamData ? parseFloat(vamData.vam_kmh) : null;
-  const vamVo2maxVal = vamKmhVal ? (vamKmhVal * 3.5).toFixed(1) : null;
-  const vamMlssKmhVal = vamKmhVal ? (vamKmhVal * 0.88).toFixed(1) : null;
-  const vamMlssPaceVal = vamKmhVal ? Math.round(3600 / (vamKmhVal * 0.88)) : null;
-  const vamVt2KmhVal = vamKmhVal ? (vamKmhVal * 0.875).toFixed(1) : null;
-  const vamVt2PaceVal = vamKmhVal ? Math.round(3600 / (vamKmhVal * 0.875)) : null;
-  const fmtVamProfile = (secs) => { if (!secs) return '–'; const m = Math.floor(secs / 60); const s = Math.round(secs % 60); return `${m}'${String(s).padStart(2, '0')}"`; };
-
-  const athleteName = `${athlete.user?.first_name || ''} ${athlete.user?.last_name || ''}`.trim() || 'Atleta';
-  const initials = `${athlete.user?.first_name?.[0] || ''}${athlete.user?.last_name?.[0] || ''}`.toUpperCase() || 'AT';
+  const { vamKmhVal, vamVo2maxVal, vamMlssKmhVal, vamMlssPaceVal, vamVt2KmhVal, vamVt2PaceVal } = computeVamValues(vamData);
 
   return (
     <div className="p-4 sm:p-6 lg:p-8 min-h-screen bg-gray-50 dark:bg-gray-900">
@@ -575,7 +424,7 @@ const AthleteProfile = () => {
                       <tr>
                         <th className="text-left py-1.5 px-3 text-slate-400 font-medium whitespace-nowrap sticky left-0 bg-white dark:bg-gray-800 z-10 w-20">Zona</th>
                         {conconiSorted.map(pace => (
-                          <th key={pace.pace_code} className={`px-1.5 py-1.5 text-center text-white font-bold whitespace-nowrap ${bgColors[pace.pace_code] || 'bg-gray-500'}`}>
+                          <th key={pace.pace_code} className={`px-1.5 py-1.5 text-center text-white font-bold whitespace-nowrap ${PACE_BG_COLORS[pace.pace_code] || 'bg-gray-500'}`}>
                             {pace.pace_code}
                           </th>
                         ))}
@@ -585,7 +434,7 @@ const AthleteProfile = () => {
                       <tr className="bg-gray-50 dark:bg-gray-700/30">
                         <td className="py-1 px-3 text-slate-400 text-[10px] sticky left-0 bg-gray-50 dark:bg-gray-700/30 z-10">% FC</td>
                         {conconiSorted.map(pace => (
-                          <td key={pace.pace_code} className="px-1 py-1 text-center text-slate-500 dark:text-slate-400 whitespace-nowrap">{pctLabels[pace.pace_code] || ''}</td>
+                          <td key={pace.pace_code} className="px-1 py-1 text-center text-slate-500 dark:text-slate-400 whitespace-nowrap">{PACE_PCT_LABELS[pace.pace_code] || ''}</td>
                         ))}
                       </tr>
                       <tr className="border-t border-gray-100 dark:border-gray-700">
@@ -1383,6 +1232,300 @@ const AthleteProfile = () => {
           </div>
         </motion.div>
 
+        {/* Perfil Deportivo */}
+        <motion.div
+          initial={{ opacity: 0, y: 20 }}
+          animate={{ opacity: 1, y: 0 }}
+          transition={{ delay: 0.5 }}
+          className="col-span-12 bg-white dark:bg-gray-800 rounded-2xl shadow-sm border border-gray-200 dark:border-gray-700 overflow-hidden"
+        >
+          <div className="px-4 py-3 border-b border-gray-200 dark:border-gray-700 flex items-center justify-between">
+            <h2 className="text-sm font-bold text-slate-900 dark:text-white flex items-center gap-2">
+              <FiUser className="w-4 h-4 text-indigo-500" />
+              Perfil Deportivo
+            </h2>
+            {/* Generar Plan con IA button */}
+            <button
+              onClick={handleGenerateAIPlan}
+              disabled={!athleteProfile || generatingPlan}
+              title={!athleteProfile ? 'El atleta debe completar su perfil deportivo' : 'Generar plan de entrenamiento con IA'}
+              className={`flex items-center gap-2 px-3 py-1.5 rounded-xl text-sm font-medium transition-all ${
+                athleteProfile && !generatingPlan
+                  ? 'bg-gradient-to-r from-violet-600 to-indigo-600 hover:from-violet-500 hover:to-indigo-500 text-white shadow-sm hover:shadow-md'
+                  : 'bg-gray-100 dark:bg-gray-700 text-gray-400 dark:text-gray-500 cursor-not-allowed'
+              }`}
+            >
+              {generatingPlan ? (
+                <>
+                  <FiLoader className="w-4 h-4 animate-spin" />
+                  <span>Generando plan con IA...</span>
+                </>
+              ) : (
+                <>
+                  <svg className="w-4 h-4" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round">
+                    <polygon points="12 2 15.09 8.26 22 9.27 17 14.14 18.18 21.02 12 17.77 5.82 21.02 7 14.14 2 9.27 8.91 8.26 12 2" />
+                  </svg>
+                  <span>Generar Plan con IA</span>
+                </>
+              )}
+            </button>
+          </div>
+
+          <div className="p-4">
+            {profileLoading ? (
+              <div className="flex items-center justify-center py-8">
+                <FiLoader className="w-6 h-6 animate-spin text-indigo-500" />
+              </div>
+            ) : !athleteProfile ? (
+              <div className="text-center py-8">
+                <FiUser className="w-10 h-10 text-gray-200 dark:text-gray-600 mx-auto mb-3" />
+                <p className="text-sm text-gray-500 dark:text-gray-400 font-medium">
+                  Este atleta aún no ha completado su perfil deportivo
+                </p>
+                <p className="text-xs text-gray-400 dark:text-gray-500 mt-1">
+                  El atleta debe completar el cuestionario inicial para poder generar planes con IA
+                </p>
+              </div>
+            ) : (
+              <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
+                {/* Enfoque Deportivo */}
+                <div className="rounded-2xl border border-amber-100 dark:border-amber-900/30 bg-gradient-to-br from-amber-50/50 to-orange-50/30 dark:from-amber-900/10 dark:to-orange-900/5 p-5">
+                  <h3 className="text-xs font-bold uppercase tracking-wide text-amber-600 dark:text-amber-400 mb-4 flex items-center gap-2">
+                    <FiTarget className="w-3.5 h-3.5" />
+                    Enfoque deportivo
+                  </h3>
+                  <div className="space-y-3">
+                    {athleteProfile.modalidad && (
+                      <div className="flex items-center justify-between text-sm">
+                        <span className="text-gray-500 dark:text-gray-400">Modalidad</span>
+                        <span className="font-semibold text-gray-900 dark:text-white bg-amber-100 dark:bg-amber-900/30 px-2.5 py-0.5 rounded-full text-xs">
+                          {modalityLabels[athleteProfile.modalidad] ?? athleteProfile.modalidad}
+                        </span>
+                      </div>
+                    )}
+                    {athleteProfile.objetivo && (
+                      <div className="flex items-center justify-between text-sm">
+                        <span className="text-gray-500 dark:text-gray-400">Objetivo</span>
+                        <span className="font-medium text-gray-900 dark:text-white">{goalLabels[athleteProfile.objetivo] ?? athleteProfile.objetivo}</span>
+                      </div>
+                    )}
+                    {athleteProfile.marca_actual && (
+                      <div className="flex items-center justify-between text-sm">
+                        <span className="text-gray-500 dark:text-gray-400">Marca actual</span>
+                        <span className="font-medium text-gray-900 dark:text-white">{athleteProfile.marca_actual}</span>
+                      </div>
+                    )}
+                    {athleteProfile.competicion_objetivo && (
+                      <div className="flex items-center justify-between text-sm">
+                        <span className="text-gray-500 dark:text-gray-400">Competición obj.</span>
+                        <span className="font-medium text-gray-900 dark:text-white">{athleteProfile.competicion_objetivo}</span>
+                      </div>
+                    )}
+                    {athleteProfile.competicion_fecha && (
+                      <div className="flex items-center justify-between text-sm">
+                        <span className="text-gray-500 dark:text-gray-400 flex items-center gap-1"><FiCalendar className="w-3 h-3" /> Fecha obj.</span>
+                        <span className="font-medium text-gray-900 dark:text-white">
+                          {new Date(athleteProfile.competicion_fecha + 'T12:00:00').toLocaleDateString('es-ES', { day: 'numeric', month: 'short', year: 'numeric' })}
+                        </span>
+                      </div>
+                    )}
+                    {athleteProfile.lesiones && (
+                      <div className="pt-2 border-t border-amber-200/50 dark:border-amber-800/30">
+                        <p className="text-xs text-gray-500 dark:text-gray-400 mb-1.5 flex items-center gap-1">
+                          <FiFileText className="w-3 h-3" /> Lesiones / Notas
+                        </p>
+                        <p className="text-sm font-medium text-gray-900 dark:text-white bg-white/60 dark:bg-gray-700/40 rounded-lg px-3 py-2">
+                          {athleteProfile.lesiones}
+                        </p>
+                      </div>
+                    )}
+                  </div>
+                </div>
+
+                {/* Condicion Fisica */}
+                <div className="rounded-2xl border border-emerald-100 dark:border-emerald-900/30 bg-gradient-to-br from-emerald-50/50 to-teal-50/30 dark:from-emerald-900/10 dark:to-teal-900/5 p-5">
+                  <h3 className="text-xs font-bold uppercase tracking-wide text-emerald-600 dark:text-emerald-400 mb-4 flex items-center gap-2">
+                    <FiActivity className="w-3.5 h-3.5" />
+                    Condicion fisica
+                  </h3>
+                  <div className="grid grid-cols-2 gap-3">
+                    {athleteProfile.peso_kg && (
+                      <div className="bg-white/60 dark:bg-gray-700/30 rounded-xl p-3 text-center">
+                        <p className="text-xs text-gray-500 dark:text-gray-400 mb-1">Peso</p>
+                        <p className="text-lg font-bold text-gray-900 dark:text-white">{athleteProfile.peso_kg}<span className="text-xs font-normal text-gray-400 ml-0.5">kg</span></p>
+                      </div>
+                    )}
+                    {athleteProfile.altura_cm && (
+                      <div className="bg-white/60 dark:bg-gray-700/30 rounded-xl p-3 text-center">
+                        <p className="text-xs text-gray-500 dark:text-gray-400 mb-1">Altura</p>
+                        <p className="text-lg font-bold text-gray-900 dark:text-white">{athleteProfile.altura_cm}<span className="text-xs font-normal text-gray-400 ml-0.5">cm</span></p>
+                      </div>
+                    )}
+                    {computeBMI(athleteProfile.peso_kg, athleteProfile.altura_cm) && (
+                      <div className="bg-white/60 dark:bg-gray-700/30 rounded-xl p-3 text-center">
+                        <p className="text-xs text-gray-500 dark:text-gray-400 mb-1">IMC</p>
+                        <p className="text-lg font-bold text-gray-900 dark:text-white">{computeBMI(athleteProfile.peso_kg, athleteProfile.altura_cm)}</p>
+                      </div>
+                    )}
+                    {athleteProfile.km_semanales != null && (
+                      <div className="bg-white/60 dark:bg-gray-700/30 rounded-xl p-3 text-center">
+                        <p className="text-xs text-gray-500 dark:text-gray-400 mb-1">Km/semana</p>
+                        <p className="text-lg font-bold text-gray-900 dark:text-white">{athleteProfile.km_semanales}<span className="text-xs font-normal text-gray-400 ml-0.5">km</span></p>
+                      </div>
+                    )}
+                    {athleteProfile.ritmo_comodo && (
+                      <div className="bg-white/60 dark:bg-gray-700/30 rounded-xl p-3 text-center">
+                        <p className="text-xs text-gray-500 dark:text-gray-400 mb-1">Ritmo comodo</p>
+                        <p className="text-lg font-bold text-gray-900 dark:text-white">{athleteProfile.ritmo_comodo}</p>
+                      </div>
+                    )}
+                    {athleteProfile.fc_max && (
+                      <div className="bg-white/60 dark:bg-gray-700/30 rounded-xl p-3 text-center">
+                        <p className="text-xs text-gray-500 dark:text-gray-400 mb-1 flex items-center justify-center gap-1"><FiHeart className="w-3 h-3 text-red-400" />FC max</p>
+                        <p className="text-lg font-bold text-gray-900 dark:text-white">{athleteProfile.fc_max}<span className="text-xs font-normal text-gray-400 ml-0.5">bpm</span></p>
+                      </div>
+                    )}
+                  </div>
+                  {/* Access badges */}
+                  <div className="flex gap-2 mt-3">
+                    <span className={`inline-flex items-center gap-1 px-2.5 py-1 rounded-full text-xs font-medium ${
+                      athleteProfile.acceso_gimnasio
+                        ? 'bg-emerald-100 dark:bg-emerald-900/30 text-emerald-700 dark:text-emerald-300'
+                        : 'bg-gray-100 dark:bg-gray-700 text-gray-400 dark:text-gray-500'
+                    }`}>
+                      <span className={`w-1.5 h-1.5 rounded-full ${athleteProfile.acceso_gimnasio ? 'bg-emerald-500' : 'bg-gray-300 dark:bg-gray-600'}`} />
+                      Gimnasio
+                    </span>
+                    <span className={`inline-flex items-center gap-1 px-2.5 py-1 rounded-full text-xs font-medium ${
+                      athleteProfile.acceso_pista
+                        ? 'bg-emerald-100 dark:bg-emerald-900/30 text-emerald-700 dark:text-emerald-300'
+                        : 'bg-gray-100 dark:bg-gray-700 text-gray-400 dark:text-gray-500'
+                    }`}>
+                      <span className={`w-1.5 h-1.5 rounded-full ${athleteProfile.acceso_pista ? 'bg-emerald-500' : 'bg-gray-300 dark:bg-gray-600'}`} />
+                      Pista
+                    </span>
+                  </div>
+                </div>
+
+                {/* Disponibilidad */}
+                <div className="rounded-2xl border border-sky-100 dark:border-sky-900/30 bg-gradient-to-br from-sky-50/50 to-blue-50/30 dark:from-sky-900/10 dark:to-blue-900/5 p-5">
+                  <h3 className="text-xs font-bold uppercase tracking-wide text-sky-600 dark:text-sky-400 mb-4 flex items-center gap-2">
+                    <FiCalendar className="w-3.5 h-3.5" />
+                    Disponibilidad
+                  </h3>
+                  {(() => {
+                    const dias = athleteProfile.dias_disponibles;
+                    const horas = athleteProfile.horas_por_dia;
+                    const dayKeys = ['L', 'M', 'X', 'J', 'V', 'S', 'D'];
+                    const hasData = dias && typeof dias === 'object';
+                    return hasData ? (
+                      <div className="flex items-start justify-between gap-2">
+                        {dayKeys.map((d) => {
+                          const active = dias[d];
+                          const hours = horas?.[d];
+                          return (
+                            <div key={d} className="flex flex-col items-center gap-1.5">
+                              <div className={`w-10 h-10 rounded-full flex items-center justify-center text-sm font-bold transition-colors ${
+                                active
+                                  ? 'bg-sky-500 text-white shadow-md shadow-sky-200 dark:shadow-sky-900/30'
+                                  : 'bg-gray-100 dark:bg-gray-700 text-gray-300 dark:text-gray-600'
+                              }`}>
+                                {d}
+                              </div>
+                              {active && hours != null && (
+                                <span className="text-xs font-semibold text-sky-600 dark:text-sky-300">{hours}h</span>
+                              )}
+                              {!active && (
+                                <span className="text-xs text-gray-300 dark:text-gray-600">-</span>
+                              )}
+                            </div>
+                          );
+                        })}
+                      </div>
+                    ) : (
+                      <p className="text-sm text-gray-400 dark:text-gray-500">Sin datos</p>
+                    );
+                  })()}
+                </div>
+
+                {/* VO2max Gauge */}
+                <div className="rounded-2xl border border-violet-100 dark:border-violet-900/30 bg-gradient-to-br from-violet-50/50 to-purple-50/30 dark:from-violet-900/10 dark:to-purple-900/5 p-5">
+                  <h3 className="text-xs font-bold uppercase tracking-wide text-violet-600 dark:text-violet-400 mb-4 flex items-center gap-2">
+                    <FiZap className="w-3.5 h-3.5" />
+                    VO2max
+                  </h3>
+                  {athleteProfile.vo2max ? (() => {
+                    const { vo2, rating, cx, cy, r, dotX, dotY, segmentColors, segmentCount } = computeVo2maxGauge(athleteProfile.vo2max, athleteProfile.sexo);
+                    return (
+                      <div className="flex flex-col items-center">
+                        <svg viewBox="0 0 240 140" className="w-full max-w-[240px]">
+                          {/* Colored arc segments */}
+                          {segmentColors.map((color, i) => {
+                            const startAngle = Math.PI - (i * Math.PI / segmentCount);
+                            const endAngle = Math.PI - ((i + 1) * Math.PI / segmentCount);
+                            const x1 = cx + r * Math.cos(startAngle);
+                            const y1 = cy - r * Math.sin(startAngle);
+                            const x2 = cx + r * Math.cos(endAngle);
+                            const y2 = cy - r * Math.sin(endAngle);
+                            return (
+                              <path
+                                key={i}
+                                d={`M ${x1} ${y1} A ${r} ${r} 0 0 1 ${x2} ${y2}`}
+                                fill="none"
+                                stroke={color}
+                                strokeWidth="14"
+                                strokeLinecap="round"
+                                opacity="0.85"
+                              />
+                            );
+                          })}
+                          {/* Background track (subtle) */}
+                          <path
+                            d={`M ${cx - r} ${cy} A ${r} ${r} 0 0 1 ${cx + r} ${cy}`}
+                            fill="none"
+                            stroke="currentColor"
+                            className="text-gray-200 dark:text-gray-700"
+                            strokeWidth="4"
+                          />
+                          {/* Indicator dot */}
+                          <circle cx={dotX} cy={dotY} r="8" fill="white" stroke="#6D28D9" strokeWidth="3" />
+                          <circle cx={dotX} cy={dotY} r="3.5" fill="#6D28D9" />
+                          {/* Center value */}
+                          <text x={cx} y={cy - 10} textAnchor="middle" className="fill-gray-900 dark:fill-white" fontSize="28" fontWeight="700">{vo2}</text>
+                          <text x={cx} y={cy + 10} textAnchor="middle" className="fill-gray-400 dark:fill-gray-500" fontSize="10">ml/kg/min</text>
+                        </svg>
+                        {/* Rating badge below */}
+                        <span className={`mt-1 inline-block px-3 py-1 rounded-full text-xs font-bold ${
+                          rating === 'Pobre' ? 'bg-red-100 dark:bg-red-900/30 text-red-600 dark:text-red-400' :
+                          rating === 'Regular' ? 'bg-orange-100 dark:bg-orange-900/30 text-orange-600 dark:text-orange-400' :
+                          rating === 'Bueno' ? 'bg-yellow-100 dark:bg-yellow-900/30 text-yellow-600 dark:text-yellow-400' :
+                          (rating === 'Muy bueno' || rating === 'Muy buena') ? 'bg-green-100 dark:bg-green-900/30 text-green-600 dark:text-green-400' :
+                          'bg-violet-100 dark:bg-violet-900/30 text-violet-600 dark:text-violet-400'
+                        }`}>
+                          {rating}
+                        </span>
+                        {/* Scale labels */}
+                        <div className="flex justify-between w-full max-w-[240px] mt-2 px-1">
+                          <span className="text-[9px] text-gray-400 dark:text-gray-500">Pobre</span>
+                          <span className="text-[9px] text-gray-400 dark:text-gray-500">Regular</span>
+                          <span className="text-[9px] text-gray-400 dark:text-gray-500">Bueno</span>
+                          <span className="text-[9px] text-gray-400 dark:text-gray-500">Muy bueno</span>
+                          <span className="text-[9px] text-gray-400 dark:text-gray-500">Excelente</span>
+                        </div>
+                      </div>
+                    );
+                  })() : (
+                    <div className="flex flex-col items-center justify-center py-6">
+                      <FiZap className="w-8 h-8 text-gray-200 dark:text-gray-600 mb-2" />
+                      <p className="text-sm text-gray-400 dark:text-gray-500">Sin datos de VO2max</p>
+                    </div>
+                  )}
+                </div>
+              </div>
+            )}
+          </div>
+        </motion.div>
+
       </div>
 
       {/* Activity Detail Modal */}
@@ -1514,8 +1657,7 @@ const AthleteProfile = () => {
                         </h3>
                         <div
                           ref={mapContainerRef}
-                          className="h-64 rounded-lg overflow-hidden"
-                          style={{ minHeight: '256px' }}
+                          className="h-64 rounded-lg overflow-hidden min-h-[256px]"
                         />
                       </div>
                     )}
@@ -1799,7 +1941,7 @@ const AthleteProfile = () => {
                   Cancelar
                 </button>
                 <button
-                  onClick={handleSaveEvent}
+                  onClick={onSaveEvent}
                   disabled={!newEvent.name || !newEvent.date || savingEvent}
                   className="flex-1 px-4 py-2.5 bg-gradient-to-r from-red-500 to-pink-500 text-white rounded-lg hover:from-red-600 hover:to-pink-600 transition-colors font-medium disabled:opacity-50 disabled:cursor-not-allowed flex items-center justify-center"
                 >
@@ -1921,10 +2063,7 @@ const AthleteProfile = () => {
         onClose={() => setShowConconiModal(false)}
         athlete={athlete}
         coachId={profile?.coach_id || profile?.id}
-        onSuccess={async () => {
-          const { data } = await getAthleteDetails(athleteId);
-          if (data) setAthlete(data);
-        }}
+        onSuccess={refreshAthlete}
       />
 
       {/* VAM Test Modal */}
@@ -2080,6 +2219,21 @@ const AthleteProfile = () => {
           </motion.div>
         )}
       </AnimatePresence>
+
+      {/* AI Plan Review Modal */}
+      <AIPlanReviewModal
+        isOpen={showAIPlanModal}
+        onClose={() => {
+          setShowAIPlanModal(false);
+          setAiPlanResult(null);
+        }}
+        planData={aiPlanResult}
+        athleteId={athleteId}
+        athleteName={athleteName}
+        onAssigned={() => {
+          loadTrainings();
+        }}
+      />
     </div>
   );
 };

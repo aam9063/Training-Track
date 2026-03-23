@@ -3,6 +3,8 @@
  * Generates CSV and JSON downloads directly in the browser.
  */
 
+import { toLocalDateStr } from './dateUtils';
+
 function downloadFile(content, filename, mimeType) {
   const blob = new Blob([content], { type: mimeType });
   const url = URL.createObjectURL(blob);
@@ -54,7 +56,7 @@ export function exportActivitiesCSV(activities, athleteName = 'atleta') {
   ];
 
   const rows = activities.map((a) => [
-    a.start_date_local ? a.start_date_local.split('T')[0] : '',
+    a.start_date_local ? toLocalDateStr(new Date(a.start_date_local)) : '',
     a.sport_type || a.type || '',
     (a.name || '').replace(/,/g, ' '),
     a.distance ? (a.distance / 1000).toFixed(2) : '',
@@ -71,7 +73,7 @@ export function exportActivitiesCSV(activities, athleteName = 'atleta') {
     .map((row) => row.map((v) => `"${v}"`).join(','))
     .join('\n');
 
-  const date = new Date().toISOString().split('T')[0];
+  const date = toLocalDateStr(new Date());
   downloadFile('\uFEFF' + csv, `trainingtrack-actividades-${athleteName}-${date}.csv`, 'text/csv;charset=utf-8');
 }
 
@@ -95,6 +97,6 @@ export function exportLoadCSV(weeklyLoads, athleteName = 'atleta') {
     .map((row) => row.map((v) => `"${v}"`).join(','))
     .join('\n');
 
-  const date = new Date().toISOString().split('T')[0];
+  const date = toLocalDateStr(new Date());
   downloadFile('\uFEFF' + csv, `trainingtrack-carga-${athleteName}-${date}.csv`, 'text/csv;charset=utf-8');
 }

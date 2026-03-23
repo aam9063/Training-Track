@@ -35,7 +35,6 @@ export const getAdminStats = async () => {
     const data = await callAdminApi('get_stats');
     return { data, error: null };
   } catch (error) {
-    console.error('Error fetching admin stats:', error);
     return { data: null, error };
   }
 };
@@ -57,7 +56,6 @@ export const getAllUsers = async ({ search = '', roleFilter = 'all', statusFilte
 
     return { data: users, error: null };
   } catch (error) {
-    console.error('Error fetching all users:', error);
     return { data: [], error };
   }
 };
@@ -68,7 +66,6 @@ export const toggleUserActive = async (userId, isActive) => {
     const data = await callAdminApi('toggle_user_active', { userId, isActive });
     return { data, error: null };
   } catch (error) {
-    console.error('Error toggling user active:', error);
     return { data: null, error };
   }
 };
@@ -83,7 +80,26 @@ export const updateCoachSubscription = async (coachId, { subscription_plan, max_
     });
     return { data, error: null };
   } catch (error) {
-    console.error('Error updating coach subscription:', error);
+    return { data: null, error };
+  }
+};
+
+// Get waitlist entries
+export const getWaitlist = async () => {
+  try {
+    const data = await callAdminApi('get_waitlist');
+    return { data, error: null };
+  } catch (error) {
+    return { data: [], error };
+  }
+};
+
+// Delete waitlist entry
+export const deleteWaitlistEntry = async (entryId) => {
+  try {
+    const data = await callAdminApi('delete_waitlist_entry', { entryId });
+    return { data, error: null };
+  } catch (error) {
     return { data: null, error };
   }
 };
@@ -94,7 +110,6 @@ export const getUserDetail = async (userId) => {
     const data = await callAdminApi('get_user_detail', { userId });
     return { data, error: null };
   } catch (error) {
-    console.error('Error fetching user detail:', error);
     return { data: null, error };
   }
 };

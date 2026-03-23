@@ -28,8 +28,13 @@ dist-ssr
 *.sln
 *.sw?
 *.claude/*
+.atl/*
 
 .mcp.json
 .claude/*
 .agents/*
 supabase/*
+openspec/*
+
+AGENTS.md
+.gga

@@ -1,7 +1,6 @@
-import { useState, useEffect, useCallback } from 'react';
+import { useState } from 'react';
 import { Link } from 'react-router-dom';
 import { useAuth } from '../../contexts/AuthContext';
-import { motion } from 'framer-motion';
 import {
   FiActivity,
   FiTrendingUp,
@@ -16,16 +15,13 @@ import {
   FiMessageSquare,
   FiZap,
 } from 'react-icons/fi';
-import { supabase } from '../../lib/supabase';
 import { toLocalDateStr } from '../../lib/dateUtils';
-import { getWeekStartDate } from '../../services/weeklyTrainingService';
-import { parseKmFromDescription } from '../../hooks/useWeeklyTrainings';
-import { getAthleteCompetitions } from '../../services/athleteService';
-import { getCachedActivities } from '../../services/stravaCacheService';
 import WellnessForm from '../../components/athlete/WellnessForm';
 import ReadinessScore from '../../components/athlete/ReadinessScore';
 import WeeklyDiaryForm from '../../components/athlete/WeeklyDiaryForm';
-import { getCurrentWeekDiary } from '../../services/weeklyDiaryService';
+import useAthleteProfile from '../../hooks/useAthleteProfile';
+import OnboardingWizard from '../../components/athlete/OnboardingWizard';
+import useAthleteDashboardData from '../../hooks/useAthleteDashboardData';
 
 // ---------------------------------------------------------------------------
 // Sub-componentes
@@ -63,168 +59,19 @@ const StatCard = ({ icon: Icon, label, value, sub, accent, iconBg, iconColor }) 
 const AthleteDashboard = () => {
   const { user, profile } = useAuth();
   const [wellnessRefreshKey, setWellnessRefreshKey] = useState(0);
-  const [loading, setLoading] = useState(true);
-  const [hasDiaryThisWeek, setHasDiaryThisWeek] = useState(true); // optimistic: hide banner until loaded
   const isSunday = new Date().getDay() === 0;
-  const [weekStats, setWeekStats] = useState({
-    totalKm: 0,
-    totalTime: '0h 0m',
-    sessions: 0,
-  });
-  const [streak, setStreak] = useState(0);
-  const [upcomingSessions, setUpcomingSessions] = useState([]);
-  const [upcomingCompetitions, setUpcomingCompetitions] = useState([]);
+
+  const {
+    loading,
+    weekStats,
+    streak,
+    upcomingSessions,
+    upcomingCompetitions,
+    hasDiaryThisWeek,
+    setHasDiaryThisWeek,
+  } = useAthleteDashboardData(profile?.id);
 
   const displayName = profile?.first_name || user?.user_metadata?.first_name || 'Atleta';
-
-  const loadDashboardData = useCallback(async () => {
-    if (!profile?.id) {
-      setLoading(false);
-      return;
-    }
-    // Check if diary filled this week (for Sunday banner)
-    getCurrentWeekDiary(profile.id).then(({ data }) => setHasDiaryThisWeek(!!data));
-
-    setLoading(true);
-    try {
-      const weekStart = getWeekStartDate();
-      const weekEnd = new Date(weekStart);
-      weekEnd.setDate(weekEnd.getDate() + 6);
-
-      const { data: weekSessions, error: weekError } = await supabase
-        .from('training_sessions')
-        .select('*')
-        .eq('athlete_id', profile.id)
-        .gte('scheduled_date', toLocalDateStr(weekStart))
-        .lte('scheduled_date', toLocalDateStr(weekEnd))
-        .order('scheduled_date', { ascending: true });
-
-      if (weekError) throw weekError;
-
-      const { data: upcomingData, error: upcomingError } = await supabase
-        .from('training_sessions')
-        .select('*')
-        .eq('athlete_id', profile.id)
-        .gte('scheduled_date', toLocalDateStr(weekStart))
-        .neq('training_type', 'rest')
-        .order('scheduled_date', { ascending: true })
-        .limit(10);
-
-      if (upcomingError) throw upcomingError;
-
-      let weekSessionsWithExercises = weekSessions || [];
-      if (weekSessions?.length > 0) {
-        const sessionIds = weekSessions.map(s => s.id);
-        const { data: exercises } = await supabase
-          .from('training_session_exercises')
-          .select('*')
-          .in('session_id', sessionIds);
-
-        weekSessionsWithExercises = weekSessions.map(session => ({
-          ...session,
-          exercises: exercises?.filter(e => e.session_id === session.id) || [],
-        }));
-      }
-
-      const stravaActivities = await getCachedActivities(profile.id, {
-        after: weekStart,
-        before: new Date(weekEnd.getTime() + 24 * 60 * 60 * 1000),
-      });
-
-      let stravaDistanceMeters = 0;
-      let stravaMovingTimeSeconds = 0;
-      stravaActivities.forEach((a) => {
-        stravaDistanceMeters += a.distance || 0;
-        stravaMovingTimeSeconds += a.moving_time || 0;
-      });
-
-      let plannedDistanceMeters = 0;
-      let plannedDurationMinutes = 0;
-      weekSessionsWithExercises.forEach((session) => {
-        if (session.training_type !== 'rest') {
-          if (session.estimated_duration_minutes) {
-            plannedDurationMinutes += session.estimated_duration_minutes;
-          }
-          let sessionDistance = 0;
-          session.exercises?.forEach((ex) => {
-            if (ex.planned_distance_meters) {
-              const sets = ex.planned_sets || 1;
-              const reps = ex.planned_reps || 1;
-              sessionDistance += ex.planned_distance_meters * sets * reps;
-            }
-          });
-          if (sessionDistance === 0 && session.description) {
-            const parsedKm = parseKmFromDescription(session.description);
-            if (parsedKm > 0) sessionDistance = parsedKm * 1000;
-          }
-          plannedDistanceMeters += sessionDistance;
-        }
-      });
-
-      const hasStrava = stravaActivities.length > 0;
-      const totalDistanceMeters = hasStrava ? stravaDistanceMeters : plannedDistanceMeters;
-      const totalDurationMinutes = hasStrava
-        ? Math.round(stravaMovingTimeSeconds / 60)
-        : plannedDurationMinutes;
-
-      const totalKm = (totalDistanceMeters / 1000).toFixed(1);
-      const hours = Math.floor(totalDurationMinutes / 60);
-      const minutes = totalDurationMinutes % 60;
-      const totalTime = `${hours}h ${minutes}m`;
-
-      setWeekStats({
-        totalKm: parseFloat(totalKm),
-        totalTime,
-        sessions: weekSessionsWithExercises.filter(s => s.training_type !== 'rest').length,
-      });
-
-      const upcoming = (upcomingData || []).map(session => ({
-        id: session.id,
-        title: session.title || 'Entrenamiento',
-        date: session.scheduled_date,
-        time: session.scheduled_time || '',
-        type: session.training_type,
-        status: session.status,
-      }));
-      setUpcomingSessions(upcoming.slice(0, 4));
-
-      const { data: competitions } = await getAthleteCompetitions(profile.id);
-      setUpcomingCompetitions((competitions || []).slice(0, 1));
-
-      // Streak: count consecutive days with completed sessions going back from today
-      const streakStart = new Date();
-      streakStart.setDate(streakStart.getDate() - 60);
-      const { data: recentSessions } = await supabase
-        .from('training_sessions')
-        .select('scheduled_date, status')
-        .eq('athlete_id', profile.id)
-        .eq('status', 'completed')
-        .neq('training_type', 'rest')
-        .gte('scheduled_date', toLocalDateStr(streakStart))
-        .order('scheduled_date', { ascending: false });
-
-      if (recentSessions?.length > 0) {
-        const completedDates = new Set(recentSessions.map(s => s.scheduled_date));
-        let count = 0;
-        const cursor = new Date();
-        // If today has no completed session yet, start counting from yesterday
-        if (!completedDates.has(toLocalDateStr(cursor))) cursor.setDate(cursor.getDate() - 1);
-        while (completedDates.has(toLocalDateStr(cursor))) {
-          count++;
-          cursor.setDate(cursor.getDate() - 1);
-        }
-        setStreak(count);
-      }
-    } catch (error) {
-      console.error('Error loading dashboard data:', error);
-    } finally {
-      setLoading(false);
-    }
-  }, [profile?.id]);
-
-  useEffect(() => {
-    loadDashboardData();
-  }, [loadDashboardData]);
 
   if (loading) {
     return (
@@ -251,7 +98,7 @@ const AthleteDashboard = () => {
         {/* GREETING */}
         <div>
           <h1 className="text-2xl lg:text-3xl font-bold text-slate-900 dark:text-white tracking-tight">
-            ¡Hola, {displayName}! 👋
+            ¡Hola, {displayName}! <span role="img" aria-label="saludo">👋</span>
           </h1>
           <p className="text-sm text-slate-500 dark:text-slate-400 mt-1">
             Aquí está tu resumen de entrenamiento
@@ -279,7 +126,7 @@ const AthleteDashboard = () => {
             icon={FiTrendingUp}
             label="Racha"
             value={streak > 0 ? `${streak}d` : '—'}
-            sub={streak >= 3 ? '🔥 ¡Sigue así!' : streak > 0 ? 'días seguidos' : 'Sin racha aún'}
+            sub={streak >= 3 ? '¡Sigue así!' : streak > 0 ? 'días seguidos' : 'Sin racha aún'}
             iconBg="bg-orange-50 dark:bg-orange-900/30"
             iconColor="text-orange-500 dark:text-orange-400"
           />
@@ -296,7 +143,7 @@ const AthleteDashboard = () => {
         {/* SUNDAY BANNER — only on Sunday if diary not yet filled */}
         {isSunday && !hasDiaryThisWeek && (
           <div className="flex items-start gap-3 bg-amber-50 dark:bg-amber-900/20 border border-amber-200 dark:border-amber-700 rounded-xl px-4 py-3">
-            <span className="text-lg">📅</span>
+            <span className="text-lg" role="img" aria-label="calendario">📅</span>
             <div>
               <p className="text-sm font-semibold text-amber-800 dark:text-amber-300">Es domingo — rellena tu diario semanal</p>
               <p className="text-xs text-amber-700 dark:text-amber-400 mt-0.5">Tu entrenador lo tendrá en cuenta en el informe del lunes.</p>
@@ -319,7 +166,7 @@ const AthleteDashboard = () => {
         {/* IA CARD */}
         <Link to="/athlete/my-reports" className="relative bg-slate-900 rounded-2xl p-4 overflow-hidden flex gap-3 hover:bg-slate-800 transition-colors">
           <div className="absolute inset-0 pointer-events-none">
-            <div className="absolute -top-8 -right-8 w-40 h-40 rounded-full opacity-20" style={{ background: 'radial-gradient(circle, #16a34a, transparent)' }} />
+            <div className="absolute -top-8 -right-8 w-40 h-40 rounded-full opacity-20 bg-[radial-gradient(circle,_#16a34a,_transparent)]" />
           </div>
           <div className="w-9 h-9 rounded-xl bg-green-600 flex items-center justify-center flex-shrink-0 z-10">
             <FiZap className="w-4 h-4 text-white" />
@@ -396,7 +243,7 @@ const AthleteDashboard = () => {
               const daysUntil = Math.ceil((eventDate - new Date().setHours(0,0,0,0)) / 86400000);
               const progressPct = Math.min(100, Math.max(5, (90 - daysUntil) / 90 * 100));
               return (
-                <div className="relative rounded-2xl overflow-hidden flex-1" style={{ background: 'linear-gradient(135deg, #1A6BFF 0%, #0f4fcf 100%)' }}>
+                <div className="relative rounded-2xl overflow-hidden flex-1 bg-[linear-gradient(135deg,_#1A6BFF_0%,_#0f4fcf_100%)]">
                   {/* Decorative circles */}
                   <div className="absolute -top-10 -right-10 w-40 h-40 rounded-full opacity-10 bg-white" />
                   <div className="absolute -bottom-8 -left-8 w-32 h-32 rounded-full opacity-10 bg-white" />
@@ -404,7 +251,7 @@ const AthleteDashboard = () => {
                   <div className="relative p-5">
                     {/* Header label */}
                     <div className="flex items-center justify-between mb-4">
-                      <span className="text-[10px] font-bold uppercase tracking-widest text-white/70">🏆 Próxima Competición</span>
+                      <span className="text-[10px] font-bold uppercase tracking-widest text-white/70"><span role="img" aria-label="trofeo">🏆</span> Próxima Competición</span>
                       {competition.priority && (
                         <span className="text-[10px] font-bold px-2 py-0.5 rounded-full bg-white/20 text-white">
                           Prioridad {competition.priority}
@@ -460,7 +307,7 @@ const AthleteDashboard = () => {
                 </div>
               );
             })() : (
-              <div className="relative rounded-2xl overflow-hidden flex flex-col items-center justify-center py-10 text-center" style={{ background: 'linear-gradient(135deg, #1A6BFF 0%, #0f4fcf 100%)' }}>
+              <div className="relative rounded-2xl overflow-hidden flex flex-col items-center justify-center py-10 text-center bg-[linear-gradient(135deg,_#1A6BFF_0%,_#0f4fcf_100%)]">
                 <div className="absolute -top-10 -right-10 w-40 h-40 rounded-full opacity-10 bg-white" />
                 <FiFlag className="w-10 h-10 text-white/40 mb-2" />
                 <p className="text-sm text-white/70 font-medium">No hay competiciones programadas</p>
@@ -512,4 +359,30 @@ const AthleteDashboard = () => {
   );
 };
 
-export default AthleteDashboard;
+// ---------------------------------------------------------------------------
+// Wrapper with onboarding gate
+// ---------------------------------------------------------------------------
+
+const AthleteDashboardWithGate = () => {
+  const { user } = useAuth();
+  const { profile: athleteProfile, loading: profileLoading, refresh: refreshProfile } = useAthleteProfile(user?.id);
+
+  // Show loading spinner while checking for athlete profile
+  if (profileLoading) {
+    return (
+      <div className="flex items-center justify-center min-h-screen bg-gray-950">
+        <FiLoader className="w-8 h-8 animate-spin text-sky-500" />
+      </div>
+    );
+  }
+
+  // No profile yet — show onboarding wizard
+  if (!athleteProfile) {
+    return <OnboardingWizard onComplete={refreshProfile} />;
+  }
+
+  // Profile exists — show normal dashboard
+  return <AthleteDashboard />;
+};
+
+export default AthleteDashboardWithGate;

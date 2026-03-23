@@ -14,6 +14,7 @@ import {
   FiSun,
   FiMoon,
   FiShield,
+  FiMail,
 } from 'react-icons/fi';
 
 const AdminSidebar = ({ onCollapse }) => {
@@ -41,11 +42,12 @@ const AdminSidebar = ({ onCollapse }) => {
   const menuItems = [
     { path: '/admin', icon: FiHome, label: 'Panel Admin' },
     { path: '/admin/users', icon: FiUsers, label: 'Usuarios' },
+    { path: '/admin/waitlist', icon: FiMail, label: 'Lista de Espera' },
   ];
 
   const handleSignOut = async () => {
     setShowUserMenu(false);
-    signOut().catch(err => console.error('Error en signOut:', err));
+    signOut().catch(() => {});
     localStorage.clear();
     window.location.href = '/login';
   };
@@ -90,8 +92,8 @@ const AdminSidebar = ({ onCollapse }) => {
           fixed left-0 top-0
           z-40
           ${mobileOpen ? 'translate-x-0' : '-translate-x-full lg:translate-x-0'}
+          overflow-x-clip
         `}
-        style={{ overflowX: 'clip' }}
       >
         {/* Logo & Toggle */}
         <div className={`h-16 flex items-center border-b border-gray-200 dark:border-gray-700 ${collapsed ? 'justify-center px-2' : 'justify-between px-4'}`}>
@@ -245,7 +247,7 @@ const AdminSidebar = ({ onCollapse }) => {
               className="w-full flex items-center space-x-2 px-4 py-2 text-sm text-red-600 dark:text-red-400 hover:bg-red-50 dark:hover:bg-red-900/20 transition-colors"
             >
               <FiLogOut className="w-4 h-4" />
-              <span>Cerrar Sesion</span>
+              <span>Cerrar Sesión</span>
             </button>
           </div>
         </>

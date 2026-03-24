@@ -287,7 +287,7 @@ const AIPlanReviewModal = ({ isOpen, onClose, planData, athleteId, athleteName, 
             animate={{ opacity: 1, scale: 1, y: 0 }}
             exit={{ opacity: 0, scale: 0.95, y: 20 }}
             transition={{ type: 'spring', stiffness: 300, damping: 30 }}
-            className="bg-white dark:bg-gray-800 rounded-2xl shadow-2xl w-full max-w-5xl max-h-[95vh] overflow-hidden flex flex-col"
+            className="bg-white dark:bg-gray-800 rounded-2xl shadow-2xl w-[95vw] max-w-7xl max-h-[90vh] overflow-hidden flex flex-col"
           >
             {/* ─── Header ──────────────────────────────────────── */}
             <div className="px-4 sm:px-6 py-4 border-b border-gray-200 dark:border-gray-700 flex-shrink-0">
@@ -343,14 +343,21 @@ const AIPlanReviewModal = ({ isOpen, onClose, planData, athleteId, athleteName, 
             {/* ─── Body: Week grid ─────────────────────────────── */}
             <div className="flex-1 overflow-y-auto px-4 sm:px-6 py-4">
               {/* Week summary bar */}
-              <div className="flex items-center gap-4 mb-4 text-sm text-gray-600 dark:text-gray-400">
-                <span>{weekStats[activeWeek]?.trainingDays} días de entreno</span>
-                <span>{weekStats[activeWeek]?.totalKm} km total</span>
-                <span>{weekStats[activeWeek]?.totalMin} min total</span>
+              <div className="flex items-center flex-wrap gap-2 mb-4">
+                <span className="inline-flex items-center px-3 py-1 rounded-full border border-gray-200 dark:border-gray-600 bg-white dark:bg-gray-700 text-sm text-gray-700 dark:text-gray-300">
+                  {weekStats[activeWeek]?.trainingDays} días de entreno
+                </span>
+                <span className="inline-flex items-center px-3 py-1 rounded-full border border-gray-200 dark:border-gray-600 bg-white dark:bg-gray-700 text-sm text-gray-700 dark:text-gray-300">
+                  {weekStats[activeWeek]?.totalKm} km total
+                </span>
+                <span className="inline-flex items-center px-3 py-1 rounded-full border border-gray-200 dark:border-gray-600 bg-white dark:bg-gray-700 text-sm text-gray-700 dark:text-gray-300">
+                  {weekStats[activeWeek]?.totalMin} min total
+                </span>
               </div>
 
-              {/* Day cards grid */}
-              <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-7 gap-3">
+              {/* Day cards grid — horizontally scrollable so 7 cols don't get squished */}
+              <div className="overflow-x-auto pb-2">
+              <div className="grid grid-cols-7 gap-3 min-w-[900px]">
                 {weeks[activeWeek]?.sessions.map((session, sIdx) => {
                   const dayInfo = DAY_MAP[session.day_of_week] || { label: session.day_of_week, short: session.day_of_week?.slice(0, 3) };
                   const typeConf = TYPE_CONFIG[session.training_type] || TYPE_CONFIG.carrera;
@@ -525,6 +532,7 @@ const AIPlanReviewModal = ({ isOpen, onClose, planData, athleteId, athleteName, 
                   );
                 })}
               </div>
+              </div>{/* end overflow-x-auto */}
             </div>
 
             {/* ─── Footer ──────────────────────────────────────── */}

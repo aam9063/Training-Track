@@ -3,6 +3,56 @@
  * for computing athlete metrics, formatting paces, etc.
  */
 
+const DISTANCE_NORMALIZE_MAP = {
+  '400 m': '400m',
+  '1/2 mile': '1/2 milla',
+  '1/2 milla': '1/2 milla',
+  '1 mile': '1 milla',
+  '1 milla': '1 milla',
+  '1k': '1km',
+  '1 k': '1km',
+  '1 km': '1km',
+  '2 mile': '2 millas',
+  '2 millas': '2 millas',
+  '5k': '5km',
+  '5 k': '5km',
+  '5 km': '5km',
+  '10k': '10km',
+  '10 k': '10km',
+  '10 km': '10km',
+  '15k': '15km',
+  '15 k': '15km',
+  '15 km': '15km',
+  '20k': '20km',
+  '20 k': '20km',
+  '20 km': '20km',
+  'half marathon': 'Media maratón',
+  'half-marathon': 'Media maratón',
+  'media maraton': 'Media maratón',
+  'marathon': 'Maratón',
+  'maraton': 'Maratón',
+};
+
+export const normalizeDistanceName = (name) => {
+  if (!name) return name;
+  const lower = name.trim().toLowerCase();
+  return DISTANCE_NORMALIZE_MAP[lower] || name.trim();
+};
+
+export const deduplicatePersonalBests = (pbs) => {
+  if (!pbs || pbs.length === 0) return [];
+  const bestByDistance = {};
+  for (const pb of pbs) {
+    const rawName = pb.distance || pb.distance_name || (pb.distance_meters ? `${pb.distance_meters}m` : 'unknown');
+    const key = normalizeDistanceName(rawName);
+    const existing = bestByDistance[key];
+    if (!existing || (pb.time_seconds && pb.time_seconds < existing.time_seconds)) {
+      bestByDistance[key] = { ...pb, _normalizedName: key };
+    }
+  }
+  return Object.values(bestByDistance).sort((a, b) => (a.time_seconds || 0) - (b.time_seconds || 0));
+};
+
 /**
  * Compute age from a birth date string.
  * @param {string|null} birthDate - ISO date string or null

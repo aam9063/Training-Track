@@ -82,6 +82,7 @@ import {
   computeVamValues,
   computeConconiVars,
   computeVo2maxGauge,
+  deduplicatePersonalBests,
 } from '../../lib/athleteUtils';
 import useAthleteProfileData from '../../hooks/useAthleteProfileData';
 
@@ -1205,17 +1206,24 @@ const AthleteProfile = () => {
               </div>
             ) : athlete.personal_bests?.length > 0 ? (
               <div className="space-y-1.5">
-                {athlete.personal_bests.slice(0, 5).map((pb) => (
+                {deduplicatePersonalBests(athlete.personal_bests).slice(0, 5).map((pb) => (
                   <div
-                    key={pb.id}
+                    key={pb._normalizedName}
                     className="flex items-center justify-between px-3 py-2 rounded-lg hover:bg-gray-50 dark:hover:bg-gray-700/40 transition-colors"
                   >
                     <span className="text-sm text-slate-600 dark:text-slate-400">
-                      {pb.distance_name || `${pb.distance_meters}m`}
+                      {pb._normalizedName}
                     </span>
-                    <span className="font-mono font-bold text-slate-900 dark:text-white text-sm">
-                      {pb.time_formatted || formatDuration(pb.time_seconds)}
-                    </span>
+                    <div className="text-right">
+                      <span className="font-mono font-bold text-slate-900 dark:text-white text-sm">
+                        {pb.time_formatted || formatDuration(pb.time_seconds)}
+                      </span>
+                      {pb.date && (
+                        <p className="text-xs text-slate-400 dark:text-slate-500">
+                          {new Date(pb.date).toLocaleDateString('es-ES', { day: '2-digit', month: 'short' })}
+                        </p>
+                      )}
+                    </div>
                   </div>
                 ))}
               </div>

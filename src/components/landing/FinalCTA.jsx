@@ -1,9 +1,10 @@
-import { motion, useInView } from 'framer-motion';
+import { motion, AnimatePresence, useInView } from 'framer-motion';
 import { useRef } from 'react';
-import { HiRefresh, HiTrendingUp } from 'react-icons/hi';
+import { Link } from 'react-router-dom';
+import { HiRefresh, HiTrendingUp, HiArrowRight } from 'react-icons/hi';
 import WaitlistForm from './WaitlistForm';
 
-export default function FinalCTA() {
+export default function FinalCTA({ audience = 'coach' }) {
   const ref = useRef(null);
   const isInView = useInView(ref, { once: true, margin: '-100px' });
 
@@ -16,6 +17,21 @@ export default function FinalCTA() {
     { day: 'S', height: 90 },
     { day: 'D', height: 30 },
   ];
+
+  const content = {
+    coach: {
+      headline: 'Transforma tu coaching con inteligencia artificial',
+      subtitle: 'Planifica, analiza y comunícate con todos tus atletas desde una sola plataforma. Empieza gratis hoy.',
+      cta: 'Empieza gratis como entrenador',
+    },
+    athlete: {
+      headline: 'Empieza a entrenar con tu coach virtual',
+      subtitle: 'Hermes IA genera tu plan personalizado, responde tus dudas y te acompaña en cada entrenamiento. Sin entrenador, sin excusas.',
+      cta: 'Empieza gratis como atleta',
+    },
+  };
+
+  const current = content[audience] ?? content.coach;
 
   return (
     <section
@@ -36,17 +52,33 @@ export default function FinalCTA() {
             animate={isInView ? { opacity: 1, x: 0 } : { opacity: 0, x: -50 }}
             transition={{ duration: 0.6 }}
           >
-            <h2 className="text-4xl sm:text-5xl font-bold text-white mb-6 leading-tight">
-              Sé de los primeros en usar Training Track
-            </h2>
+            <AnimatePresence mode="wait">
+              <motion.div
+                key={audience}
+                initial={{ opacity: 0, y: 20 }}
+                animate={{ opacity: 1, y: 0 }}
+                exit={{ opacity: 0, y: -20 }}
+                transition={{ duration: 0.4 }}
+              >
+                <h2 className="text-4xl sm:text-5xl font-bold text-white mb-6 leading-tight">
+                  {current.headline}
+                </h2>
 
-            <p className="text-xl text-sky-100 mb-8 leading-relaxed">
-              Estamos preparando algo grande para entrenadores de running.
-              Apúntate a la lista de espera y te avisaremos en cuanto lancemos.
-            </p>
+                <p className="text-xl text-sky-100 mb-8 leading-relaxed">
+                  {current.subtitle}
+                </p>
 
-            {/* Waitlist form */}
-            <WaitlistForm source="cta" variant="on-blue" className="max-w-lg" />
+                <Link
+                  to="/register"
+                  className="inline-flex items-center gap-3 px-8 py-4 bg-white text-sky-700 rounded-xl font-bold text-lg hover:bg-sky-50 hover:shadow-xl transition-all duration-200 hover:scale-105 active:scale-95"
+                >
+                  {current.cta}
+                  <HiArrowRight className="w-5 h-5" />
+                </Link>
+
+                <WaitlistForm source="cta" variant="on-blue" className="mt-6" />
+              </motion.div>
+            </AnimatePresence>
           </motion.div>
 
           {/* Right Content - Progress Card */}

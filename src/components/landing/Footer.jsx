@@ -1,8 +1,9 @@
 import { motion } from 'framer-motion';
-import { HiMail, HiLocationMarker } from 'react-icons/hi';
-import { FaFacebook, FaInstagram, FaLinkedin, FaYoutube, FaTiktok } from 'react-icons/fa';
-import { FaXTwitter } from "react-icons/fa6";
+import { Link } from 'react-router-dom';
+import { HiMail, HiLocationMarker, HiArrowRight } from 'react-icons/hi';
 import WaitlistForm from './WaitlistForm';
+import { FaFacebook, FaInstagram, FaLinkedin, FaYoutube, FaTiktok } from 'react-icons/fa';
+import { FaXTwitter } from 'react-icons/fa6';
 
 export default function Footer() {
   const currentYear = new Date().getFullYear();
@@ -60,8 +61,8 @@ export default function Footer() {
               </div>
 
               <p className="text-gray-500 dark:text-gray-400 mb-6 leading-relaxed">
-                La plataforma líder en gestión de entrenamientos de atletismo.
-                Llevando tu rendimiento al siguiente nivel.
+                La plataforma de entrenamiento de atletismo con IA para entrenadores
+                y atletas independientes. Llevando tu rendimiento al siguiente nivel.
               </p>
 
               {/* Contact Info */}
@@ -89,12 +90,21 @@ export default function Footer() {
             <ul className="space-y-3">
               {footerLinks.product.map((link, index) => (
                 <li key={index}>
-                  <a
-                    href={link.href}
-                    className="text-gray-500 dark:text-gray-400 hover:text-gray-900 dark:hover:text-white transition-colors duration-200"
-                  >
-                    {link.name}
-                  </a>
+                  {link.href.startsWith('#') ? (
+                    <a
+                      href={link.href}
+                      className="text-gray-500 dark:text-gray-400 hover:text-gray-900 dark:hover:text-white transition-colors duration-200"
+                    >
+                      {link.name}
+                    </a>
+                  ) : (
+                    <Link
+                      to={link.href}
+                      className="text-gray-500 dark:text-gray-400 hover:text-gray-900 dark:hover:text-white transition-colors duration-200"
+                    >
+                      {link.name}
+                    </Link>
+                  )}
                 </li>
               ))}
             </ul>
@@ -111,12 +121,21 @@ export default function Footer() {
             <ul className="space-y-3">
               {footerLinks.company.map((link, index) => (
                 <li key={index}>
-                  <a
-                    href={link.href}
-                    className="text-gray-500 dark:text-gray-400 hover:text-gray-900 dark:hover:text-white transition-colors duration-200"
-                  >
-                    {link.name}
-                  </a>
+                  {link.href.startsWith('#') ? (
+                    <a
+                      href={link.href}
+                      className="text-gray-500 dark:text-gray-400 hover:text-gray-900 dark:hover:text-white transition-colors duration-200"
+                    >
+                      {link.name}
+                    </a>
+                  ) : (
+                    <Link
+                      to={link.href}
+                      className="text-gray-500 dark:text-gray-400 hover:text-gray-900 dark:hover:text-white transition-colors duration-200"
+                    >
+                      {link.name}
+                    </Link>
+                  )}
                 </li>
               ))}
             </ul>
@@ -133,20 +152,29 @@ export default function Footer() {
             <ul className="space-y-3">
               {footerLinks.legal.map((link, index) => (
                 <li key={index}>
-                  <a
-                    href={link.href}
-                    onClick={link.onClick ? (e) => { e.preventDefault(); link.onClick(); } : undefined}
-                    className="text-gray-500 dark:text-gray-400 hover:text-gray-900 dark:hover:text-white transition-colors duration-200 cursor-pointer"
-                  >
-                    {link.name}
-                  </a>
+                  {link.href.startsWith('#') || link.onClick ? (
+                    <a
+                      href={link.href}
+                      onClick={link.onClick ? (e) => { e.preventDefault(); link.onClick(); } : undefined}
+                      className="text-gray-500 dark:text-gray-400 hover:text-gray-900 dark:hover:text-white transition-colors duration-200 cursor-pointer"
+                    >
+                      {link.name}
+                    </a>
+                  ) : (
+                    <Link
+                      to={link.href}
+                      className="text-gray-500 dark:text-gray-400 hover:text-gray-900 dark:hover:text-white transition-colors duration-200"
+                    >
+                      {link.name}
+                    </Link>
+                  )}
                 </li>
               ))}
             </ul>
           </motion.div>
         </div>
 
-        {/* Newsletter Section */}
+        {/* Register CTA Section */}
         <motion.div
           initial={{ opacity: 0, y: 20 }}
           whileInView={{ opacity: 1, y: 0 }}
@@ -157,7 +185,7 @@ export default function Footer() {
           <div className="max-w-md mx-auto text-center">
             <h3 className="text-gray-900 dark:text-white font-semibold mb-2">Únete a la lista de espera</h3>
             <p className="text-gray-500 dark:text-gray-400 text-sm mb-4">
-              Te avisaremos en cuanto lancemos. Sin spam, lo prometemos.
+              Para entrenadores y atletas independientes. Te avisaremos cuando esté lista.
             </p>
             <WaitlistForm source="footer" variant="light" />
           </div>

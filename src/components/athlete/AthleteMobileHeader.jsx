@@ -7,7 +7,7 @@ import { useTheme } from '../../contexts/ThemeContext';
 import NotificationPanel from '../common/NotificationPanel';
 
 const AthleteMobileHeader = () => {
-  const { user, profile, signOut } = useAuth();
+  const { user, profile, signOut, isIndependent } = useAuth();
   const { theme, toggleTheme } = useTheme();
   const navigate = useNavigate();
   const [showUserMenu, setShowUserMenu] = useState(false);
@@ -33,7 +33,7 @@ const AthleteMobileHeader = () => {
       <button onClick={() => navigate('/athlete/dashboard')} className="flex items-center gap-2">
         <img src="/img/logo.png" alt="TrainingTrack" className="h-8 w-auto" />
         <span className="text-xl font-bold tracking-tight text-slate-900 dark:text-white">
-          Training<span style={{ color: '#16a34a' }}>Track</span>
+          Training<span className="text-green-600">Track</span>
         </span>
       </button>
 
@@ -78,12 +78,14 @@ const AthleteMobileHeader = () => {
                   >
                     <FiUser className="w-4 h-4" /> Mi Perfil
                   </button>
-                  <button
-                    onClick={() => { navigate('/athlete/messages'); setShowUserMenu(false); }}
-                    className="w-full flex items-center gap-2.5 px-4 py-2.5 text-sm text-slate-700 dark:text-slate-300 hover:bg-slate-50 dark:hover:bg-gray-700 transition-colors"
-                  >
-                    <FiMessageSquare className="w-4 h-4" /> Mis Mensajes
-                  </button>
+                  {!isIndependent && (
+                    <button
+                      onClick={() => { navigate('/athlete/messages'); setShowUserMenu(false); }}
+                      className="w-full flex items-center gap-2.5 px-4 py-2.5 text-sm text-slate-700 dark:text-slate-300 hover:bg-slate-50 dark:hover:bg-gray-700 transition-colors"
+                    >
+                      <FiMessageSquare className="w-4 h-4" /> Mis Mensajes
+                    </button>
+                  )}
 
                   {/* Dark mode toggle */}
                   <div className="border-t border-gray-200 dark:border-gray-700 my-1" />

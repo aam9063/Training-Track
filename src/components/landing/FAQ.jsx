@@ -1,5 +1,6 @@
 import { motion, useInView, AnimatePresence } from 'framer-motion';
 import { useRef, useState } from 'react';
+import { Link } from 'react-router-dom';
 import { HiChevronDown } from 'react-icons/hi';
 
 export default function FAQ() {
@@ -7,10 +8,27 @@ export default function FAQ() {
   const isInView = useInView(ref, { once: true, margin: '-100px' });
   const [openIndex, setOpenIndex] = useState(null);
 
+  // NOTE: Keep this FAQ list in sync with the FAQPage JSON-LD in index.html
   const faqs = [
     {
       question: '¿Qué distancias de atletismo cubre Training Track?',
       answer: 'Training Track está diseñado específicamente para medio fondo y fondo, cubriendo desde 400m hasta maratón completo. Incluye: 400m, 800m, 1500m, 3000m, 5000m, 10000m, 5K, 10K, 21K (media maratón) y Maratón (42K).',
+    },
+    {
+      question: '¿Puedo usar TrainingTrack sin entrenador?',
+      answer: 'Sí, completamente. Si entrenas de forma independiente puedes usar TrainingTrack con Hermes IA como tu entrenador virtual. Hermes genera un plan personalizado basado en tu perfil, objetivo y disponibilidad, y puedes consultarle dudas sobre tu entrenamiento en cualquier momento.',
+    },
+    {
+      question: '¿Qué incluye el plan gratuito para atletas independientes?',
+      answer: 'El plan gratuito incluye 1 generación de plan de entrenamiento con IA, métricas básicas de rendimiento y seguimiento de competiciones. Es perfecto para probar la plataforma sin ningún coste. Para regeneraciones semanales del plan, chat ilimitado con Hermes IA y conexión con Strava, puedes pasarte al plan Premium por solo 5 €/mes.',
+    },
+    {
+      question: '¿Cómo genera la IA mi plan de entrenamiento?',
+      answer: 'Hermes IA analiza tu perfil completo: distancia objetivo, nivel actual, días disponibles por semana, historial de kilómetros y próximas competiciones. Con esa información genera un plan periodizado con sesiones diarias adaptadas a ti. Si conectas Strava, el plan también tiene en cuenta tu carga reciente para evitar el sobreentrenamiento.',
+    },
+    {
+      question: '¿Necesito un reloj deportivo o GPS?',
+      answer: 'No es obligatorio. Puedes usar TrainingTrack desde el móvil sin ningún dispositivo adicional. Sin embargo, si conectas Strava tus actividades se sincronizan automáticamente y las métricas de carga (ACWR, TSB) se calculan con datos reales, lo que mejora mucho la precisión de tu seguimiento.',
     },
     {
       question: '¿Cómo funciona la prueba gratuita?',
@@ -22,11 +40,11 @@ export default function FAQ() {
     },
     {
       question: '¿Qué métodos de pago aceptan?',
-      answer: 'Aceptamos todas las tarjetas de crédito principales (Visa, Mastercard, American Express), Stripe y transferencias bancarias para planes Enterprise. Todos los pagos son procesados de forma segura.',
+      answer: 'Aceptamos todas las tarjetas de crédito principales (Visa, Mastercard, American Express) y Stripe. Todos los pagos son procesados de forma segura.',
     },
     {
-      question: '¿Los atletas también necesitan una suscripción?',
-      answer: 'No, los atletas no pagan nada. Solo el entrenador necesita una suscripción. Los atletas reciben acceso gratuito a la app para ver sus entrenamientos, progreso y comunicarse con su entrenador.',
+      question: '¿Los atletas con entrenador también necesitan suscripción?',
+      answer: 'No. Los atletas que trabajan con un entrenador en TrainingTrack no pagan nada. Solo el entrenador necesita suscripción. Los atletas acceden gratis a la app para ver sus entrenamientos, progreso y comunicarse con su entrenador. Los atletas independientes (sin entrenador) pueden usar el plan gratuito o el Premium por 5 €/mes.',
     },
     {
       question: '¿Puedo exportar mis datos?',
@@ -159,19 +177,18 @@ export default function FAQ() {
             Nuestro equipo está aquí para ayudarte. Contáctanos y te responderemos lo antes posible.
           </p>
           <div className="flex flex-col sm:flex-row items-center justify-center gap-4">
-            <button
-              type="button"
-              onClick={() => window.open('mailto:info@trainingtrack.es', '_self')}
-              className="px-8 py-3 bg-sky-600 hover:bg-sky-700 text-white rounded-xl font-semibold hover:shadow-lg transition-all duration-200 cursor-pointer"
+            <a
+              href="mailto:info@trainingtrack.es"
+              className="px-8 py-3 bg-sky-600 hover:bg-sky-700 text-white rounded-xl font-semibold hover:shadow-lg transition-all duration-200"
             >
               Contactar Soporte
-            </button>
-            <a
-              href="/casos-de-uso"
+            </a>
+            <Link
+              to="/casos-de-uso"
               className="px-8 py-3 bg-gray-100 dark:bg-gray-700 text-gray-900 dark:text-white rounded-xl font-semibold hover:bg-gray-200 dark:hover:bg-gray-600 transition-all duration-200 hover:scale-105 active:scale-95 transform"
             >
               Ver Casos de Uso
-            </a>
+            </Link>
           </div>
         </motion.div>
       </div>

@@ -1,15 +1,43 @@
 # TrainingTrack
 
-> TrainingTrack es una plataforma web y PWA para entrenadores de running y sus atletas. Permite planificar, asignar y hacer seguimiento de entrenamientos semanales, analizar métricas de rendimiento (ACWR, TSB, zonas de FC, ritmos), integrar actividades de Strava, y generar informes semanales automáticos con IA que incluyen percepción de esfuerzo (RPE), carga interna y predicciones de competición.
+> TrainingTrack es una plataforma web y PWA para entrenadores de running y atletas independientes. Permite planificar, asignar y hacer seguimiento de entrenamientos semanales, analizar métricas de rendimiento (ACWR, TSB, zonas de FC, ritmos), integrar actividades de Strava, y generar informes semanales automáticos con IA. Incluye un entrenador virtual con IA (Hermes IA) que genera planes de entrenamiento personalizados y responde preguntas de entrenamiento en tiempo real.
 
-TrainingTrack está dirigida a entrenadores de atletismo y running que gestionan múltiples atletas, y a atletas que quieren ver sus datos de entrenamiento de forma clara e inteligente. La plataforma conecta a entrenadores y atletas en tiempo real, con chat integrado, notificaciones push y sincronización automática con Strava.
+TrainingTrack está dirigida a dos perfiles: entrenadores de atletismo y running que gestionan múltiples atletas, y atletas independientes que quieren entrenar con inteligencia artificial sin necesitar un entrenador humano. La plataforma conecta entrenadores y atletas en tiempo real, con chat integrado, notificaciones push y sincronización automática con Strava.
 
 **Web:** https://trainingtrack.es
-**Tecnología:** React 19, Supabase (PostgreSQL + Auth + Edge Functions), Vite, Tailwind CSS, PWA
+**Contacto:** info@trainingtrack.es
+**Tecnología:** React 19, Supabase (PostgreSQL + Auth + Edge Functions), DeepSeek AI, Vite, Tailwind CSS, PWA, Strava API
 **Idioma de la interfaz:** Español
 **Disponible en:** Web (desktop y móvil), instalable como app (PWA)
 
-## Funcionalidades principales
+## Precios
+
+- **Gratis (atleta independiente):** 0 EUR/mes. Incluye 1 generación de plan con IA, métricas básicas y seguimiento de competiciones.
+- **Premium (atleta independiente):** 5 EUR/mes o 48 EUR/año (ahorra 12 EUR). Incluye chat ilimitado con Hermes IA, 2 regeneraciones de plan por semana, conexión Strava, métricas completas, seguimiento de competiciones con cuenta atrás y logros.
+- **Para entrenadores:** planes de pago para gestionar múltiples atletas. Atletas de entrenadores con cuenta activa acceden gratis.
+
+## Para entrenadores
+
+TrainingTrack permite a los entrenadores:
+- Crear y asignar planes de entrenamiento periodizados a varios atletas simultáneamente
+- Recibir alertas automáticas semanales cuando un atleta tiene indicadores de riesgo (ACWR alto, RPE elevado, sesiones no completadas)
+- Ver en un solo panel el estado de todos sus atletas
+- Exportar informes individuales en PDF para compartir con atletas o para registros
+- Comunicarse directamente con cada atleta por chat
+- Generar informes IA semanales automáticos con análisis de carga, ACWR, TSB y recomendaciones personalizadas
+
+## Para atletas independientes
+
+TrainingTrack ofrece a los atletas independientes (sin entrenador humano):
+
+- **Hermes IA — Entrenador Virtual:** Chat con inteligencia artificial especializado en running y atletismo. Responde preguntas sobre entrenamiento, ajusta el plan según tu estado de forma y proporciona orientación personalizada en tiempo real. Disponible en el plan Premium.
+- **Generación de plan con IA:** Crea un plan de entrenamiento personalizado basado en tu perfil (nivel, objetivo, distancia objetivo, días disponibles, km semanales actuales). El plan incluye mesociclos y microciclos adaptados a tus competiciones objetivo. 1 generación en el plan Gratis, regeneraciones semanales en Premium.
+- **Métricas avanzadas de rendimiento:** ACWR, TSB, evolución de km, ritmo medio, frecuencia cardíaca, predictor de tiempos de carrera, zonas de entrenamiento. Métricas básicas en Gratis, completas en Premium.
+- **Seguimiento de competiciones:** Registro de competiciones con cuenta atrás, seguimiento de resultados y análisis post-competición. Disponible en todos los planes.
+- **Conexión con Strava:** Sincronización automática de actividades. Las sesiones completadas se marcan automáticamente cuando el atleta registra una actividad en Strava. Disponible en Premium.
+- **Notificaciones push:** Notificaciones en tiempo real para nuevos planes, recordatorios de entrenamiento e informes listos. Funciona incluso sin la app abierta (PWA standalone).
+
+## Funcionalidades principales (plataforma completa)
 
 - [Panel del entrenador](https://trainingtrack.es/dashboard): Vista semanal de todos los atletas asignados, agenda de sesiones, próximas competiciones y estadísticas globales.
 - [Planificación de entrenamientos](https://trainingtrack.es/dashboard/planning): Creación de planes de temporada con mesociclos (base, construcción, pico, taper, recuperación) y microciclos semanales. Asignación de planes completos a múltiples atletas desde una fecha de inicio.
@@ -34,25 +62,9 @@ TrainingTrack calcula y muestra las siguientes métricas de ciencia del deporte:
 - **Zonas de frecuencia cardíaca:** calculadas por umbral de lactato o test de Conconi.
 - **Predictor de tiempos:** modelo Daniels-Gilbert basado en VDOT para estimar tiempos en 5K, 10K, media maratón y maratón.
 
-## Para entrenadores
-
-TrainingTrack permite a los entrenadores:
-- Crear y asignar planes de entrenamiento periodizados a varios atletas simultáneamente
-- Recibir alertas automáticas semanales cuando un atleta tiene indicadores de riesgo (ACWR alto, RPE elevado, sesiones no completadas)
-- Ver en un solo panel el estado de todos sus atletas
-- Exportar informes individuales en PDF para compartir con atletas o para registros
-- Comunicarse directamente con cada atleta por chat
-
-## Para atletas
-
-Los atletas en TrainingTrack pueden:
-- Ver sus sesiones de entrenamiento asignadas por el entrenador con instrucciones detalladas
-- Registrar su RPE (percepción de esfuerzo) tras completar cada sesión
-- Conectar su cuenta de Strava para sincronización automática de actividades
-- Ver su evolución de métricas de rendimiento: ritmo, FC, km, carga de entrenamiento
-- Recibir notificaciones push cuando el entrenador añade nuevas sesiones o mensajes
-
 ## Optional
 
-- [Política de privacidad](https://trainingtrack.es/privacy): Tratamiento de datos personales y de salud de atletas.
+- [Política de privacidad](https://trainingtrack.es/privacidad): Tratamiento de datos personales y de salud de atletas.
 - [Términos de uso](https://trainingtrack.es/terms): Condiciones de uso de la plataforma.
+- [Casos de uso](https://trainingtrack.es/casos-de-uso): Ejemplos de uso de TrainingTrack para entrenadores y atletas.
+- [Blog](https://trainingtrack.es/blog): Artículos sobre entrenamiento de running, periodización y atletismo.

@@ -1,14 +1,11 @@
-import { useState } from 'react';
-import { motion, AnimatePresence } from 'framer-motion';
-import { HiPlay, HiX } from 'react-icons/hi';
-import { FiZap, FiCalendar, FiTrendingUp, FiSmartphone } from 'react-icons/fi';
+import { Link } from 'react-router-dom';
+import { motion } from 'framer-motion';
+import { FiZap, FiCalendar, FiTrendingUp, FiSmartphone, FiUsers, FiUser } from 'react-icons/fi';
+import { BsStars } from 'react-icons/bs';
 import { useTheme } from '../../contexts/ThemeContext';
 import WaitlistForm from './WaitlistForm';
 
-const YOUTUBE_VIDEO_ID = 'TU_VIDEO_ID';
-
-export default function Hero() {
-  const [showDemo, setShowDemo] = useState(false);
+export default function Hero({ audience, onSelectAudience }) {
   const { theme } = useTheme();
   const mobileImg = theme === 'dark' ? '/img/mobile-5-dark.png' : '/img/mobile-5.png';
 
@@ -32,11 +29,19 @@ export default function Hero() {
     { icon: FiSmartphone, text: 'PWA instalable en móvil — sin App Store, con notificaciones push' },
   ];
 
-  const stats = [
-    { value: 'Strava + IA', label: 'Datos automáticos', sub: 'Sin copiar nada a mano' },
-    { value: 'ACWR · TSB', label: 'Control de carga real', sub: 'Prevén lesiones antes de que ocurran' },
-    { value: 'Lanzamiento pronto', label: 'Apúntate hoy', sub: 'Serás de los primeros en probarlo' },
-  ];
+  const handleCoachClick = (e) => {
+    e.preventDefault();
+    onSelectAudience?.('coach');
+    const el = document.querySelector('#pricing');
+    if (el) el.scrollIntoView({ behavior: 'smooth' });
+  };
+
+  const handleAthleteClick = (e) => {
+    e.preventDefault();
+    onSelectAudience?.('athlete');
+    const el = document.querySelector('#entrenamiento-ia');
+    if (el) el.scrollIntoView({ behavior: 'smooth' });
+  };
 
   return (
     <section
@@ -72,7 +77,7 @@ export default function Hero() {
               <div className="inline-flex items-center gap-2 px-4 py-2 bg-sky-100 dark:bg-sky-900/30 rounded-full">
                 <span className="w-2 h-2 bg-sky-600 rounded-full animate-pulse" />
                 <span className="text-sm font-medium text-sky-600 dark:text-sky-400">
-                  Próximo lanzamiento · ¡Únete a la lista de espera!
+                  ¡Regístrate ahora y empieza gratis!
                 </span>
               </div>
             </motion.div>
@@ -94,7 +99,7 @@ export default function Hero() {
               variants={itemVariants}
               className="text-lg sm:text-xl text-gray-600 dark:text-gray-300 mb-7 max-w-xl mx-auto lg:mx-0 leading-relaxed text-center lg:text-left"
             >
-              Strava sincronizado, ACWR e informes IA automáticos cada semana. Todo lo que necesitas para entrenar a tus atletas — en un solo lugar.
+              Para entrenadores y atletas independientes. IA, Strava, métricas avanzadas y planificación inteligente — todo en un solo lugar.
             </motion.p>
 
             {/* Feature list */}
@@ -112,10 +117,65 @@ export default function Hero() {
               })}
             </motion.div>
 
-            {/* Waitlist CTA */}
-            <motion.div variants={itemVariants} className="w-full max-w-lg">
-              <WaitlistForm source="hero" variant="light" />
+            {/* Dual Path Cards */}
+            <motion.div variants={itemVariants} className="grid grid-cols-1 md:grid-cols-2 gap-4 mb-8">
+              {/* Coach path card */}
+              <motion.a
+                href="#pricing"
+                onClick={handleCoachClick}
+                whileHover={{ scale: 1.03 }}
+                whileTap={{ scale: 0.98 }}
+                className="group flex items-start gap-3 p-4 rounded-2xl border-2 border-sky-200 dark:border-sky-800 bg-sky-50 dark:bg-sky-900/20 hover:border-sky-400 dark:hover:border-sky-600 hover:bg-sky-100 dark:hover:bg-sky-900/40 transition-all duration-200 cursor-pointer"
+              >
+                <div className="w-10 h-10 rounded-xl bg-sky-600 flex items-center justify-center flex-shrink-0">
+                  <FiUsers className="w-5 h-5 text-white" />
+                </div>
+                <div>
+                  <p className="font-semibold text-gray-900 dark:text-white text-sm">Soy Entrenador</p>
+                  <p className="text-xs text-gray-600 dark:text-gray-400 mt-0.5 leading-snug">
+                    Dashboard de atletas, planificación IA, informes ACWR/TSB automáticos
+                  </p>
+                  <span className="inline-block mt-1.5 text-xs font-medium text-sky-600 dark:text-sky-400 group-hover:underline">
+                    Ver planes de entrenador →
+                  </span>
+                </div>
+              </motion.a>
+
+              {/* Athlete path card */}
+              <motion.a
+                href="#entrenamiento-ia"
+                onClick={handleAthleteClick}
+                whileHover={{ scale: 1.03 }}
+                whileTap={{ scale: 0.98 }}
+                className="group flex items-start gap-3 p-4 rounded-2xl border-2 border-gray-200 dark:border-gray-700 bg-white dark:bg-gray-800 hover:border-sky-400 dark:hover:border-sky-600 hover:bg-sky-50 dark:hover:bg-sky-900/20 transition-all duration-200 cursor-pointer"
+              >
+                <div className="w-10 h-10 rounded-xl bg-gradient-to-br from-sky-500 to-sky-700 flex items-center justify-center flex-shrink-0">
+                  <BsStars className="w-5 h-5 text-white" />
+                </div>
+                <div>
+                  <p className="font-semibold text-gray-900 dark:text-white text-sm">Soy Atleta Independiente</p>
+                  <p className="text-xs text-gray-600 dark:text-gray-400 mt-0.5 leading-snug">
+                    Tu entrenador virtual con IA, planes personalizados y Hermes IA
+                  </p>
+                  <span className="inline-block mt-1.5 text-xs font-medium text-sky-600 dark:text-sky-400 group-hover:underline">
+                    Descubrir entrenamiento IA →
+                  </span>
+                </div>
+              </motion.a>
             </motion.div>
+
+            {/* Primary CTA */}
+            <motion.div variants={itemVariants} className="flex flex-col sm:flex-row gap-3">
+              <Link
+                to="/register"
+                className="inline-flex items-center justify-center gap-2 px-8 py-3.5 bg-sky-600 hover:bg-sky-700 text-white font-semibold rounded-xl shadow-lg hover:shadow-xl hover:scale-105 transition-all duration-200"
+              >
+                <FiUser className="w-4 h-4" />
+                Regístrate gratis
+              </Link>
+            </motion.div>
+
+            <WaitlistForm source="hero" variant="light" className="mt-6" />
           </motion.div>
 
           {/* Right — Mock phone + floating cards */}
@@ -192,59 +252,7 @@ export default function Hero() {
             </motion.div>
           </motion.div>
         </div>
-
-        {/* Stats row */}
-        <motion.div
-          initial={{ opacity: 0, y: 30 }}
-          animate={{ opacity: 1, y: 0 }}
-          transition={{ duration: 0.6, delay: 0.8 }}
-          className="grid grid-cols-1 sm:grid-cols-3 gap-6 max-w-4xl mx-auto mt-16"
-        >
-          {stats.map((s, i) => (
-            <div key={i} className="bg-white/60 dark:bg-gray-800/60 backdrop-blur-sm rounded-2xl p-6 border border-gray-200 dark:border-gray-700 text-center">
-              <div className="text-3xl font-bold text-sky-600 dark:text-sky-400 mb-1">{s.value}</div>
-              <div className="text-sm font-semibold text-gray-800 dark:text-white">{s.label}</div>
-              <div className="text-xs text-gray-500 dark:text-gray-400 mt-0.5">{s.sub}</div>
-            </div>
-          ))}
-        </motion.div>
       </div>
-
-      {/* Demo modal */}
-      <AnimatePresence>
-        {showDemo && (
-          <motion.div
-            initial={{ opacity: 0 }}
-            animate={{ opacity: 1 }}
-            exit={{ opacity: 0 }}
-            className="fixed inset-0 z-50 flex items-center justify-center bg-black/80 backdrop-blur-sm p-4"
-            onClick={() => setShowDemo(false)}
-          >
-            <motion.div
-              initial={{ scale: 0.8, opacity: 0 }}
-              animate={{ scale: 1, opacity: 1 }}
-              exit={{ scale: 0.8, opacity: 0 }}
-              transition={{ type: 'spring', damping: 25, stiffness: 300 }}
-              className="relative w-full max-w-4xl aspect-video"
-              onClick={(e) => e.stopPropagation()}
-            >
-              <button
-                onClick={() => setShowDemo(false)}
-                className="absolute -top-12 right-0 text-white hover:text-sky-400 transition-colors"
-              >
-                <HiX className="w-8 h-8" />
-              </button>
-              <iframe
-                src={`https://www.youtube.com/embed/${YOUTUBE_VIDEO_ID}?autoplay=1&rel=0`}
-                title="TrainingTrack Demo"
-                allow="accelerometer; autoplay; clipboard-write; encrypted-media; gyroscope; picture-in-picture"
-                allowFullScreen
-                className="w-full h-full rounded-2xl shadow-2xl"
-              />
-            </motion.div>
-          </motion.div>
-        )}
-      </AnimatePresence>
 
       {/* Scroll indicator */}
       <motion.div

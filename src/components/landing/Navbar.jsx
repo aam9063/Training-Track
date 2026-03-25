@@ -25,9 +25,9 @@ export default function Navbar() {
 
   const navLinks = [
     { name: 'Inicio', href: '#inicio' },
-    { name: 'Conócenos', href: '#conocenos' },
-    { name: 'Informes IA', href: '#informes-ia' },
-    { name: 'Pricing', href: '#pricing' },
+    { name: 'Funcionalidades', href: '#conocenos' },
+    { name: 'IA Training', href: '#entrenamiento-ia' },
+    { name: 'Precios', href: '#pricing' },
     { name: 'FAQ', href: '#faq' },
     { name: 'Blog', href: '/blog' },
   ];
@@ -96,7 +96,7 @@ export default function Navbar() {
           </motion.div>
 
           {/* Desktop Navigation */}
-          <div className="hidden md:flex items-center space-x-8">
+          <div className="hidden lg:flex items-center space-x-6">
             {navLinks.map((link, index) => (
               <motion.a
                 key={link.name}
@@ -120,7 +120,7 @@ export default function Navbar() {
           </div>
 
           {/* Action Buttons */}
-          <div className="hidden md:flex items-center space-x-4">
+          <div className="hidden lg:flex items-center space-x-3">
             {/* Theme Toggle */}
             <motion.button
               initial={{ opacity: 0, scale: 0.8 }}
@@ -142,11 +142,13 @@ export default function Navbar() {
             </motion.button>
 
             {/* Login Button */}
-            <Link to="/login">
-              <motion.button
-                initial={{ opacity: 0, x: 20 }}
-                animate={{ opacity: 1, x: 0 }}
-                transition={{ delay: 0.4 }}
+            <motion.div
+              initial={{ opacity: 0, x: 20 }}
+              animate={{ opacity: 1, x: 0 }}
+              transition={{ delay: 0.4 }}
+            >
+              <Link
+                to="/login"
                 className={`px-6 py-2.5 ${
                   !isScrolled && hasDarkHero
                     ? 'text-white/90 hover:text-white'
@@ -154,24 +156,26 @@ export default function Navbar() {
                 } font-medium transition-colors duration-200`}
               >
                 Iniciar Sesión
-              </motion.button>
-            </Link>
+              </Link>
+            </motion.div>
 
             {/* Register CTA */}
-            <Link to="/register">
-              <motion.button
-                initial={{ opacity: 0, x: 20 }}
-                animate={{ opacity: 1, x: 0 }}
-                transition={{ delay: 0.5 }}
+            <motion.div
+              initial={{ opacity: 0, x: 20 }}
+              animate={{ opacity: 1, x: 0 }}
+              transition={{ delay: 0.5 }}
+            >
+              <Link
+                to="/register"
                 className="px-6 py-2.5 bg-sky-600 hover:bg-sky-700 text-white rounded-lg font-medium hover:shadow-lg hover:scale-105 transition-all duration-200"
               >
                 Regístrate
-              </motion.button>
-            </Link>
+              </Link>
+            </motion.div>
           </div>
 
           {/* Mobile Menu Button */}
-          <div className="md:hidden flex items-center space-x-3">
+          <div className="lg:hidden flex items-center space-x-3">
             <button
               onClick={toggleTheme}
               className={`p-2 rounded-lg ${
@@ -229,15 +233,19 @@ export default function Navbar() {
               ))}
 
               <div className="pt-4 space-y-3">
-                <Link to="/login" onClick={() => setIsMobileMenuOpen(false)}>
-                  <button className="w-full px-6 py-3 mb-4 text-gray-700 dark:text-gray-300 border-2 border-gray-300 dark:border-gray-600 rounded-lg font-medium hover:border-sky-600 dark:hover:border-sky-400 transition-colors duration-200">
-                    Iniciar Sesión
-                  </button>
+                <Link
+                  to="/login"
+                  onClick={() => setIsMobileMenuOpen(false)}
+                  className="block w-full px-6 py-3 mb-4 text-gray-700 dark:text-gray-300 border-2 border-gray-300 dark:border-gray-600 rounded-lg font-medium hover:border-sky-600 dark:hover:border-sky-400 transition-colors duration-200 text-center"
+                >
+                  Iniciar Sesión
                 </Link>
-                <Link to="/register" onClick={() => setIsMobileMenuOpen(false)}>
-                  <button className="w-full px-6 py-3 bg-sky-600 hover:bg-sky-700 text-white rounded-lg font-medium hover:shadow-lg transition-all duration-200">
-                    Regístrate
-                  </button>
+                <Link
+                  to="/register"
+                  onClick={() => setIsMobileMenuOpen(false)}
+                  className="block w-full px-6 py-3 bg-sky-600 hover:bg-sky-700 text-white rounded-lg font-medium hover:shadow-lg transition-all duration-200 text-center"
+                >
+                  Regístrate
                 </Link>
               </div>
             </div>

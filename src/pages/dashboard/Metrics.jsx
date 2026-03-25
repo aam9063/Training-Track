@@ -670,7 +670,7 @@ const Metrics = () => {
             <h3 className="text-base sm:text-lg font-bold text-gray-900 dark:text-white flex items-center">
               <FiAward className="w-5 h-5 mr-2 text-yellow-500 flex-shrink-0" />
               Ranking de Atletas
-              <InfoTooltip text="Clasificación basada en datos de carga de entrenamiento (Supabase). Ordena por cualquier columna. CTL = fitness crónico, TSB = equilibrio agudo (positivo = fresco, negativo = fatiga)." />
+              <InfoTooltip text="Clasificación basada en datos de carga de entrenamiento. Ordena por cualquier columna. CTL = fitness crónico, TSB = equilibrio agudo (positivo = fresco, negativo = fatiga)." />
             </h3>
             {sortedRanking.length >= 2 && (
               <button

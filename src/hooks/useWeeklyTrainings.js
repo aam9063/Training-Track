@@ -78,6 +78,10 @@ export default function useWeeklyTrainings({ fetchFn, deps = [], transformFn }) 
           rpeNotes: session.rpe_notes,
           completedAt: session.completed_at,
           stravaActivityId: session.strava_activity_id,
+          actualDistanceKm: session.actual_distance_km ?? null,
+          actualTimeMinutes: session.actual_time_minutes ?? null,
+          rpe: session.rpe ?? null,
+          completionNotes: session.completion_notes ?? null,
         };
       });
     }

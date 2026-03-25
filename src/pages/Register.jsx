@@ -1,7 +1,7 @@
 import { useState } from 'react';
 import { Link } from 'react-router-dom';
 import { motion, AnimatePresence } from 'framer-motion';
-import { HiUser, HiMail, HiLockClosed, HiEye, HiEyeOff, HiUserGroup, HiAcademicCap, HiArrowLeft, HiLockOpen, HiShieldCheck } from 'react-icons/hi';
+import { HiUser, HiMail, HiLockClosed, HiEye, HiEyeOff, HiUserGroup, HiAcademicCap, HiArrowLeft, HiLockOpen, HiShieldCheck, HiLightningBolt } from 'react-icons/hi';
 import { FcGoogle } from 'react-icons/fc';
 import useRegisterForm from '../hooks/useRegisterForm';
 
@@ -134,7 +134,7 @@ export default function Register() {
                     </div>
                   </motion.button>
 
-                  {/* Athlete Card */}
+                  {/* Coached Athlete Card */}
                   <motion.button
                     whileHover={{ scale: 1.02 }}
                     whileTap={{ scale: 0.98 }}
@@ -151,6 +151,28 @@ export default function Register() {
                         </h3>
                         <p className="text-gray-600 dark:text-gray-400 mt-1">
                           Accede a tus entrenamientos, visualiza tu progreso y comunícate con tu entrenador.
+                        </p>
+                      </div>
+                    </div>
+                  </motion.button>
+
+                  {/* Independent Athlete Card */}
+                  <motion.button
+                    whileHover={{ scale: 1.02 }}
+                    whileTap={{ scale: 0.98 }}
+                    onClick={() => selectRole('independent_athlete')}
+                    className="w-full p-6 border-2 border-gray-200 dark:border-gray-700 rounded-2xl hover:border-green-500 dark:hover:border-green-400 transition-all duration-200 text-left group"
+                  >
+                    <div className="flex items-start space-x-4">
+                      <div className="w-14 h-14 bg-green-600 rounded-xl flex items-center justify-center flex-shrink-0">
+                        <HiLightningBolt className="w-7 h-7 text-white" />
+                      </div>
+                      <div>
+                        <h3 className="text-xl font-bold text-gray-900 dark:text-white group-hover:text-green-600 dark:group-hover:text-green-400 transition-colors">
+                          Atleta Independiente
+                        </h3>
+                        <p className="text-gray-600 dark:text-gray-400 mt-1">
+                          Entrena por tu cuenta con planes generados por IA, gestiona tus competiciones y sigue tu progreso.
                         </p>
                       </div>
                     </div>
@@ -191,15 +213,17 @@ export default function Register() {
 
                 {/* Header */}
                 <div className="text-center">
-                  <div className={`w-16 h-16 mx-auto rounded-2xl flex items-center justify-center mb-4 bg-sky-600`}>
+                  <div className={`w-16 h-16 mx-auto rounded-2xl flex items-center justify-center mb-4 ${role === 'independent_athlete' ? 'bg-green-600' : 'bg-sky-600'}`}>
                     {role === 'coach' ? (
                       <HiAcademicCap className="w-8 h-8 text-white" />
+                    ) : role === 'independent_athlete' ? (
+                      <HiLightningBolt className="w-8 h-8 text-white" />
                     ) : (
                       <HiUserGroup className="w-8 h-8 text-white" />
                     )}
                   </div>
                   <h2 className="text-2xl font-bold text-gray-900 dark:text-white">
-                    Registro como {role === 'coach' ? 'Entrenador' : 'Atleta'}
+                    Registro como {role === 'coach' ? 'Entrenador' : role === 'independent_athlete' ? 'Atleta Independiente' : 'Atleta'}
                   </h2>
                 </div>
 
@@ -340,7 +364,7 @@ export default function Register() {
                     </motion.div>
                   )}
 
-                  {/* Coach Email (Only for Athletes without invite) */}
+                  {/* Coach Email (Only for coached Athletes without invite, not for independent athletes) */}
                   {role === 'athlete' && !inviteCoachId && (
                     <motion.div
                       initial={{ opacity: 0, height: 0 }}
@@ -462,7 +486,7 @@ export default function Register() {
                     whileTap={{ scale: 0.98 }}
                     type="submit"
                     disabled={isLoading}
-                    className="w-full py-3 px-4 text-white rounded-xl font-semibold hover:shadow-lg transition-all duration-200 disabled:opacity-50 disabled:cursor-not-allowed bg-sky-600 hover:bg-sky-700"
+                    className={`w-full py-3 px-4 text-white rounded-xl font-semibold hover:shadow-lg transition-all duration-200 disabled:opacity-50 disabled:cursor-not-allowed ${role === 'independent_athlete' ? 'bg-green-600 hover:bg-green-700' : 'bg-sky-600 hover:bg-sky-700'}`}
                   >
                     {isLoading ? (
                       <span className="flex items-center justify-center">
@@ -473,7 +497,7 @@ export default function Register() {
                         Creando cuenta...
                       </span>
                     ) : (
-                      `Crear cuenta como ${role === 'coach' ? 'Entrenador' : 'Atleta'}`
+                      `Crear cuenta como ${role === 'coach' ? 'Entrenador' : role === 'independent_athlete' ? 'Atleta Independiente' : 'Atleta'}`
                     )}
                   </motion.button>
                 </form>

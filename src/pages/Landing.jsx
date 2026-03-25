@@ -1,4 +1,4 @@
-import { useEffect } from 'react';
+import { useState, useEffect } from 'react';
 import { useLocation } from 'react-router-dom';
 import useSEO from '../hooks/useSEO';
 import Navbar from '../components/landing/Navbar';
@@ -7,6 +7,7 @@ import AppShowcase from '../components/landing/AppShowcase';
 import MobileShowcase from '../components/landing/MobileShowcase';
 import About from '../components/landing/About';
 import AIReports from '../components/landing/AIReports';
+import AITrainingSection from '../components/landing/AITrainingSection';
 import Testimonials from '../components/landing/Testimonials';
 import Pricing from '../components/landing/Pricing';
 import FAQ from '../components/landing/FAQ';
@@ -19,6 +20,7 @@ import CookieConsent from '../components/landing/CookieConsent';
 
 export default function Landing() {
   const location = useLocation();
+  const [audience, setAudience] = useState('coach');
 
   useSEO({
     title: 'Plataforma de entrenamiento de running y atletismo con IA',
@@ -38,16 +40,17 @@ export default function Landing() {
   return (
     <div className="min-h-screen bg-white dark:bg-gray-900">
       <Navbar />
-      <Hero />
+      <Hero audience={audience} onSelectAudience={setAudience} />
       <AppShowcase />
       <MobileShowcase />
       <About />
       <AIReports />
+      <AITrainingSection />
       <Testimonials />
-      <Pricing />
+      <Pricing audience={audience} onAudienceChange={setAudience} />
       <FAQ />
       <BlogPreview />
-      <FinalCTA />
+      <FinalCTA audience={audience} />
       <Footer />
       <ScrollToTop />
       <PromoBanner />

@@ -19,6 +19,8 @@ import {
   FiSun,
   FiMoon,
   FiZap,
+  FiClipboard,
+  FiFlag,
 } from 'react-icons/fi';
 
 const AthleteSidebar = ({ onCollapse }) => {
@@ -29,7 +31,7 @@ const AthleteSidebar = ({ onCollapse }) => {
   const userBtnRef = useRef(null);
   const location = useLocation();
   const navigate = useNavigate();
-  const { user, profile, signOut } = useAuth();
+  const { user, profile, signOut, isIndependent } = useAuth();
   const { theme, toggleTheme } = useTheme();
   const { unreadMessages } = useNotifications();
 
@@ -48,7 +50,17 @@ const AthleteSidebar = ({ onCollapse }) => {
     setMobileOpen(false);
   }, [location.pathname]);
 
-  const menuItems = [
+  const independentMenuItems = [
+    { path: '/athlete/dashboard', icon: FiHome, label: 'Inicio' },
+    { path: '/athlete/my-plan', icon: FiClipboard, label: 'Mi Plan' },
+    { path: '/athlete/calendar', icon: FiCalendar, label: 'Calendario' },
+    { path: '/athlete/metrics', icon: FiBarChart2, label: 'Mis Métricas' },
+    { path: '/athlete/competitions', icon: FiFlag, label: 'Competiciones' },
+    { path: '/athlete/ai-assistant', icon: FiZap, label: 'Hermes IA' },
+    { path: '/athlete/devices', icon: FiWatch, label: 'Dispositivos' },
+  ];
+
+  const coachedMenuItems = [
     { path: '/athlete/dashboard', icon: FiHome, label: 'Inicio' },
     { path: '/athlete/training', icon: FiActivity, label: 'Mis Entrenamientos' },
     { path: '/athlete/calendar', icon: FiCalendar, label: 'Calendario' },
@@ -58,18 +70,17 @@ const AthleteSidebar = ({ onCollapse }) => {
     { path: '/athlete/messages', icon: FiMessageSquare, label: 'Mensajes', badge: unreadMessages },
   ];
 
+  const menuItems = isIndependent ? independentMenuItems : coachedMenuItems;
+
   const handleSignOut = async () => {
-    console.log('🚪 Cerrando sesión...');
     setShowUserMenu(false);
-    
+
     // Ejecutar signOut pero NO esperar
-    signOut().catch(err => console.error('Error en signOut:', err));
-    
+    signOut().catch(() => {});
+
     // Limpiar localStorage y redirigir inmediatamente
-    console.log('🧹 Limpiando localStorage...');
     localStorage.clear();
-    
-    console.log('🔄 Redirigiendo a login...');
+
     window.location.href = '/login';
   };
 
@@ -266,16 +277,18 @@ const AthleteSidebar = ({ onCollapse }) => {
               <FiUser className="w-4 h-4" />
               <span>Mi Perfil</span>
             </button>
-            <button
-              onClick={() => {
-                navigate('/athlete/messages');
-                setShowUserMenu(false);
-              }}
-              className="w-full flex items-center space-x-2 px-4 py-2 text-sm text-gray-700 dark:text-gray-300 hover:bg-gray-100 dark:hover:bg-gray-700 transition-colors"
-            >
-              <FiMessageSquare className="w-4 h-4" />
-              <span>Mis Mensajes</span>
-            </button>
+            {!isIndependent && (
+              <button
+                onClick={() => {
+                  navigate('/athlete/messages');
+                  setShowUserMenu(false);
+                }}
+                className="w-full flex items-center space-x-2 px-4 py-2 text-sm text-gray-700 dark:text-gray-300 hover:bg-gray-100 dark:hover:bg-gray-700 transition-colors"
+              >
+                <FiMessageSquare className="w-4 h-4" />
+                <span>Mis Mensajes</span>
+              </button>
+            )}
             <div className="border-t border-gray-200 dark:border-gray-700 my-1"></div>
             <button
               onClick={handleSignOut}

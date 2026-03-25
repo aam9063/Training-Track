@@ -61,20 +61,22 @@ const Devices = () => {
     if (!stravaConnected || !profile?.id) return;
     (async () => {
       try {
-        const { data: device } = await supabase
+        const { data: device, error: deviceErr } = await supabase
           .from('devices')
           .select('strava_athlete_id')
           .eq('athlete_id', profile.id)
           .eq('device_type', 'strava')
-          .single();
-        if (device && !device.strava_athlete_id) {
+          .maybeSingle();
+        if (deviceErr || !device) return;
+        if (!device.strava_athlete_id) {
           const { data: athlete } = await getStravaAthlete();
           if (athlete?.id) {
-            await supabase
+            const { error: updateErr } = await supabase
               .from('devices')
               .update({ strava_athlete_id: athlete.id })
               .eq('athlete_id', profile.id)
               .eq('device_type', 'strava');
+            if (updateErr) return;
           }
         }
       } catch {
@@ -150,7 +152,9 @@ const Devices = () => {
 
   // When profile is ready: process saved code OR check existing connection
   useEffect(() => {
-    if (!profile?.id) return;
+    if (!profile?.id) {
+      return;
+    }
 
     const code = sessionStorage.getItem('strava_oauth_code');
     if (code) {
@@ -342,7 +346,7 @@ const Devices = () => {
                 src="/img/integrations/garmin.svg"
                 alt="Garmin"
                 className="w-5 h-5 object-contain"
-                onError={(e) => { e.currentTarget.style.display = 'none'; }}
+                onError={(e) => { e.currentTarget.classList.add('hidden'); }}
               />
             </div>
             <div>
@@ -368,7 +372,7 @@ const Devices = () => {
                 src="/img/integrations/coros.jpeg"
                 alt="COROS"
                 className="w-5 h-5 object-contain rounded"
-                onError={(e) => { e.currentTarget.style.display = 'none'; }}
+                onError={(e) => { e.currentTarget.classList.add('hidden'); }}
               />
             </div>
             <div>

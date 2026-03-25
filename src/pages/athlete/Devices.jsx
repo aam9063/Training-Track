@@ -1,5 +1,4 @@
 import { useState, useEffect, useCallback } from 'react';
-import { useSearchParams } from 'react-router-dom';
 import { motion } from 'framer-motion';
 import {
   FiCheckCircle,
@@ -27,7 +26,6 @@ import { fullHistoricalSync, syncActivityDetails } from '../../services/stravaSy
 
 const Devices = () => {
   const { profile } = useAuth();
-  const [searchParams, setSearchParams] = useSearchParams();
   const [stravaConnected, setStravaConnected] = useState(false);
   const [stravaAthlete, setStravaAthlete] = useState(null);
   const [loading, setLoading] = useState(true);
@@ -140,25 +138,28 @@ const Devices = () => {
     }
   };
 
+  // On mount: capture OAuth code from URL and save to sessionStorage
   useEffect(() => {
-    const code = searchParams.get('code');
+    const params = new URLSearchParams(window.location.search);
+    const code = params.get('code');
     if (code) {
       sessionStorage.setItem('strava_oauth_code', code);
-      setSearchParams({}, { replace: true });
+      window.history.replaceState({}, '', window.location.pathname);
     }
-  }, [searchParams, setSearchParams]);
+  }, []);
 
+  // When profile is ready: process saved code OR check existing connection
   useEffect(() => {
+    if (!profile?.id) return;
+
     const code = sessionStorage.getItem('strava_oauth_code');
-    if (code && profile?.id) {
+    if (code) {
       sessionStorage.removeItem('strava_oauth_code');
       handleStravaCallback(code);
+    } else {
+      checkStravaConnection();
     }
-  }, [profile?.id, handleStravaCallback]);
-
-  useEffect(() => {
-    checkStravaConnection();
-  }, [checkStravaConnection]);
+  }, [profile?.id, handleStravaCallback, checkStravaConnection]);
 
   if (loading) {
     return (

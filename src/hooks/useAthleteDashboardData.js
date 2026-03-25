@@ -7,23 +7,32 @@ import { parseKmFromDescription } from '../lib/trainingUtils';
 import { getAthleteCompetitions } from '../services/athleteService';
 import { getCachedActivities } from '../services/stravaCacheService';
 import { getCurrentWeekDiary } from '../services/weeklyDiaryService';
+import { getNextCompetition } from '../services/competitionService';
 
 /**
  * Custom hook that encapsulates all business logic for the Athlete Dashboard.
  * Handles supabase queries, data transformations, streak calculation,
  * distance stats, and Strava metrics aggregation.
+ *
+ * @param {string|null} profileId - UUID of the athlete
+ * @param {boolean} isIndependent - true for independent athletes (no coach)
  */
-export default function useAthleteDashboardData(profileId) {
+export default function useAthleteDashboardData(profileId, isIndependent = false) {
   const [loading, setLoading] = useState(true);
   const [hasDiaryThisWeek, setHasDiaryThisWeek] = useState(true); // optimistic: hide banner until loaded
   const [weekStats, setWeekStats] = useState({
     totalKm: 0,
     totalTime: '0h 0m',
     sessions: 0,
+    completed: 0,
   });
   const [streak, setStreak] = useState(0);
   const [upcomingSessions, setUpcomingSessions] = useState([]);
   const [upcomingCompetitions, setUpcomingCompetitions] = useState([]);
+  // Independent-athlete extras
+  const [nextCompetition, setNextCompetition] = useState(null);
+  const [weeklyRpeAvg, setWeeklyRpeAvg] = useState(null);
+  const [hasActivePlan, setHasActivePlan] = useState(false);
 
   const loadDashboardData = useCallback(async () => {
     if (!profileId) {
@@ -113,11 +122,25 @@ export default function useAthleteDashboardData(profileId) {
         }
       });
 
-      const hasStrava = stravaActivities.length > 0;
-      const totalDistanceMeters = hasStrava ? stravaDistanceMeters : plannedDistanceMeters;
-      const totalDurationMinutes = hasStrava
-        ? Math.round(stravaMovingTimeSeconds / 60)
-        : plannedDurationMinutes;
+      const nonRestSessions = weekSessionsWithExercises.filter(s => s.training_type !== 'rest');
+      const completedSessions = nonRestSessions.filter(s => s.status === 'completed');
+
+      // For independent athletes, prefer actual_distance_km from completed sessions
+      let totalDistanceMeters;
+      let totalDurationMinutes;
+
+      if (isIndependent) {
+        const actualKm = completedSessions.reduce((sum, s) => sum + (s.actual_distance_km ?? 0), 0);
+        const actualTime = completedSessions.reduce((sum, s) => sum + (s.actual_time_minutes ?? 0), 0);
+        totalDistanceMeters = actualKm > 0 ? actualKm * 1000 : plannedDistanceMeters;
+        totalDurationMinutes = actualTime > 0 ? actualTime : plannedDurationMinutes;
+      } else {
+        const hasStrava = stravaActivities.length > 0;
+        totalDistanceMeters = hasStrava ? stravaDistanceMeters : plannedDistanceMeters;
+        totalDurationMinutes = hasStrava
+          ? Math.round(stravaMovingTimeSeconds / 60)
+          : plannedDurationMinutes;
+      }
 
       const totalKm = (totalDistanceMeters / 1000).toFixed(1);
       const hours = Math.floor(totalDurationMinutes / 60);
@@ -127,7 +150,8 @@ export default function useAthleteDashboardData(profileId) {
       setWeekStats({
         totalKm: parseFloat(totalKm),
         totalTime,
-        sessions: weekSessionsWithExercises.filter(s => s.training_type !== 'rest').length,
+        sessions: nonRestSessions.length,
+        completed: completedSessions.length,
       });
 
       const upcoming = (upcomingData || []).map(session => ({
@@ -140,8 +164,45 @@ export default function useAthleteDashboardData(profileId) {
       }));
       setUpcomingSessions(upcoming.slice(0, 4));
 
-      const { data: competitions } = await getAthleteCompetitions(profileId);
-      setUpcomingCompetitions((competitions || []).slice(0, 1));
+      if (isIndependent) {
+        // Independent athlete: fetch next competition from own competitions table
+        const { data: nextComp } = await getNextCompetition(profileId);
+        if (nextComp) {
+          const eventDate = new Date(nextComp.event_date + 'T00:00:00');
+          const daysUntil = Math.max(0, Math.ceil((eventDate - new Date().setHours(0, 0, 0, 0)) / 86400000));
+          setNextCompetition({ ...nextComp, daysUntil });
+        } else {
+          setNextCompetition(null);
+        }
+
+        // Weekly average RPE
+        const { data: rpeData } = await supabase
+          .from('training_sessions')
+          .select('rpe')
+          .eq('athlete_id', profileId)
+          .eq('status', 'completed')
+          .not('rpe', 'is', null)
+          .gte('scheduled_date', toLocalDateStr(weekStart))
+          .lte('scheduled_date', toLocalDateStr(weekEnd));
+
+        if (rpeData?.length > 0) {
+          const avg = rpeData.reduce((s, r) => s + r.rpe, 0) / rpeData.length;
+          setWeeklyRpeAvg(parseFloat(avg.toFixed(1)));
+        } else {
+          setWeeklyRpeAvg(null);
+        }
+
+        // Check for active plan
+        const { data: planData } = await supabase
+          .from('training_plans')
+          .select('id')
+          .eq('created_by', profileId)
+          .limit(1);
+        setHasActivePlan((planData?.length ?? 0) > 0);
+      } else {
+        const { data: competitions } = await getAthleteCompetitions(profileId);
+        setUpcomingCompetitions((competitions || []).slice(0, 1));
+      }
 
       // Streak: count consecutive days with completed sessions going back from today
       const streakStart = new Date();
@@ -172,7 +233,7 @@ export default function useAthleteDashboardData(profileId) {
     } finally {
       setLoading(false);
     }
-  }, [profileId]);
+  }, [profileId, isIndependent]);
 
   useEffect(() => {
     loadDashboardData();
@@ -186,5 +247,9 @@ export default function useAthleteDashboardData(profileId) {
     upcomingCompetitions,
     hasDiaryThisWeek,
     setHasDiaryThisWeek,
+    // Independent athlete extras
+    nextCompetition,
+    weeklyRpeAvg,
+    hasActivePlan,
   };
 }

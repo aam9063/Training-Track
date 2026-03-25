@@ -14,13 +14,19 @@ import {
   FiSmartphone,
   FiMessageSquare,
   FiZap,
+  FiCheckSquare,
+  FiStar,
+  FiAward,
+  FiWatch,
 } from 'react-icons/fi';
+import useGamificationData from '../../hooks/useGamificationData';
 import { toLocalDateStr } from '../../lib/dateUtils';
 import WellnessForm from '../../components/athlete/WellnessForm';
 import ReadinessScore from '../../components/athlete/ReadinessScore';
 import WeeklyDiaryForm from '../../components/athlete/WeeklyDiaryForm';
 import useAthleteProfile from '../../hooks/useAthleteProfile';
 import OnboardingWizard from '../../components/athlete/OnboardingWizard';
+import CompetitionCountdown from '../../components/athlete/CompetitionCountdown';
 import useAthleteDashboardData from '../../hooks/useAthleteDashboardData';
 
 // ---------------------------------------------------------------------------
@@ -57,7 +63,7 @@ const StatCard = ({ icon: Icon, label, value, sub, accent, iconBg, iconColor }) 
 // ---------------------------------------------------------------------------
 
 const AthleteDashboard = () => {
-  const { user, profile } = useAuth();
+  const { user, profile, isIndependent } = useAuth();
   const [wellnessRefreshKey, setWellnessRefreshKey] = useState(0);
   const isSunday = new Date().getDay() === 0;
 
@@ -69,7 +75,27 @@ const AthleteDashboard = () => {
     upcomingCompetitions,
     hasDiaryThisWeek,
     setHasDiaryThisWeek,
-  } = useAthleteDashboardData(profile?.id);
+    nextCompetition: independentNextCompetition,
+    weeklyRpeAvg,
+    hasActivePlan,
+  } = useAthleteDashboardData(profile?.id, isIndependent);
+
+  // Gamification data (independent athletes only — skip for coached athletes to avoid extra queries)
+  const { achievements, dailyStreak: gamificationDailyStreak, weeklyStreak } = useGamificationData(
+    isIndependent ? user?.id : null
+  );
+
+  // For coached athletes, resolve competition from upcomingCompetitions
+  // For independent athletes, the hook already fetches nextCompetition with daysUntil
+  const nextCompetition = isIndependent
+    ? independentNextCompetition
+    : (() => {
+        if (!upcomingCompetitions?.[0]) return null;
+        const c = upcomingCompetitions[0];
+        const eventDate = new Date(c.event_date + 'T00:00:00');
+        const daysUntil = Math.max(0, Math.ceil((eventDate - new Date().setHours(0, 0, 0, 0)) / 86400000));
+        return { ...c, daysUntil };
+      })();
 
   const displayName = profile?.first_name || user?.user_metadata?.first_name || 'Atleta';
 
@@ -140,45 +166,120 @@ const AthleteDashboard = () => {
           />
         </div>
 
-        {/* SUNDAY BANNER — only on Sunday if diary not yet filled */}
-        {isSunday && !hasDiaryThisWeek && (
-          <div className="flex items-start gap-3 bg-amber-50 dark:bg-amber-900/20 border border-amber-200 dark:border-amber-700 rounded-xl px-4 py-3">
-            <span className="text-lg" role="img" aria-label="calendario">📅</span>
-            <div>
-              <p className="text-sm font-semibold text-amber-800 dark:text-amber-300">Es domingo — rellena tu diario semanal</p>
-              <p className="text-xs text-amber-700 dark:text-amber-400 mt-0.5">Tu entrenador lo tendrá en cuenta en el informe del lunes.</p>
+        {/* INDEPENDENT ATHLETE: weekly progress + RPE summary + plan CTA */}
+        {isIndependent && (
+          <div className="grid grid-cols-1 gap-3">
+            {/* Weekly progress bar */}
+            <div className="bg-white dark:bg-gray-800 rounded-2xl border border-gray-200 dark:border-gray-700 p-4">
+              <div className="flex items-center justify-between mb-2">
+                <span className="text-xs font-semibold text-slate-500 dark:text-slate-400 flex items-center gap-1.5">
+                  <FiCheckSquare className="w-3.5 h-3.5 text-green-500" />
+                  Progreso semanal
+                </span>
+                <span className="text-xs font-bold text-slate-700 dark:text-slate-300">
+                  {weekStats.completed}/{weekStats.sessions} sesiones
+                </span>
+              </div>
+              <div className="w-full h-2 bg-gray-100 dark:bg-gray-700 rounded-full overflow-hidden">
+                <div
+                  className="h-2 bg-green-500 rounded-full transition-all duration-500"
+                  style={{ width: weekStats.sessions > 0 ? `${Math.round((weekStats.completed / weekStats.sessions) * 100)}%` : '0%' }}
+                />
+              </div>
+              <div className="flex items-center justify-between mt-2">
+                <span className="text-[11px] text-slate-400 dark:text-slate-500">
+                  {weekStats.totalKm} km esta semana
+                </span>
+                {weeklyRpeAvg != null && (
+                  <span className="text-[11px] text-slate-400 dark:text-slate-500 flex items-center gap-1">
+                    <FiStar className="w-3 h-3 text-orange-400" />
+                    RPE medio: {weeklyRpeAvg}
+                  </span>
+                )}
+              </div>
             </div>
+
+            {/* Generate plan CTA — only if no active plan */}
+            {!hasActivePlan && (
+              <Link
+                to="/athlete/my-plan"
+                className="flex items-center gap-3 bg-gradient-to-r from-green-600 to-emerald-500 rounded-2xl p-4 text-white hover:from-green-700 hover:to-emerald-600 transition-all"
+              >
+                <div className="w-10 h-10 bg-white/20 rounded-xl flex items-center justify-center flex-shrink-0">
+                  <FiZap className="w-5 h-5 text-white" />
+                </div>
+                <div className="min-w-0">
+                  <p className="text-sm font-bold leading-tight">Generar mi plan de entrenamiento</p>
+                  <p className="text-xs text-white/70 mt-0.5">IA personalizada según tu perfil</p>
+                </div>
+                <FiArrowRight className="w-4 h-4 ml-auto flex-shrink-0 text-white/80" />
+              </Link>
+            )}
           </div>
         )}
 
-        {/* WELLNESS + READINESS — en columna para que el wellness expandido no rompa el layout */}
-        <div className="space-y-4">
-          <WellnessForm compact onSaved={() => setWellnessRefreshKey(k => k + 1)} />
-          <ReadinessScore onRefresh={wellnessRefreshKey} />
-        </div>
+        {/* COACHED ATHLETE: Sunday banner, wellness, diary */}
+        {!isIndependent && (
+          <>
+            {isSunday && !hasDiaryThisWeek && (
+              <div className="flex items-start gap-3 bg-amber-50 dark:bg-amber-900/20 border border-amber-200 dark:border-amber-700 rounded-xl px-4 py-3">
+                <span className="text-lg" role="img" aria-label="calendario">📅</span>
+                <div>
+                  <p className="text-sm font-semibold text-amber-800 dark:text-amber-300">Es domingo — rellena tu diario semanal</p>
+                  <p className="text-xs text-amber-700 dark:text-amber-400 mt-0.5">Tu entrenador lo tendrá en cuenta en el informe del lunes.</p>
+                </div>
+              </div>
+            )}
 
-        {/* DIARIO SEMANAL */}
-        <WeeklyDiaryForm
-          compact
-          onSaved={() => setHasDiaryThisWeek(true)}
-        />
+            <div className="space-y-4">
+              <WellnessForm compact onSaved={() => setWellnessRefreshKey(k => k + 1)} />
+              <ReadinessScore onRefresh={wellnessRefreshKey} />
+            </div>
 
-        {/* IA CARD */}
-        <Link to="/athlete/my-reports" className="relative bg-slate-900 rounded-2xl p-4 overflow-hidden flex gap-3 hover:bg-slate-800 transition-colors">
-          <div className="absolute inset-0 pointer-events-none">
-            <div className="absolute -top-8 -right-8 w-40 h-40 rounded-full opacity-20 bg-[radial-gradient(circle,_#16a34a,_transparent)]" />
-          </div>
-          <div className="w-9 h-9 rounded-xl bg-green-600 flex items-center justify-center flex-shrink-0 z-10">
-            <FiZap className="w-4 h-4 text-white" />
-          </div>
-          <div className="z-10 min-w-0">
-            <p className="text-[10px] uppercase tracking-widest text-green-400 font-semibold">Hermes · IA</p>
-            <p className="text-sm text-white font-semibold mt-0.5 leading-snug">
-              Análisis de tu carga semanal disponible
-            </p>
-            <p className="text-xs text-slate-400 mt-1">Ver mis informes →</p>
-          </div>
-        </Link>
+            <WeeklyDiaryForm
+              compact
+              onSaved={() => setHasDiaryThisWeek(true)}
+            />
+          </>
+        )}
+
+        {/* IA CARD — for coached athletes only */}
+        {!isIndependent && (
+          <Link to="/athlete/my-reports" className="relative bg-slate-900 rounded-2xl p-4 overflow-hidden flex gap-3 hover:bg-slate-800 transition-colors">
+            <div className="absolute inset-0 pointer-events-none">
+              <div className="absolute -top-8 -right-8 w-40 h-40 rounded-full opacity-20 bg-[radial-gradient(circle,_#16a34a,_transparent)]" />
+            </div>
+            <div className="w-9 h-9 rounded-xl bg-green-600 flex items-center justify-center flex-shrink-0 z-10">
+              <FiZap className="w-4 h-4 text-white" />
+            </div>
+            <div className="z-10 min-w-0">
+              <p className="text-[10px] uppercase tracking-widest text-green-400 font-semibold">Hermes · IA</p>
+              <p className="text-sm text-white font-semibold mt-0.5 leading-snug">
+                Análisis de tu carga semanal disponible
+              </p>
+              <p className="text-xs text-slate-400 mt-1">Ver mis informes →</p>
+            </div>
+          </Link>
+        )}
+
+        {/* INDEPENDENT ATHLETE: AI assistant card */}
+        {isIndependent && (
+          <Link to="/athlete/ai-assistant" className="relative bg-slate-900 rounded-2xl p-4 overflow-hidden flex gap-3 hover:bg-slate-800 transition-colors">
+            <div className="absolute inset-0 pointer-events-none">
+              <div className="absolute -top-8 -right-8 w-40 h-40 rounded-full opacity-20 bg-[radial-gradient(circle,_#16a34a,_transparent)]" />
+            </div>
+            <div className="w-9 h-9 rounded-xl bg-green-600 flex items-center justify-center flex-shrink-0 z-10">
+              <FiZap className="w-4 h-4 text-white" />
+            </div>
+            <div className="z-10 min-w-0">
+              <p className="text-[10px] uppercase tracking-widest text-green-400 font-semibold">Asistente IA</p>
+              <p className="text-sm text-white font-semibold mt-0.5 leading-snug">
+                Pregunta a tu entrenador virtual
+              </p>
+              <p className="text-xs text-slate-400 mt-1">Consejo personalizado →</p>
+            </div>
+          </Link>
+        )}
 
         {/* ENTRENAMIENTOS DE LA SEMANA */}
         <section>
@@ -237,13 +338,15 @@ const AthleteDashboard = () => {
 
           {/* PRÓXIMAS COMPETICIONES */}
           <section className="flex flex-col">
-            {upcomingCompetitions.length > 0 ? (() => {
+            {isIndependent ? (
+              <CompetitionCountdown competition={nextCompetition} />
+            ) : upcomingCompetitions.length > 0 ? (() => {
               const competition = upcomingCompetitions[0];
               const eventDate = new Date(competition.event_date + 'T00:00:00');
               const daysUntil = Math.ceil((eventDate - new Date().setHours(0,0,0,0)) / 86400000);
               const progressPct = Math.min(100, Math.max(5, (90 - daysUntil) / 90 * 100));
               return (
-                <div className="relative rounded-2xl overflow-hidden flex-1 bg-[linear-gradient(135deg,_#1A6BFF_0%,_#0f4fcf_100%)]">
+                <div className="relative rounded-2xl overflow-hidden flex-1 bg-gradient-to-br from-blue-600 to-blue-800">
                   {/* Decorative circles */}
                   <div className="absolute -top-10 -right-10 w-40 h-40 rounded-full opacity-10 bg-white" />
                   <div className="absolute -bottom-8 -left-8 w-32 h-32 rounded-full opacity-10 bg-white" />
@@ -307,7 +410,7 @@ const AthleteDashboard = () => {
                 </div>
               );
             })() : (
-              <div className="relative rounded-2xl overflow-hidden flex flex-col items-center justify-center py-10 text-center bg-[linear-gradient(135deg,_#1A6BFF_0%,_#0f4fcf_100%)]">
+              <div className="relative rounded-2xl overflow-hidden flex flex-col items-center justify-center py-10 text-center bg-gradient-to-br from-blue-600 to-blue-800">
                 <div className="absolute -top-10 -right-10 w-40 h-40 rounded-full opacity-10 bg-white" />
                 <FiFlag className="w-10 h-10 text-white/40 mb-2" />
                 <p className="text-sm text-white/70 font-medium">No hay competiciones programadas</p>
@@ -327,33 +430,98 @@ const AthleteDashboard = () => {
                   <FiBarChart2 className="w-4 h-4 text-white" />
                 </div>
                 <p className="text-xs font-semibold text-slate-900 dark:text-white">Mis Métricas</p>
-                <p className="text-[11px] text-slate-500 dark:text-slate-400 mt-0.5">VO2max, ritmos, progreso</p>
+                <p className="text-[11px] text-slate-500 dark:text-slate-400 mt-0.5">Ritmos, progreso</p>
               </Link>
-              <Link to="/athlete/devices" className="p-3.5 rounded-xl border border-green-100 dark:border-green-800/30 bg-gradient-to-br from-green-50 to-emerald-50 dark:from-green-900/20 dark:to-emerald-900/20 hover:shadow-md transition-all group">
-                <div className="w-9 h-9 bg-green-500 rounded-lg flex items-center justify-center mb-2.5 group-hover:scale-110 transition-transform">
-                  <FiSmartphone className="w-4 h-4 text-white" />
-                </div>
-                <p className="text-xs font-semibold text-slate-900 dark:text-white">Dispositivos</p>
-                <p className="text-[11px] text-slate-500 dark:text-slate-400 mt-0.5">Conecta tus dispositivos</p>
-              </Link>
-              <Link to="/athlete/messages" className="p-3.5 rounded-xl border border-yellow-100 dark:border-yellow-800/30 bg-gradient-to-br from-yellow-50 to-orange-50 dark:from-yellow-900/20 dark:to-orange-900/20 hover:shadow-md transition-all group">
-                <div className="w-9 h-9 bg-yellow-500 rounded-lg flex items-center justify-center mb-2.5 group-hover:scale-110 transition-transform">
-                  <FiMessageSquare className="w-4 h-4 text-white" />
-                </div>
-                <p className="text-xs font-semibold text-slate-900 dark:text-white">Mensajes</p>
-                <p className="text-[11px] text-slate-500 dark:text-slate-400 mt-0.5">Chat con tu entrenador</p>
-              </Link>
-              <Link to="/athlete/calendar" className="p-3.5 rounded-xl border border-orange-100 dark:border-orange-800/30 bg-gradient-to-br from-orange-50 to-pink-50 dark:from-orange-900/20 dark:to-pink-900/20 hover:shadow-md transition-all group">
-                <div className="w-9 h-9 bg-orange-500 rounded-lg flex items-center justify-center mb-2.5 group-hover:scale-110 transition-transform">
-                  <FiCalendar className="w-4 h-4 text-white" />
-                </div>
-                <p className="text-xs font-semibold text-slate-900 dark:text-white">Calendario</p>
-                <p className="text-[11px] text-slate-500 dark:text-slate-400 mt-0.5">Vista mensual completa</p>
-              </Link>
+              {isIndependent ? (
+                <Link to="/athlete/my-plan" className="p-3.5 rounded-xl border border-green-100 dark:border-green-800/30 bg-gradient-to-br from-green-50 to-emerald-50 dark:from-green-900/20 dark:to-emerald-900/20 hover:shadow-md transition-all group">
+                  <div className="w-9 h-9 bg-green-500 rounded-lg flex items-center justify-center mb-2.5 group-hover:scale-110 transition-transform">
+                    <FiZap className="w-4 h-4 text-white" />
+                  </div>
+                  <p className="text-xs font-semibold text-slate-900 dark:text-white">Mi Plan</p>
+                  <p className="text-[11px] text-slate-500 dark:text-slate-400 mt-0.5">Plan generado por IA</p>
+                </Link>
+              ) : (
+                <Link to="/athlete/devices" className="p-3.5 rounded-xl border border-green-100 dark:border-green-800/30 bg-gradient-to-br from-green-50 to-emerald-50 dark:from-green-900/20 dark:to-emerald-900/20 hover:shadow-md transition-all group">
+                  <div className="w-9 h-9 bg-green-500 rounded-lg flex items-center justify-center mb-2.5 group-hover:scale-110 transition-transform">
+                    <FiSmartphone className="w-4 h-4 text-white" />
+                  </div>
+                  <p className="text-xs font-semibold text-slate-900 dark:text-white">Dispositivos</p>
+                  <p className="text-[11px] text-slate-500 dark:text-slate-400 mt-0.5">Conecta tus dispositivos</p>
+                </Link>
+              )}
+              {isIndependent ? (
+                <Link to="/athlete/competitions" className="p-3.5 rounded-xl border border-yellow-100 dark:border-yellow-800/30 bg-gradient-to-br from-yellow-50 to-orange-50 dark:from-yellow-900/20 dark:to-orange-900/20 hover:shadow-md transition-all group">
+                  <div className="w-9 h-9 bg-yellow-500 rounded-lg flex items-center justify-center mb-2.5 group-hover:scale-110 transition-transform">
+                    <FiFlag className="w-4 h-4 text-white" />
+                  </div>
+                  <p className="text-xs font-semibold text-slate-900 dark:text-white">Competiciones</p>
+                  <p className="text-[11px] text-slate-500 dark:text-slate-400 mt-0.5">Gestiona tus carreras</p>
+                </Link>
+              ) : (
+                <Link to="/athlete/messages" className="p-3.5 rounded-xl border border-yellow-100 dark:border-yellow-800/30 bg-gradient-to-br from-yellow-50 to-orange-50 dark:from-yellow-900/20 dark:to-orange-900/20 hover:shadow-md transition-all group">
+                  <div className="w-9 h-9 bg-yellow-500 rounded-lg flex items-center justify-center mb-2.5 group-hover:scale-110 transition-transform">
+                    <FiMessageSquare className="w-4 h-4 text-white" />
+                  </div>
+                  <p className="text-xs font-semibold text-slate-900 dark:text-white">Mensajes</p>
+                  <p className="text-[11px] text-slate-500 dark:text-slate-400 mt-0.5">Chat con tu entrenador</p>
+                </Link>
+              )}
+              {isIndependent ? (
+                <Link to="/athlete/devices" className="p-3.5 rounded-xl border border-orange-100 dark:border-orange-800/30 bg-gradient-to-br from-orange-50 to-pink-50 dark:from-orange-900/20 dark:to-pink-900/20 hover:shadow-md transition-all group">
+                  <div className="w-9 h-9 bg-orange-500 rounded-lg flex items-center justify-center mb-2.5 group-hover:scale-110 transition-transform">
+                    <FiWatch className="w-4 h-4 text-white" />
+                  </div>
+                  <p className="text-xs font-semibold text-slate-900 dark:text-white">Dispositivos</p>
+                  <p className="text-[11px] text-slate-500 dark:text-slate-400 mt-0.5">Conecta tu reloj</p>
+                </Link>
+              ) : (
+                <Link to="/athlete/calendar" className="p-3.5 rounded-xl border border-orange-100 dark:border-orange-800/30 bg-gradient-to-br from-orange-50 to-pink-50 dark:from-orange-900/20 dark:to-pink-900/20 hover:shadow-md transition-all group">
+                  <div className="w-9 h-9 bg-orange-500 rounded-lg flex items-center justify-center mb-2.5 group-hover:scale-110 transition-transform">
+                    <FiCalendar className="w-4 h-4 text-white" />
+                  </div>
+                  <p className="text-xs font-semibold text-slate-900 dark:text-white">Calendario</p>
+                  <p className="text-[11px] text-slate-500 dark:text-slate-400 mt-0.5">Vista mensual completa</p>
+                </Link>
+              )}
             </div>
           </section>
 
         </div>
+
+        {/* ACHIEVEMENTS — independent athletes only */}
+        {isIndependent && achievements.length > 0 && (
+          <section className="bg-white dark:bg-gray-800 rounded-2xl p-4 border border-gray-200 dark:border-gray-700">
+            <div className="flex items-center gap-2 text-base font-bold text-slate-900 dark:text-white mb-3">
+              <FiAward className="w-4 h-4 text-yellow-500" />
+              Mis Logros
+              <span className="ml-auto text-xs font-medium text-slate-400 dark:text-slate-500">
+                {achievements.length} desbloqueado{achievements.length !== 1 ? 's' : ''}
+              </span>
+            </div>
+            <div className="grid grid-cols-3 sm:grid-cols-4 lg:grid-cols-6 gap-2.5">
+              {achievements.slice(0, 6).map(a => (
+                <div
+                  key={a.id}
+                  title={a.description}
+                  className="flex flex-col items-center gap-1.5 p-2.5 rounded-xl bg-yellow-50 dark:bg-yellow-900/20 border border-yellow-100 dark:border-yellow-800/30"
+                >
+                  <span className="text-2xl" role="img" aria-label={a.title}>{a.icon}</span>
+                  <p className="text-[10px] font-semibold text-center text-slate-700 dark:text-slate-300 leading-tight line-clamp-2">
+                    {a.title}
+                  </p>
+                </div>
+              ))}
+            </div>
+            {/* Weekly streak badge */}
+            {weeklyStreak >= 2 && (
+              <div className="mt-3 flex items-center gap-2 text-xs text-orange-600 dark:text-orange-400 font-medium">
+                <span role="img" aria-label="racha semanal">🔥</span>
+                <span>{weeklyStreak} semanas activas seguidas</span>
+              </div>
+            )}
+          </section>
+        )}
+
       </div>
     </div>
   );

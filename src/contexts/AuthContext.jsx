@@ -31,7 +31,6 @@ export function AuthProvider({ children }) {
         .single();
 
       if (userError) {
-        console.warn('Using fallback profile - DB error:', userError.message);
         return fallbackProfile;
       }
 
@@ -73,8 +72,7 @@ export function AuthProvider({ children }) {
         ...userData,
         ...(userData.role === 'coach' ? { coach: roleData } : { athlete: roleData }),
       };
-    } catch (error) {
-      console.warn('Using fallback profile - exception:', error.message);
+    } catch {
       return fallbackProfile;
     }
   }, []);
@@ -117,8 +115,7 @@ export function AuthProvider({ children }) {
           setProfile(null);
           setLoading(false);
         }
-      } catch (error) {
-        console.error('Auth initialization error:', error);
+      } catch {
         if (mounted) {
           setUser(null);
           setProfile(null);
@@ -171,7 +168,7 @@ export function AuthProvider({ children }) {
   }, [fetchProfile]);
 
   // Sign up with email
-  const signUp = useCallback(async ({ email, password, role, firstName, lastName, coachEmail, coachId }) => {
+  const signUp = useCallback(async ({ email, password, role, firstName, lastName, coachEmail, coachId, isIndependent }) => {
     try {
       const { data, error } = await supabase.auth.signUp({
         email,
@@ -183,6 +180,7 @@ export function AuthProvider({ children }) {
             last_name: lastName,
             coach_email: coachEmail || null,
             coach_id: coachId || null,
+            is_independent: isIndependent || false,
           },
         },
       });
@@ -190,7 +188,6 @@ export function AuthProvider({ children }) {
       if (error) throw error;
       return { data, error: null };
     } catch (error) {
-      console.error('Sign up error:', error);
       return { data: null, error };
     }
   }, []);
@@ -206,7 +203,6 @@ export function AuthProvider({ children }) {
       if (error) throw error;
       return { data, error: null };
     } catch (error) {
-      console.error('Sign in error:', error);
       return { data: null, error };
     }
   }, []);
@@ -230,7 +226,6 @@ export function AuthProvider({ children }) {
       if (error) throw error;
       return { data, error: null };
     } catch (error) {
-      console.error('Google sign in error:', error);
       // Clean up on error
       localStorage.removeItem('google_oauth_metadata');
       return { data: null, error };
@@ -247,7 +242,6 @@ export function AuthProvider({ children }) {
       setProfile(null);
       return { error: null };
     } catch (error) {
-      console.error('Sign out error:', error);
       return { error };
     }
   }, []);
@@ -262,7 +256,6 @@ export function AuthProvider({ children }) {
       if (error) throw error;
       return { data, error: null };
     } catch (error) {
-      console.error('Reset password error:', error);
       return { data: null, error };
     }
   }, []);
@@ -277,7 +270,6 @@ export function AuthProvider({ children }) {
       if (error) throw error;
       return { data, error: null };
     } catch (error) {
-      console.error('Update password error:', error);
       return { data: null, error };
     }
   }, []);
@@ -299,7 +291,6 @@ export function AuthProvider({ children }) {
       setProfile(prev => ({ ...prev, ...data }));
       return { data, error: null };
     } catch (error) {
-      console.error('Update profile error:', error);
       return { data: null, error };
     }
   }, [user?.id]);
@@ -323,7 +314,6 @@ export function AuthProvider({ children }) {
       setProfile(prev => ({ ...prev, coach: { ...prev?.coach, ...data } }));
       return { data, error: null };
     } catch (error) {
-      console.error('Update coach profile error:', error);
       return { data: null, error };
     }
   }, [profile?.role, user?.id]);
@@ -347,7 +337,6 @@ export function AuthProvider({ children }) {
       setProfile(prev => ({ ...prev, athlete: { ...prev?.athlete, ...data } }));
       return { data, error: null };
     } catch (error) {
-      console.error('Update athlete profile error:', error);
       return { data: null, error };
     }
   }, [profile?.role, user?.id]);
@@ -395,7 +384,6 @@ export function AuthProvider({ children }) {
 
       return { data: athletes, error: null };
     } catch (error) {
-      console.error('Get athletes error:', error);
       return { data: null, error };
     }
   }, [profile?.role, user?.id]);
@@ -436,7 +424,6 @@ export function AuthProvider({ children }) {
 
       return { data: coach, error: null };
     } catch (error) {
-      console.error('Get coach error:', error);
       return { data: null, error };
     }
   }, [profile?.role, user?.id]);
@@ -457,7 +444,6 @@ export function AuthProvider({ children }) {
       if (error) throw error;
       return { data, error: null };
     } catch (error) {
-      console.error('Update relationship error:', error);
       return { data: null, error };
     }
   }, []);
@@ -479,6 +465,7 @@ export function AuthProvider({ children }) {
     loading,
     isCoach: profile?.role === 'coach',
     isAthlete: profile?.role === 'athlete',
+    isIndependent: profile?.role === 'athlete' && profile?.is_independent === true,
     isAdmin: profile?.is_admin === true,
     signUp,
     signIn,

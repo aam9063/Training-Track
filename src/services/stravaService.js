@@ -41,12 +41,11 @@ const getTokensFromDatabase = async (athleteId) => {
       .select('*')
       .eq('athlete_id', athleteId)
       .eq('device_type', 'strava')
-      .single();
+      .maybeSingle();
 
-    if (error && error.code !== 'PGRST116') throw error; // PGRST116 = no rows
+    if (error) throw error;
     return { data, error: null };
   } catch (error) {
-    console.error('Error getting tokens from database:', error);
     return { data: null, error };
   }
 };
@@ -65,7 +64,6 @@ const deleteTokensFromDatabase = async (athleteId) => {
     if (error) throw error;
     return { success: true };
   } catch (error) {
-    console.error('Error deleting tokens from database:', error);
     return { success: false, error };
   }
 };
@@ -133,7 +131,6 @@ export const exchangeStravaCode = async (code, athleteId = null) => {
 
     return { data, error: null };
   } catch (error) {
-    console.error('Strava token exchange error:', error);
     return { data: null, error };
   }
 };
@@ -166,7 +163,6 @@ export const refreshStravaToken = async (athleteId = null) => {
 
     return { data: newTokenData, error: null };
   } catch (error) {
-    console.error('Strava token refresh error:', error);
     // Clear invalid tokens
     disconnectStrava(athleteId);
     return { data: null, error };
@@ -310,7 +306,6 @@ const stravaApiRequest = async (endpoint, options = {}, athleteId = null) => {
     const data = await response.json();
     return { data, error: null };
   } catch (error) {
-    console.error('Strava API error:', error);
     return { data: null, error };
   }
 };

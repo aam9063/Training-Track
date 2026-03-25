@@ -48,13 +48,14 @@ import { getRPEEmoji, RPE_OPTIONS } from '../../services/rpeService';
 import { showSuccess, showError } from '../../lib/toast';
 import { inferTrainingType } from '../../lib/dateUtils';
 import RPEModal from '../../components/athlete/RPEModal';
+import SessionCompletionModal from '../../components/athlete/SessionCompletionModal';
 import useMapbox from '../../hooks/useMapbox';
 import useAthleteTestData from '../../hooks/useAthleteTestData';
 import useStravaActivities from '../../hooks/useStravaActivities';
 
 const Training = () => {
   const navigate = useNavigate();
-  const { profile } = useAuth();
+  const { profile, isIndependent } = useAuth();
   const {
     currentWeek, trainings, loading,
     loadTrainings, goToPreviousWeek, goToNextWeek, getWeekDays,
@@ -107,8 +108,8 @@ const Training = () => {
             if (activity) {
               result[dayIdx] = formatStravaActivity(activity);
             }
-          } catch (err) {
-            console.error('Error fetching linked activity:', err);
+          } catch {
+            // ignore
           }
         })
       );
@@ -118,6 +119,7 @@ const Training = () => {
 
   // Completion flow state
   const [showCompletionFlow, setShowCompletionFlow] = useState(false);
+  const [completionModalSession, setCompletionModalSession] = useState(null);
   const [rpeScore, setRpeScore] = useState(null);
   const [rpeNotes, setRpeNotes] = useState('');
   const [athleteNotes, setAthleteNotes] = useState('');
@@ -148,6 +150,11 @@ const Training = () => {
     setSaving(false);
   };
 
+  const openCompletionModal = (e, session) => {
+    e.stopPropagation();
+    setCompletionModalSession(session);
+  };
+
   const isPastOrToday = (dateStr) => {
     const d = new Date(dateStr);
     const today = new Date();
@@ -170,8 +177,7 @@ const Training = () => {
       showSuccess('Sesión completada correctamente');
       closeDayDetail();
       loadTrainings();
-    } catch (error) {
-      console.error('Error completing session:', error);
+    } catch {
       showError('Error al completar la sesión');
     } finally {
       setSaving(false);
@@ -187,8 +193,7 @@ const Training = () => {
       showSuccess('Sesión marcada como omitida');
       closeDayDetail();
       loadTrainings();
-    } catch (error) {
-      console.error('Error skipping session:', error);
+    } catch {
       showError('Error al omitir la sesión');
     } finally {
       setSaving(false);
@@ -204,8 +209,7 @@ const Training = () => {
       showSuccess('Sesión revertida a planificada');
       closeDayDetail();
       loadTrainings();
-    } catch (error) {
-      console.error('Error reverting session:', error);
+    } catch {
       showError('Error al revertir la sesión');
     } finally {
       setSaving(false);
@@ -226,8 +230,7 @@ const Training = () => {
       setShowStravaRpeFlow(false);
       closeDayDetail();
       loadTrainings();
-    } catch (error) {
-      console.error('Error saving RPE:', error);
+    } catch {
       showError('Error al guardar el RPE');
     } finally {
       setSaving(false);
@@ -752,7 +755,18 @@ const Training = () => {
                       }`} />
                       {isCompleted && <FiCheckCircle className="w-4 h-4 text-green-500" />}
                       {isSkipped && <FiSkipForward className="w-4 h-4 text-gray-400" />}
-                      {canComplete && <FiCheck className="w-4 h-4 text-green-500" />}
+                      {canComplete && isIndependent && (
+                        <button
+                          type="button"
+                          onClick={(e) => openCompletionModal(e, training)}
+                          aria-label="Marcar sesión como completada"
+                          className="flex items-center gap-1 px-2 py-1 rounded-lg bg-green-50 dark:bg-green-900/20 text-green-600 dark:text-green-400 text-[11px] font-semibold border border-green-200 dark:border-green-800/40 hover:bg-green-100 dark:hover:bg-green-900/30 transition-colors"
+                        >
+                          <FiCheck className="w-3 h-3" />
+                          Completar
+                        </button>
+                      )}
+                      {canComplete && !isIndependent && <FiCheck className="w-4 h-4 text-green-500" />}
                       {hasTraining && !isCompleted && !isSkipped && !canComplete && (
                         <FiChevronRight className="w-4 h-4 text-gray-300 dark:text-gray-600" />
                       )}
@@ -891,11 +905,32 @@ const Training = () => {
                             <p className="text-xs text-gray-500 dark:text-gray-400 line-clamp-3">{training.description}</p>
                           )}
                           <div className="mt-2 pt-2 text-center">
-                            {canComplete ? (
+                            {canComplete && isIndependent ? (
+                              <button
+                                type="button"
+                                onClick={(e) => openCompletionModal(e, training)}
+                                aria-label="Marcar sesión como completada"
+                                className="inline-flex items-center gap-1.5 px-3 py-1.5 rounded-lg bg-green-600 hover:bg-green-700 text-white text-xs font-semibold transition-colors"
+                              >
+                                <FiCheck className="w-3.5 h-3.5" />
+                                Marcar completado
+                              </button>
+                            ) : canComplete ? (
                               <span className="inline-flex items-center space-x-1 text-xs font-medium text-green-600 dark:text-green-400">
                                 <FiCheck className="w-3.5 h-3.5" />
                                 <span>Completar sesión</span>
                               </span>
+                            ) : isCompleted && training.actualDistanceKm ? (
+                              <div className="space-y-1">
+                                <div className="flex items-center justify-center gap-3 text-xs text-slate-500 dark:text-slate-400">
+                                  {training.actualDistanceKm && (
+                                    <span className="font-semibold text-green-600 dark:text-green-400">{training.actualDistanceKm} km</span>
+                                  )}
+                                  {training.rpe && (
+                                    <span>RPE {training.rpe}/10</span>
+                                  )}
+                                </div>
+                              </div>
                             ) : (
                               <span className="text-xs text-blue-500 dark:text-blue-400">
                                 {isCompleted ? 'Ver resultado →' : 'Ver detalles →'}
@@ -1336,6 +1371,42 @@ const Training = () => {
                       </div>
                     )}
 
+                    {/* Manual Completion Summary (independent athlete new-style completion) */}
+                    {selectedDay.status === 'completed' && (selectedDay.actualDistanceKm || selectedDay.rpe) && !selectedDay.rpeScore && (
+                      <div className="bg-green-50 dark:bg-green-900/20 rounded-2xl p-4 border border-green-100 dark:border-green-800/50 space-y-2">
+                        <p className="text-xs font-bold uppercase tracking-widest text-green-600 dark:text-green-400">Resultado</p>
+                        <div className="grid grid-cols-2 gap-3">
+                          {selectedDay.actualDistanceKm && (
+                            <div className="bg-white dark:bg-gray-800 rounded-xl p-3 border border-green-100 dark:border-green-800/30">
+                              <p className="text-[10px] uppercase tracking-widest text-slate-400 dark:text-slate-500 mb-0.5">Distancia</p>
+                              <p className="text-xl font-bold text-green-700 dark:text-green-400">
+                                {selectedDay.actualDistanceKm} <span className="text-sm font-normal text-slate-400">km</span>
+                              </p>
+                            </div>
+                          )}
+                          {selectedDay.actualTimeMinutes && (
+                            <div className="bg-white dark:bg-gray-800 rounded-xl p-3 border border-green-100 dark:border-green-800/30">
+                              <p className="text-[10px] uppercase tracking-widest text-slate-400 dark:text-slate-500 mb-0.5">Tiempo</p>
+                              <p className="text-xl font-bold text-green-700 dark:text-green-400">
+                                {selectedDay.actualTimeMinutes} <span className="text-sm font-normal text-slate-400">min</span>
+                              </p>
+                            </div>
+                          )}
+                          {selectedDay.rpe && (
+                            <div className="bg-white dark:bg-gray-800 rounded-xl p-3 border border-green-100 dark:border-green-800/30">
+                              <p className="text-[10px] uppercase tracking-widest text-slate-400 dark:text-slate-500 mb-0.5">RPE</p>
+                              <p className="text-xl font-bold text-green-700 dark:text-green-400">
+                                {selectedDay.rpe}<span className="text-sm font-normal text-slate-400">/10</span>
+                              </p>
+                            </div>
+                          )}
+                        </div>
+                        {selectedDay.completionNotes && (
+                          <p className="text-sm text-green-700 dark:text-green-300 italic">"{selectedDay.completionNotes}"</p>
+                        )}
+                      </div>
+                    )}
+
                     {/* Strava Auto-completed Banner */}
                     {selectedDay.status === 'completed' && selectedDay.stravaActivityId && linkedActivities[selectedDayIndex] && (
                       <div className="rounded-2xl border border-[#FC4C02]/20 overflow-hidden">
@@ -1596,7 +1667,14 @@ const Training = () => {
                   {selectedDay.status === 'planned' && isPastOrToday(selectedDay.date) ? (
                     <div className="flex items-center gap-2">
                       <button
-                        onClick={() => setShowCompletionFlow(true)}
+                        onClick={() => {
+                          if (isIndependent) {
+                            setCompletionModalSession(selectedDay);
+                            closeDayDetail();
+                          } else {
+                            setShowCompletionFlow(true);
+                          }
+                        }}
                         disabled={saving}
                         className="flex-1 flex items-center justify-center gap-2 py-2.5 bg-slate-900 dark:bg-white hover:bg-slate-700 dark:hover:bg-gray-100 disabled:opacity-50 text-white dark:text-slate-900 rounded-xl font-semibold transition-colors text-sm"
                       >
@@ -1699,6 +1777,18 @@ const Training = () => {
           initialScore={activitiesRPE[String(editRpeActivity.id)]?.score}
           initialNotes={activitiesRPE[String(editRpeActivity.id)]?.notes || ''}
           editMode
+        />
+      )}
+
+      {/* Session Completion Modal (independent athletes) */}
+      {completionModalSession && (
+        <SessionCompletionModal
+          session={completionModalSession}
+          onClose={() => setCompletionModalSession(null)}
+          onComplete={() => {
+            setCompletionModalSession(null);
+            loadTrainings();
+          }}
         />
       )}
       </div>

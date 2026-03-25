@@ -71,7 +71,9 @@ export default function useRegisterForm() {
   }, [searchParams]);
 
   const onSubmit = async (data) => {
-    // Validate coachEmail for athletes without invite
+    const isIndependentAthlete = role === 'independent_athlete';
+
+    // Validate coachEmail for coached athletes without invite
     if (role === 'athlete' && !inviteCoachId && !data.coachEmail?.trim()) {
       form.setError('coachEmail', { message: 'El email de tu entrenador es requerido' });
       return;
@@ -87,11 +89,12 @@ export default function useRegisterForm() {
       const { error } = await signUp({
         email: data.email,
         password: data.password,
-        role,
+        role: isIndependentAthlete ? 'athlete' : role,
         firstName: data.firstName,
         lastName: data.lastName,
         coachEmail: role === 'athlete' && !inviteCoachId ? data.coachEmail : null,
         coachId: inviteCoachId || null,
+        isIndependent: isIndependentAthlete,
       });
 
       if (error) throw error;

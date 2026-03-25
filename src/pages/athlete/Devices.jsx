@@ -1,4 +1,4 @@
-import { useState, useEffect, useCallback, useRef } from 'react';
+import { useState, useEffect, useCallback } from 'react';
 import { motion } from 'framer-motion';
 import {
   FiCheckCircle,
@@ -138,29 +138,21 @@ const Devices = () => {
     }
   };
 
-  // Strava OAuth callback: capture code from URL or sessionStorage
-  const processedCodeRef = useRef(false);
-
+  // Strava OAuth callback: capture code immediately on mount
   useEffect(() => {
-    if (processedCodeRef.current) return;
-
-    // Try URL first, then sessionStorage
     const urlCode = new URLSearchParams(window.location.search).get('code');
-    const savedCode = sessionStorage.getItem('strava_oauth_code');
-    const code = urlCode || savedCode;
-
     if (urlCode) {
-      // Save to sessionStorage in case profile isn't ready yet
       sessionStorage.setItem('strava_oauth_code', urlCode);
-      // Clean URL without re-render
       window.history.replaceState({}, '', window.location.pathname);
     }
+  }, []);
 
-    if (code && profile?.id) {
-      processedCodeRef.current = true;
-      sessionStorage.removeItem('strava_oauth_code');
-      handleStravaCallback(code);
-    }
+  // Process saved code when profile is ready
+  useEffect(() => {
+    const code = sessionStorage.getItem('strava_oauth_code');
+    if (!code || !profile?.id) return;
+    sessionStorage.removeItem('strava_oauth_code');
+    handleStravaCallback(code);
   }, [profile?.id, handleStravaCallback]);
 
   useEffect(() => {

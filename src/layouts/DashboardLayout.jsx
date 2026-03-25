@@ -1,5 +1,5 @@
-import { useState, useEffect } from 'react';
-import { Navigate, Outlet, useLocation, useNavigate } from 'react-router-dom';
+import { useState } from 'react';
+import { Navigate, Outlet } from 'react-router-dom';
 import { useAuth } from '../contexts/AuthContext';
 import Sidebar from '../components/dashboard/Sidebar';
 import BottomNav from '../components/dashboard/BottomNav';
@@ -7,33 +7,10 @@ import MobileHeader from '../components/dashboard/MobileHeader';
 import NotificationPanel from '../components/common/NotificationPanel';
 import PushNotificationBanner from '../components/common/PushNotificationBanner';
 
-const COACH_ROUTE_KEY = 'tt_last_coach_route';
-
 const DashboardLayout = () => {
   const { user, loading, profile } = useAuth();
   const [sidebarCollapsed, setSidebarCollapsed] = useState(false);
-  const [restored, setRestored] = useState(false);
-  const location = useLocation();
-  const navigate = useNavigate();
 
-  // Restore saved route on mount (before save effect overwrites it)
-  useEffect(() => {
-    const saved = sessionStorage.getItem(COACH_ROUTE_KEY);
-    if (saved && saved.startsWith('/dashboard') && saved !== location.pathname) {
-      navigate(saved, { replace: true });
-    }
-    setRestored(true);
-  // eslint-disable-next-line react-hooks/exhaustive-deps
-  }, []);
-
-  // Save current route — only after restore has run
-  useEffect(() => {
-    if (restored) {
-      sessionStorage.setItem(COACH_ROUTE_KEY, location.pathname);
-    }
-  }, [location.pathname, restored]);
-
-  // Show loading only while truly loading and no user yet
   if (loading && !user) {
     return (
       <div className="min-h-screen flex items-center justify-center bg-gray-50 dark:bg-gray-900">

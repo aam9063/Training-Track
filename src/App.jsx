@@ -1,5 +1,6 @@
 import { lazy, Suspense } from 'react';
-import { BrowserRouter as Router, Routes, Route } from 'react-router-dom';
+import { BrowserRouter as Router, Routes, Route, Navigate } from 'react-router-dom';
+import { useAuth } from './contexts/AuthContext';
 import { ThemeProvider } from './contexts/ThemeContext';
 import { AuthProvider } from './contexts/AuthContext';
 import { NotificationProvider } from './contexts/NotificationContext';
@@ -51,6 +52,18 @@ const Devices = lazy(() => import('./pages/athlete/Devices'));
 const AthleteMessages = lazy(() => import('./pages/athlete/Messages'));
 const GymFiles = lazy(() => import('./pages/athlete/GymFiles'));
 const MyReports = lazy(() => import('./pages/athlete/MyReports'));
+
+// Independent athlete pages
+const MyPlan = lazy(() => import('./pages/athlete/MyPlan'));
+const Competitions = lazy(() => import('./pages/athlete/Competitions'));
+const AIAssistant = lazy(() => import('./pages/athlete/AIAssistant'));
+
+// Guard: only renders children when isIndependent is true, else redirects to dashboard
+const IndependentRoute = ({ children }) => {
+  const { isIndependent, loading } = useAuth();
+  if (loading) return null;
+  return isIndependent ? children : <Navigate to="/athlete/dashboard" replace />;
+};
 
 // Loading fallback
 const PageLoader = () => (
@@ -108,6 +121,10 @@ function App() {
                   <Route path="gym-files" element={<GymFiles />} />
                   <Route path="my-reports" element={<MyReports />} />
                   <Route path="profile" element={<Profile />} />
+                  {/* Independent athlete routes */}
+                  <Route path="my-plan" element={<IndependentRoute><MyPlan /></IndependentRoute>} />
+                  <Route path="competitions" element={<IndependentRoute><Competitions /></IndependentRoute>} />
+                  <Route path="ai-assistant" element={<IndependentRoute><AIAssistant /></IndependentRoute>} />
                 </Route>
 
                 {/* Admin Login (public) */}

@@ -1,8 +1,9 @@
 import { Link, useLocation } from 'react-router-dom';
-import { FiHome, FiActivity, FiCalendar, FiBarChart2, FiMessageSquare } from 'react-icons/fi';
+import { FiHome, FiActivity, FiCalendar, FiBarChart2, FiMessageSquare, FiClipboard, FiZap } from 'react-icons/fi';
 import { useNotifications } from '../../contexts/NotificationContext';
+import { useAuth } from '../../contexts/AuthContext';
 
-const tabs = [
+const coachedTabs = [
   { path: '/athlete/dashboard', icon: FiHome, label: 'Inicio', exact: true },
   { path: '/athlete/training', icon: FiActivity, label: 'Entrenos' },
   { path: '/athlete/calendar', icon: FiCalendar, label: 'Calendario' },
@@ -10,9 +11,20 @@ const tabs = [
   { path: '/athlete/messages', icon: FiMessageSquare, label: 'Mensajes' },
 ];
 
+const independentTabs = [
+  { path: '/athlete/dashboard', icon: FiHome, label: 'Inicio', exact: true },
+  { path: '/athlete/my-plan', icon: FiClipboard, label: 'Mi Plan' },
+  { path: '/athlete/metrics', icon: FiBarChart2, label: 'Métricas' },
+  { path: '/athlete/ai-assistant', icon: FiZap, label: 'Hermes IA' },
+  { path: '/athlete/competitions', icon: FiCalendar, label: 'Competi.' },
+];
+
 const AthleteBottomNav = () => {
   const location = useLocation();
   const { unreadMessages } = useNotifications();
+  const { isIndependent } = useAuth();
+
+  const tabs = isIndependent ? independentTabs : coachedTabs;
 
   const isActive = (tab) =>
     tab.exact

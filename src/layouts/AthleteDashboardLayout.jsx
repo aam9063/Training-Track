@@ -1,5 +1,5 @@
-import { useState } from 'react';
-import { Navigate, Outlet } from 'react-router-dom';
+import { useState, useEffect } from 'react';
+import { Navigate, Outlet, useLocation, useNavigate } from 'react-router-dom';
 import { useAuth } from '../contexts/AuthContext';
 import AthleteSidebar from '../components/athlete/AthleteSidebar';
 import AthleteBottomNav from '../components/athlete/AthleteBottomNav';
@@ -7,11 +7,33 @@ import AthleteMobileHeader from '../components/athlete/AthleteMobileHeader';
 import NotificationPanel from '../components/common/NotificationPanel';
 import PushNotificationBanner from '../components/common/PushNotificationBanner';
 
+const ATHLETE_ROUTE_KEY = 'tt_last_athlete_route';
+
 const AthleteDashboardLayout = () => {
   const { user, loading, profile } = useAuth();
   const [sidebarCollapsed, setSidebarCollapsed] = useState(false);
+  const [restored, setRestored] = useState(false);
+  const location = useLocation();
+  const navigate = useNavigate();
 
-  if (loading && !user) {
+  // Restore saved route on mount (before save effect overwrites it)
+  useEffect(() => {
+    const saved = sessionStorage.getItem(ATHLETE_ROUTE_KEY);
+    if (saved && saved.startsWith('/athlete') && saved !== location.pathname) {
+      navigate(saved, { replace: true });
+    }
+    setRestored(true);
+  // eslint-disable-next-line react-hooks/exhaustive-deps
+  }, []);
+
+  // Save current route — only after restore has run
+  useEffect(() => {
+    if (restored) {
+      sessionStorage.setItem(ATHLETE_ROUTE_KEY, location.pathname);
+    }
+  }, [location.pathname, restored]);
+
+  if ((loading && !user) || !restored) {
     return (
       <div className="min-h-screen flex items-center justify-center bg-gray-50 dark:bg-gray-900">
         <div className="text-center">

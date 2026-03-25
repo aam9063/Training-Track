@@ -29,6 +29,8 @@ import {
   FiAlertTriangle,
   FiShield,
   FiNavigation,
+  FiAward,
+  FiCheckCircle,
 } from 'react-icons/fi';
 import { useAuth } from '../../contexts/AuthContext';
 import { supabase } from '../../lib/supabase';
@@ -39,6 +41,7 @@ import PMCChart from '../../components/athlete/PMCChart';
 import TrainingZonesCard from '../../components/athlete/TrainingZonesCard';
 import InfoTooltip from '../../components/common/InfoTooltip';
 import useStravaMetrics from '../../hooks/useStravaMetrics';
+import useInternalMetrics from '../../hooks/useInternalMetrics';
 import { exportActivitiesCSV, exportLoadCSV } from '../../lib/dataExport';
 
 // Register Chart.js components
@@ -421,6 +424,324 @@ const TotalActivityTimeChart = ({ activities, selectedPeriod, onPeriodChange }) 
   );
 };
 
+// ─── Helper: format minutes as "Xh Ym" or "Xm Ys" ──────────────────────────
+const formatMinutes = (totalMinutes) => {
+  if (!totalMinutes && totalMinutes !== 0) return '–';
+  const h = Math.floor(totalMinutes / 60);
+  const m = totalMinutes % 60;
+  if (h > 0) return `${h}h ${m}m`;
+  return `${m}m`;
+};
+
+// Format pace in min/km as "M:SS"
+const formatPace = (minPerKm) => {
+  if (!minPerKm) return '–';
+  const m = Math.floor(minPerKm);
+  const s = Math.round((minPerKm - m) * 60);
+  return `${m}:${String(s).padStart(2, '0')}`;
+};
+
+// ─── InternalMetricsSection ──────────────────────────────────────────────────
+/**
+ * Displays progression metrics derived from completed training_sessions.
+ * Shown for all athletes (independent and coached), with or without Strava.
+ */
+const InternalMetricsSection = ({
+  weeklyKm,
+  weeklyRpe,
+  weeklyPace,
+  personalBests,
+  completionRate,
+  hasData,
+  loading,
+}) => {
+  const commonChartOptions = {
+    responsive: true,
+    maintainAspectRatio: false,
+    plugins: { legend: { display: false } },
+    scales: {
+      x: { grid: { display: false }, ticks: { color: 'rgb(156,163,175)', font: { size: 10 } } },
+      y: { beginAtZero: true, grid: { color: 'rgba(156,163,175,0.1)' }, ticks: { color: 'rgb(156,163,175)', font: { size: 10 } } },
+    },
+  };
+
+  const pbSlots = [
+    { key: '5k', label: '5K' },
+    { key: '10k', label: '10K' },
+    { key: 'half', label: 'Media Maratón' },
+    { key: 'marathon', label: 'Maratón' },
+  ];
+
+  if (loading) {
+    return (
+      <div className="flex items-center justify-center py-12">
+        <FiLoader className="w-6 h-6 animate-spin text-green-600" />
+      </div>
+    );
+  }
+
+  const emptyState = (
+    <div className="flex flex-col items-center justify-center py-10 bg-white dark:bg-gray-800 rounded-2xl border border-gray-200 dark:border-gray-700">
+      <FiActivity className="w-10 h-10 text-gray-300 dark:text-gray-600 mb-3" />
+      <p className="text-sm font-medium text-slate-500 dark:text-slate-400 text-center max-w-xs">
+        Completa tus entrenamientos para ver tus métricas
+      </p>
+    </div>
+  );
+
+  return (
+    <section className="space-y-4">
+      <div className="flex items-center gap-2">
+        <FiTrendingUp className="w-4 h-4 text-green-600" />
+        <h2 className="text-base font-bold text-slate-900 dark:text-white">
+          Progresión de Entrenamientos
+        </h2>
+        <span className="text-[10px] font-semibold bg-green-100 dark:bg-green-900/40 text-green-700 dark:text-green-400 px-2 py-0.5 rounded-full">
+          Últimas 8 semanas
+        </span>
+      </div>
+
+      {!hasData ? (
+        emptyState
+      ) : (
+        <>
+          {/* Completion rate badge */}
+          {completionRate && completionRate.total > 0 && (
+            <motion.div
+              initial={{ opacity: 0, y: 16 }}
+              animate={{ opacity: 1, y: 0 }}
+              className="flex items-center gap-4 bg-white dark:bg-gray-800 rounded-2xl border border-gray-200 dark:border-gray-700 p-4"
+            >
+              <div className="flex-shrink-0 w-14 h-14 relative">
+                {/* Simple ring using SVG */}
+                <svg viewBox="0 0 56 56" className="w-full h-full -rotate-90">
+                  <circle cx="28" cy="28" r="22" fill="none" stroke="currentColor" strokeWidth="6" className="text-gray-100 dark:text-gray-700" />
+                  <circle
+                    cx="28" cy="28" r="22" fill="none" stroke="currentColor" strokeWidth="6"
+                    className="text-green-500"
+                    strokeDasharray={`${2 * Math.PI * 22 * completionRate.pct / 100} ${2 * Math.PI * 22}`}
+                    strokeLinecap="round"
+                  />
+                </svg>
+                <span className="absolute inset-0 flex items-center justify-center text-xs font-bold text-slate-900 dark:text-white">
+                  {completionRate.pct}%
+                </span>
+              </div>
+              <div>
+                <p className="text-sm font-semibold text-slate-900 dark:text-white flex items-center gap-1.5">
+                  <FiCheckCircle className="w-4 h-4 text-green-500" />
+                  Tasa de cumplimiento
+                </p>
+                <p className="text-xs text-slate-500 dark:text-slate-400 mt-0.5">
+                  {completionRate.completed} de {completionRate.total} sesiones completadas (últimas 4 semanas)
+                </p>
+              </div>
+            </motion.div>
+          )}
+
+          {/* Charts grid: km + RPE */}
+          <div className="grid grid-cols-1 lg:grid-cols-2 gap-4">
+            {/* Weekly km bar chart */}
+            <motion.div
+              initial={{ opacity: 0, y: 16 }}
+              animate={{ opacity: 1, y: 0 }}
+              transition={{ delay: 0.05 }}
+              className="bg-white dark:bg-gray-800 rounded-2xl border border-gray-200 dark:border-gray-700 p-4"
+            >
+              <div className="flex items-center gap-2 mb-3">
+                <FiMapPin className="w-4 h-4 text-blue-500" />
+                <h3 className="text-sm font-bold text-slate-900 dark:text-white">
+                  Km semanales
+                </h3>
+              </div>
+              <div className="h-44">
+                {weeklyKm.some(w => w.km > 0) ? (
+                  <Bar
+                    data={{
+                      labels: weeklyKm.map(w => w.label),
+                      datasets: [{
+                        label: 'km',
+                        data: weeklyKm.map(w => w.km),
+                        backgroundColor: 'rgba(59, 130, 246, 0.7)',
+                        borderRadius: 4,
+                        barPercentage: 0.7,
+                      }],
+                    }}
+                    options={{
+                      ...commonChartOptions,
+                      scales: {
+                        ...commonChartOptions.scales,
+                        y: { ...commonChartOptions.scales.y, title: { display: true, text: 'km', color: 'rgb(156,163,175)', font: { size: 10 } } },
+                      },
+                    }}
+                  />
+                ) : (
+                  <div className="h-full flex items-center justify-center text-sm text-slate-400 dark:text-slate-500">
+                    Sin datos de kilómetros aún
+                  </div>
+                )}
+              </div>
+            </motion.div>
+
+            {/* RPE trend line chart */}
+            <motion.div
+              initial={{ opacity: 0, y: 16 }}
+              animate={{ opacity: 1, y: 0 }}
+              transition={{ delay: 0.1 }}
+              className="bg-white dark:bg-gray-800 rounded-2xl border border-gray-200 dark:border-gray-700 p-4"
+            >
+              <div className="flex items-center gap-2 mb-3">
+                <FiZap className="w-4 h-4 text-orange-500" />
+                <h3 className="text-sm font-bold text-slate-900 dark:text-white">
+                  Esfuerzo percibido (RPE)
+                </h3>
+              </div>
+              <div className="h-44">
+                {weeklyRpe.some(w => w.avgRpe != null) ? (
+                  <Line
+                    data={{
+                      labels: weeklyRpe.map(w => w.label),
+                      datasets: [{
+                        label: 'RPE medio',
+                        data: weeklyRpe.map(w => w.avgRpe),
+                        borderColor: 'rgb(249, 115, 22)',
+                        backgroundColor: 'rgba(249, 115, 22, 0.1)',
+                        fill: true,
+                        tension: 0.4,
+                        pointRadius: 4,
+                        pointBackgroundColor: 'rgb(249, 115, 22)',
+                        spanGaps: true,
+                      }],
+                    }}
+                    options={{
+                      ...commonChartOptions,
+                      scales: {
+                        ...commonChartOptions.scales,
+                        y: {
+                          ...commonChartOptions.scales.y,
+                          min: 1,
+                          max: 10,
+                          title: { display: true, text: 'RPE (1-10)', color: 'rgb(156,163,175)', font: { size: 10 } },
+                        },
+                      },
+                    }}
+                  />
+                ) : (
+                  <div className="h-full flex items-center justify-center text-sm text-slate-400 dark:text-slate-500">
+                    Sin datos de RPE aún
+                  </div>
+                )}
+              </div>
+            </motion.div>
+          </div>
+
+          {/* Pace trend */}
+          {weeklyPace.some(w => w.avgPace != null) && (
+            <motion.div
+              initial={{ opacity: 0, y: 16 }}
+              animate={{ opacity: 1, y: 0 }}
+              transition={{ delay: 0.15 }}
+              className="bg-white dark:bg-gray-800 rounded-2xl border border-gray-200 dark:border-gray-700 p-4"
+            >
+              <div className="flex items-center gap-2 mb-3">
+                <FiClock className="w-4 h-4 text-purple-500" />
+                <h3 className="text-sm font-bold text-slate-900 dark:text-white">
+                  Ritmo medio semanal (min/km)
+                </h3>
+              </div>
+              <div className="h-44">
+                <Line
+                  data={{
+                    labels: weeklyPace.map(w => w.label),
+                    datasets: [{
+                      label: 'min/km',
+                      data: weeklyPace.map(w => w.avgPace),
+                      borderColor: 'rgb(139, 92, 246)',
+                      backgroundColor: 'rgba(139, 92, 246, 0.1)',
+                      fill: true,
+                      tension: 0.4,
+                      pointRadius: 4,
+                      pointBackgroundColor: 'rgb(139, 92, 246)',
+                      spanGaps: true,
+                    }],
+                  }}
+                  options={{
+                    responsive: true,
+                    maintainAspectRatio: false,
+                    plugins: { legend: { display: false },
+                      tooltip: {
+                        callbacks: {
+                          label: (ctx) => ctx.parsed.y != null ? `${formatPace(ctx.parsed.y)} min/km` : '–',
+                        },
+                      },
+                    },
+                    scales: {
+                      x: { grid: { display: false }, ticks: { color: 'rgb(156,163,175)', font: { size: 10 } } },
+                      y: {
+                        reverse: true,
+                        grid: { color: 'rgba(156,163,175,0.1)' },
+                        ticks: {
+                          color: 'rgb(156,163,175)',
+                          font: { size: 10 },
+                          callback: (v) => formatPace(v),
+                        },
+                        title: { display: true, text: 'min/km', color: 'rgb(156,163,175)', font: { size: 10 } },
+                      },
+                    },
+                  }}
+                />
+              </div>
+            </motion.div>
+          )}
+
+          {/* Personal bests */}
+          {personalBests && (
+            <motion.div
+              initial={{ opacity: 0, y: 16 }}
+              animate={{ opacity: 1, y: 0 }}
+              transition={{ delay: 0.2 }}
+              className="bg-white dark:bg-gray-800 rounded-2xl border border-gray-200 dark:border-gray-700 p-4"
+            >
+              <div className="flex items-center gap-2 mb-3">
+                <FiAward className="w-4 h-4 text-yellow-500" />
+                <h3 className="text-sm font-bold text-slate-900 dark:text-white">
+                  Mejores marcas personales
+                </h3>
+              </div>
+              <div className="grid grid-cols-2 gap-2.5">
+                {pbSlots.map(({ key, label }) => {
+                  const pb = personalBests[key];
+                  return (
+                    <div key={key} className="bg-gray-50 dark:bg-gray-700/50 rounded-xl p-3">
+                      <p className="text-[10px] font-bold uppercase tracking-widest text-slate-400 dark:text-slate-500 mb-1">
+                        {label}
+                      </p>
+                      {pb ? (
+                        <>
+                          <p className="text-xl font-bold text-slate-900 dark:text-white leading-none mb-0.5">
+                            {formatMinutes(pb.minutes)}
+                          </p>
+                          {pb.date && (
+                            <p className="text-[10px] text-slate-400 dark:text-slate-500">
+                              {new Date(pb.date + 'T00:00:00').toLocaleDateString('es-ES', { month: 'short', year: 'numeric' })}
+                            </p>
+                          )}
+                        </>
+                      ) : (
+                        <p className="text-xl font-bold text-slate-300 dark:text-slate-600 leading-none">–</p>
+                      )}
+                    </div>
+                  );
+                })}
+              </div>
+            </motion.div>
+          )}
+        </>
+      )}
+    </section>
+  );
+};
+
 // Calculate HR training zones using Karvonen formula
 const calculateHRZones = (maxHR, restingHR) => {
   const zones = [
@@ -438,7 +759,7 @@ const calculateHRZones = (maxHR, restingHR) => {
 };
 
 const AthleteMetrics = () => {
-  const { profile } = useAuth();
+  const { profile, isIndependent } = useAuth();
   const {
     loading, stravaConnected, stravaMetrics, bestEfforts,
     stravaStats, weekFilter, setWeekFilter, rawActivities,
@@ -446,6 +767,17 @@ const AthleteMetrics = () => {
   const [activityTimePeriod, setActivityTimePeriod] = useState('7days');
   const [exportOpen, setExportOpen] = useState(false);
   const [dbPersonalBests, setDbPersonalBests] = useState([]);
+
+  // Internal metrics (from completed training_sessions, not Strava)
+  const {
+    loading: internalLoading,
+    weeklyKm,
+    weeklyRpe,
+    weeklyPace,
+    personalBests,
+    completionRate,
+    hasData: hasInternalData,
+  } = useInternalMetrics(profile?.id, 8);
 
   // Fetch personal bests from DB for race predictions
   useEffect(() => {
@@ -820,8 +1152,8 @@ const AthleteMetrics = () => {
 
   if (!stravaConnected) {
     return (
-      <div className="p-4 sm:p-6 lg:p-8">
-        <div className="mb-6 sm:mb-8">
+      <div className="p-4 sm:p-6 lg:p-8 space-y-6">
+        <div>
           <h1 className="text-2xl sm:text-3xl font-bold text-gray-900 dark:text-white mb-2">
             Mis Métricas
           </h1>
@@ -830,24 +1162,38 @@ const AthleteMetrics = () => {
           </p>
         </div>
 
-        <div className="bg-white dark:bg-gray-800 rounded-2xl p-8 sm:p-12 text-center shadow-sm border border-gray-200 dark:border-gray-700">
-          <div className="w-20 h-20 bg-orange-100 dark:bg-orange-900/30 rounded-full flex items-center justify-center mx-auto mb-6">
-            <FiActivity className="w-10 h-10 text-orange-500" />
+        {/* Internal progression metrics (always visible) */}
+        <InternalMetricsSection
+          weeklyKm={weeklyKm}
+          weeklyRpe={weeklyRpe}
+          weeklyPace={weeklyPace}
+          personalBests={personalBests}
+          completionRate={completionRate}
+          hasData={hasInternalData}
+          loading={internalLoading}
+        />
+
+        {/* Strava connect prompt (only for non-independent athletes) */}
+        {!isIndependent && (
+          <div className="bg-white dark:bg-gray-800 rounded-2xl p-8 sm:p-10 text-center shadow-sm border border-gray-200 dark:border-gray-700">
+            <div className="w-16 h-16 bg-orange-100 dark:bg-orange-900/30 rounded-full flex items-center justify-center mx-auto mb-4">
+              <FiActivity className="w-8 h-8 text-orange-500" />
+            </div>
+            <h2 className="text-lg font-bold text-gray-900 dark:text-white mb-2">
+              Conecta Strava para más métricas
+            </h2>
+            <p className="text-gray-500 dark:text-gray-400 mb-5 max-w-md mx-auto text-sm">
+              Sincroniza tu cuenta de Strava para ver estadísticas detalladas: zonas de frecuencia cardíaca, predictor de tiempos, ACWR y más.
+            </p>
+            <a
+              href="/athlete/devices"
+              className="inline-flex items-center space-x-2 px-5 py-2.5 bg-orange-500 hover:bg-orange-600 text-white rounded-xl font-semibold transition-all text-sm"
+            >
+              <span>Ir a Dispositivos</span>
+              <FiActivity className="w-4 h-4" />
+            </a>
           </div>
-          <h2 className="text-xl font-bold text-gray-900 dark:text-white mb-3">
-            Conecta Strava para ver tus métricas
-          </h2>
-          <p className="text-gray-500 dark:text-gray-400 mb-6 max-w-md mx-auto">
-            Sincroniza tu cuenta de Strava en la sección de Dispositivos para ver estadísticas detalladas de tus entrenamientos.
-          </p>
-          <a
-            href="/athlete/devices"
-            className="inline-flex items-center space-x-2 px-6 py-3 bg-orange-500 hover:bg-orange-600 text-white rounded-xl font-semibold transition-all"
-          >
-            <span>Ir a Dispositivos</span>
-            <FiActivity className="w-5 h-5" />
-          </a>
-        </div>
+        )}
       </div>
     );
   }
@@ -1006,6 +1352,17 @@ const AthleteMetrics = () => {
           </motion.div>
         </div>
       )}
+
+      {/* Internal progression metrics (available even with Strava connected) */}
+      <InternalMetricsSection
+        weeklyKm={weeklyKm}
+        weeklyRpe={weeklyRpe}
+        weeklyPace={weeklyPace}
+        personalBests={personalBests}
+        completionRate={completionRate}
+        hasData={hasInternalData}
+        loading={internalLoading}
+      />
 
       {/* Race Time Predictor */}
       {racePredictions && Object.keys(racePredictions.predictions).length > 0 && (

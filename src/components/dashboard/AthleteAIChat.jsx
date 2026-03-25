@@ -264,7 +264,7 @@ export default function AthleteAIChat({ athleteId, athleteName, inline = false }
             <FiSend className="w-3.5 h-3.5 text-white" />
           </button>
         </div>
-        <p className={`text-[10px] mt-1.5 text-center ${inline ? 'text-gray-400 dark:text-slate-600' : 'text-slate-600'}`}>Enter para enviar · Shift+Enter para nueva línea</p>
+        <p className={`hidden lg:block text-[10px] mt-1.5 text-center ${inline ? 'text-gray-400 dark:text-slate-600' : 'text-slate-600'}`}>Enter para enviar · Shift+Enter para nueva línea</p>
       </div>
     </motion.div>
   );

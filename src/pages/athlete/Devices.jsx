@@ -4,7 +4,6 @@ import { motion } from 'framer-motion';
 import {
   FiCheckCircle,
   FiAlertCircle,
-  FiExternalLink,
   FiLoader,
   FiX,
   FiRefreshCw,
@@ -80,8 +79,8 @@ const Devices = () => {
               .eq('device_type', 'strava');
           }
         }
-      } catch (err) {
-        console.error('Strava athlete ID backfill error:', err);
+      } catch {
+        // Backfill is non-critical — silently ignore
       }
     })();
   }, [stravaConnected, profile?.id]);
@@ -143,11 +142,19 @@ const Devices = () => {
 
   useEffect(() => {
     const code = searchParams.get('code');
-    if (code && profile?.id) {
-      handleStravaCallback(code);
-      setSearchParams({});
+    if (code) {
+      sessionStorage.setItem('strava_oauth_code', code);
+      setSearchParams({}, { replace: true });
     }
-  }, [searchParams, setSearchParams, profile?.id, handleStravaCallback]);
+  }, [searchParams, setSearchParams]);
+
+  useEffect(() => {
+    const code = sessionStorage.getItem('strava_oauth_code');
+    if (code && profile?.id) {
+      sessionStorage.removeItem('strava_oauth_code');
+      handleStravaCallback(code);
+    }
+  }, [profile?.id, handleStravaCallback]);
 
   useEffect(() => {
     checkStravaConnection();

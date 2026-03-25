@@ -19,6 +19,7 @@ export function AuthProvider({ children }) {
       role: userMetadata.role || 'coach',
       first_name: userMetadata.first_name || 'Usuario',
       last_name: userMetadata.last_name || '',
+      is_independent: userMetadata.is_independent || false,
       created_at: sessionUser?.created_at,
     };
 
@@ -96,6 +97,7 @@ export function AuthProvider({ children }) {
             role: session.user.user_metadata?.role || 'coach',
             first_name: session.user.user_metadata?.first_name || 'Usuario',
             last_name: session.user.user_metadata?.last_name || '',
+            is_independent: session.user.user_metadata?.is_independent || false,
           };
           setProfile(initialProfile);
           setLoading(false);
@@ -141,6 +143,7 @@ export function AuthProvider({ children }) {
             role: session.user.user_metadata?.role || 'coach',
             first_name: session.user.user_metadata?.first_name || 'Usuario',
             last_name: session.user.user_metadata?.last_name || '',
+            is_independent: session.user.user_metadata?.is_independent || false,
           };
           setProfile(metadataProfile);
 

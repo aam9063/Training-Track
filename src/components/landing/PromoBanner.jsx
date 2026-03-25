@@ -1,6 +1,7 @@
 import { useState, useEffect } from 'react';
 import { motion, AnimatePresence } from 'framer-motion';
-import { HiX } from 'react-icons/hi';
+import { Link } from 'react-router-dom';
+import { HiX, HiArrowRight } from 'react-icons/hi';
 import { BsStars } from 'react-icons/bs';
 import { supabase } from '../../lib/supabase';
 import WaitlistForm from './WaitlistForm';
@@ -13,16 +14,17 @@ export default function PromoBanner() {
     // Don't show if already dismissed this session
     if (sessionStorage.getItem('promo_dismissed')) return;
 
+    let timer;
     const checkAndShow = async () => {
       const { data: { session } } = await supabase.auth.getSession();
       // Only show to non-logged-in users
       if (!session) {
-        const timer = setTimeout(() => setShow(true), 6000);
-        return () => clearTimeout(timer);
+        timer = setTimeout(() => setShow(true), 6000);
       }
     };
 
     checkAndShow();
+    return () => { if (timer) clearTimeout(timer); };
   }, []);
 
   const handleDismiss = () => {
@@ -47,7 +49,7 @@ export default function PromoBanner() {
               <div className="flex items-center gap-2">
                 <BsStars className="w-4 h-4 text-sky-200" />
                 <span className="text-white font-semibold text-sm">
-                  ¡Próximo lanzamiento!
+                  TrainingTrack — Ya disponible
                 </span>
               </div>
               <button
@@ -61,13 +63,22 @@ export default function PromoBanner() {
             {/* Content */}
             <div className="px-5 py-4">
               <h4 className="text-gray-900 dark:text-white font-bold text-lg mb-1">
-                Únete a la lista de espera
+                Entrena más inteligente
               </h4>
               <p className="text-gray-600 dark:text-gray-400 text-sm mb-4 leading-relaxed">
-                Estamos preparando la plataforma definitiva para entrenadores de running: IA, Strava, métricas avanzadas y mucho más. ¡Sé de los primeros!
+                Tanto si eres entrenador como atleta independiente, TrainingTrack tiene un plan para ti: IA, Strava, métricas avanzadas y mucho más.
               </p>
 
-              <WaitlistForm source="promo" variant="light" />
+              <Link
+                to="/register"
+                onClick={handleDismiss}
+                className="flex items-center justify-center gap-2 w-full px-4 py-2 bg-sky-600 hover:bg-sky-700 text-white rounded-xl font-semibold text-sm transition-all duration-200 hover:shadow-lg"
+              >
+                Crear cuenta gratis
+                <HiArrowRight className="w-4 h-4" />
+              </Link>
+
+              <WaitlistForm source="promo" variant="light" className="mt-4" />
             </div>
           </div>
         </motion.div>

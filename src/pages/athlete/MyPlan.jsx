@@ -338,7 +338,7 @@ export default function MyPlan() {
   // ── Onboarding gate: show wizard if no profile ──
   if (hasProfile === false) {
     return (
-      <div className="max-w-2xl mx-auto px-4 py-8">
+      <div className="px-4 lg:px-8 py-5 lg:py-8">
         <div className="mb-6">
           <h1 className="text-2xl font-bold text-slate-900 dark:text-white">Mi Plan</h1>
           <p className="text-slate-500 dark:text-slate-400 mt-1">
@@ -362,7 +362,7 @@ export default function MyPlan() {
   const hasActivePlan = activePlan.length > 0;
 
   return (
-    <div className="max-w-4xl mx-auto px-4 py-6 space-y-6">
+    <div className="px-4 lg:px-8 py-5 lg:py-8 space-y-6">
       {/* Header */}
       <div className="flex items-start justify-between gap-4 flex-wrap">
         <div>

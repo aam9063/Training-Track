@@ -1,4 +1,5 @@
 import { useState, useEffect, useCallback } from 'react';
+import { useSearchParams } from 'react-router-dom';
 import { motion } from 'framer-motion';
 import {
   FiCheckCircle,
@@ -26,6 +27,7 @@ import { fullHistoricalSync, syncActivityDetails } from '../../services/stravaSy
 
 const Devices = () => {
   const { profile } = useAuth();
+  const [searchParams, setSearchParams] = useSearchParams();
   const [stravaConnected, setStravaConnected] = useState(false);
   const [stravaAthlete, setStravaAthlete] = useState(null);
   const [loading, setLoading] = useState(true);
@@ -138,21 +140,20 @@ const Devices = () => {
     }
   };
 
-  // Strava OAuth callback: capture code immediately on mount
   useEffect(() => {
-    const urlCode = new URLSearchParams(window.location.search).get('code');
-    if (urlCode) {
-      sessionStorage.setItem('strava_oauth_code', urlCode);
-      window.history.replaceState({}, '', window.location.pathname);
+    const code = searchParams.get('code');
+    if (code) {
+      sessionStorage.setItem('strava_oauth_code', code);
+      setSearchParams({}, { replace: true });
     }
-  }, []);
+  }, [searchParams, setSearchParams]);
 
-  // Process saved code when profile is ready
   useEffect(() => {
     const code = sessionStorage.getItem('strava_oauth_code');
-    if (!code || !profile?.id) return;
-    sessionStorage.removeItem('strava_oauth_code');
-    handleStravaCallback(code);
+    if (code && profile?.id) {
+      sessionStorage.removeItem('strava_oauth_code');
+      handleStravaCallback(code);
+    }
   }, [profile?.id, handleStravaCallback]);
 
   useEffect(() => {

@@ -17,21 +17,26 @@ const AthleteDashboardLayout = () => {
   const navigate = useNavigate();
 
   // Restore saved route on mount (before save effect overwrites it)
+  // Skip restore if URL has query params (e.g., Strava OAuth ?code=xxx)
   useEffect(() => {
-    const saved = sessionStorage.getItem(ATHLETE_ROUTE_KEY);
-    if (saved && saved.startsWith('/athlete') && saved !== location.pathname) {
-      navigate(saved, { replace: true });
+    const hasQueryParams = window.location.search.length > 1;
+    if (!hasQueryParams) {
+      const saved = sessionStorage.getItem(ATHLETE_ROUTE_KEY);
+      if (saved && saved.startsWith('/athlete') && saved !== location.pathname) {
+        navigate(saved, { replace: true });
+      }
     }
     setRestored(true);
   // eslint-disable-next-line react-hooks/exhaustive-deps
   }, []);
 
   // Save current route — only after restore has run
+  // Don't save routes with OAuth query params (they're one-time use)
   useEffect(() => {
-    if (restored) {
+    if (restored && !location.search.includes('code=')) {
       sessionStorage.setItem(ATHLETE_ROUTE_KEY, location.pathname);
     }
-  }, [location.pathname, restored]);
+  }, [location.pathname, location.search, restored]);
 
   if ((loading && !user) || !restored) {
     return (

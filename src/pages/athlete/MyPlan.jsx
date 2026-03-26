@@ -1,4 +1,5 @@
 import { useState } from 'react';
+import { createPortal } from 'react-dom';
 import { motion, AnimatePresence } from 'framer-motion';
 import {
   FiClipboard,
@@ -322,11 +323,14 @@ function ActivePlanView({
                         initial={{ opacity: 0 }}
                         animate={{ opacity: 1 }}
                         transition={{ delay: index * 0.03 }}
+                        role={hasTraining && !isRest ? 'button' : undefined}
+                        tabIndex={hasTraining && !isRest ? 0 : undefined}
+                        onClick={() => { if (hasTraining && !isRest) setSelectedSession(training); }}
                         className={`w-full flex items-center gap-3 px-4 py-3.5 ${
                           isToday
                             ? 'bg-blue-50/60 dark:bg-blue-900/10'
                             : ''
-                        }`}
+                        } ${hasTraining && !isRest ? 'cursor-pointer active:bg-slate-50 dark:active:bg-slate-800/50' : ''}`}
                       >
                         {/* Day column */}
                         <div className="w-10 flex flex-col items-center flex-shrink-0">
@@ -444,7 +448,7 @@ function ActivePlanView({
                       animate={{ opacity: 1, y: 0 }}
                       transition={{ delay: index * 0.05 }}
                       className={`
-                        bg-white dark:bg-gray-800 rounded-xl p-4 shadow-sm border-2 relative
+                        bg-white dark:bg-gray-800 rounded-xl p-4 shadow-sm border-2 relative flex flex-col
                         ${isCompleted
                           ? 'border-green-500 dark:border-green-400'
                           : isSkipped
@@ -493,7 +497,7 @@ function ActivePlanView({
 
                       {/* Training Content */}
                       {training ? (
-                        <div className="space-y-3">
+                        <div className="flex-1 flex flex-col gap-3">
                           <div className="flex items-center gap-2 flex-wrap">
                             <span className={`inline-block text-xs px-2 py-1 rounded-full ${getTypeColor(training)}`}>
                               {getTypeLabel(training)}
@@ -551,7 +555,7 @@ function ActivePlanView({
                               {training.description && !training.exercises?.length && (
                                 <p className="text-xs text-gray-500 dark:text-gray-400 line-clamp-3">{training.description}</p>
                               )}
-                              <div className="mt-2 pt-2 text-center">
+                              <div className="mt-auto pt-2 text-center">
                                 {canComplete ? (
                                   <button
                                     type="button"
@@ -763,8 +767,8 @@ function ActivePlanView({
         )}
       </AnimatePresence>
 
-      {/* Session completion modal */}
-      {completionModalSession && (
+      {/* Session completion modal — portal to body to avoid stacking context issues */}
+      {completionModalSession && createPortal(
         <SessionCompletionModal
           session={completionModalSession}
           onClose={() => setCompletionModalSession(null)}
@@ -772,11 +776,12 @@ function ActivePlanView({
             setCompletionModalSession(null);
             loadTrainings();
           }}
-        />
+        />,
+        document.body
       )}
 
-      {/* Session detail modal */}
-      <AnimatePresence>
+      {/* Session detail modal — portal to body */}
+      {createPortal(<AnimatePresence>
         {selectedSession && (
           <motion.div
             initial={{ opacity: 0 }}
@@ -891,7 +896,7 @@ function ActivePlanView({
             </motion.div>
           </motion.div>
         )}
-      </AnimatePresence>
+      </AnimatePresence>, document.body)}
     </div>
   );
 }

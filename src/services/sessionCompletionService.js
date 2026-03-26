@@ -37,7 +37,7 @@ export const completeSessionManual = async (sessionId, { distance, time, rpe, no
       status: 'completed',
       completed_at: new Date().toISOString(),
       actual_distance_km: distance ?? null,
-      actual_time_minutes: time ?? null,
+      actual_time_minutes: time != null ? Math.round(time) : null,
       rpe: rpe ?? null,
       completion_notes: notes || null,
     })

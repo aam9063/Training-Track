@@ -1,4 +1,5 @@
 import { useState } from 'react';
+import { createPortal } from 'react-dom';
 import { motion, AnimatePresence } from 'framer-motion';
 import {
   FiClipboard,
@@ -26,12 +27,14 @@ import useStravaActivities from '../../hooks/useStravaActivities';
 import OnboardingWizard from '../../components/athlete/OnboardingWizard';
 import PlanPreviewInline from '../../components/athlete/PlanPreviewInline';
 import SessionCompletionModal from '../../components/athlete/SessionCompletionModal';
+import { saveRpeToSession } from '../../services/sessionCompletionService';
+import { showError, showSuccess } from '../../lib/toast';
 import { generateWeeklyPDF } from '../../lib/pdfExport';
 import { getMyWeeklySessions } from '../../services/independentPlanService';
 import { DAYS_OF_WEEK } from '../../services/weeklyTrainingService';
 import { getActivityTypeLabel } from '../../services/stravaService';
 import { getRPEEmoji } from '../../services/rpeService';
-import { inferTrainingType } from '../../lib/dateUtils';
+import { inferTrainingType, toLocalDateStr } from '../../lib/dateUtils';
 
 // ---------------------------------------------------------------------------
 // Helpers
@@ -62,11 +65,9 @@ const getTypeColor = (session) => {
 };
 
 const isPastOrToday = (dateStr) => {
-  const d = new Date(dateStr);
-  const today = new Date();
-  today.setHours(0, 0, 0, 0);
-  d.setHours(0, 0, 0, 0);
-  return d <= today;
+  if (!dateStr) return false;
+  const todayStr = toLocalDateStr(new Date());
+  return dateStr <= todayStr;
 };
 
 // ---------------------------------------------------------------------------
@@ -142,6 +143,9 @@ function ActivePlanView({
   const [activeTab, setActiveTab] = useState('week');
   const [completionModalSession, setCompletionModalSession] = useState(null);
   const [selectedSession, setSelectedSession] = useState(null);
+  const [rpeSession, setRpeSession] = useState(null);
+  const [rpeValue, setRpeValue] = useState(null);
+  const [savingRpe, setSavingRpe] = useState(false);
 
   const {
     stravaConnected, stravaActivities, loadingStrava,
@@ -168,6 +172,27 @@ function ActivePlanView({
   const openCompletionModal = (e, session) => {
     e.stopPropagation();
     setCompletionModalSession(session);
+  };
+
+  const openRpeModal = (e, session) => {
+    e.stopPropagation();
+    setRpeSession(session);
+    setRpeValue(null);
+  };
+
+  const handleSaveRpe = async () => {
+    if (!rpeValue || !rpeSession) return;
+    setSavingRpe(true);
+    const { error } = await saveRpeToSession(rpeSession.id, { rpe: rpeValue, notes: null });
+    setSavingRpe(false);
+    if (error) {
+      showError('Error al guardar RPE');
+      return;
+    }
+    showSuccess('RPE guardado');
+    setRpeSession(null);
+    setRpeValue(null);
+    loadTrainings();
   };
 
   return (
@@ -322,11 +347,14 @@ function ActivePlanView({
                         initial={{ opacity: 0 }}
                         animate={{ opacity: 1 }}
                         transition={{ delay: index * 0.03 }}
+                        role={hasTraining && !isRest ? 'button' : undefined}
+                        tabIndex={hasTraining && !isRest ? 0 : undefined}
+                        onClick={() => { if (hasTraining && !isRest) setSelectedSession(training); }}
                         className={`w-full flex items-center gap-3 px-4 py-3.5 ${
                           isToday
                             ? 'bg-blue-50/60 dark:bg-blue-900/10'
                             : ''
-                        }`}
+                        } ${hasTraining && !isRest ? 'cursor-pointer active:bg-slate-50 dark:active:bg-slate-800/50' : ''}`}
                       >
                         {/* Day column */}
                         <div className="w-10 flex flex-col items-center flex-shrink-0">
@@ -405,6 +433,16 @@ function ActivePlanView({
                           }`} />
                           {isCompleted && <FiCheckCircle className="w-4 h-4 text-green-500" />}
                           {isSkipped && <FiSkipForward className="w-4 h-4 text-gray-400" />}
+                          {isCompleted && !training.rpe && !training.rpeScore && (
+                            <button
+                              type="button"
+                              onClick={(e) => openRpeModal(e, training)}
+                              aria-label="Añadir RPE"
+                              className="flex items-center gap-1 px-2 py-1 rounded-lg bg-orange-50 dark:bg-orange-900/20 text-orange-600 dark:text-orange-400 text-[11px] font-semibold border border-orange-200 dark:border-orange-800/40 hover:bg-orange-100 dark:hover:bg-orange-900/30 transition-colors"
+                            >
+                              RPE
+                            </button>
+                          )}
                           {canComplete && (
                             <button
                               type="button"
@@ -444,7 +482,7 @@ function ActivePlanView({
                       animate={{ opacity: 1, y: 0 }}
                       transition={{ delay: index * 0.05 }}
                       className={`
-                        bg-white dark:bg-gray-800 rounded-xl p-4 shadow-sm border-2 relative
+                        bg-white dark:bg-gray-800 rounded-xl p-4 shadow-sm border-2 relative flex flex-col
                         ${isCompleted
                           ? 'border-green-500 dark:border-green-400'
                           : isSkipped
@@ -493,7 +531,7 @@ function ActivePlanView({
 
                       {/* Training Content */}
                       {training ? (
-                        <div className="space-y-3">
+                        <div className="flex-1 flex flex-col gap-3">
                           <div className="flex items-center gap-2 flex-wrap">
                             <span className={`inline-block text-xs px-2 py-1 rounded-full ${getTypeColor(training)}`}>
                               {getTypeLabel(training)}
@@ -551,8 +589,8 @@ function ActivePlanView({
                               {training.description && !training.exercises?.length && (
                                 <p className="text-xs text-gray-500 dark:text-gray-400 line-clamp-3">{training.description}</p>
                               )}
-                              <div className="mt-2 pt-2 text-center">
-                                {canComplete ? (
+                              <div className="mt-auto pt-2 text-center space-y-1.5">
+                                {canComplete && (
                                   <button
                                     type="button"
                                     onClick={(e) => openCompletionModal(e, training)}
@@ -562,18 +600,29 @@ function ActivePlanView({
                                     <FiCheck className="w-3.5 h-3.5" />
                                     Marcar completado
                                   </button>
-                                ) : isCompleted && training.actualDistanceKm ? (
+                                )}
+                                {isCompleted && training.actualDistanceKm && (
                                   <div className="flex items-center justify-center gap-3 text-xs text-slate-500 dark:text-slate-400">
                                     <span className="font-semibold text-green-600 dark:text-green-400">{training.actualDistanceKm} km</span>
-                                    {training.rpe && <span>RPE {training.rpe}/10</span>}
+                                    {(training.rpe || training.rpeScore) && <span>RPE {training.rpe || training.rpeScore}/10</span>}
                                   </div>
-                                ) : (
+                                )}
+                                {isCompleted && !training.rpe && !training.rpeScore && (
+                                  <button
+                                    type="button"
+                                    onClick={(e) => openRpeModal(e, training)}
+                                    className="inline-flex items-center gap-1.5 px-3 py-1.5 rounded-lg bg-orange-100 dark:bg-orange-900/20 text-orange-600 dark:text-orange-400 text-xs font-semibold border border-orange-200 dark:border-orange-800/40 hover:bg-orange-200 dark:hover:bg-orange-900/30 transition-colors"
+                                  >
+                                    Añadir RPE
+                                  </button>
+                                )}
+                                {!canComplete && !isCompleted && (
                                   <button
                                     type="button"
                                     onClick={(e) => { e.stopPropagation(); setSelectedSession(training); }}
                                     className="text-xs text-blue-500 dark:text-blue-400 hover:text-blue-700 dark:hover:text-blue-300 transition-colors"
                                   >
-                                    {isCompleted ? 'Ver resultado →' : 'Ver detalles →'}
+                                    Ver detalles →
                                   </button>
                                 )}
                               </div>
@@ -763,8 +812,8 @@ function ActivePlanView({
         )}
       </AnimatePresence>
 
-      {/* Session completion modal */}
-      {completionModalSession && (
+      {/* Session completion modal — portal to body to avoid stacking context issues */}
+      {completionModalSession && createPortal(
         <SessionCompletionModal
           session={completionModalSession}
           onClose={() => setCompletionModalSession(null)}
@@ -772,11 +821,77 @@ function ActivePlanView({
             setCompletionModalSession(null);
             loadTrainings();
           }}
-        />
+        />,
+        document.body
       )}
 
-      {/* Session detail modal */}
-      <AnimatePresence>
+      {/* RPE quick modal — portal to body */}
+      {rpeSession && createPortal(
+        <motion.div
+          initial={{ opacity: 0 }}
+          animate={{ opacity: 1 }}
+          exit={{ opacity: 0 }}
+          className="fixed inset-0 z-50 flex items-center justify-center bg-black/40 p-4"
+          onClick={() => setRpeSession(null)}
+        >
+          <motion.div
+            initial={{ opacity: 0, scale: 0.95 }}
+            animate={{ opacity: 1, scale: 1 }}
+            exit={{ opacity: 0, scale: 0.95 }}
+            onClick={(e) => e.stopPropagation()}
+            className="bg-white dark:bg-slate-900 rounded-2xl shadow-xl w-full max-w-sm p-5"
+          >
+            <h3 className="text-base font-bold text-slate-900 dark:text-white mb-1">
+              Añadir RPE
+            </h3>
+            <p className="text-sm text-slate-500 dark:text-slate-400 mb-4">
+              {rpeSession.title} — ¿Cómo te sentiste?
+            </p>
+            <div className="flex flex-wrap gap-2 justify-center mb-4">
+              {[1, 2, 3, 4, 5, 6, 7, 8, 9, 10].map((v) => (
+                <button
+                  key={v}
+                  type="button"
+                  onClick={() => setRpeValue(v)}
+                  className={`w-9 h-9 rounded-full text-sm font-bold transition-all ${
+                    rpeValue === v
+                      ? 'bg-orange-500 text-white scale-110 shadow-md'
+                      : 'bg-slate-100 dark:bg-slate-800 text-slate-700 dark:text-slate-300 hover:bg-slate-200 dark:hover:bg-slate-700'
+                  }`}
+                >
+                  {v}
+                </button>
+              ))}
+            </div>
+            {rpeValue && (
+              <p className="text-center text-sm text-slate-500 dark:text-slate-400 mb-3">
+                RPE seleccionado: <span className="font-bold text-orange-500">{rpeValue}/10</span>
+              </p>
+            )}
+            <div className="flex gap-3">
+              <button
+                type="button"
+                onClick={() => setRpeSession(null)}
+                className="flex-1 px-3 py-2 text-sm font-medium text-slate-600 dark:text-slate-400 border border-slate-200 dark:border-slate-700 rounded-xl hover:bg-slate-50 dark:hover:bg-slate-800 transition-colors"
+              >
+                Cancelar
+              </button>
+              <button
+                type="button"
+                onClick={handleSaveRpe}
+                disabled={!rpeValue || savingRpe}
+                className="flex-1 px-3 py-2 text-sm font-semibold text-white bg-orange-500 hover:bg-orange-600 disabled:bg-slate-300 dark:disabled:bg-slate-700 rounded-xl transition-colors disabled:cursor-not-allowed"
+              >
+                {savingRpe ? 'Guardando…' : 'Guardar'}
+              </button>
+            </div>
+          </motion.div>
+        </motion.div>,
+        document.body
+      )}
+
+      {/* Session detail modal — portal to body */}
+      {createPortal(<AnimatePresence>
         {selectedSession && (
           <motion.div
             initial={{ opacity: 0 }}
@@ -891,7 +1006,7 @@ function ActivePlanView({
             </motion.div>
           </motion.div>
         )}
-      </AnimatePresence>
+      </AnimatePresence>, document.body)}
     </div>
   );
 }

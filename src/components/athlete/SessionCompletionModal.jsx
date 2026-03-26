@@ -4,6 +4,13 @@ import { FiX, FiCheck, FiMapPin, FiClock } from 'react-icons/fi';
 import { completeSessionManual, SENSATIONS } from '../../services/sessionCompletionService';
 import { showSuccess, showError } from '../../lib/toast';
 
+const SENSATION_COLORS = {
+  facil: 'bg-green-100 text-green-700 dark:bg-green-900/30 dark:text-green-400 border-green-300 dark:border-green-700',
+  normal: 'bg-blue-100 text-blue-700 dark:bg-blue-900/30 dark:text-blue-400 border-blue-300 dark:border-blue-700',
+  duro: 'bg-orange-100 text-orange-700 dark:bg-orange-900/30 dark:text-orange-400 border-orange-300 dark:border-orange-700',
+  muy_duro: 'bg-red-100 text-red-700 dark:bg-red-900/30 dark:text-red-400 border-red-300 dark:border-red-700',
+};
+
 /**
  * Modal for manually completing a training session.
  * Fields: distancia (required), tiempo (optional), sensación / RPE (required), notas (optional).
@@ -43,7 +50,8 @@ export default function SessionCompletionModal({ session, onClose, onComplete })
   const handleSubmit = async (e) => {
     e.preventDefault();
 
-    if (!distance || parseFloat(distance) <= 0) {
+    const isGym = session.type === 'gym' || session.training_type === 'gym';
+    if (!isGym && (!distance || parseFloat(distance) <= 0)) {
       showError('La distancia es obligatoria');
       return;
     }
@@ -73,29 +81,28 @@ export default function SessionCompletionModal({ session, onClose, onComplete })
 
   return (
     <AnimatePresence>
-      {/* Backdrop */}
+      {/* Overlay — click to close */}
       <motion.div
-        key="backdrop"
+        key="overlay"
         initial={{ opacity: 0 }}
         animate={{ opacity: 1 }}
         exit={{ opacity: 0 }}
-        className="fixed inset-0 z-40 bg-black/50 backdrop-blur-sm"
+        className="fixed inset-0 z-50 flex items-center justify-center bg-black/50 backdrop-blur-sm p-4"
         onClick={onClose}
-        aria-hidden="true"
-      />
-
-      {/* Panel */}
-      <motion.div
-        key="panel"
-        initial={{ opacity: 0, y: 60, scale: 0.97 }}
-        animate={{ opacity: 1, y: 0, scale: 1 }}
-        exit={{ opacity: 0, y: 40, scale: 0.97 }}
-        transition={{ type: 'spring', stiffness: 380, damping: 32 }}
-        className="fixed inset-x-0 bottom-0 z-50 rounded-t-2xl bg-white dark:bg-gray-900 shadow-2xl sm:inset-auto sm:left-1/2 sm:-translate-x-1/2 sm:top-1/2 sm:-translate-y-1/2 sm:w-full sm:max-w-md sm:rounded-2xl"
-        role="dialog"
-        aria-modal="true"
-        aria-labelledby="completion-modal-title"
       >
+        {/* Panel */}
+        <motion.div
+          key="panel"
+          initial={{ opacity: 0, y: 20, scale: 0.97 }}
+          animate={{ opacity: 1, y: 0, scale: 1 }}
+          exit={{ opacity: 0, y: 20, scale: 0.97 }}
+          transition={{ type: 'spring', stiffness: 380, damping: 32 }}
+          className="w-full max-w-md max-h-[85vh] overflow-y-auto bg-white dark:bg-gray-900 shadow-2xl rounded-2xl"
+          role="dialog"
+          aria-modal="true"
+          aria-labelledby="completion-modal-title"
+          onClick={(e) => e.stopPropagation()}
+        >
         {/* Handle (mobile) */}
         <div className="flex justify-center pt-3 pb-1 sm:hidden">
           <div className="w-10 h-1 rounded-full bg-gray-300 dark:bg-gray-600" />
@@ -131,7 +138,12 @@ export default function SessionCompletionModal({ session, onClose, onComplete })
             <label htmlFor="distance" className="flex items-center gap-1.5 text-sm font-semibold text-gray-700 dark:text-gray-300 mb-1.5">
               <FiMapPin className="w-4 h-4 text-blue-500" />
               Distancia real (km)
-              <span className="text-red-500 ml-0.5">*</span>
+              {!(session.type === 'gym' || session.training_type === 'gym') && (
+                <span className="text-red-500 ml-0.5">*</span>
+              )}
+              {(session.type === 'gym' || session.training_type === 'gym') && (
+                <span className="text-xs text-slate-400 font-normal ml-1">(opcional)</span>
+              )}
             </label>
             <input
               id="distance"
@@ -213,7 +225,7 @@ export default function SessionCompletionModal({ session, onClose, onComplete })
                     onClick={() => handleSensationSelect(s)}
                     className={`py-2.5 px-3 rounded-xl text-sm font-semibold border-2 transition-all ${
                       selectedSensation === s.key
-                        ? s.colorClass + ' ring-2 ring-offset-1 ring-current'
+                        ? (SENSATION_COLORS[s.key] || '') + ' ring-2 ring-offset-1 ring-current'
                         : 'bg-gray-50 dark:bg-gray-800 text-gray-600 dark:text-gray-400 border-gray-200 dark:border-gray-700 hover:border-gray-300 dark:hover:border-gray-600'
                     }`}
                   >
@@ -292,6 +304,7 @@ export default function SessionCompletionModal({ session, onClose, onComplete })
             )}
           </button>
         </form>
+        </motion.div>
       </motion.div>
     </AnimatePresence>
   );

@@ -4,6 +4,13 @@ import { FiX, FiCheck, FiMapPin, FiClock } from 'react-icons/fi';
 import { completeSessionManual, SENSATIONS } from '../../services/sessionCompletionService';
 import { showSuccess, showError } from '../../lib/toast';
 
+const SENSATION_COLORS = {
+  facil: 'bg-green-100 text-green-700 dark:bg-green-900/30 dark:text-green-400 border-green-300 dark:border-green-700',
+  normal: 'bg-blue-100 text-blue-700 dark:bg-blue-900/30 dark:text-blue-400 border-blue-300 dark:border-blue-700',
+  duro: 'bg-orange-100 text-orange-700 dark:bg-orange-900/30 dark:text-orange-400 border-orange-300 dark:border-orange-700',
+  muy_duro: 'bg-red-100 text-red-700 dark:bg-red-900/30 dark:text-red-400 border-red-300 dark:border-red-700',
+};
+
 /**
  * Modal for manually completing a training session.
  * Fields: distancia (required), tiempo (optional), sensación / RPE (required), notas (optional).
@@ -218,7 +225,7 @@ export default function SessionCompletionModal({ session, onClose, onComplete })
                     onClick={() => handleSensationSelect(s)}
                     className={`py-2.5 px-3 rounded-xl text-sm font-semibold border-2 transition-all ${
                       selectedSensation === s.key
-                        ? s.colorClass + ' ring-2 ring-offset-1 ring-current'
+                        ? (SENSATION_COLORS[s.key] || '') + ' ring-2 ring-offset-1 ring-current'
                         : 'bg-gray-50 dark:bg-gray-800 text-gray-600 dark:text-gray-400 border-gray-200 dark:border-gray-700 hover:border-gray-300 dark:hover:border-gray-600'
                     }`}
                   >

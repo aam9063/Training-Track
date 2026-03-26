@@ -13,10 +13,10 @@ export const SENSATION_RPE_MAP = {
 };
 
 export const SENSATIONS = [
-  { key: 'facil', label: 'Fácil', rpe: 2, colorClass: 'bg-green-100 text-green-700 dark:bg-green-900/30 dark:text-green-400 border-green-300 dark:border-green-700' },
-  { key: 'normal', label: 'Normal', rpe: 5, colorClass: 'bg-blue-100 text-blue-700 dark:bg-blue-900/30 dark:text-blue-400 border-blue-300 dark:border-blue-700' },
-  { key: 'duro', label: 'Duro', rpe: 7, colorClass: 'bg-orange-100 text-orange-700 dark:bg-orange-900/30 dark:text-orange-400 border-orange-300 dark:border-orange-700' },
-  { key: 'muy_duro', label: 'Muy duro', rpe: 9, colorClass: 'bg-red-100 text-red-700 dark:bg-red-900/30 dark:text-red-400 border-red-300 dark:border-red-700' },
+  { key: 'facil', label: 'Fácil', rpe: 2 },
+  { key: 'normal', label: 'Normal', rpe: 5 },
+  { key: 'duro', label: 'Duro', rpe: 7 },
+  { key: 'muy_duro', label: 'Muy duro', rpe: 9 },
 ];
 
 /**
@@ -38,6 +38,26 @@ export const completeSessionManual = async (sessionId, { distance, time, rpe, no
       completed_at: new Date().toISOString(),
       actual_distance_km: distance ?? null,
       actual_time_minutes: time != null ? Math.round(time) : null,
+      rpe: rpe ?? null,
+      completion_notes: notes || null,
+    })
+    .eq('id', sessionId)
+    .select()
+    .single();
+
+  if (error) {
+    return { data: null, error };
+  }
+  return { data, error: null };
+};
+
+/**
+ * Saves RPE and optional notes to an already-completed session (e.g. auto-completed by Strava).
+ */
+export const saveRpeToSession = async (sessionId, { rpe, notes }) => {
+  const { data, error } = await supabase
+    .from('training_sessions')
+    .update({
       rpe: rpe ?? null,
       completion_notes: notes || null,
     })

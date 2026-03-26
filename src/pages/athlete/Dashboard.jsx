@@ -288,7 +288,7 @@ const AthleteDashboard = () => {
               <FiActivity className="w-4 h-4" />
               Entrenamientos de la semana
             </div>
-            <Link to="/athlete/training" className="text-xs font-medium text-green-600 dark:text-green-400 flex items-center gap-1">
+            <Link to={isIndependent ? '/athlete/my-plan' : '/athlete/training'} className="text-xs font-medium text-green-600 dark:text-green-400 flex items-center gap-1">
               Ver todos <FiArrowRight className="w-3 h-3" />
             </Link>
           </div>
@@ -301,7 +301,7 @@ const AthleteDashboard = () => {
                 return (
                   <Link
                     key={session.id}
-                    to="/athlete/training"
+                    to={isIndependent ? '/athlete/my-plan' : '/athlete/training'}
                     className="flex items-center gap-3 bg-white dark:bg-gray-800 rounded-xl p-3 border border-gray-200 dark:border-gray-700"
                   >
                     <div className={`w-9 h-9 rounded-xl flex items-center justify-center flex-shrink-0 ${s.bg}`}>

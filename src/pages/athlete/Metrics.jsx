@@ -42,6 +42,7 @@ import TrainingZonesCard from '../../components/athlete/TrainingZonesCard';
 import InfoTooltip from '../../components/common/InfoTooltip';
 import useStravaMetrics from '../../hooks/useStravaMetrics';
 import useInternalMetrics from '../../hooks/useInternalMetrics';
+import { computeAge } from '../../lib/athleteUtils';
 import { exportActivitiesCSV, exportLoadCSV } from '../../lib/dataExport';
 
 // Register Chart.js components
@@ -146,28 +147,56 @@ const ActivityTypeDistribution = ({ activities }) => {
 
   return (
     <div className="flex flex-col">
-      {/* List */}
-      <div className="space-y-2">
-        {sortedTypes.map(([type, data]) => {
-          const percentage = totalTime > 0 ? Math.round((data.time / totalTime) * 100) : 0;
-          return (
-            <div key={type} className="flex items-center gap-2.5">
-              <div
-                className="w-2.5 h-2.5 rounded-full flex-shrink-0"
-                style={{ backgroundColor: activityColors[type] || '#6b7280' }}
-              />
-              <span className="flex-1 text-sm font-medium text-slate-700 dark:text-slate-300 truncate">
-                {activityTypeLabels[type] || type}
-              </span>
-              <span className="text-xs text-slate-400 dark:text-slate-500 whitespace-nowrap">
-                {data.count} act. · {formatTime(data.time)}
-              </span>
-              <span className="text-xs font-bold text-blue-600 dark:text-blue-400 w-8 text-right flex-shrink-0">
-                {percentage}%
-              </span>
-            </div>
-          );
-        })}
+      {/* Chart + List */}
+      <div className="flex flex-col sm:flex-row items-center gap-6">
+        {/* Doughnut chart */}
+        <div className="w-36 h-36 flex-shrink-0">
+          <Doughnut
+            data={chartData}
+            options={{
+              responsive: true,
+              maintainAspectRatio: true,
+              cutout: '65%',
+              plugins: {
+                legend: { display: false },
+                tooltip: {
+                  callbacks: {
+                    label: (ctx) => {
+                      const mins = ctx.parsed;
+                      const h = Math.floor(mins / 60);
+                      const m = mins % 60;
+                      return ` ${ctx.label}: ${h > 0 ? `${h}h ` : ''}${m}m`;
+                    },
+                  },
+                },
+              },
+            }}
+          />
+        </div>
+
+        {/* List */}
+        <div className="space-y-2 flex-1 w-full">
+          {sortedTypes.map(([type, data]) => {
+            const percentage = totalTime > 0 ? Math.round((data.time / totalTime) * 100) : 0;
+            return (
+              <div key={type} className="flex items-center gap-2.5">
+                <div
+                  className="w-2.5 h-2.5 rounded-full flex-shrink-0"
+                  style={{ backgroundColor: activityColors[type] || '#6b7280' }}
+                />
+                <span className="flex-1 text-sm font-medium text-slate-700 dark:text-slate-300 truncate">
+                  {activityTypeLabels[type] || type}
+                </span>
+                <span className="text-xs text-slate-400 dark:text-slate-500 whitespace-nowrap">
+                  {data.count} act. · {formatTime(data.time)}
+                </span>
+                <span className="text-xs font-bold text-blue-600 dark:text-blue-400 w-8 text-right flex-shrink-0">
+                  {percentage}%
+                </span>
+              </div>
+            );
+          })}
+        </div>
       </div>
 
       {/* Summary */}
@@ -186,32 +215,24 @@ const ActivityTypeDistribution = ({ activities }) => {
 };
 
 // Total Activity Time Chart (Garmin style)
+const getDateRangeForPeriod = (period) => {
+  const end = new Date();
+  const start = new Date();
+  switch (period) {
+    case '7days': start.setDate(end.getDate() - 6); break;
+    case '4weeks': start.setDate(end.getDate() - 27); break;
+    case '6months': start.setMonth(end.getMonth() - 6); break;
+    case '1year': start.setFullYear(end.getFullYear() - 1); break;
+    default: start.setDate(end.getDate() - 6);
+  }
+  return { start, end };
+};
+
 const TotalActivityTimeChart = ({ activities, selectedPeriod, onPeriodChange }) => {
-  const [dateRange, setDateRange] = useState({ start: new Date(), end: new Date() });
+  const [dateRange, setDateRange] = useState(() => getDateRangeForPeriod(selectedPeriod));
 
-  // Calculate date range based on period
   useEffect(() => {
-    const end = new Date();
-    const start = new Date();
-
-    switch (selectedPeriod) {
-      case '7days':
-        start.setDate(end.getDate() - 6);
-        break;
-      case '4weeks':
-        start.setDate(end.getDate() - 27);
-        break;
-      case '6months':
-        start.setMonth(end.getMonth() - 6);
-        break;
-      case '1year':
-        start.setFullYear(end.getFullYear() - 1);
-        break;
-      default:
-        start.setDate(end.getDate() - 6);
-    }
-
-    setDateRange({ start, end });
+    setDateRange(getDateRangeForPeriod(selectedPeriod));
   }, [selectedPeriod]);
 
   // Group activities by day/week/month depending on period
@@ -490,7 +511,7 @@ const InternalMetricsSection = ({
   );
 
   return (
-    <section className="space-y-4">
+    <section className="space-y-6">
       <div className="flex items-center gap-2">
         <FiTrendingUp className="w-4 h-4 text-green-600" />
         <h2 className="text-base font-bold text-slate-900 dark:text-white">
@@ -540,7 +561,7 @@ const InternalMetricsSection = ({
           )}
 
           {/* Charts grid: km + RPE */}
-          <div className="grid grid-cols-1 lg:grid-cols-2 gap-4">
+          <div className="grid grid-cols-1 lg:grid-cols-2 gap-6">
             {/* Weekly km bar chart */}
             <motion.div
               initial={{ opacity: 0, y: 16 }}
@@ -904,11 +925,12 @@ const AthleteMetrics = () => {
   }, [bestEfforts, dbPersonalBests, profile?.athlete?.vdot]);
 
   // HR training zones (Karvonen formula)
+  const estimatedAge = profile?.athlete?.date_of_birth
+    ? computeAge(profile.athlete.date_of_birth)
+    : null;
   const hrZoneData = useMemo(() => {
     const maxHR = profile?.athlete?.max_heart_rate
-      || (profile?.athlete?.date_of_birth
-        ? 220 - Math.floor((Date.now() - new Date(profile.athlete.date_of_birth).getTime()) / 31557600000)
-        : null);
+      || (estimatedAge ? 220 - estimatedAge : null);
     if (!maxHR) return null;
     const restingHR = profile?.athlete?.resting_heart_rate || 60;
     const zones = calculateHRZones(maxHR, restingHR);
@@ -924,7 +946,7 @@ const AthleteMetrics = () => {
     });
 
     return { zones, maxHR, restingHR, totalHRActivities: hrActivities.length };
-  }, [rawActivities, profile]);
+  }, [rawActivities, profile, estimatedAge]);
 
   // Per-sport weekly charts data
   const sportCharts = useMemo(() => {
@@ -1199,9 +1221,9 @@ const AthleteMetrics = () => {
   }
 
   return (
-    <div className="p-4 sm:p-6 lg:p-8">
+    <div className="p-4 sm:p-6 lg:p-8 space-y-6">
       {/* Header */}
-      <div className="flex flex-col sm:flex-row sm:items-center sm:justify-between mb-6 sm:mb-8 gap-4">
+      <div className="flex flex-col sm:flex-row sm:items-center sm:justify-between gap-4">
         <div>
           <div className="flex items-center gap-3 mb-2">
             <h1 className="text-2xl sm:text-3xl font-bold text-gray-900 dark:text-white">
@@ -1370,7 +1392,7 @@ const AthleteMetrics = () => {
           initial={{ opacity: 0, y: 20 }}
           animate={{ opacity: 1, y: 0 }}
           transition={{ delay: 0.3 }}
-          className="bg-white dark:bg-gray-800 rounded-2xl p-4 mb-4 sm:mb-6 sm:p-5 border border-gray-200 dark:border-gray-700"
+          className="bg-white dark:bg-gray-800 rounded-2xl p-4 sm:p-5 border border-gray-200 dark:border-gray-700"
         >
           {/* Header */}
           <div className="flex items-center justify-between mb-1">

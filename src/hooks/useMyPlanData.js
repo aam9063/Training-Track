@@ -19,11 +19,13 @@ import { showError, showSuccess } from '../lib/toast';
 export default function useMyPlanData(userId) {
   const [loading, setLoading] = useState(true);
   const [generating, setGenerating] = useState(false);
+  const [assigning, setAssigning] = useState(false);
   const [activePlan, setActivePlan] = useState([]);
   const [planHistory, setPlanHistory] = useState([]);
   const [hasProfile, setHasProfile] = useState(null); // null = unknown, true/false once loaded
   const [rateLimit, setRateLimit] = useState({ used: 0, remaining: 2, canGenerate: true });
   const [currentWeekStart, setCurrentWeekStart] = useState(null);
+  const [pendingPlan, setPendingPlan] = useState(null);
 
   // Compute current week Monday
   const getThisMonday = useCallback(() => {
@@ -69,8 +71,8 @@ export default function useMyPlanData(userId) {
   }, [loadData]);
 
   /**
-   * Trigger AI plan generation and auto-assignment.
-   * Validates rate limit before calling the Edge Function.
+   * Trigger AI plan generation and store result in pendingPlan for preview.
+   * Does NOT auto-assign — the user must confirm via assignPlan().
    */
   const generatePlan = useCallback(async () => {
     if (!userId) return;
@@ -83,28 +85,53 @@ export default function useMyPlanData(userId) {
     setGenerating(true);
     try {
       const planData = await generateSelfPlan(userId);
-      await autoAssignPlan(planData, userId);
-
-      showSuccess('¡Plan generado y asignado correctamente!');
-
-      // Reload everything after generation
-      await loadData();
+      setPendingPlan(planData);
     } catch (err) {
       showError(err.message ?? 'Error al generar el plan');
     } finally {
       setGenerating(false);
     }
-  }, [userId, rateLimit, loadData]);
+  }, [userId, rateLimit]);
+
+  /**
+   * Assign the pending plan to the athlete and refresh data.
+   */
+  const assignPlan = useCallback(async () => {
+    if (!pendingPlan || !userId) return;
+
+    setAssigning(true);
+    try {
+      await autoAssignPlan(pendingPlan, userId);
+      showSuccess('¡Plan asignado correctamente!');
+      setPendingPlan(null);
+      await loadData();
+    } catch (err) {
+      showError(err.message ?? 'Error al asignar el plan');
+    } finally {
+      setAssigning(false);
+    }
+  }, [pendingPlan, userId, loadData]);
+
+  /**
+   * Discard the pending plan without assigning.
+   */
+  const discardPlan = useCallback(() => {
+    setPendingPlan(null);
+  }, []);
 
   return {
     loading,
     generating,
+    assigning,
     activePlan,
     planHistory,
     hasProfile,
     rateLimit,
     currentWeekStart,
+    pendingPlan,
     generatePlan,
+    assignPlan,
+    discardPlan,
     refresh: loadData,
   };
 }

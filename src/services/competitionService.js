@@ -6,6 +6,12 @@ import { toLocalDateStr } from '../lib/dateUtils';
  * All operations use the authenticated user's id as athlete_id with coach_id = NULL.
  */
 
+/** Map DB row (target_time_seconds) to frontend field (goal_time_minutes) */
+const mapCompetition = (row) => ({
+  ...row,
+  goal_time_minutes: row.target_time_seconds ? Math.round(row.target_time_seconds / 60) : null,
+});
+
 /**
  * Fetch all competitions for the given athlete (upcoming and past).
  *
@@ -27,7 +33,7 @@ export const getIndependentCompetitions = async (userId) => {
   if (error) {
     return { data: [], error };
   }
-  return { data: data ?? [], error: null };
+  return { data: (data ?? []).map(mapCompetition), error: null };
 };
 
 /**
@@ -56,7 +62,7 @@ export const getNextCompetition = async (userId) => {
   if (error) {
     return { data: null, error };
   }
-  return { data: data ?? null, error: null };
+  return { data: data ? mapCompetition(data) : null, error: null };
 };
 
 /**
@@ -87,7 +93,7 @@ export const createCompetition = async (userId, competitionData) => {
       distance_km: competitionData.distance_km ?? null,
       location: competitionData.location?.trim() || null,
       notes: competitionData.notes?.trim() || null,
-      goal_time_minutes: competitionData.goal_time_minutes ?? null,
+      target_time_seconds: competitionData.goal_time_minutes ? competitionData.goal_time_minutes * 60 : null,
       status: 'upcoming',
     })
     .select()

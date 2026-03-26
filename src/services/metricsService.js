@@ -235,12 +235,19 @@ export const getPersonalBests = async (userId) => {
   if (!userId) return { data: null, error: new Error('No userId') };
 
   // Fetch competition results
-  const { data: competitions, error: compError } = await supabase
+  const { data: rawComps, error: compError } = await supabase
     .from('competitions')
-    .select('distance_km, actual_time_minutes, event_date')
+    .select('distance_km, result_time_seconds, event_date')
     .eq('athlete_id', userId)
-    .not('actual_time_minutes', 'is', null)
-    .order('actual_time_minutes', { ascending: true });
+    .not('result_time_seconds', 'is', null)
+    .order('result_time_seconds', { ascending: true });
+
+  // Map to minutes for consistency
+  const competitions = (rawComps ?? []).map(c => ({
+    distance_km: c.distance_km,
+    actual_time_minutes: c.result_time_seconds ? Math.round(c.result_time_seconds / 60) : null,
+    event_date: c.event_date,
+  }));
 
   // Fetch manual session completions with distance + time (running)
   const { data: sessions, error: sessError } = await supabase

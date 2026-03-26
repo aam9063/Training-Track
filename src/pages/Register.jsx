@@ -40,10 +40,11 @@ export default function Register() {
 
           {loadingInvite && (
             <div className="flex items-center justify-center py-12">
-              <svg className="animate-spin h-8 w-8 text-sky-600" xmlns="http://www.w3.org/2000/svg" fill="none" viewBox="0 0 24 24">
+              <svg className="animate-spin h-8 w-8 text-sky-600" xmlns="http://www.w3.org/2000/svg" fill="none" viewBox="0 0 24 24" aria-hidden="true">
                 <circle className="opacity-25" cx="12" cy="12" r="10" stroke="currentColor" strokeWidth="4"></circle>
                 <path className="opacity-75" fill="currentColor" d="M4 12a8 8 0 018-8V0C5.373 0 0 5.373 0 12h4zm2 5.291A7.962 7.962 0 014 12H0c0 3.042 1.135 5.824 3 7.938l3-2.647z"></path>
               </svg>
+              <span className="sr-only">Cargando...</span>
             </div>
           )}
 
@@ -161,14 +162,14 @@ export default function Register() {
                     whileHover={{ scale: 1.02 }}
                     whileTap={{ scale: 0.98 }}
                     onClick={() => selectRole('independent_athlete')}
-                    className="w-full p-6 border-2 border-gray-200 dark:border-gray-700 rounded-2xl hover:border-green-500 dark:hover:border-green-400 transition-all duration-200 text-left group"
+                    className="w-full p-6 border-2 border-gray-200 dark:border-gray-700 rounded-2xl hover:border-sky-500 dark:hover:border-sky-400 transition-all duration-200 text-left group"
                   >
                     <div className="flex items-start space-x-4">
-                      <div className="w-14 h-14 bg-green-600 rounded-xl flex items-center justify-center flex-shrink-0">
+                      <div className="w-14 h-14 bg-sky-600 rounded-xl flex items-center justify-center flex-shrink-0">
                         <HiLightningBolt className="w-7 h-7 text-white" />
                       </div>
                       <div>
-                        <h3 className="text-xl font-bold text-gray-900 dark:text-white group-hover:text-green-600 dark:group-hover:text-green-400 transition-colors">
+                        <h3 className="text-xl font-bold text-gray-900 dark:text-white group-hover:text-sky-600 dark:group-hover:text-sky-400 transition-colors">
                           Atleta Independiente
                         </h3>
                         <p className="text-gray-600 dark:text-gray-400 mt-1">
@@ -213,7 +214,7 @@ export default function Register() {
 
                 {/* Header */}
                 <div className="text-center">
-                  <div className={`w-16 h-16 mx-auto rounded-2xl flex items-center justify-center mb-4 ${role === 'independent_athlete' ? 'bg-green-600' : 'bg-sky-600'}`}>
+                  <div className={`w-16 h-16 mx-auto rounded-2xl flex items-center justify-center mb-4 bg-sky-600`}>
                     {role === 'coach' ? (
                       <HiAcademicCap className="w-8 h-8 text-white" />
                     ) : role === 'independent_athlete' ? (
@@ -486,11 +487,11 @@ export default function Register() {
                     whileTap={{ scale: 0.98 }}
                     type="submit"
                     disabled={isLoading}
-                    className={`w-full py-3 px-4 text-white rounded-xl font-semibold hover:shadow-lg transition-all duration-200 disabled:opacity-50 disabled:cursor-not-allowed ${role === 'independent_athlete' ? 'bg-green-600 hover:bg-green-700' : 'bg-sky-600 hover:bg-sky-700'}`}
+                    className={`w-full py-3 px-4 text-white rounded-xl font-semibold hover:shadow-lg transition-all duration-200 disabled:opacity-50 disabled:cursor-not-allowed bg-sky-600 hover:bg-sky-700`}
                   >
                     {isLoading ? (
                       <span className="flex items-center justify-center">
-                        <svg className="animate-spin -ml-1 mr-3 h-5 w-5 text-white" xmlns="http://www.w3.org/2000/svg" fill="none" viewBox="0 0 24 24">
+                        <svg className="animate-spin -ml-1 mr-3 h-5 w-5 text-white" xmlns="http://www.w3.org/2000/svg" fill="none" viewBox="0 0 24 24" aria-hidden="true">
                           <circle className="opacity-25" cx="12" cy="12" r="10" stroke="currentColor" strokeWidth="4"></circle>
                           <path className="opacity-75" fill="currentColor" d="M4 12a8 8 0 018-8V0C5.373 0 0 5.373 0 12h4zm2 5.291A7.962 7.962 0 014 12H0c0 3.042 1.135 5.824 3 7.938l3-2.647z"></path>
                         </svg>

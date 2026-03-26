@@ -16,7 +16,7 @@ const independentTabs = [
   { path: '/athlete/my-plan', icon: FiClipboard, label: 'Mi Plan' },
   { path: '/athlete/metrics', icon: FiBarChart2, label: 'Métricas' },
   { path: '/athlete/ai-assistant', icon: FiZap, label: 'Hermes IA' },
-  { path: '/athlete/competitions', icon: FiCalendar, label: 'Competi.' },
+  { path: '/athlete/calendar', icon: FiCalendar, label: 'Calendario' },
 ];
 
 const AthleteBottomNav = () => {

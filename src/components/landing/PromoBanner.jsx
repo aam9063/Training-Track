@@ -1,7 +1,6 @@
 import { useState, useEffect } from 'react';
 import { motion, AnimatePresence } from 'framer-motion';
-import { Link } from 'react-router-dom';
-import { HiX, HiArrowRight } from 'react-icons/hi';
+import { HiX } from 'react-icons/hi';
 import { BsStars } from 'react-icons/bs';
 import { supabase } from '../../lib/supabase';
 import WaitlistForm from './WaitlistForm';
@@ -49,11 +48,12 @@ export default function PromoBanner() {
               <div className="flex items-center gap-2">
                 <BsStars className="w-4 h-4 text-sky-200" />
                 <span className="text-white font-semibold text-sm">
-                  TrainingTrack — Ya disponible
+                  TrainingTrack — Próximo lanzamiento
                 </span>
               </div>
               <button
                 onClick={handleDismiss}
+                aria-label="Cerrar banner"
                 className="text-sky-200 hover:text-white transition-colors"
               >
                 <HiX className="w-5 h-5" />
@@ -69,16 +69,7 @@ export default function PromoBanner() {
                 Tanto si eres entrenador como atleta independiente, TrainingTrack tiene un plan para ti: IA, Strava, métricas avanzadas y mucho más.
               </p>
 
-              <Link
-                to="/register"
-                onClick={handleDismiss}
-                className="flex items-center justify-center gap-2 w-full px-4 py-2 bg-sky-600 hover:bg-sky-700 text-white rounded-xl font-semibold text-sm transition-all duration-200 hover:shadow-lg"
-              >
-                Crear cuenta gratis
-                <HiArrowRight className="w-4 h-4" />
-              </Link>
-
-              <WaitlistForm source="promo" variant="light" className="mt-4" />
+              <WaitlistForm source="promo" variant="light" />
             </div>
           </div>
         </motion.div>

@@ -379,8 +379,7 @@ export const checkGenerationRateLimit = async (userId) => {
     if (error) throw error;
 
     const used = count ?? 0;
-    // TODO: restore limit to 2 for production launch
-    const MAX_GENERATIONS = 999;
+    const MAX_GENERATIONS = 2;
     const remaining = Math.max(0, MAX_GENERATIONS - used);
 
     return { used, remaining, canGenerate: remaining > 0 };

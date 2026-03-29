@@ -139,8 +139,8 @@ const ActivityTypeDistribution = ({ activities }) => {
   if (!activities?.length) {
     return (
       <div className="flex flex-col items-center justify-center h-full py-8">
-        <FiActivity className="w-12 h-12 text-gray-300 dark:text-gray-600 mb-3" />
-        <p className="text-gray-500 dark:text-gray-400">No hay actividades</p>
+        <FiActivity className="w-12 h-12 text-ath-text-muted mb-3" />
+        <p className="text-ath-text-muted">No hay actividades</p>
       </div>
     );
   }
@@ -184,10 +184,10 @@ const ActivityTypeDistribution = ({ activities }) => {
                   className="w-2.5 h-2.5 rounded-full flex-shrink-0"
                   style={{ backgroundColor: activityColors[type] || '#6b7280' }}
                 />
-                <span className="flex-1 text-sm font-medium text-slate-700 dark:text-slate-300 truncate">
+                <span className="flex-1 text-sm font-medium text-ath-text-secondary truncate">
                   {activityTypeLabels[type] || type}
                 </span>
-                <span className="text-xs text-slate-400 dark:text-slate-500 whitespace-nowrap">
+                <span className="text-xs text-ath-text-muted whitespace-nowrap">
                   {data.count} act. · {formatTime(data.time)}
                 </span>
                 <span className="text-xs font-bold text-blue-600 dark:text-blue-400 w-8 text-right flex-shrink-0">
@@ -200,14 +200,14 @@ const ActivityTypeDistribution = ({ activities }) => {
       </div>
 
       {/* Summary */}
-      <div className="mt-4 pt-4 border-t border-gray-100 dark:border-gray-700 grid grid-cols-2 gap-4 text-center">
+      <div className="mt-4 pt-4 border-t border-ath-border grid grid-cols-2 gap-4 text-center">
         <div>
-          <p className="text-2xl font-bold text-slate-900 dark:text-white">{activities.length}</p>
-          <p className="text-xs text-slate-400 dark:text-slate-500">Actividades totales</p>
+          <p className="text-2xl font-bold text-ath-text-primary">{activities.length}</p>
+          <p className="text-xs text-ath-text-muted">Actividades totales</p>
         </div>
         <div>
-          <p className="text-2xl font-bold text-slate-900 dark:text-white">{(totalDistance / 1000).toFixed(1)}</p>
-          <p className="text-xs text-slate-400 dark:text-slate-500">km totales</p>
+          <p className="text-2xl font-bold text-ath-text-primary">{(totalDistance / 1000).toFixed(1)}</p>
+          <p className="text-xs text-ath-text-muted">km totales</p>
         </div>
       </div>
     </div>
@@ -322,18 +322,18 @@ const TotalActivityTimeChart = ({ activities, selectedPeriod, onPeriodChange }) 
   };
 
   return (
-    <div className="bg-white dark:bg-gray-800 rounded-xl p-4 sm:p-6 shadow-sm border border-gray-200 dark:border-gray-700">
+    <div className="bg-ath-surface rounded-xl p-4 sm:p-6 shadow-sm border border-ath-border">
       <div className="flex flex-col sm:flex-row sm:items-center sm:justify-between mb-4 gap-3">
         <div className="flex items-center justify-between">
-          <h3 className="text-base sm:text-lg font-bold text-gray-900 dark:text-white flex items-center">
+          <h3 className="text-base sm:text-lg font-bold text-ath-text-primary flex items-center">
             Tiempo Total por Actividad
             <InfoTooltip text="Tiempo de movimiento de cada actividad en el período seleccionado. Permite ver cómo se distribuye el esfuerzo en sesiones cortas vs largas." />
           </h3>
-          <button className="sm:hidden text-gray-500 hover:text-gray-700 dark:text-gray-400 dark:hover:text-gray-200">
+          <button className="sm:hidden text-ath-text-muted hover:text-ath-text-primary">
             <FiDownload className="w-5 h-5" />
           </button>
         </div>
-        <button className="hidden sm:block text-gray-500 hover:text-gray-700 dark:text-gray-400 dark:hover:text-gray-200">
+        <button className="hidden sm:block text-ath-text-muted hover:text-ath-text-primary">
           <FiDownload className="w-5 h-5" />
         </button>
       </div>
@@ -345,21 +345,21 @@ const TotalActivityTimeChart = ({ activities, selectedPeriod, onPeriodChange }) 
             onClick={() => navigatePeriod(-1)}
             className="p-1.5 rounded-full hover:bg-gray-100 dark:hover:bg-gray-700 transition-colors"
           >
-            <FiChevronLeft className="w-5 h-5 text-gray-600 dark:text-gray-400" />
+            <FiChevronLeft className="w-5 h-5 text-ath-text-secondary" />
           </button>
           <button
             onClick={() => navigatePeriod(1)}
             className="p-1.5 rounded-full hover:bg-gray-100 dark:hover:bg-gray-700 transition-colors"
           >
-            <FiChevronRight className="w-5 h-5 text-gray-600 dark:text-gray-400" />
+            <FiChevronRight className="w-5 h-5 text-ath-text-secondary" />
           </button>
-          <span className="text-xs sm:text-sm text-gray-600 dark:text-gray-400 flex items-center space-x-1 whitespace-nowrap">
+          <span className="text-xs sm:text-sm text-ath-text-secondary flex items-center space-x-1 whitespace-nowrap">
             <FiClock className="w-4 h-4 flex-shrink-0" />
             <span>{formatDateRange()}</span>
           </span>
         </div>
 
-        <div className="flex items-center bg-gray-100 dark:bg-gray-700 rounded-lg p-1">
+        <div className="flex items-center bg-ath-inset rounded-lg p-1">
           {[
             { value: '7days', label: '7d', labelSm: '7 días' },
             { value: '4weeks', label: '4s', labelSm: '4 semanas' },
@@ -371,8 +371,8 @@ const TotalActivityTimeChart = ({ activities, selectedPeriod, onPeriodChange }) 
               onClick={() => onPeriodChange(period.value)}
               className={`px-2 sm:px-3 py-1.5 rounded-md text-xs sm:text-sm font-medium transition-all ${
                 selectedPeriod === period.value
-                  ? 'bg-white dark:bg-gray-600 text-gray-900 dark:text-white shadow-sm'
-                  : 'text-gray-600 dark:text-gray-400 hover:text-gray-900 dark:hover:text-white'
+                  ? 'bg-ath-surface text-ath-text-primary shadow-sm'
+                  : 'text-ath-text-secondary hover:text-gray-900 dark:hover:text-white'
               }`}
             >
               <span className="sm:hidden">{period.label}</span>
@@ -496,15 +496,15 @@ const InternalMetricsSection = ({
   if (loading) {
     return (
       <div className="flex items-center justify-center py-12">
-        <FiLoader className="w-6 h-6 animate-spin text-green-600" />
+        <FiLoader className="w-6 h-6 animate-spin text-ath-accent" />
       </div>
     );
   }
 
   const emptyState = (
-    <div className="flex flex-col items-center justify-center py-10 bg-white dark:bg-gray-800 rounded-2xl border border-gray-200 dark:border-gray-700">
-      <FiActivity className="w-10 h-10 text-gray-300 dark:text-gray-600 mb-3" />
-      <p className="text-sm font-medium text-slate-500 dark:text-slate-400 text-center max-w-xs">
+    <div className="flex flex-col items-center justify-center py-10 bg-ath-surface rounded-2xl border border-ath-border">
+      <FiActivity className="w-10 h-10 text-ath-text-muted mb-3" />
+      <p className="text-sm font-medium text-ath-text-muted text-center max-w-xs">
         Completa tus entrenamientos para ver tus métricas
       </p>
     </div>
@@ -513,8 +513,8 @@ const InternalMetricsSection = ({
   return (
     <section className="space-y-6">
       <div className="flex items-center gap-2">
-        <FiTrendingUp className="w-4 h-4 text-green-600" />
-        <h2 className="text-base font-bold text-slate-900 dark:text-white">
+        <FiTrendingUp className="w-4 h-4 text-ath-accent" />
+        <h2 className="text-base font-bold text-ath-text-primary">
           Progresión de Entrenamientos
         </h2>
         <span className="text-[10px] font-semibold bg-green-100 dark:bg-green-900/40 text-green-700 dark:text-green-400 px-2 py-0.5 rounded-full">
@@ -531,12 +531,12 @@ const InternalMetricsSection = ({
             <motion.div
               initial={{ opacity: 0, y: 16 }}
               animate={{ opacity: 1, y: 0 }}
-              className="flex items-center gap-4 bg-white dark:bg-gray-800 rounded-2xl border border-gray-200 dark:border-gray-700 p-4"
+              className="flex items-center gap-4 bg-ath-surface rounded-2xl border border-ath-border p-4"
             >
               <div className="flex-shrink-0 w-14 h-14 relative">
                 {/* Simple ring using SVG */}
                 <svg viewBox="0 0 56 56" className="w-full h-full -rotate-90">
-                  <circle cx="28" cy="28" r="22" fill="none" stroke="currentColor" strokeWidth="6" className="text-gray-100 dark:text-gray-700" />
+                  <circle cx="28" cy="28" r="22" fill="none" stroke="currentColor" strokeWidth="6" className="text-ath-inset" />
                   <circle
                     cx="28" cy="28" r="22" fill="none" stroke="currentColor" strokeWidth="6"
                     className="text-green-500"
@@ -544,16 +544,16 @@ const InternalMetricsSection = ({
                     strokeLinecap="round"
                   />
                 </svg>
-                <span className="absolute inset-0 flex items-center justify-center text-xs font-bold text-slate-900 dark:text-white">
+                <span className="absolute inset-0 flex items-center justify-center text-xs font-bold text-ath-text-primary">
                   {completionRate.pct}%
                 </span>
               </div>
               <div>
-                <p className="text-sm font-semibold text-slate-900 dark:text-white flex items-center gap-1.5">
+                <p className="text-sm font-semibold text-ath-text-primary flex items-center gap-1.5">
                   <FiCheckCircle className="w-4 h-4 text-green-500" />
                   Tasa de cumplimiento
                 </p>
-                <p className="text-xs text-slate-500 dark:text-slate-400 mt-0.5">
+                <p className="text-xs text-ath-text-muted mt-0.5">
                   {completionRate.completed} de {completionRate.total} sesiones completadas (últimas 4 semanas)
                 </p>
               </div>
@@ -567,11 +567,11 @@ const InternalMetricsSection = ({
               initial={{ opacity: 0, y: 16 }}
               animate={{ opacity: 1, y: 0 }}
               transition={{ delay: 0.05 }}
-              className="bg-white dark:bg-gray-800 rounded-2xl border border-gray-200 dark:border-gray-700 p-4"
+              className="bg-ath-surface rounded-2xl border border-ath-border p-4"
             >
               <div className="flex items-center gap-2 mb-3">
                 <FiMapPin className="w-4 h-4 text-blue-500" />
-                <h3 className="text-sm font-bold text-slate-900 dark:text-white">
+                <h3 className="text-sm font-bold text-ath-text-primary">
                   Km semanales
                 </h3>
               </div>
@@ -597,7 +597,7 @@ const InternalMetricsSection = ({
                     }}
                   />
                 ) : (
-                  <div className="h-full flex items-center justify-center text-sm text-slate-400 dark:text-slate-500">
+                  <div className="h-full flex items-center justify-center text-sm text-ath-text-muted">
                     Sin datos de kilómetros aún
                   </div>
                 )}
@@ -609,11 +609,11 @@ const InternalMetricsSection = ({
               initial={{ opacity: 0, y: 16 }}
               animate={{ opacity: 1, y: 0 }}
               transition={{ delay: 0.1 }}
-              className="bg-white dark:bg-gray-800 rounded-2xl border border-gray-200 dark:border-gray-700 p-4"
+              className="bg-ath-surface rounded-2xl border border-ath-border p-4"
             >
               <div className="flex items-center gap-2 mb-3">
                 <FiZap className="w-4 h-4 text-orange-500" />
-                <h3 className="text-sm font-bold text-slate-900 dark:text-white">
+                <h3 className="text-sm font-bold text-ath-text-primary">
                   Esfuerzo percibido (RPE)
                 </h3>
               </div>
@@ -648,7 +648,7 @@ const InternalMetricsSection = ({
                     }}
                   />
                 ) : (
-                  <div className="h-full flex items-center justify-center text-sm text-slate-400 dark:text-slate-500">
+                  <div className="h-full flex items-center justify-center text-sm text-ath-text-muted">
                     Sin datos de RPE aún
                   </div>
                 )}
@@ -662,11 +662,11 @@ const InternalMetricsSection = ({
               initial={{ opacity: 0, y: 16 }}
               animate={{ opacity: 1, y: 0 }}
               transition={{ delay: 0.15 }}
-              className="bg-white dark:bg-gray-800 rounded-2xl border border-gray-200 dark:border-gray-700 p-4"
+              className="bg-ath-surface rounded-2xl border border-ath-border p-4"
             >
               <div className="flex items-center gap-2 mb-3">
                 <FiClock className="w-4 h-4 text-purple-500" />
-                <h3 className="text-sm font-bold text-slate-900 dark:text-white">
+                <h3 className="text-sm font-bold text-ath-text-primary">
                   Ritmo medio semanal (min/km)
                 </h3>
               </div>
@@ -715,48 +715,6 @@ const InternalMetricsSection = ({
             </motion.div>
           )}
 
-          {/* Personal bests */}
-          {personalBests && (
-            <motion.div
-              initial={{ opacity: 0, y: 16 }}
-              animate={{ opacity: 1, y: 0 }}
-              transition={{ delay: 0.2 }}
-              className="bg-white dark:bg-gray-800 rounded-2xl border border-gray-200 dark:border-gray-700 p-4"
-            >
-              <div className="flex items-center gap-2 mb-3">
-                <FiAward className="w-4 h-4 text-yellow-500" />
-                <h3 className="text-sm font-bold text-slate-900 dark:text-white">
-                  Mejores marcas personales
-                </h3>
-              </div>
-              <div className="grid grid-cols-2 gap-2.5">
-                {pbSlots.map(({ key, label }) => {
-                  const pb = personalBests[key];
-                  return (
-                    <div key={key} className="bg-gray-50 dark:bg-gray-700/50 rounded-xl p-3">
-                      <p className="text-[10px] font-bold uppercase tracking-widest text-slate-400 dark:text-slate-500 mb-1">
-                        {label}
-                      </p>
-                      {pb ? (
-                        <>
-                          <p className="text-xl font-bold text-slate-900 dark:text-white leading-none mb-0.5">
-                            {formatMinutes(pb.minutes)}
-                          </p>
-                          {pb.date && (
-                            <p className="text-[10px] text-slate-400 dark:text-slate-500">
-                              {new Date(pb.date + 'T00:00:00').toLocaleDateString('es-ES', { month: 'short', year: 'numeric' })}
-                            </p>
-                          )}
-                        </>
-                      ) : (
-                        <p className="text-xl font-bold text-slate-300 dark:text-slate-600 leading-none">–</p>
-                      )}
-                    </div>
-                  );
-                })}
-              </div>
-            </motion.div>
-          )}
         </>
       )}
     </section>
@@ -824,10 +782,11 @@ const AthleteMetrics = () => {
       const startIdx = w * 7;
       const weekSlice = daily56.slice(startIdx, startIdx + 7);
       const weekKm = weekSlice.reduce((s, v) => s + v, 0);
+      const wStart = new Date(); wStart.setDate(wStart.getDate() - w * 7 - wStart.getDay() + 1);
       weeklyLoads.push({
         weekIndex: 7 - w,
         km: +weekKm.toFixed(1),
-        label: w === 0 ? 'Esta sem.' : w === 1 ? 'Sem. -1' : `Sem. -${w}`,
+        label: w === 0 ? 'Esta sem.' : wStart.toLocaleDateString('es-ES', { day: 'numeric', month: 'short' }),
       });
     }
 
@@ -971,8 +930,9 @@ const AthleteMetrics = () => {
           return d >= weekStart && d <= weekEnd;
         });
 
+        const wLabel = w === 0 ? 'Esta sem.' : weekStart.toLocaleDateString('es-ES', { day: 'numeric', month: 'short' });
         weeks.push({
-          label: w === 0 ? 'Esta sem.' : w === 1 ? 'Sem. -1' : `Sem. -${w}`,
+          label: wLabel,
           ...metricFn(weekActs),
         });
       }
@@ -1165,8 +1125,8 @@ const AthleteMetrics = () => {
     return (
       <div className="flex items-center justify-center min-h-[60vh]">
         <div className="text-center">
-          <FiLoader className="w-8 h-8 animate-spin text-orange-600 mx-auto mb-4" />
-          <p className="text-gray-600 dark:text-gray-400">Cargando métricas...</p>
+          <FiLoader className="w-8 h-8 animate-spin text-ath-accent mx-auto mb-4" />
+          <p className="text-ath-text-secondary">Cargando métricas...</p>
         </div>
       </div>
     );
@@ -1176,10 +1136,10 @@ const AthleteMetrics = () => {
     return (
       <div className="p-4 sm:p-6 lg:p-8 space-y-6">
         <div>
-          <h1 className="text-2xl sm:text-3xl font-bold text-gray-900 dark:text-white mb-2">
+          <h1 className="text-2xl sm:text-3xl font-bold text-ath-text-primary mb-2">
             Mis Métricas
           </h1>
-          <p className="text-sm sm:text-base text-gray-600 dark:text-gray-400">
+          <p className="text-sm sm:text-base text-ath-text-secondary">
             Análisis de rendimiento y progresión
           </p>
         </div>
@@ -1197,14 +1157,14 @@ const AthleteMetrics = () => {
 
         {/* Strava connect prompt (only for non-independent athletes) */}
         {!isIndependent && (
-          <div className="bg-white dark:bg-gray-800 rounded-2xl p-8 sm:p-10 text-center shadow-sm border border-gray-200 dark:border-gray-700">
+          <div className="bg-ath-surface rounded-2xl p-8 sm:p-10 text-center shadow-sm border border-ath-border">
             <div className="w-16 h-16 bg-orange-100 dark:bg-orange-900/30 rounded-full flex items-center justify-center mx-auto mb-4">
               <FiActivity className="w-8 h-8 text-orange-500" />
             </div>
-            <h2 className="text-lg font-bold text-gray-900 dark:text-white mb-2">
+            <h2 className="text-lg font-bold text-ath-text-primary mb-2">
               Conecta Strava para más métricas
             </h2>
-            <p className="text-gray-500 dark:text-gray-400 mb-5 max-w-md mx-auto text-sm">
+            <p className="text-ath-text-muted mb-5 max-w-md mx-auto text-sm">
               Sincroniza tu cuenta de Strava para ver estadísticas detalladas: zonas de frecuencia cardíaca, predictor de tiempos, ACWR y más.
             </p>
             <a
@@ -1226,14 +1186,14 @@ const AthleteMetrics = () => {
       <div className="flex flex-col sm:flex-row sm:items-center sm:justify-between gap-4">
         <div>
           <div className="flex items-center gap-3 mb-2">
-            <h1 className="text-2xl sm:text-3xl font-bold text-gray-900 dark:text-white">
+            <h1 className="text-2xl sm:text-3xl font-bold text-ath-text-primary">
               Mis Métricas
             </h1>
             {/* Export dropdown */}
             <div className="relative">
               <button
                 onClick={() => setExportOpen((o) => !o)}
-                className="flex items-center gap-1.5 px-3 py-1.5 text-xs font-semibold text-gray-600 dark:text-gray-300 bg-gray-100 dark:bg-gray-700 hover:bg-gray-200 dark:hover:bg-gray-600 rounded-lg transition-colors"
+                className="flex items-center gap-1.5 px-3 py-1.5 text-xs font-semibold text-ath-text-secondary bg-ath-inset hover:bg-ath-inset rounded-lg transition-colors"
               >
                 <FiDownload className="w-3.5 h-3.5" />
                 Exportar
@@ -1242,17 +1202,17 @@ const AthleteMetrics = () => {
                 <>
                   {/* Backdrop to close on outside click */}
                   <div className="fixed inset-0 z-10" onClick={() => setExportOpen(false)} />
-                  <div className="absolute left-0 top-full mt-1 w-48 bg-white dark:bg-gray-800 rounded-xl shadow-lg border border-gray-200 dark:border-gray-700 py-1 z-20">
+                  <div className="absolute left-0 top-full mt-1 w-48 bg-ath-surface rounded-xl shadow-lg border border-ath-border py-1 z-20">
                     <button
                       onClick={() => { exportActivitiesCSV(rawActivities, profile?.full_name || 'atleta'); setExportOpen(false); }}
-                      className="w-full text-left px-4 py-2.5 text-sm text-gray-700 dark:text-gray-300 hover:bg-gray-50 dark:hover:bg-gray-700 flex items-center gap-2"
+                      className="w-full text-left px-4 py-2.5 text-sm text-ath-text-secondary hover:bg-ath-inset flex items-center gap-2"
                     >
                       <FiActivity className="w-4 h-4 text-orange-500" />
                       Actividades (CSV)
                     </button>
                     <button
                       onClick={() => { exportLoadCSV(loadData?.weeklyLoads, profile?.full_name || 'atleta'); setExportOpen(false); }}
-                      className="w-full text-left px-4 py-2.5 text-sm text-gray-700 dark:text-gray-300 hover:bg-gray-50 dark:hover:bg-gray-700 flex items-center gap-2"
+                      className="w-full text-left px-4 py-2.5 text-sm text-ath-text-secondary hover:bg-ath-inset flex items-center gap-2"
                     >
                       <FiTrendingUp className="w-4 h-4 text-blue-500" />
                       Carga semanal (CSV)
@@ -1262,13 +1222,13 @@ const AthleteMetrics = () => {
               )}
             </div>
           </div>
-          <p className="text-sm sm:text-base text-gray-600 dark:text-gray-400">
+          <p className="text-sm sm:text-base text-ath-text-secondary">
             Análisis de rendimiento basado en Strava
           </p>
         </div>
 
         {/* Week Filter */}
-        <div className="flex items-center bg-gray-100 dark:bg-gray-700 rounded-xl p-1 gap-0.5">
+        <div className="flex items-center bg-ath-inset rounded-xl p-1 gap-0.5">
           {[4, 8, 12].map((weeks) => (
             <button
               key={weeks}
@@ -1276,7 +1236,7 @@ const AthleteMetrics = () => {
               className={`px-4 py-2 rounded-lg text-sm font-semibold transition-all ${
                 weekFilter === weeks
                   ? 'bg-slate-900 dark:bg-white text-white dark:text-slate-900 shadow-sm'
-                  : 'text-gray-600 dark:text-gray-400 hover:text-gray-900 dark:hover:text-white'
+                  : 'text-ath-text-secondary hover:text-gray-900 dark:hover:text-white'
               }`}
             >
               {weeks} sem
@@ -1392,13 +1352,13 @@ const AthleteMetrics = () => {
           initial={{ opacity: 0, y: 20 }}
           animate={{ opacity: 1, y: 0 }}
           transition={{ delay: 0.3 }}
-          className="bg-white dark:bg-gray-800 rounded-2xl p-4 sm:p-5 border border-gray-200 dark:border-gray-700"
+          className="bg-ath-surface rounded-2xl p-4 sm:p-5 border border-ath-border"
         >
           {/* Header */}
           <div className="flex items-center justify-between mb-1">
             <div className="flex items-center gap-2">
               <FiTarget className="w-4 h-4 text-violet-500" />
-              <h3 className="text-base font-bold text-slate-900 dark:text-white">
+              <h3 className="text-base font-bold text-ath-text-primary">
                 Predictor de Tiempos
                 <InfoTooltip text="Estimación de tiempos usando el modelo VDOT de Jack Daniels, el mismo sistema que usan relojes deportivos como COROS y Garmin. Basado en tu mejor marca registrada." />
               </h3>
@@ -1407,7 +1367,7 @@ const AthleteMetrics = () => {
               VDOT {racePredictions.vdot}
             </span>
           </div>
-          <p className="text-xs text-slate-400 dark:text-slate-500 mb-4">
+          <p className="text-xs text-ath-text-muted mb-4">
             Modelo Daniels-Gilbert · Actualizado hoy
           </p>
 
@@ -1423,17 +1383,17 @@ const AthleteMetrics = () => {
             return (
               <div className="grid grid-cols-2 gap-2.5">
                 {entries.map(([distance, data]) => (
-                  <div key={distance} className="bg-gray-50 dark:bg-gray-700/50 rounded-xl p-3.5">
-                    <p className="text-[10px] font-bold uppercase tracking-widest text-slate-400 dark:text-slate-500 mb-1">
+                  <div key={distance} className="bg-ath-inset rounded-xl p-3.5">
+                    <p className="text-[10px] font-bold uppercase tracking-widest text-ath-text-muted mb-1">
                       {distance.toUpperCase()}
                     </p>
-                    <p className="text-2xl font-bold text-slate-900 dark:text-white leading-none mb-0.5">
+                    <p className="text-2xl font-bold text-ath-text-primary leading-none mb-0.5">
                       {data.timeFormatted}
                     </p>
-                    <p className="text-xs text-slate-400 dark:text-slate-500 mb-2">
+                    <p className="text-xs text-ath-text-muted mb-2">
                       {data.pace} min/km
                     </p>
-                    <div className="w-full h-1 bg-gray-200 dark:bg-gray-600 rounded-full overflow-hidden">
+                    <div className="w-full h-1 bg-ath-inset rounded-full overflow-hidden">
                       <div className={`h-1 rounded-full ${barColors[distance] || 'bg-violet-500'}`} style={{ width: '100%' }} />
                     </div>
                   </div>
@@ -1442,7 +1402,7 @@ const AthleteMetrics = () => {
             );
           })()}
 
-          <p className="text-[11px] text-slate-400 dark:text-slate-500 mt-3 flex items-center gap-1">
+          <p className="text-[11px] text-ath-text-muted mt-3 flex items-center gap-1">
             <span className="inline-block w-3.5 h-3.5 rounded-full bg-violet-100 dark:bg-violet-900/40 text-violet-500 text-center leading-3.5 text-[9px]">i</span>
             Cada punto de VDOT ≈ 30s menos en 5km
           </p>
@@ -1486,14 +1446,14 @@ const AthleteMetrics = () => {
           initial={{ opacity: 0, y: 20 }}
           animate={{ opacity: 1, y: 0 }}
           transition={{ delay: 0.35 }}
-          className="bg-white dark:bg-gray-800 rounded-2xl mb-4 sm:mb-6 p-4 sm:p-5 border border-gray-200 dark:border-gray-700"
+          className="bg-ath-surface rounded-2xl mb-4 sm:mb-6 p-4 sm:p-5 border border-ath-border"
         >
           {/* Header */}
           <div className="flex items-center gap-2 mb-0.5">
             <FiClock className="w-4 h-4 text-slate-500" />
-            <h3 className="text-base font-bold text-slate-900 dark:text-white">Zonas de Entrenamiento</h3>
+            <h3 className="text-base font-bold text-ath-text-primary">Zonas de Entrenamiento</h3>
           </div>
-          <p className="text-xs text-slate-400 dark:text-slate-500 mb-4">
+          <p className="text-xs text-ath-text-muted mb-4">
             VDOT: {racePredictions?.vdot ?? '–'} · FC Máx: {hrZoneData.maxHR} bpm · FC Reposo: {hrZoneData.restingHR} bpm
           </p>
 
@@ -1502,8 +1462,8 @@ const AthleteMetrics = () => {
             {hrZoneData.zones.map((zone) => (
               <div key={zone.name} className="flex items-center gap-3">
                 <div className="w-2.5 h-2.5 rounded-full flex-shrink-0" style={{ backgroundColor: zone.color }} />
-                <span className="flex-1 text-sm font-medium text-slate-700 dark:text-slate-300">{zone.name}</span>
-                <span className="text-xs font-mono text-slate-400 dark:text-slate-500 whitespace-nowrap">
+                <span className="flex-1 text-sm font-medium text-ath-text-secondary">{zone.name}</span>
+                <span className="text-xs font-mono text-ath-text-muted whitespace-nowrap">
                   {zone.bpmMin}–{zone.bpmMax} bpm
                 </span>
               </div>
@@ -1511,9 +1471,9 @@ const AthleteMetrics = () => {
           </div>
 
           {/* Distribución por zona */}
-          <div className="border-t border-gray-100 dark:border-gray-700 pt-4">
-            <p className="text-xs font-semibold text-slate-600 dark:text-slate-300 mb-0.5">Distribución por zona</p>
-            <p className="text-[11px] text-slate-400 dark:text-slate-500 mb-3">
+          <div className="border-t border-ath-border pt-4">
+            <p className="text-xs font-semibold text-ath-text-secondary mb-0.5">Distribución por zona</p>
+            <p className="text-[11px] text-ath-text-muted mb-3">
               Basado en FC · últimas {weekFilter} semanas
             </p>
 
@@ -1552,7 +1512,7 @@ const AthleteMetrics = () => {
                   />
                   {/* Center label */}
                   <div className="absolute inset-0 flex items-center justify-center pointer-events-none">
-                    <span className="text-lg font-bold text-slate-900 dark:text-white">
+                    <span className="text-lg font-bold text-ath-text-primary">
                       {hrZoneData.zones[1] && hrZoneData.totalHRActivities > 0
                         ? Math.round((hrZoneData.zones[1].count / hrZoneData.totalHRActivities) * 100)
                         : 0}%
@@ -1570,8 +1530,8 @@ const AthleteMetrics = () => {
                     return (
                       <div key={zone.name} className="flex items-center gap-2">
                         <div className="w-2 h-2 rounded-full flex-shrink-0" style={{ backgroundColor: zone.color }} />
-                        <span className="text-[11px] text-slate-500 dark:text-slate-400 w-20 truncate">{shortName}</span>
-                        <span className="text-[11px] font-semibold text-slate-700 dark:text-slate-300 w-8 text-right flex-shrink-0">{pct}%</span>
+                        <span className="text-[11px] text-ath-text-muted w-20 truncate">{shortName}</span>
+                        <span className="text-[11px] font-semibold text-ath-text-secondary w-8 text-right flex-shrink-0">{pct}%</span>
                       </div>
                     );
                   })}
@@ -1579,8 +1539,8 @@ const AthleteMetrics = () => {
               </div>
             ) : (
               <div className="text-center py-6">
-                <FiHeart className="w-8 h-8 text-gray-300 dark:text-gray-600 mx-auto mb-2" />
-                <p className="text-sm text-gray-500 dark:text-gray-400">No hay datos de frecuencia cardíaca</p>
+                <FiHeart className="w-8 h-8 text-ath-text-muted mx-auto mb-2" />
+                <p className="text-sm text-ath-text-muted">No hay datos de frecuencia cardíaca</p>
               </div>
             )}
 
@@ -1594,14 +1554,14 @@ const AthleteMetrics = () => {
                   const shortName = zone.name.replace('Z1 - ', 'Z1 ').replace('Z2 - ', 'Z2 ').replace('Z3 - ', 'Z3 ').replace('Z4 - ', 'Z4 ').replace('Z5 - ', 'Z5 ');
                   return (
                     <div key={zone.name} className="flex items-center gap-2">
-                      <span className="text-[11px] text-slate-500 dark:text-slate-400 w-24 flex-shrink-0">{shortName}</span>
-                      <div className="flex-1 h-2 bg-gray-100 dark:bg-gray-700 rounded-full overflow-hidden">
+                      <span className="text-[11px] text-ath-text-muted w-24 flex-shrink-0">{shortName}</span>
+                      <div className="flex-1 h-2 bg-ath-inset rounded-full overflow-hidden">
                         <div
                           className="h-2 rounded-full transition-all duration-500"
                           style={{ width: `${Math.max(pct, 1)}%`, backgroundColor: zone.color }}
                         />
                       </div>
-                      <span className="text-[11px] font-semibold text-slate-500 dark:text-slate-400 w-7 text-right flex-shrink-0">{pct}%</span>
+                      <span className="text-[11px] font-semibold text-ath-text-muted w-7 text-right flex-shrink-0">{pct}%</span>
                     </div>
                   );
                 })}
@@ -1618,16 +1578,16 @@ const AthleteMetrics = () => {
           initial={{ opacity: 0, y: 20 }}
           animate={{ opacity: 1, y: 0 }}
           transition={{ delay: 0.4 }}
-          className="bg-white dark:bg-gray-800 rounded-2xl p-4 sm:p-5 border border-gray-200 dark:border-gray-700 overflow-hidden"
+          className="bg-ath-surface rounded-2xl p-4 sm:p-5 border border-ath-border overflow-hidden"
         >
           <div className="flex items-center gap-2 mb-1">
             <FiActivity className="w-4 h-4 text-blue-500 flex-shrink-0" />
-            <h3 className="text-base font-bold text-slate-900 dark:text-white">
+            <h3 className="text-base font-bold text-ath-text-primary">
               Distribución de Actividades
               <InfoTooltip text="Proporción de cada tipo de actividad (carrera, ciclismo, natación, etc.) registrada en Strava durante el período seleccionado." />
             </h3>
           </div>
-          <p className="text-xs text-slate-400 dark:text-slate-500 mb-4">Últimas {weekFilter} semanas</p>
+          <p className="text-xs text-ath-text-muted mb-4">Últimas {weekFilter} semanas</p>
           <ActivityTypeDistribution activities={rawActivities} />
         </motion.div>
 
@@ -1651,17 +1611,17 @@ const AthleteMetrics = () => {
           initial={{ opacity: 0, y: 20 }}
           animate={{ opacity: 1, y: 0 }}
           transition={{ delay: 0.55 }}
-          className="bg-white dark:bg-gray-800 rounded-2xl p-4 sm:p-5 border border-gray-200 dark:border-gray-700 mb-4 sm:mb-6"
+          className="bg-ath-surface rounded-2xl p-4 sm:p-5 border border-ath-border mb-4 sm:mb-6"
         >
           {/* Header */}
           <div className="flex items-center gap-2 mb-1">
             <FiZap className="w-4 h-4 text-amber-500" />
-            <h3 className="text-base font-bold text-slate-900 dark:text-white">
+            <h3 className="text-base font-bold text-ath-text-primary">
               Gestión de Carga
               <InfoTooltip text="Ratio de carga aguda/crónica (ACWR): compara el volumen de la última semana con la media de las 4 anteriores. Zona óptima: 0.8–1.3. Por encima de 1.5 aumenta el riesgo de lesión." />
             </h3>
           </div>
-          <p className="text-xs text-slate-400 dark:text-slate-500 mb-3">ACWR · ratio carga aguda/crónica</p>
+          <p className="text-xs text-ath-text-muted mb-3">ACWR · ratio carga aguda/crónica</p>
 
           {/* Alert banner */}
           {(() => {
@@ -1686,25 +1646,25 @@ const AthleteMetrics = () => {
 
           {/* 3 stat chips */}
           <div className="grid grid-cols-3 gap-2.5 mb-4">
-            <div className="bg-gray-50 dark:bg-gray-700/50 rounded-xl p-3 text-center">
-              <p className="text-[10px] text-slate-400 dark:text-slate-500 mb-1">Carga aguda</p>
-              <p className="text-xl font-bold text-slate-900 dark:text-white">{loadData.acuteLoad}</p>
+            <div className="bg-ath-inset rounded-xl p-3 text-center">
+              <p className="text-[10px] text-ath-text-muted mb-1">Carga aguda</p>
+              <p className="text-xl font-bold text-ath-text-primary">{loadData.acuteLoad}</p>
               <p className="text-[10px] text-slate-400">km · 7 días</p>
             </div>
-            <div className="bg-gray-50 dark:bg-gray-700/50 rounded-xl p-3 text-center">
-              <p className="text-[10px] text-slate-400 dark:text-slate-500 mb-1">Carga crónica</p>
-              <p className="text-xl font-bold text-slate-900 dark:text-white">{loadData.chronicLoadWeekly}</p>
+            <div className="bg-ath-inset rounded-xl p-3 text-center">
+              <p className="text-[10px] text-ath-text-muted mb-1">Carga crónica</p>
+              <p className="text-xl font-bold text-ath-text-primary">{loadData.chronicLoadWeekly}</p>
               <p className="text-[10px] text-slate-400">km/sem · 4 sem</p>
             </div>
-            <div className="bg-gray-50 dark:bg-gray-700/50 rounded-xl p-3 text-center">
-              <p className="text-[10px] text-slate-400 dark:text-slate-500 mb-1">ACWR</p>
+            <div className="bg-ath-inset rounded-xl p-3 text-center">
+              <p className="text-[10px] text-ath-text-muted mb-1">ACWR</p>
               <p className={`text-xl font-bold ${getACWRZone(loadData.acwr).textClass}`}>{loadData.acwr.toFixed(2)}</p>
               <p className={`text-[10px] font-medium ${getACWRZone(loadData.acwr).textClass}`}>{getACWRZone(loadData.acwr).label}</p>
             </div>
           </div>
 
           {/* Weekly Load Bar Chart */}
-          <p className="text-xs font-semibold text-slate-600 dark:text-slate-300 mb-2">
+          <p className="text-xs font-semibold text-ath-text-secondary mb-2">
             Carga semanal · últimas 8 semanas
           </p>
           <div className="h-44">
@@ -1743,7 +1703,7 @@ const AthleteMetrics = () => {
           </div>
 
           {/* Zone legend */}
-          <div className="flex flex-wrap items-center gap-3 mt-3 text-[11px] text-slate-400 dark:text-slate-500">
+          <div className="flex flex-wrap items-center gap-3 mt-3 text-[11px] text-ath-text-muted">
             <span className="flex items-center gap-1"><span className="w-2.5 h-2.5 rounded-full bg-blue-500" />Bajo</span>
             <span className="flex items-center gap-1"><span className="w-2.5 h-2.5 rounded-full bg-green-500" />Óptimo</span>
             <span className="flex items-center gap-1"><span className="w-2.5 h-2.5 rounded-full bg-orange-500" />Alto</span>
@@ -1759,9 +1719,9 @@ const AthleteMetrics = () => {
           initial={{ opacity: 0, y: 20 }}
           animate={{ opacity: 1, y: 0 }}
           transition={{ delay: 0.6 }}
-          className="bg-white dark:bg-gray-800 rounded-xl p-4 sm:p-6 shadow-sm border border-gray-200 dark:border-gray-700"
+          className="bg-ath-surface rounded-xl p-4 sm:p-6 shadow-sm border border-ath-border"
         >
-          <h3 className="text-base sm:text-lg font-bold text-gray-900 dark:text-white mb-4 flex items-center">
+          <h3 className="text-base sm:text-lg font-bold text-ath-text-primary mb-4 flex items-center">
             <FiTrendingUp className="w-5 h-5 mr-2 text-orange-500" />
             Progresión Semanal Running (km)
             <InfoTooltip text="Kilómetros de running recorridos cada semana. Solo incluye carrera, trail y carrera virtual. Permite ver la progresión del volumen y detectar aumentos bruscos de carga." />
@@ -1782,9 +1742,9 @@ const AthleteMetrics = () => {
           initial={{ opacity: 0, y: 20 }}
           animate={{ opacity: 1, y: 0 }}
           transition={{ delay: 0.7 }}
-          className="bg-white dark:bg-gray-800 rounded-xl p-4 sm:p-6 shadow-sm border border-gray-200 dark:border-gray-700"
+          className="bg-ath-surface rounded-xl p-4 sm:p-6 shadow-sm border border-ath-border"
         >
-          <h3 className="text-base sm:text-lg font-bold text-gray-900 dark:text-white mb-4 flex items-center">
+          <h3 className="text-base sm:text-lg font-bold text-ath-text-primary mb-4 flex items-center">
             <FiZap className="w-5 h-5 mr-2 text-blue-500" />
             Velocidad Media por Actividad
             <InfoTooltip text="Velocidad media (km/h) de cada actividad a lo largo del tiempo. La línea punteada indica la media general. Permite ver tendencias de mejora o fatiga." />
@@ -1801,9 +1761,9 @@ const AthleteMetrics = () => {
             return (
               <>
                 {/* Average line indicator */}
-                <div className="flex items-center justify-end mb-2 text-xs sm:text-sm text-gray-500 dark:text-gray-400">
+                <div className="flex items-center justify-end mb-2 text-xs sm:text-sm text-ath-text-muted">
                   <div className="flex items-center">
-                    <div className="w-6 sm:w-8 h-0.5 bg-gray-400 dark:bg-gray-500 mr-1.5 sm:mr-2 flex-shrink-0"></div>
+                    <div className="w-6 sm:w-8 h-0.5 bg-ath-text-muted mr-1.5 sm:mr-2 flex-shrink-0"></div>
                     <span className="whitespace-nowrap">Media = {speedData.avgSpeed} km/h</span>
                   </div>
                 </div>
@@ -1884,9 +1844,9 @@ const AthleteMetrics = () => {
           initial={{ opacity: 0, y: 20 }}
           animate={{ opacity: 1, y: 0 }}
           transition={{ delay: 0.65 }}
-          className="bg-white dark:bg-gray-800 rounded-xl p-4 sm:p-6 shadow-sm border border-gray-200 dark:border-gray-700 mb-6 sm:mb-8"
+          className="bg-ath-surface rounded-xl p-4 sm:p-6 shadow-sm border border-ath-border mb-6 sm:mb-8"
         >
-          <h3 className="text-base sm:text-lg font-bold text-gray-900 dark:text-white mb-4 flex items-center">
+          <h3 className="text-base sm:text-lg font-bold text-ath-text-primary mb-4 flex items-center">
             <FiNavigation className="w-5 h-5 mr-2 text-yellow-500" />
             Ciclismo
             <InfoTooltip text="Métricas de ciclismo: km semanales, velocidad media y desnivel acumulado. Solo incluye Ride y VirtualRide." />
@@ -1896,26 +1856,26 @@ const AthleteMetrics = () => {
           <div className="grid grid-cols-2 sm:grid-cols-4 gap-3 mb-6">
             <div className="bg-yellow-50 dark:bg-yellow-900/20 rounded-lg p-3 text-center">
               <p className="text-xl sm:text-2xl font-bold text-yellow-700 dark:text-yellow-300">{sportCharts.cycling.totalKm}</p>
-              <p className="text-[10px] sm:text-xs text-gray-500 dark:text-gray-400">km totales</p>
+              <p className="text-[10px] sm:text-xs text-ath-text-muted">km totales</p>
             </div>
             <div className="bg-yellow-50 dark:bg-yellow-900/20 rounded-lg p-3 text-center">
               <p className="text-xl sm:text-2xl font-bold text-yellow-700 dark:text-yellow-300">{sportCharts.cycling.avgSpeed}</p>
-              <p className="text-[10px] sm:text-xs text-gray-500 dark:text-gray-400">km/h media</p>
+              <p className="text-[10px] sm:text-xs text-ath-text-muted">km/h media</p>
             </div>
             <div className="bg-yellow-50 dark:bg-yellow-900/20 rounded-lg p-3 text-center">
               <p className="text-xl sm:text-2xl font-bold text-yellow-700 dark:text-yellow-300">{sportCharts.cycling.totalElevation}</p>
-              <p className="text-[10px] sm:text-xs text-gray-500 dark:text-gray-400">m desnivel</p>
+              <p className="text-[10px] sm:text-xs text-ath-text-muted">m desnivel</p>
             </div>
             <div className="bg-yellow-50 dark:bg-yellow-900/20 rounded-lg p-3 text-center">
               <p className="text-xl sm:text-2xl font-bold text-yellow-700 dark:text-yellow-300">{sportCharts.cycling.avgHR || '-'}</p>
-              <p className="text-[10px] sm:text-xs text-gray-500 dark:text-gray-400">bpm media</p>
+              <p className="text-[10px] sm:text-xs text-ath-text-muted">bpm media</p>
             </div>
           </div>
 
           {/* Weekly km + speed chart */}
           <div className="grid grid-cols-1 lg:grid-cols-2 gap-4">
             <div>
-              <h4 className="text-sm font-semibold text-gray-700 dark:text-gray-300 mb-3">Km semanales</h4>
+              <h4 className="text-sm font-semibold text-ath-text-secondary mb-3">Km semanales</h4>
               <div className="h-48">
                 <Bar
                   data={{
@@ -1941,7 +1901,7 @@ const AthleteMetrics = () => {
               </div>
             </div>
             <div>
-              <h4 className="text-sm font-semibold text-gray-700 dark:text-gray-300 mb-3">Velocidad media semanal</h4>
+              <h4 className="text-sm font-semibold text-ath-text-secondary mb-3">Velocidad media semanal</h4>
               <div className="h-48">
                 <Line
                   data={{
@@ -1979,9 +1939,9 @@ const AthleteMetrics = () => {
           initial={{ opacity: 0, y: 20 }}
           animate={{ opacity: 1, y: 0 }}
           transition={{ delay: 0.7 }}
-          className="bg-white dark:bg-gray-800 rounded-xl p-4 sm:p-6 shadow-sm border border-gray-200 dark:border-gray-700 mb-6 sm:mb-8"
+          className="bg-ath-surface rounded-xl p-4 sm:p-6 shadow-sm border border-ath-border mb-6 sm:mb-8"
         >
-          <h3 className="text-base sm:text-lg font-bold text-gray-900 dark:text-white mb-4 flex items-center">
+          <h3 className="text-base sm:text-lg font-bold text-ath-text-primary mb-4 flex items-center">
             <FiActivity className="w-5 h-5 mr-2 text-cyan-500" />
             Natación
             <InfoTooltip text="Métricas de natación: metros semanales y ritmo medio por 100m." />
@@ -1991,22 +1951,22 @@ const AthleteMetrics = () => {
           <div className="grid grid-cols-3 gap-3 mb-6">
             <div className="bg-cyan-50 dark:bg-cyan-900/20 rounded-lg p-3 text-center">
               <p className="text-xl sm:text-2xl font-bold text-cyan-700 dark:text-cyan-300">{sportCharts.swimming.totalMeters}</p>
-              <p className="text-[10px] sm:text-xs text-gray-500 dark:text-gray-400">metros totales</p>
+              <p className="text-[10px] sm:text-xs text-ath-text-muted">metros totales</p>
             </div>
             <div className="bg-cyan-50 dark:bg-cyan-900/20 rounded-lg p-3 text-center">
               <p className="text-xl sm:text-2xl font-bold text-cyan-700 dark:text-cyan-300">{sportCharts.swimming.avgPace100m}</p>
-              <p className="text-[10px] sm:text-xs text-gray-500 dark:text-gray-400">min/100m</p>
+              <p className="text-[10px] sm:text-xs text-ath-text-muted">min/100m</p>
             </div>
             <div className="bg-cyan-50 dark:bg-cyan-900/20 rounded-lg p-3 text-center">
               <p className="text-xl sm:text-2xl font-bold text-cyan-700 dark:text-cyan-300">{sportCharts.swimming.count}</p>
-              <p className="text-[10px] sm:text-xs text-gray-500 dark:text-gray-400">sesiones</p>
+              <p className="text-[10px] sm:text-xs text-ath-text-muted">sesiones</p>
             </div>
           </div>
 
           {/* Weekly meters chart */}
           <div className="grid grid-cols-1 lg:grid-cols-2 gap-4">
             <div>
-              <h4 className="text-sm font-semibold text-gray-700 dark:text-gray-300 mb-3">Metros semanales</h4>
+              <h4 className="text-sm font-semibold text-ath-text-secondary mb-3">Metros semanales</h4>
               <div className="h-48">
                 <Bar
                   data={{
@@ -2032,7 +1992,7 @@ const AthleteMetrics = () => {
               </div>
             </div>
             <div>
-              <h4 className="text-sm font-semibold text-gray-700 dark:text-gray-300 mb-3">Ritmo medio /100m</h4>
+              <h4 className="text-sm font-semibold text-ath-text-secondary mb-3">Ritmo medio /100m</h4>
               <div className="h-48">
                 <Line
                   data={{
@@ -2088,9 +2048,9 @@ const AthleteMetrics = () => {
           initial={{ opacity: 0, y: 20 }}
           animate={{ opacity: 1, y: 0 }}
           transition={{ delay: 0.75 }}
-          className="bg-white dark:bg-gray-800 rounded-xl p-4 sm:p-6 shadow-sm border border-gray-200 dark:border-gray-700 mb-6 sm:mb-8"
+          className="bg-ath-surface rounded-xl p-4 sm:p-6 shadow-sm border border-ath-border mb-6 sm:mb-8"
         >
-          <h3 className="text-base sm:text-lg font-bold text-gray-900 dark:text-white mb-4 flex items-center">
+          <h3 className="text-base sm:text-lg font-bold text-ath-text-primary mb-4 flex items-center">
             <FiZap className="w-5 h-5 mr-2 text-indigo-500" />
             Fuerza / Gimnasio
             <InfoTooltip text="Sesiones de fuerza, pesas, CrossFit y yoga. Muestra frecuencia semanal y duración media." />
@@ -2100,22 +2060,22 @@ const AthleteMetrics = () => {
           <div className="grid grid-cols-3 gap-3 mb-6">
             <div className="bg-indigo-50 dark:bg-indigo-900/20 rounded-lg p-3 text-center">
               <p className="text-xl sm:text-2xl font-bold text-indigo-700 dark:text-indigo-300">{sportCharts.gym.totalSessions}</p>
-              <p className="text-[10px] sm:text-xs text-gray-500 dark:text-gray-400">sesiones</p>
+              <p className="text-[10px] sm:text-xs text-ath-text-muted">sesiones</p>
             </div>
             <div className="bg-indigo-50 dark:bg-indigo-900/20 rounded-lg p-3 text-center">
               <p className="text-xl sm:text-2xl font-bold text-indigo-700 dark:text-indigo-300">{sportCharts.gym.avgDurationMin}</p>
-              <p className="text-[10px] sm:text-xs text-gray-500 dark:text-gray-400">min/sesión</p>
+              <p className="text-[10px] sm:text-xs text-ath-text-muted">min/sesión</p>
             </div>
             <div className="bg-indigo-50 dark:bg-indigo-900/20 rounded-lg p-3 text-center">
               <p className="text-xl sm:text-2xl font-bold text-indigo-700 dark:text-indigo-300">{sportCharts.gym.totalMinutes}</p>
-              <p className="text-[10px] sm:text-xs text-gray-500 dark:text-gray-400">min totales</p>
+              <p className="text-[10px] sm:text-xs text-ath-text-muted">min totales</p>
             </div>
           </div>
 
           {/* Weekly sessions + duration chart */}
           <div className="grid grid-cols-1 lg:grid-cols-2 gap-4">
             <div>
-              <h4 className="text-sm font-semibold text-gray-700 dark:text-gray-300 mb-3">Sesiones semanales</h4>
+              <h4 className="text-sm font-semibold text-ath-text-secondary mb-3">Sesiones semanales</h4>
               <div className="h-48">
                 <Bar
                   data={{
@@ -2146,7 +2106,7 @@ const AthleteMetrics = () => {
               </div>
             </div>
             <div>
-              <h4 className="text-sm font-semibold text-gray-700 dark:text-gray-300 mb-3">Duración semanal</h4>
+              <h4 className="text-sm font-semibold text-ath-text-secondary mb-3">Duración semanal</h4>
               <div className="h-48">
                 <Bar
                   data={{
@@ -2183,13 +2143,13 @@ const AthleteMetrics = () => {
           initial={{ opacity: 0, y: 20 }}
           animate={{ opacity: 1, y: 0 }}
           transition={{ delay: 0.6 }}
-          className="bg-white dark:bg-gray-800 rounded-2xl p-4 sm:p-5 border border-gray-200 dark:border-gray-700 mb-4 sm:mb-6"
+          className="bg-ath-surface rounded-2xl p-4 sm:p-5 border border-ath-border mb-4 sm:mb-6"
         >
           <div className="flex items-center gap-2 mb-0.5">
             <span className="text-amber-400">★</span>
-            <h3 className="text-base font-bold text-slate-900 dark:text-white">Récords & Mejores marcas</h3>
+            <h3 className="text-base font-bold text-ath-text-primary">Récords & Mejores marcas</h3>
           </div>
-          <p className="text-xs text-slate-400 dark:text-slate-500 mb-4">Mejores registros históricos en Strava</p>
+          <p className="text-xs text-ath-text-muted mb-4">Mejores registros históricos en Strava</p>
 
           {/* Top 2 highlight cards */}
           <div className="grid grid-cols-2 gap-2.5 mb-4">
@@ -2206,11 +2166,11 @@ const AthleteMetrics = () => {
             )}
             {stravaMetrics.fastestPace && (
               <div className="rounded-xl bg-green-50 dark:bg-green-900/20 p-3.5">
-                <p className="text-[10px] font-bold uppercase tracking-widest text-green-600 dark:text-green-400 mb-1 flex items-center gap-1">
+                <p className="text-[10px] font-bold uppercase tracking-widest text-ath-accent-text mb-1 flex items-center gap-1">
                   <FiZap className="w-3 h-3" /> Ritmo más rápido
                 </p>
                 <p className="text-2xl font-bold text-green-700 dark:text-green-300 leading-none mb-0.5">
-                  {stravaMetrics.fastestPace.pace} <span className="text-sm font-normal">/km</span>
+                  {stravaMetrics.fastestPace.pace} <span className="text-sm font-normal"></span>
                 </p>
                 <p className="text-[11px] text-slate-400 truncate">{stravaMetrics.fastestPace.name}</p>
               </div>
@@ -2247,22 +2207,22 @@ const AthleteMetrics = () => {
             return (
               <div className="grid grid-cols-2 gap-2.5">
                 {slots.map(({ key, label, effort }) => (
-                  <div key={key} className="bg-gray-50 dark:bg-gray-700/50 rounded-xl p-3">
-                    <p className="text-[10px] font-bold uppercase tracking-widest text-slate-400 dark:text-slate-500 mb-1">{label}</p>
+                  <div key={key} className="bg-ath-inset rounded-xl p-3">
+                    <p className="text-[10px] font-bold uppercase tracking-widest text-ath-text-muted mb-1">{label}</p>
                     {effort ? (
                       <>
-                        <p className="text-xl font-bold text-slate-900 dark:text-white leading-none mb-0.5">
+                        <p className="text-xl font-bold text-ath-text-primary leading-none mb-0.5">
                           {fmtTime(effort.elapsed_time)}
                         </p>
                         <p className="text-[11px] text-slate-400 font-mono">{fmtPace(effort.elapsed_time, effort.distance)} min/km</p>
-                        <p className="text-[10px] text-slate-300 dark:text-slate-600 mt-0.5">
+                        <p className="text-[10px] text-ath-text-muted mt-0.5">
                           {effort.start_date_local ? new Date(effort.start_date_local).toLocaleDateString('es-ES', { month: 'short', year: 'numeric' }) : ''}
                         </p>
                       </>
                     ) : (
                       <>
-                        <p className="text-xl font-bold text-slate-300 dark:text-slate-600 leading-none mb-0.5">–</p>
-                        <p className="text-[11px] text-slate-300 dark:text-slate-600">Sin registro</p>
+                        <p className="text-xl font-bold text-ath-text-muted leading-none mb-0.5">–</p>
+                        <p className="text-[11px] text-ath-text-muted">Sin registro</p>
                       </>
                     )}
                   </div>
@@ -2279,37 +2239,37 @@ const AthleteMetrics = () => {
           initial={{ opacity: 0, y: 20 }}
           animate={{ opacity: 1, y: 0 }}
           transition={{ delay: 0.8 }}
-          className="bg-white dark:bg-gray-800 rounded-xl p-4 sm:p-6 shadow-sm border border-gray-200 dark:border-gray-700"
+          className="bg-ath-surface rounded-xl p-4 sm:p-6 shadow-sm border border-ath-border"
         >
-          <h3 className="text-base sm:text-lg font-bold text-gray-900 dark:text-white mb-4 flex items-center">
+          <h3 className="text-base sm:text-lg font-bold text-ath-text-primary mb-4 flex items-center">
             <FiActivity className="w-5 h-5 mr-2 text-orange-500" />
             Estadísticas Totales (Strava)
             <InfoTooltip text="Estadísticas acumuladas de toda tu historia en Strava: carreras totales, distancia, desnivel y tiempo de movimiento." />
           </h3>
           <div className="grid grid-cols-2 sm:grid-cols-4 gap-3 sm:gap-4">
-            <div className="text-center p-3 sm:p-4 bg-gray-50 dark:bg-gray-700/50 rounded-xl">
-              <p className="text-xl sm:text-3xl font-bold text-gray-900 dark:text-white">
+            <div className="text-center p-3 sm:p-4 bg-ath-inset rounded-xl">
+              <p className="text-xl sm:text-3xl font-bold text-ath-text-primary">
                 {stravaStats.all_run_totals?.count || 0}
               </p>
-              <p className="text-[10px] sm:text-sm text-gray-500 dark:text-gray-400">Carreras totales</p>
+              <p className="text-[10px] sm:text-sm text-ath-text-muted">Carreras totales</p>
             </div>
-            <div className="text-center p-3 sm:p-4 bg-gray-50 dark:bg-gray-700/50 rounded-xl">
-              <p className="text-xl sm:text-3xl font-bold text-gray-900 dark:text-white">
+            <div className="text-center p-3 sm:p-4 bg-ath-inset rounded-xl">
+              <p className="text-xl sm:text-3xl font-bold text-ath-text-primary">
                 {((stravaStats.all_run_totals?.distance || 0) / 1000).toFixed(0)} km
               </p>
-              <p className="text-[10px] sm:text-sm text-gray-500 dark:text-gray-400">Distancia total</p>
+              <p className="text-[10px] sm:text-sm text-ath-text-muted">Distancia total</p>
             </div>
-            <div className="text-center p-3 sm:p-4 bg-gray-50 dark:bg-gray-700/50 rounded-xl">
-              <p className="text-xl sm:text-3xl font-bold text-gray-900 dark:text-white">
+            <div className="text-center p-3 sm:p-4 bg-ath-inset rounded-xl">
+              <p className="text-xl sm:text-3xl font-bold text-ath-text-primary">
                 {Math.round((stravaStats.all_run_totals?.elapsed_time || 0) / 3600)}h
               </p>
-              <p className="text-[10px] sm:text-sm text-gray-500 dark:text-gray-400">Tiempo total</p>
+              <p className="text-[10px] sm:text-sm text-ath-text-muted">Tiempo total</p>
             </div>
-            <div className="text-center p-3 sm:p-4 bg-gray-50 dark:bg-gray-700/50 rounded-xl">
-              <p className="text-xl sm:text-3xl font-bold text-gray-900 dark:text-white">
+            <div className="text-center p-3 sm:p-4 bg-ath-inset rounded-xl">
+              <p className="text-xl sm:text-3xl font-bold text-ath-text-primary">
                 {((stravaStats.all_run_totals?.elevation_gain || 0) / 1000).toFixed(1)}k
               </p>
-              <p className="text-[10px] sm:text-sm text-gray-500 dark:text-gray-400">Desnivel (m)</p>
+              <p className="text-[10px] sm:text-sm text-ath-text-muted">Desnivel (m)</p>
             </div>
           </div>
         </motion.div>

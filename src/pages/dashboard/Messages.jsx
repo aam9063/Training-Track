@@ -90,9 +90,7 @@ const CoachMessages = () => {
       });
 
       setConversations(all);
-    } catch (error) {
-      console.error('Error loading conversations:', error);
-    } finally {
+    } catch { /* silenced */ } finally {
       setLoading(false);
     }
   }, [profile?.id]);
@@ -176,9 +174,7 @@ const CoachMessages = () => {
           }
         }
       );
-    } catch (error) {
-      console.error('Error loading messages:', error);
-    } finally {
+    } catch { /* silenced */ } finally {
       setLoadingMessages(false);
     }
   }, [profile?.id, decrementUnread]);
@@ -225,7 +221,6 @@ const CoachMessages = () => {
       );
       if (error) throw error;
     } catch (error) {
-      console.error('Error sending message:', error);
       showError('Error al enviar el mensaje');
       setNewMessageText(content);
     } finally {
@@ -297,7 +292,7 @@ const CoachMessages = () => {
       <div className="flex items-center justify-center min-h-[60vh]">
         <div className="text-center">
           <FiLoader className="w-8 h-8 animate-spin text-sky-600 mx-auto mb-4" />
-          <p className="text-gray-600 dark:text-gray-400">Cargando mensajes...</p>
+          <p className="text-coach-text-secondary">Cargando mensajes...</p>
         </div>
       </div>
     );
@@ -308,25 +303,25 @@ const CoachMessages = () => {
       {/* Left Panel — Conversation List */}
       <div
         className={`
-          w-full lg:w-80 flex-shrink-0 border-r border-gray-200 dark:border-gray-700
-          bg-white dark:bg-gray-800 flex flex-col
+          w-full lg:w-80 flex-shrink-0 border-r border-coach-border
+          bg-coach-surface flex flex-col
           ${selectedConversation ? 'hidden lg:flex' : 'flex'}
         `}
       >
         {/* Header */}
-        <div className="p-4 border-b border-gray-200 dark:border-gray-700">
-          <h1 className="text-xl font-bold text-gray-900 dark:text-white mb-3">
+        <div className="p-4 border-b border-coach-border">
+          <h1 className="text-xl font-bold text-coach-text-primary mb-3">
             Mensajes
           </h1>
           {/* Search */}
           <div className="relative">
-            <FiSearch className="absolute left-3 top-1/2 -translate-y-1/2 w-4 h-4 text-gray-400" />
+            <FiSearch className="absolute left-3 top-1/2 -translate-y-1/2 w-4 h-4 text-coach-text-muted" />
             <input
               type="text"
               placeholder="Buscar atleta..."
               value={searchQuery}
               onChange={(e) => setSearchQuery(e.target.value)}
-              className="w-full pl-9 pr-4 py-2 text-sm border border-gray-200 dark:border-gray-600 rounded-lg bg-gray-50 dark:bg-gray-700 text-gray-900 dark:text-white focus:ring-2 focus:ring-sky-500 focus:border-transparent"
+              className="w-full pl-9 pr-4 py-2 text-sm border border-coach-border rounded-lg bg-coach-inset text-coach-text-primary focus:ring-2 focus:ring-sky-500 focus:border-transparent"
             />
           </div>
         </div>
@@ -344,7 +339,7 @@ const CoachMessages = () => {
                     w-full text-left p-3 flex items-center space-x-3 transition-colors
                     ${isSelected
                       ? 'bg-sky-50 dark:bg-sky-900/20'
-                      : 'hover:bg-gray-50 dark:hover:bg-gray-700/50'
+                      : 'hover:bg-coach-inset'
                     }
                   `}
                 >
@@ -366,15 +361,15 @@ const CoachMessages = () => {
                   {/* Info */}
                   <div className="flex-1 min-w-0">
                     <div className="flex items-center justify-between">
-                      <p className={`text-sm truncate ${conv.unreadCount > 0 ? 'font-bold text-gray-900 dark:text-white' : 'font-medium text-gray-900 dark:text-white'}`}>
+                      <p className={`text-sm truncate ${conv.unreadCount > 0 ? 'font-bold text-coach-text-primary' : 'font-medium text-coach-text-primary'}`}>
                         {getUserName(conv.otherUser)}
                       </p>
-                      <span className="text-xs text-gray-500 dark:text-gray-400 flex-shrink-0 ml-2">
+                      <span className="text-xs text-coach-text-muted flex-shrink-0 ml-2">
                         {formatConversationTime(conv.lastMessage?.created_at)}
                       </span>
                     </div>
                     <div className="flex items-center justify-between mt-0.5">
-                      <p className={`text-sm truncate ${conv.unreadCount > 0 ? 'text-gray-800 dark:text-gray-200 font-medium' : 'text-gray-500 dark:text-gray-400'}`}>
+                      <p className={`text-sm truncate ${conv.unreadCount > 0 ? 'text-coach-text-primary font-medium' : 'text-coach-text-muted'}`}>
                         {conv.lastMessage
                           ? (conv.lastMessage.sender_id === profile.id ? 'Tú: ' : '') +
                             (parseReport(conv.lastMessage.content) ? '📊 Informe IA semanal' : conv.lastMessage.content)
@@ -393,8 +388,8 @@ const CoachMessages = () => {
             })
           ) : (
             <div className="text-center py-12 px-4">
-              <FiMessageSquare className="w-10 h-10 text-gray-300 dark:text-gray-600 mx-auto mb-3" />
-              <p className="text-sm text-gray-500 dark:text-gray-400">
+              <FiMessageSquare className="w-10 h-10 text-coach-text-muted mx-auto mb-3" />
+              <p className="text-sm text-coach-text-muted">
                 {searchQuery ? 'No se encontraron resultados' : 'No hay conversaciones'}
               </p>
             </div>
@@ -405,14 +400,14 @@ const CoachMessages = () => {
       {/* Right Panel — Chat View */}
       <div
         className={`
-          flex-1 flex flex-col bg-gray-50 dark:bg-gray-900
+          flex-1 flex flex-col bg-coach-base
           ${selectedConversation ? 'flex' : 'hidden lg:flex'}
         `}
       >
         {selectedConversation ? (
           <>
             {/* Chat Header */}
-            <div className="px-4 py-3 border-b border-gray-200 dark:border-gray-700 bg-white dark:bg-gray-800 flex items-center space-x-3">
+            <div className="px-4 py-3 border-b border-coach-border bg-coach-surface flex items-center space-x-3">
               <button
                 onClick={() => {
                   setSelectedConversation(null);
@@ -422,14 +417,14 @@ const CoachMessages = () => {
                     channelRef.current = null;
                   }
                 }}
-                className="lg:hidden p-1 hover:bg-gray-100 dark:hover:bg-gray-700 rounded-lg transition-colors"
+                className="lg:hidden p-1 hover:bg-coach-inset rounded-lg transition-colors"
               >
-                <FiArrowLeft className="w-5 h-5 text-gray-600 dark:text-gray-400" />
+                <FiArrowLeft className="w-5 h-5 text-coach-text-secondary" />
               </button>
               {selectedConversation.otherUser.profile_image ? (
                 <img
                   src={selectedConversation.otherUser.profile_image}
-                  alt=""
+                  alt="Avatar"
                   className="w-10 h-10 rounded-full object-cover"
                 />
               ) : (
@@ -440,10 +435,10 @@ const CoachMessages = () => {
                 </div>
               )}
               <div>
-                <p className="font-semibold text-gray-900 dark:text-white text-sm">
+                <p className="font-semibold text-coach-text-primary text-sm">
                   {getUserName(selectedConversation.otherUser)}
                 </p>
-                <p className="text-xs text-gray-500 dark:text-gray-400">Atleta</p>
+                <p className="text-xs text-coach-text-muted">Atleta</p>
               </div>
             </div>
 
@@ -459,10 +454,10 @@ const CoachMessages = () => {
               ) : messages.length === 0 ? (
                 <div className="flex items-center justify-center h-full">
                   <div className="text-center">
-                    <div className="w-16 h-16 bg-gray-200 dark:bg-gray-700 rounded-full flex items-center justify-center mx-auto mb-4">
-                      <FiMessageSquare className="w-8 h-8 text-gray-400 dark:text-gray-500" />
+                    <div className="w-16 h-16 bg-coach-elevated rounded-full flex items-center justify-center mx-auto mb-4">
+                      <FiMessageSquare className="w-8 h-8 text-coach-text-muted" />
                     </div>
-                    <p className="text-gray-500 dark:text-gray-400">
+                    <p className="text-coach-text-muted">
                       Envía tu primer mensaje a {getUserName(selectedConversation.otherUser)}
                     </p>
                   </div>
@@ -478,7 +473,7 @@ const CoachMessages = () => {
                       <div key={msg.id}>
                         {showDateSep && (
                           <div className="flex items-center justify-center my-4">
-                            <span className="bg-gray-200 dark:bg-gray-700 text-gray-600 dark:text-gray-300 text-xs px-3 py-1 rounded-full">
+                            <span className="bg-coach-elevated text-coach-text-secondary text-xs px-3 py-1 rounded-full">
                               {getDateSeparator(msg.created_at)}
                             </span>
                           </div>
@@ -486,16 +481,16 @@ const CoachMessages = () => {
                         <div className={`flex ${isMine ? 'justify-end' : 'justify-start'} mb-1`}>
                           {parseReport(msg.content) ? (
                             <div className="max-w-[75%] sm:max-w-[65%]">
-                              <div className="flex items-center gap-2 px-3 py-2.5 bg-white dark:bg-gray-800 border border-gray-200 dark:border-gray-700 rounded-2xl shadow-sm">
+                              <div className="flex items-center gap-2 px-3 py-2.5 bg-coach-surface border border-coach-border rounded-2xl shadow-sm">
                                 <div className="w-7 h-7 rounded-lg flex items-center justify-center flex-shrink-0" style={{ background: 'rgba(26,107,255,0.12)' }}>
                                   <FiZap className="w-3.5 h-3.5" style={{ color: '#1A6BFF' }} />
                                 </div>
                                 <div>
-                                  <p className="text-xs font-semibold text-gray-800 dark:text-gray-200">Informe IA enviado</p>
-                                  <p className="text-[11px] text-gray-400">El atleta puede verlo en su chat</p>
+                                  <p className="text-xs font-semibold text-coach-text-primary">Informe IA enviado</p>
+                                  <p className="text-[11px] text-coach-text-muted">El atleta puede verlo en su chat</p>
                                 </div>
                               </div>
-                              <div className="flex items-center justify-end gap-1 mt-1 text-gray-400">
+                              <div className="flex items-center justify-end gap-1 mt-1 text-coach-text-muted">
                                 <span className="text-[11px]">{formatTime(msg.created_at)}</span>
                                 {msg.read ? <FiCheckCircle className="w-3 h-3" /> : <FiCheck className="w-3 h-3" />}
                               </div>
@@ -506,12 +501,12 @@ const CoachMessages = () => {
                                 max-w-[75%] sm:max-w-[65%] px-3 py-2 rounded-2xl
                                 ${isMine
                                   ? 'bg-sky-500 text-white rounded-br-md'
-                                  : 'bg-white dark:bg-gray-800 text-gray-900 dark:text-white rounded-bl-md shadow-sm'
+                                  : 'bg-coach-surface text-coach-text-primary rounded-bl-md shadow-sm'
                                 }
                               `}
                             >
                               <p className="text-sm whitespace-pre-wrap break-words">{msg.content}</p>
-                              <div className={`flex items-center justify-end space-x-1 mt-1 ${isMine ? 'text-sky-100' : 'text-gray-400 dark:text-gray-500'}`}>
+                              <div className={`flex items-center justify-end space-x-1 mt-1 ${isMine ? 'text-sky-100' : 'text-coach-text-muted'}`}>
                                 <span className="text-[11px]">{formatTime(msg.created_at)}</span>
                                 {isMine && (
                                   msg.read
@@ -531,7 +526,7 @@ const CoachMessages = () => {
             </div>
 
             {/* Input Area */}
-            <div className="px-4 py-3 border-t border-gray-200 dark:border-gray-700 bg-white dark:bg-gray-800">
+            <div className="px-4 py-3 border-t border-coach-border bg-coach-surface">
               <div className="flex items-end space-x-3">
                 <textarea
                   ref={textareaRef}
@@ -545,7 +540,7 @@ const CoachMessages = () => {
                   onKeyDown={handleKeyDown}
                   placeholder="Escribe un mensaje..."
                   rows={1}
-                  className="flex-1 px-4 py-2.5 border border-gray-200 dark:border-gray-600 rounded-2xl bg-gray-50 dark:bg-gray-700 text-gray-900 dark:text-white text-sm focus:ring-2 focus:ring-sky-500 focus:border-transparent resize-none overflow-hidden"
+                  className="flex-1 px-4 py-2.5 border border-coach-border rounded-2xl bg-coach-inset text-coach-text-primary text-sm focus:ring-2 focus:ring-sky-500 focus:border-transparent resize-none overflow-hidden"
                   style={{ minHeight: '40px', maxHeight: '120px' }}
                 />
                 <button
@@ -566,13 +561,13 @@ const CoachMessages = () => {
           /* Empty State */
           <div className="flex-1 flex items-center justify-center">
             <div className="text-center">
-              <div className="w-20 h-20 bg-gray-200 dark:bg-gray-700 rounded-full flex items-center justify-center mx-auto mb-4">
-                <FiMessageSquare className="w-10 h-10 text-gray-400 dark:text-gray-500" />
+              <div className="w-20 h-20 bg-coach-elevated rounded-full flex items-center justify-center mx-auto mb-4">
+                <FiMessageSquare className="w-10 h-10 text-coach-text-muted" />
               </div>
-              <h3 className="text-lg font-medium text-gray-900 dark:text-white mb-2">
+              <h3 className="text-lg font-medium text-coach-text-primary mb-2">
                 Tus mensajes
               </h3>
-              <p className="text-gray-500 dark:text-gray-400 max-w-sm">
+              <p className="text-coach-text-muted max-w-sm">
                 Selecciona un atleta para empezar a chatear
               </p>
             </div>

@@ -13,7 +13,7 @@ const StatCard = ({ icon: Icon, title, value, subtitle, color = 'blue', trend })
     <motion.div
       initial={{ opacity: 0, y: 20 }}
       animate={{ opacity: 1, y: 0 }}
-      className="bg-white dark:bg-gray-800 rounded-xl shadow-sm border border-gray-200 dark:border-gray-700 p-4 sm:p-6 hover:shadow-md transition-shadow"
+      className="bg-coach-surface rounded-xl shadow-sm border border-gray-200 dark:border-coach-border p-4 sm:p-6 hover:shadow-md transition-shadow"
     >
       <div className="flex items-start justify-between gap-2">
         <div className="flex-1 min-w-0">

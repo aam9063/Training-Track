@@ -345,23 +345,23 @@ const Training = () => {
   const fmtVamP = (secs) => { const m=Math.floor(secs/60); const s=Math.round(secs%60); return `${m}'${String(s).padStart(2,'0')}"`; };
 
   return (
-    <div className="bg-gray-50 dark:bg-gray-900 min-h-screen">
+    <div className="bg-ath-base min-h-screen">
       <div className="px-4 lg:px-8 py-5 lg:py-8 space-y-4">
 
       {/* Header */}
       <div className="flex items-center justify-between">
         <div>
-          <h1 className="text-2xl lg:text-3xl font-bold text-slate-900 dark:text-white tracking-tight">
+          <h1 className="text-2xl lg:text-3xl font-bold text-ath-text-primary tracking-tight">
             Mis Entrenamientos
           </h1>
-          <p className="text-sm text-slate-500 dark:text-slate-400 mt-0.5">
+          <p className="text-sm text-ath-text-muted mt-0.5">
             {activeTab === 'week' ? 'Plan semanal de entrenamiento' : 'Últimos 30 días · Strava'}
           </p>
         </div>
         <button
           onClick={downloadPDF}
           disabled={!hasAnyTraining}
-          className="flex items-center gap-1.5 px-3 py-2 text-sm font-medium text-slate-600 dark:text-slate-400 border border-gray-200 dark:border-gray-700 rounded-xl hover:bg-white dark:hover:bg-gray-800 disabled:opacity-40 disabled:cursor-not-allowed transition-colors"
+          className="flex items-center gap-1.5 px-3 py-2 text-sm font-medium text-ath-text-secondary border border-ath-border rounded-xl hover:bg-ath-inset disabled:opacity-40 disabled:cursor-not-allowed transition-colors"
         >
           <FiDownload className="w-4 h-4" />
           <span>PDF</span>
@@ -372,39 +372,39 @@ const Training = () => {
       {gymFilesCount > 0 && (
         <button
           onClick={() => navigate('/athlete/gym-files')}
-          className="w-full flex items-center gap-4 bg-white dark:bg-gray-800 border border-gray-100 dark:border-gray-700 rounded-2xl px-4 py-4 hover:bg-gray-50 dark:hover:bg-gray-750 transition-colors text-left"
+          className="w-full flex items-center gap-4 bg-ath-surface border border-ath-border rounded-2xl px-4 py-4 hover:bg-ath-inset transition-colors text-left"
         >
           <div className="flex-shrink-0 w-11 h-11 rounded-xl bg-gradient-to-br from-red-400 to-orange-500 flex flex-col items-center justify-center shadow-sm">
             <span className="text-[9px] font-black text-white tracking-wider leading-none">PDF</span>
             <FiFileText className="w-3 h-3 text-white/80 mt-0.5" />
           </div>
           <div className="flex-1 min-w-0">
-            <p className="text-sm font-semibold text-slate-800 dark:text-white">Material de Fuerza</p>
-            <p className="text-[11px] text-slate-400 dark:text-slate-500 mt-0.5">
+            <p className="text-sm font-semibold text-ath-text-primary">Material de Fuerza</p>
+            <p className="text-[11px] text-ath-text-muted mt-0.5">
               {gymFilesCount} {gymFilesCount === 1 ? 'documento disponible' : 'documentos disponibles'}
             </p>
           </div>
-          <FiChevronRight className="w-4 h-4 text-slate-300 dark:text-slate-600 flex-shrink-0" />
+          <FiChevronRight className="w-4 h-4 text-ath-text-muted flex-shrink-0" />
         </button>
       )}
 
       {/* ===== TESTS DE RENDIMIENTO ===== */}
       {(athletePaces.length > 0 || latestVam) && (
         <div className="space-y-3">
-          <p className="text-[10px] font-bold uppercase tracking-widest text-slate-400 dark:text-slate-500 flex items-center gap-1.5">
+          <p className="text-[10px] font-bold uppercase tracking-widest text-ath-text-muted flex items-center gap-1.5">
             <FiZap className="w-3 h-3" /> Tests de Rendimiento
           </p>
 
           {/* CONCONI CARD */}
           {athletePaces.length > 0 && (
-            <div className="bg-white dark:bg-gray-800 rounded-2xl border border-gray-200 dark:border-gray-700 overflow-hidden">
+            <div className="bg-ath-surface rounded-2xl border border-ath-border overflow-hidden">
               <div className="px-4 py-3 flex items-center justify-between">
                 <div className="flex items-center gap-2">
                   <FiZap className="w-4 h-4 text-amber-500" />
-                  <span className="text-sm font-bold text-slate-900 dark:text-white">Test de Conconi</span>
+                  <span className="text-sm font-bold text-ath-text-primary">Test de Conconi</span>
                   {latestConconiTest && (
-                    <span className="text-[10px] text-slate-400 dark:text-slate-500">
-                      FC Máx: <span className="font-semibold text-slate-600 dark:text-slate-300">{latestConconiTest.max_hr_reached} bpm</span>
+                    <span className="text-[10px] text-ath-text-muted">
+                      FC Máx: <span className="font-semibold text-ath-text-secondary">{latestConconiTest.max_hr_reached} bpm</span>
                       {latestConconiTest.test_date && <> · {new Date(latestConconiTest.test_date).toLocaleDateString('es-ES', { day:'numeric', month:'short', year:'numeric' })}</>}
                     </span>
                   )}
@@ -417,30 +417,30 @@ const Training = () => {
                 </button>
               </div>
 
-              <div className="grid grid-cols-3 divide-x divide-gray-100 dark:divide-gray-700 border-t border-gray-100 dark:border-gray-700">
+              <div className="grid grid-cols-3 divide-x divide-ath-border border-t border-ath-border">
                 <div className="px-3 py-3 text-center">
-                  <p className="text-[10px] uppercase tracking-wide text-slate-400 dark:text-slate-500 mb-1">FC Máxima</p>
+                  <p className="text-[10px] uppercase tracking-wide text-ath-text-muted mb-1">FC Máxima</p>
                   <p className="text-2xl font-bold text-red-500 leading-none">{conconiMaxHr ?? '–'}</p>
-                  <p className="text-[10px] text-slate-400 dark:text-slate-500 mt-0.5">bpm</p>
+                  <p className="text-[10px] text-ath-text-muted mt-0.5">bpm</p>
                 </div>
                 <div className="px-3 py-3 text-center">
-                  <p className="text-[10px] uppercase tracking-wide text-slate-400 dark:text-slate-500 mb-1">Ritmo R10</p>
+                  <p className="text-[10px] uppercase tracking-wide text-ath-text-muted mb-1">Ritmo R10</p>
                   <p className="text-2xl font-bold text-orange-500 leading-none font-mono">{conconiR10 ? fmtPaceTest(conconiR10.pace_seconds_per_km) : '–'}</p>
-                  <p className="text-[10px] text-slate-400 dark:text-slate-500 mt-0.5">min/km</p>
+                  <p className="text-[10px] text-ath-text-muted mt-0.5">min/km</p>
                 </div>
                 <div className="px-3 py-3 text-center">
-                  <p className="text-[10px] uppercase tracking-wide text-slate-400 dark:text-slate-500 mb-1">Recup. 120p</p>
+                  <p className="text-[10px] uppercase tracking-wide text-ath-text-muted mb-1">Recup. 120p</p>
                   <p className="text-2xl font-bold text-blue-500 leading-none font-mono">{conconiFirstRecov ? fmtRecTest(conconiFirstRecov) : '–'}</p>
-                  <p className="text-[10px] text-slate-400 dark:text-slate-500 mt-0.5">al 120 bpm</p>
+                  <p className="text-[10px] text-ath-text-muted mt-0.5">al 120 bpm</p>
                 </div>
               </div>
 
               {showConconiTable && (
-                <div className="border-t border-gray-100 dark:border-gray-700 overflow-x-auto">
+                <div className="border-t border-ath-border overflow-x-auto">
                   <table className="w-full text-[11px] min-w-[560px]">
                     <thead>
                       <tr>
-                        <th className="text-left py-1.5 px-3 text-slate-400 font-medium whitespace-nowrap sticky left-0 bg-white dark:bg-gray-800 z-10 w-20">Zona</th>
+                        <th className="text-left py-1.5 px-3 text-slate-400 font-medium whitespace-nowrap sticky left-0 bg-ath-surface z-10 w-20">Zona</th>
                         {sortedPaces.map(pace => (
                           <th key={pace.pace_code} className={`px-1.5 py-1.5 text-center text-white font-bold whitespace-nowrap ${bgColors[pace.pace_code] || 'bg-gray-500'}`}>
                             {pace.pace_code}
@@ -449,31 +449,31 @@ const Training = () => {
                       </tr>
                     </thead>
                     <tbody>
-                      <tr className="bg-gray-50 dark:bg-gray-700/30">
-                        <td className="py-1 px-3 text-slate-400 text-[10px] sticky left-0 bg-gray-50 dark:bg-gray-700/30 z-10">% FC</td>
+                      <tr className="bg-ath-inset">
+                        <td className="py-1 px-3 text-slate-400 text-[10px] sticky left-0 bg-ath-inset z-10">% FC</td>
                         {sortedPaces.map(pace => (
-                          <td key={pace.pace_code} className="px-1 py-1 text-center text-slate-500 dark:text-slate-400 whitespace-nowrap">{pctLabels[pace.pace_code] || ''}</td>
+                          <td key={pace.pace_code} className="px-1 py-1 text-center text-ath-text-muted whitespace-nowrap">{pctLabels[pace.pace_code] || ''}</td>
                         ))}
                       </tr>
-                      <tr className="border-t border-gray-100 dark:border-gray-700">
-                        <td className="py-1.5 px-3 text-slate-600 dark:text-slate-300 font-semibold sticky left-0 bg-white dark:bg-gray-800 z-10">Ritmo</td>
+                      <tr className="border-t border-ath-border">
+                        <td className="py-1.5 px-3 text-ath-text-secondary font-semibold sticky left-0 bg-ath-surface z-10">Ritmo</td>
                         {sortedPaces.map(pace => (
-                          <td key={pace.pace_code} className="px-1 py-1.5 text-center font-mono font-semibold text-slate-900 dark:text-white whitespace-nowrap">{fmtPaceTest(pace.pace_seconds_per_km)}</td>
+                          <td key={pace.pace_code} className="px-1 py-1.5 text-center font-mono font-semibold text-ath-text-primary whitespace-nowrap">{fmtPaceTest(pace.pace_seconds_per_km)}</td>
                         ))}
                       </tr>
-                      <tr className="border-t border-gray-100 dark:border-gray-700 bg-gray-50 dark:bg-gray-700/30">
-                        <td className="py-1.5 px-3 text-slate-600 dark:text-slate-300 font-semibold sticky left-0 bg-gray-50 dark:bg-gray-700/30 z-10">Pulso</td>
+                      <tr className="border-t border-ath-border bg-ath-inset">
+                        <td className="py-1.5 px-3 text-ath-text-secondary font-semibold sticky left-0 bg-ath-inset z-10">Pulso</td>
                         {sortedPaces.map(pace => (
-                          <td key={pace.pace_code} className="px-1 py-1.5 text-center font-mono text-slate-700 dark:text-slate-300 whitespace-nowrap">
+                          <td key={pace.pace_code} className="px-1 py-1.5 text-center font-mono text-ath-text-secondary whitespace-nowrap">
                             {pace.heart_rate_max || ''}
                           </td>
                         ))}
                       </tr>
                       {Object.keys(seriesRecovery).length > 0 && (
-                        <tr className="border-t border-gray-100 dark:border-gray-700">
-                          <td className="py-1.5 px-3 text-slate-600 dark:text-slate-300 font-semibold whitespace-nowrap sticky left-0 bg-white dark:bg-gray-800 z-10">Recu. 120p</td>
+                        <tr className="border-t border-ath-border">
+                          <td className="py-1.5 px-3 text-ath-text-secondary font-semibold whitespace-nowrap sticky left-0 bg-ath-surface z-10">Recu. 120p</td>
                           {sortedPaces.map(pace => (
-                            <td key={pace.pace_code} className="px-1 py-1.5 text-center font-mono text-slate-700 dark:text-slate-300 whitespace-nowrap">
+                            <td key={pace.pace_code} className="px-1 py-1.5 text-center font-mono text-ath-text-secondary whitespace-nowrap">
                               {seriesRecovery[pace.pace_code] ? fmtRecTest(seriesRecovery[pace.pace_code]) : ''}
                             </td>
                           ))}
@@ -488,12 +488,12 @@ const Training = () => {
 
           {/* VAM CARD */}
           {latestVam && (
-            <div className="bg-white dark:bg-gray-800 rounded-2xl border border-gray-200 dark:border-gray-700 overflow-hidden">
+            <div className="bg-ath-surface rounded-2xl border border-ath-border overflow-hidden">
               <div className="px-4 py-3 flex items-center justify-between">
                 <div className="flex items-center gap-2">
                   <FiTrendingUp className="w-4 h-4 text-purple-500" />
-                  <span className="text-sm font-bold text-slate-900 dark:text-white">Test VAM</span>
-                  <span className="text-[10px] text-slate-400 dark:text-slate-500">
+                  <span className="text-sm font-bold text-ath-text-primary">Test VAM</span>
+                  <span className="text-[10px] text-ath-text-muted">
                     {new Date(latestVam.test_date).toLocaleDateString('es-ES', { day:'numeric', month:'short', year:'numeric' })}
                     {' · '}{latestVam.distance_meters}m{' · '}{Math.floor(latestVam.duration_seconds/60)}'{String(latestVam.duration_seconds%60).padStart(2,'0')}"
                   </span>
@@ -506,7 +506,7 @@ const Training = () => {
                 </button>
               </div>
 
-              <div className="grid grid-cols-2 gap-2.5 px-4 pb-4 border-t border-gray-100 dark:border-gray-700 pt-3">
+              <div className="grid grid-cols-2 gap-2.5 px-4 pb-4 border-t border-ath-border pt-3">
                 <div className="rounded-xl bg-red-50 dark:bg-red-900/20 p-3">
                   <p className="text-[10px] font-bold uppercase tracking-wide text-red-500 mb-1">FC MÁX</p>
                   <p className="text-2xl font-bold text-red-600 dark:text-red-400 leading-none">{conconiMaxHr ?? '–'} <span className="text-sm font-normal">bpm</span></p>
@@ -530,14 +530,14 @@ const Training = () => {
               </div>
 
               {vamVt2Kmh && (
-                <div className="px-4 py-2 border-t border-gray-100 dark:border-gray-700 flex items-center gap-1.5 text-xs text-slate-500 dark:text-slate-400">
+                <div className="px-4 py-2 border-t border-ath-border flex items-center gap-1.5 text-xs text-ath-text-muted">
                   <FiActivity className="w-3.5 h-3.5 text-blue-400" />
                   VT2: {vamVt2Kmh} km/h · <span className="font-mono">{fmtVamP(vamVt2Pace)}</span> min/km
                 </div>
               )}
 
               {showVamTable && (
-                <div className="border-t border-gray-100 dark:border-gray-700 overflow-x-auto">
+                <div className="border-t border-ath-border overflow-x-auto">
                   <table className="w-full text-[11px] min-w-[440px]">
                     <thead>
                       <tr>
@@ -554,22 +554,22 @@ const Training = () => {
                       </tr>
                     </thead>
                     <tbody>
-                      <tr className="border-t border-gray-100 dark:border-gray-700">
+                      <tr className="border-t border-ath-border">
                         {[conconiMaxHr??'-', vamKmh?.toFixed(1), vamVo2max, vamMlssKmh, vamVt2Kmh, vamKmh ? (vamKmh*0.775).toFixed(1) : '-'].map((val,i) => (
-                          <td key={i} className="px-2 py-1.5 text-center font-mono font-semibold text-slate-900 dark:text-white whitespace-nowrap">{val}</td>
+                          <td key={i} className="px-2 py-1.5 text-center font-mono font-semibold text-ath-text-primary whitespace-nowrap">{val}</td>
                         ))}
                       </tr>
-                      <tr className="bg-gray-50 dark:bg-gray-700/30">
+                      <tr className="bg-ath-inset">
                         {[conconiMaxHr?'ppm':'','km/h','ml/kg/min','km/h','km/h','km/h'].map((u,i) => (
                           <td key={i} className="px-2 py-1 text-center text-[10px] text-slate-400 whitespace-nowrap">{u}</td>
                         ))}
                       </tr>
-                      <tr className="border-t border-gray-100 dark:border-gray-700">
+                      <tr className="border-t border-ath-border">
                         {['', fmtVamP(latestVam.pace_seconds_per_km), '', fmtVamP(vamMlssPace), fmtVamP(vamVt2Pace), vamKmh ? fmtVamP(Math.round(3600/(vamKmh*0.775))) : '-'].map((val,i) => (
-                          <td key={i} className="px-2 py-1.5 text-center font-mono text-slate-600 dark:text-slate-300 whitespace-nowrap">{val}</td>
+                          <td key={i} className="px-2 py-1.5 text-center font-mono text-ath-text-secondary whitespace-nowrap">{val}</td>
                         ))}
                       </tr>
-                      <tr className="bg-gray-50 dark:bg-gray-700/30">
+                      <tr className="bg-ath-inset">
                         {['','min/km','','min/km','min/km','min/km'].map((u,i) => (
                           <td key={i} className="px-2 py-1 text-center text-[10px] text-slate-400 whitespace-nowrap">{u}</td>
                         ))}
@@ -584,13 +584,13 @@ const Training = () => {
       )}
 
       {/* Tab toggle */}
-      <div className="flex bg-white dark:bg-gray-800 rounded-xl border border-gray-200 dark:border-gray-700 p-1 gap-1">
+      <div className="flex bg-ath-surface rounded-xl border border-ath-border p-1 gap-1">
         <button
           onClick={() => setActiveTab('week')}
           className={`flex-1 py-2 text-sm font-semibold rounded-lg transition-colors ${
             activeTab === 'week'
-              ? 'bg-slate-900 dark:bg-white text-white dark:text-slate-900'
-              : 'text-slate-500 dark:text-slate-400 hover:text-slate-700 dark:hover:text-slate-200'
+              ? 'bg-ath-accent text-ath-on-accent'
+              : 'text-ath-text-muted hover:text-ath-text-secondary'
           }`}
         >
           Esta semana
@@ -599,8 +599,8 @@ const Training = () => {
           onClick={() => setActiveTab('recents')}
           className={`flex-1 py-2 text-sm font-semibold rounded-lg transition-colors ${
             activeTab === 'recents'
-              ? 'bg-slate-900 dark:bg-white text-white dark:text-slate-900'
-              : 'text-slate-500 dark:text-slate-400 hover:text-slate-700 dark:hover:text-slate-200'
+              ? 'bg-ath-accent text-ath-on-accent'
+              : 'text-ath-text-muted hover:text-ath-text-secondary'
           }`}
         >
           Recientes
@@ -609,23 +609,23 @@ const Training = () => {
 
       {/* Week Navigator — only on "Esta semana" tab */}
       {activeTab === 'week' && (
-      <div className="flex items-center justify-between bg-white dark:bg-gray-800 rounded-xl border border-gray-200 dark:border-gray-700 px-4 py-3">
+      <div className="flex items-center justify-between bg-ath-surface rounded-xl border border-ath-border px-4 py-3">
         <button
           onClick={goToPreviousWeek}
-          className="p-1.5 hover:bg-gray-100 dark:hover:bg-gray-700 rounded-lg transition-colors"
+          className="p-1.5 hover:bg-ath-inset rounded-lg transition-colors"
         >
-          <FiChevronLeft className="w-5 h-5 text-slate-500 dark:text-slate-400" />
+          <FiChevronLeft className="w-5 h-5 text-ath-text-muted" />
         </button>
-        <span className="font-semibold text-sm text-slate-900 dark:text-white">
+        <span className="font-semibold text-sm text-ath-text-primary">
           {weekDays[0].toLocaleDateString('es-ES', { day: 'numeric', month: 'short' })}
           {' – '}
           {weekDays[6].toLocaleDateString('es-ES', { day: 'numeric', month: 'short', year: 'numeric' })}
         </span>
         <button
           onClick={goToNextWeek}
-          className="p-1.5 hover:bg-gray-100 dark:hover:bg-gray-700 rounded-lg transition-colors"
+          className="p-1.5 hover:bg-ath-inset rounded-lg transition-colors"
         >
-          <FiChevronRight className="w-5 h-5 text-slate-500 dark:text-slate-400" />
+          <FiChevronRight className="w-5 h-5 text-ath-text-muted" />
         </button>
       </div>
       )}
@@ -636,24 +636,24 @@ const Training = () => {
       {/* Loading State */}
       {loading ? (
         <div className="flex items-center justify-center py-16">
-          <FiLoader className="w-8 h-8 animate-spin text-green-600" />
+          <FiLoader className="w-8 h-8 animate-spin text-ath-accent" />
         </div>
       ) : !hasAnyTraining ? (
         /* Empty State */
-        <div className="bg-white dark:bg-gray-800 rounded-2xl p-8 text-center border border-gray-200 dark:border-gray-700">
-          <FiCalendar className="w-12 h-12 text-gray-300 dark:text-gray-600 mx-auto mb-3" />
-          <h3 className="text-base font-semibold text-slate-900 dark:text-white mb-1">
+        <div className="bg-ath-surface rounded-2xl p-8 text-center border border-ath-border">
+          <FiCalendar className="w-12 h-12 text-ath-text-muted mx-auto mb-3" />
+          <h3 className="text-base font-semibold text-ath-text-primary mb-1">
             No hay entrenamientos esta semana
           </h3>
-          <p className="text-sm text-slate-500 dark:text-slate-400">
+          <p className="text-sm text-ath-text-muted">
             Tu entrenador aún no ha creado un plan para esta semana.
           </p>
         </div>
       ) : (
         <>
           {/* ===== MOBILE: Session list (< lg) ===== */}
-          <div className="lg:hidden bg-white dark:bg-gray-800 rounded-2xl border border-gray-200 dark:border-gray-700 overflow-hidden">
-            <div className="divide-y divide-gray-100 dark:divide-gray-700">
+          <div className="lg:hidden bg-ath-surface rounded-2xl border border-ath-border overflow-hidden">
+            <div className="divide-y divide-ath-border">
               {weekDays.map((day, index) => {
                 const training = trainings[index];
                 const isRest = training?.type === 'rest';
@@ -674,20 +674,20 @@ const Training = () => {
                     className={`w-full flex items-center gap-3 px-4 py-3.5 text-left transition-colors ${
                       isToday
                         ? 'bg-blue-50/60 dark:bg-blue-900/10'
-                        : hasTraining ? 'hover:bg-gray-50 dark:hover:bg-gray-700/30' : ''
+                        : hasTraining ? 'hover:bg-ath-inset' : ''
                     }`}
                   >
                     {/* Day column */}
                     <div className="w-10 flex flex-col items-center flex-shrink-0">
                       <span className={`text-[10px] font-bold uppercase ${
-                        isToday ? 'text-blue-600 dark:text-blue-400' : 'text-slate-400 dark:text-slate-500'
+                        isToday ? 'text-blue-600 dark:text-blue-400' : 'text-ath-text-muted'
                       }`}>
                         {DAYS_OF_WEEK[index].slice(0, 3)}
                       </span>
                       <span className={`text-xl font-bold leading-tight ${
                         isCompleted ? 'text-green-600 dark:text-green-400'
                           : isToday ? 'text-blue-600 dark:text-blue-400'
-                          : 'text-slate-900 dark:text-white'
+                          : 'text-ath-text-primary'
                       }`}>
                         {day.getDate()}
                       </span>
@@ -699,7 +699,7 @@ const Training = () => {
                         <>
                           <div className="flex items-center gap-2 min-w-0">
                             <span className={`text-sm font-semibold truncate ${
-                              isRest ? 'text-slate-400 dark:text-slate-500' : 'text-slate-900 dark:text-white'
+                              isRest ? 'text-ath-text-muted' : 'text-ath-text-primary'
                             }`}>
                               {isRest ? 'Sin entrenamiento' : training.title}
                             </span>
@@ -715,19 +715,19 @@ const Training = () => {
                                 {getTypeLabel(training)}
                               </span>
                               {training.totalDistance && (
-                                <span className="text-[11px] text-slate-500 dark:text-slate-400">{training.totalDistance}</span>
+                                <span className="text-[11px] text-ath-text-muted">{training.totalDistance}</span>
                               )}
                               {training.duration && !training.totalDistance && (
-                                <span className="text-[11px] text-slate-500 dark:text-slate-400">{training.duration} min</span>
+                                <span className="text-[11px] text-ath-text-muted">{training.duration} min</span>
                               )}
                             </div>
                           )}
                           {isRest && (
-                            <span className="text-[11px] text-slate-400 dark:text-slate-500">Descanso</span>
+                            <span className="text-[11px] text-ath-text-muted">Descanso</span>
                           )}
                         </>
                       ) : (
-                        <span className="text-sm text-slate-300 dark:text-slate-600">Sin entrenamiento</span>
+                        <span className="text-sm text-ath-text-muted">Sin entrenamiento</span>
                       )}
                     </div>
 
@@ -768,7 +768,7 @@ const Training = () => {
                       )}
                       {canComplete && !isIndependent && <FiCheck className="w-4 h-4 text-green-500" />}
                       {hasTraining && !isCompleted && !isSkipped && !canComplete && (
-                        <FiChevronRight className="w-4 h-4 text-gray-300 dark:text-gray-600" />
+                        <FiChevronRight className="w-4 h-4 text-ath-text-muted" />
                       )}
                     </div>
                   </motion.button>
@@ -796,25 +796,25 @@ const Training = () => {
                   transition={{ delay: index * 0.05 }}
                   onClick={() => openDayDetail(training, index)}
                   className={`
-                    bg-white dark:bg-gray-800 rounded-xl p-4 shadow-sm border-2 relative
+                    bg-ath-surface rounded-xl p-4 shadow-sm border-2 relative
                     ${isCompleted
                       ? 'border-green-500 dark:border-green-400'
                       : isSkipped
                         ? 'border-gray-400 dark:border-gray-500'
                         : isToday
                           ? 'border-blue-500 dark:border-blue-400'
-                          : 'border-gray-200 dark:border-gray-700'}
-                    ${isRest ? 'bg-gray-50 dark:bg-gray-800/50' : ''}
+                          : 'border-ath-border'}
+                    ${isRest ? 'bg-ath-inset' : ''}
                     ${hasTraining ? 'cursor-pointer hover:shadow-md transition-all' : ''}
                     min-h-[300px]
                   `}
                 >
                   {/* Day Header */}
-                  <div className="mb-4 pb-3 border-b border-gray-200 dark:border-gray-700">
-                    <p className="text-xs font-semibold text-gray-500 dark:text-gray-400 uppercase mb-1">
+                  <div className="mb-4 pb-3 border-b border-ath-border">
+                    <p className="text-xs font-semibold text-ath-text-muted uppercase mb-1">
                       {DAYS_OF_WEEK[index]}
                     </p>
-                    <p className="text-lg font-bold text-gray-900 dark:text-white">
+                    <p className="text-lg font-bold text-ath-text-primary">
                       {day.getDate()}
                     </p>
                     {isToday && (
@@ -864,7 +864,7 @@ const Training = () => {
                       </div>
 
                       <h3 className={`font-bold text-lg ${
-                        isRest ? 'text-gray-500 dark:text-gray-400' : 'text-gray-900 dark:text-white'
+                        isRest ? 'text-ath-text-muted' : 'text-ath-text-primary'
                       }`}>
                         {training.title}
                       </h3>
@@ -874,27 +874,27 @@ const Training = () => {
                           {training.totalDistance && (
                             <div className="flex items-start space-x-2">
                               <span className="text-sm">📏</span>
-                              <p className="text-sm text-gray-700 dark:text-gray-300">{training.totalDistance}</p>
+                              <p className="text-sm text-ath-text-secondary">{training.totalDistance}</p>
                             </div>
                           )}
                           {training.duration && (
                             <div className="flex items-start space-x-2">
                               <span className="text-sm">⏰</span>
-                              <p className="text-sm text-gray-700 dark:text-gray-300">{training.duration} min</p>
+                              <p className="text-sm text-ath-text-secondary">{training.duration} min</p>
                             </div>
                           )}
                           {training.exercises?.length > 0 && (
-                            <div className="mt-2 pt-2 border-t border-gray-200 dark:border-gray-700">
-                              <p className="text-xs text-gray-500 dark:text-gray-400 mb-1">Ejercicios:</p>
+                            <div className="mt-2 pt-2 border-t border-ath-border">
+                              <p className="text-xs text-ath-text-muted mb-1">Ejercicios:</p>
                               <ul className="space-y-1">
                                 {training.exercises.slice(0, 3).map((ex, i) => (
-                                  <li key={i} className="text-xs text-gray-700 dark:text-gray-300 truncate">
+                                  <li key={i} className="text-xs text-ath-text-secondary truncate">
                                     • {ex.name}
                                     {ex.sets && <span className="text-gray-500"> ({ex.sets}x{ex.reps || ''})</span>}
                                   </li>
                                 ))}
                                 {training.exercises.length > 3 && (
-                                  <li className="text-xs text-gray-500 dark:text-gray-400">
+                                  <li className="text-xs text-ath-text-muted">
                                     +{training.exercises.length - 3} más
                                   </li>
                                 )}
@@ -902,7 +902,7 @@ const Training = () => {
                             </div>
                           )}
                           {training.description && !training.exercises?.length && (
-                            <p className="text-xs text-gray-500 dark:text-gray-400 line-clamp-3">{training.description}</p>
+                            <p className="text-xs text-ath-text-muted line-clamp-3">{training.description}</p>
                           )}
                           <div className="mt-2 pt-2 text-center">
                             {canComplete && isIndependent ? (
@@ -910,21 +910,21 @@ const Training = () => {
                                 type="button"
                                 onClick={(e) => openCompletionModal(e, training)}
                                 aria-label="Marcar sesión como completada"
-                                className="inline-flex items-center gap-1.5 px-3 py-1.5 rounded-lg bg-green-600 hover:bg-green-700 text-white text-xs font-semibold transition-colors"
+                                className="inline-flex items-center gap-1.5 px-3 py-1.5 rounded-lg bg-ath-accent hover:bg-ath-accent-hover text-ath-on-accent text-xs font-semibold transition-colors"
                               >
                                 <FiCheck className="w-3.5 h-3.5" />
                                 Marcar completado
                               </button>
                             ) : canComplete ? (
-                              <span className="inline-flex items-center space-x-1 text-xs font-medium text-green-600 dark:text-green-400">
+                              <span className="inline-flex items-center space-x-1 text-xs font-medium text-ath-accent-text">
                                 <FiCheck className="w-3.5 h-3.5" />
                                 <span>Completar sesión</span>
                               </span>
                             ) : isCompleted && training.actualDistanceKm ? (
                               <div className="space-y-1">
-                                <div className="flex items-center justify-center gap-3 text-xs text-slate-500 dark:text-slate-400">
+                                <div className="flex items-center justify-center gap-3 text-xs text-ath-text-muted">
                                   {training.actualDistanceKm && (
-                                    <span className="font-semibold text-green-600 dark:text-green-400">{training.actualDistanceKm} km</span>
+                                    <span className="font-semibold text-ath-accent-text">{training.actualDistanceKm} km</span>
                                   )}
                                   {training.rpe && (
                                     <span>RPE {training.rpe}/10</span>
@@ -942,7 +942,7 @@ const Training = () => {
                       {isRest && (
                         <div className="text-center py-6">
                           <span className="text-4xl">💤</span>
-                          <p className="text-sm text-gray-500 dark:text-gray-400 mt-2">Día de recuperación</p>
+                          <p className="text-sm text-ath-text-muted mt-2">Día de recuperación</p>
                         </div>
                       )}
                     </div>
@@ -964,19 +964,19 @@ const Training = () => {
       {activeTab === 'recents' && (
         <>
           {!stravaConnected ? (
-            <div className="bg-white dark:bg-gray-800 rounded-2xl p-8 text-center border border-gray-200 dark:border-gray-700">
+            <div className="bg-ath-surface rounded-2xl p-8 text-center border border-ath-border">
               <SiStrava className="w-10 h-10 text-[#FC4C02] mx-auto mb-3" />
-              <p className="text-sm font-semibold text-slate-700 dark:text-slate-300 mb-1">Conecta Strava</p>
-              <p className="text-xs text-slate-500 dark:text-slate-400">Ve a Dispositivos para conectar tu cuenta de Strava</p>
+              <p className="text-sm font-semibold text-ath-text-secondary mb-1">Conecta Strava</p>
+              <p className="text-xs text-ath-text-muted">Ve a Dispositivos para conectar tu cuenta de Strava</p>
             </div>
           ) : loadingStrava ? (
             <div className="flex items-center justify-center py-16">
               <FiLoader className="w-6 h-6 animate-spin text-[#FC4C02]" />
             </div>
           ) : stravaActivities.length === 0 ? (
-            <div className="bg-white dark:bg-gray-800 rounded-2xl p-8 text-center border border-gray-200 dark:border-gray-700">
-              <FiActivity className="w-10 h-10 text-gray-300 dark:text-gray-600 mx-auto mb-2" />
-              <p className="text-sm text-slate-500 dark:text-slate-400">No hay actividades en los últimos 30 días</p>
+            <div className="bg-ath-surface rounded-2xl p-8 text-center border border-ath-border">
+              <FiActivity className="w-10 h-10 text-ath-text-muted mx-auto mb-2" />
+              <p className="text-sm text-ath-text-muted">No hay actividades en los últimos 30 días</p>
             </div>
           ) : (
             <div className="space-y-3">
@@ -988,12 +988,12 @@ const Training = () => {
                     initial={{ opacity: 0, y: 10 }}
                     animate={{ opacity: 1, y: 0 }}
                     onClick={() => loadActivityDetail(activity)}
-                    className="bg-white dark:bg-gray-800 rounded-2xl border border-gray-200 dark:border-gray-700 overflow-hidden cursor-pointer hover:shadow-md transition-all"
+                    className="bg-ath-surface rounded-2xl border border-ath-border overflow-hidden cursor-pointer hover:shadow-md transition-all"
                   >
                     {/* Card header */}
                     <div className="px-4 pt-4 pb-3">
                       <div className="flex items-start justify-between gap-2 mb-1">
-                        <h4 className="font-bold text-slate-900 dark:text-white text-base leading-tight truncate">
+                        <h4 className="font-bold text-ath-text-primary text-base leading-tight truncate">
                           {activity.name}
                         </h4>
                         {activity.has_heartrate && (
@@ -1007,30 +1007,30 @@ const Training = () => {
                         <span className={`text-[11px] px-1.5 py-0.5 rounded-md font-medium ${getTypeColor(activity.type === 'Run' ? 'running' : activity.type === 'WeightTraining' ? 'gym' : 'cross_training')}`}>
                           {getActivityTypeLabel(activity.type)}
                         </span>
-                        <span className="text-xs text-slate-400 dark:text-slate-500">
+                        <span className="text-xs text-ath-text-muted">
                           {new Date(activity.date).toLocaleDateString('es-ES', { weekday: 'short', day: 'numeric', month: 'short', year: 'numeric' })}
                         </span>
                       </div>
                     </div>
 
                     {/* Stats row */}
-                    <div className="grid grid-cols-4 divide-x divide-gray-100 dark:divide-gray-700 border-t border-gray-100 dark:border-gray-700">
+                    <div className="grid grid-cols-4 divide-x divide-ath-border border-t border-ath-border">
                       {[
-                        { val: activity.distanceKm, unit: 'km', color: 'text-slate-900 dark:text-white' },
-                        { val: activity.formattedTime, unit: 'tiempo', color: 'text-slate-900 dark:text-white' },
-                        { val: activity.pace || '–', unit: 'ritmo', color: 'text-green-600 dark:text-green-400' },
-                        { val: activity.total_elevation_gain ?? 0, unit: 'm+', color: 'text-slate-900 dark:text-white' },
+                        { val: activity.distanceKm, unit: 'km', color: 'text-ath-text-primary' },
+                        { val: activity.formattedTime, unit: 'tiempo', color: 'text-ath-text-primary' },
+                        { val: activity.pace || '–', unit: 'ritmo', color: 'text-ath-accent-text' },
+                        { val: activity.total_elevation_gain ?? 0, unit: 'm+', color: 'text-ath-text-primary' },
                       ].map(({ val, unit, color }, i) => (
                         <div key={i} className="py-2.5 text-center">
                           <p className={`text-sm font-bold font-mono ${color}`}>{val}</p>
-                          <p className="text-[10px] text-slate-400 dark:text-slate-500">{unit}</p>
+                          <p className="text-[10px] text-ath-text-muted">{unit}</p>
                         </div>
                       ))}
                     </div>
 
                     {/* Footer: kcal + kudos + RPE + Ver detalle */}
-                    <div className="px-4 py-2.5 flex items-center justify-between border-t border-gray-100 dark:border-gray-700">
-                      <div className="flex items-center gap-3 text-xs text-slate-400 dark:text-slate-500">
+                    <div className="px-4 py-2.5 flex items-center justify-between border-t border-ath-border">
+                      <div className="flex items-center gap-3 text-xs text-ath-text-muted">
                         {activity.calories > 0 && <span>{activity.calories} kcal</span>}
                         {activity.kudos_count > 0 && <span>· {activity.kudos_count} kudos</span>}
                       </div>
@@ -1050,7 +1050,7 @@ const Training = () => {
                             + Valorar sesión
                           </button>
                         )}
-                        <span className="text-xs font-medium text-slate-400 dark:text-slate-500">Ver detalle &rsaquo;</span>
+                        <span className="text-xs font-medium text-ath-text-muted">Ver detalle &rsaquo;</span>
                       </div>
                     </div>
                   </motion.div>
@@ -1080,10 +1080,10 @@ const Training = () => {
               initial={{ opacity: 0, scale: 0.95 }}
               animate={{ opacity: 1, scale: 1 }}
               exit={{ opacity: 0, scale: 0.95 }}
-              className="bg-white dark:bg-gray-800 rounded-2xl shadow-2xl w-full max-w-5xl max-h-[90vh] overflow-hidden flex flex-col"
+              className="bg-ath-surface rounded-2xl shadow-2xl w-full max-w-5xl max-h-[90vh] overflow-hidden flex flex-col"
             >
               {/* Modal Header */}
-              <div className={`p-6 border-b border-gray-200 dark:border-gray-700 ${
+              <div className={`p-6 border-b border-ath-border ${
                 selectedActivity.type === 'Run' || selectedActivity.type === 'VirtualRun'
                   ? 'bg-blue-50 dark:bg-blue-900/20'
                   : selectedActivity.type === 'WeightTraining' || selectedActivity.type === 'Workout'
@@ -1096,15 +1096,15 @@ const Training = () => {
               }`}>
                 <div className="flex items-start justify-between">
                   <div>
-                    <h2 className="text-xl font-bold text-slate-900 dark:text-white">{selectedActivity.name}</h2>
-                    <p className="text-slate-500 dark:text-slate-400 text-sm mt-1">
+                    <h2 className="text-xl font-bold text-ath-text-primary">{selectedActivity.name}</h2>
+                    <p className="text-ath-text-muted text-sm mt-1">
                       {new Date(selectedActivity.date).toLocaleDateString('es-ES', {
                         weekday: 'long', day: 'numeric', month: 'long', year: 'numeric',
                       })} · {getActivityTypeLabel(selectedActivity.type)}
                     </p>
                   </div>
-                  <button onClick={() => setSelectedActivity(null)} className="p-2 hover:bg-white/60 dark:hover:bg-gray-700 rounded-lg transition-colors">
-                    <FiX className="w-6 h-6 text-slate-500 dark:text-slate-400" />
+                  <button onClick={() => setSelectedActivity(null)} className="p-2 hover:bg-ath-inset rounded-lg transition-colors">
+                    <FiX className="w-6 h-6 text-ath-text-muted" />
                   </button>
                 </div>
               </div>
@@ -1140,36 +1140,36 @@ const Training = () => {
 
                     {/* Additional Stats */}
                     <div className="grid grid-cols-3 sm:grid-cols-6 gap-3">
-                      <div className="bg-gray-50 dark:bg-gray-700/50 rounded-lg p-3 text-center">
-                        <p className="font-semibold text-gray-900 dark:text-white">{selectedActivity.total_elevation_gain || 0}m</p>
+                      <div className="bg-ath-inset rounded-lg p-3 text-center">
+                        <p className="font-semibold text-ath-text-primary">{selectedActivity.total_elevation_gain || 0}m</p>
                         <p className="text-xs text-gray-500">desnivel+</p>
                       </div>
-                      <div className="bg-gray-50 dark:bg-gray-700/50 rounded-lg p-3 text-center">
-                        <p className="font-semibold text-gray-900 dark:text-white">{selectedActivity.max_heartrate || '-'}</p>
+                      <div className="bg-ath-inset rounded-lg p-3 text-center">
+                        <p className="font-semibold text-ath-text-primary">{selectedActivity.max_heartrate || '-'}</p>
                         <p className="text-xs text-gray-500">FC max</p>
                       </div>
-                      <div className="bg-gray-50 dark:bg-gray-700/50 rounded-lg p-3 text-center">
-                        <p className="font-semibold text-gray-900 dark:text-white">{selectedActivity.calories || '-'}</p>
+                      <div className="bg-ath-inset rounded-lg p-3 text-center">
+                        <p className="font-semibold text-ath-text-primary">{selectedActivity.calories || '-'}</p>
                         <p className="text-xs text-gray-500">kcal</p>
                       </div>
-                      <div className="bg-gray-50 dark:bg-gray-700/50 rounded-lg p-3 text-center">
-                        <p className="font-semibold text-gray-900 dark:text-white">{selectedActivity.suffer_score || '-'}</p>
+                      <div className="bg-ath-inset rounded-lg p-3 text-center">
+                        <p className="font-semibold text-ath-text-primary">{selectedActivity.suffer_score || '-'}</p>
                         <p className="text-xs text-gray-500">esfuerzo</p>
                       </div>
-                      <div className="bg-gray-50 dark:bg-gray-700/50 rounded-lg p-3 text-center">
-                        <p className="font-semibold text-gray-900 dark:text-white">{selectedActivity.kudos_count || 0}</p>
+                      <div className="bg-ath-inset rounded-lg p-3 text-center">
+                        <p className="font-semibold text-ath-text-primary">{selectedActivity.kudos_count || 0}</p>
                         <p className="text-xs text-gray-500">kudos</p>
                       </div>
-                      <div className="bg-gray-50 dark:bg-gray-700/50 rounded-lg p-3 text-center">
-                        <p className="font-semibold text-gray-900 dark:text-white">{selectedActivity.achievement_count || 0}</p>
+                      <div className="bg-ath-inset rounded-lg p-3 text-center">
+                        <p className="font-semibold text-ath-text-primary">{selectedActivity.achievement_count || 0}</p>
                         <p className="text-xs text-gray-500">logros</p>
                       </div>
                     </div>
 
                     {/* Map */}
                     {selectedActivity.polyline && (
-                      <div className="bg-gray-100 dark:bg-gray-700 rounded-xl p-4">
-                        <h3 className="font-semibold text-gray-900 dark:text-white mb-3 flex items-center">
+                      <div className="bg-ath-inset rounded-xl p-4">
+                        <h3 className="font-semibold text-ath-text-primary mb-3 flex items-center">
                           <FiMapPin className="w-4 h-4 mr-2 text-orange-500" />Recorrido
                         </h3>
                         <div ref={mapContainerRef} className="h-64 rounded-lg overflow-hidden" style={{ minHeight: '256px' }} />
@@ -1179,30 +1179,30 @@ const Training = () => {
                     {/* Laps */}
                     {selectedActivity.laps && selectedActivity.laps.length > 0 && (
                       <div>
-                        <h3 className="font-semibold text-gray-900 dark:text-white mb-3 flex items-center">
+                        <h3 className="font-semibold text-ath-text-primary mb-3 flex items-center">
                           <FiActivity className="w-4 h-4 mr-2 text-blue-500" />Vueltas ({selectedActivity.laps.length})
                         </h3>
                         <div className="overflow-x-auto">
                           <table className="w-full text-sm">
                             <thead>
-                              <tr className="bg-gray-50 dark:bg-gray-700">
-                                <th className="px-3 py-2 text-left text-gray-600 dark:text-gray-400">#</th>
-                                <th className="px-3 py-2 text-right text-gray-600 dark:text-gray-400">Distancia</th>
-                                <th className="px-3 py-2 text-right text-gray-600 dark:text-gray-400">Tiempo</th>
-                                <th className="px-3 py-2 text-right text-gray-600 dark:text-gray-400">Ritmo</th>
-                                <th className="px-3 py-2 text-right text-gray-600 dark:text-gray-400">FC</th>
-                                <th className="px-3 py-2 text-right text-gray-600 dark:text-gray-400">Cadencia</th>
+                              <tr className="bg-ath-inset">
+                                <th className="px-3 py-2 text-left text-ath-text-secondary">#</th>
+                                <th className="px-3 py-2 text-right text-ath-text-secondary">Distancia</th>
+                                <th className="px-3 py-2 text-right text-ath-text-secondary">Tiempo</th>
+                                <th className="px-3 py-2 text-right text-ath-text-secondary">Ritmo</th>
+                                <th className="px-3 py-2 text-right text-ath-text-secondary">FC</th>
+                                <th className="px-3 py-2 text-right text-ath-text-secondary">Cadencia</th>
                               </tr>
                             </thead>
-                            <tbody className="divide-y divide-gray-200 dark:divide-gray-700">
+                            <tbody className="divide-y divide-ath-border">
                               {selectedActivity.laps.map((lap, index) => (
-                                <tr key={lap.id || index} className="hover:bg-gray-50 dark:hover:bg-gray-700/50">
-                                  <td className="px-3 py-2 font-medium text-gray-900 dark:text-white">{lap.name || `Vuelta ${index + 1}`}</td>
-                                  <td className="px-3 py-2 text-right text-gray-700 dark:text-gray-300">{(lap.distance / 1000).toFixed(2)} km</td>
-                                  <td className="px-3 py-2 text-right text-gray-700 dark:text-gray-300">{formatDuration(lap.moving_time)}</td>
-                                  <td className="px-3 py-2 text-right font-mono text-gray-900 dark:text-white">{calculatePace(lap.moving_time, lap.distance)}</td>
+                                <tr key={lap.id || index} className="hover:bg-ath-inset">
+                                  <td className="px-3 py-2 font-medium text-ath-text-primary">{lap.name || `Vuelta ${index + 1}`}</td>
+                                  <td className="px-3 py-2 text-right text-ath-text-secondary">{(lap.distance / 1000).toFixed(2)} km</td>
+                                  <td className="px-3 py-2 text-right text-ath-text-secondary">{formatDuration(lap.moving_time)}</td>
+                                  <td className="px-3 py-2 text-right font-mono text-ath-text-primary">{calculatePace(lap.moving_time, lap.distance)}</td>
                                   <td className="px-3 py-2 text-right text-red-600 dark:text-red-400">{lap.average_heartrate ? `${Math.round(lap.average_heartrate)}` : '-'}</td>
-                                  <td className="px-3 py-2 text-right text-gray-600 dark:text-gray-400">{lap.average_cadence ? `${Math.round(lap.average_cadence * 2)}` : '-'}</td>
+                                  <td className="px-3 py-2 text-right text-ath-text-secondary">{lap.average_cadence ? `${Math.round(lap.average_cadence * 2)}` : '-'}</td>
                                 </tr>
                               ))}
                             </tbody>
@@ -1214,7 +1214,7 @@ const Training = () => {
                     {/* Splits per KM */}
                     {selectedActivity.splits_metric && selectedActivity.splits_metric.length > 0 && (
                       <div>
-                        <h3 className="font-semibold text-gray-900 dark:text-white mb-3 flex items-center">
+                        <h3 className="font-semibold text-ath-text-primary mb-3 flex items-center">
                           <FiTrendingUp className="w-4 h-4 mr-2 text-green-500" />Parciales por Kilómetro
                         </h3>
                         <div className="grid grid-cols-5 sm:grid-cols-10 gap-2">
@@ -1222,9 +1222,9 @@ const Training = () => {
                             const pace = calculatePace(split.moving_time, split.distance);
                             const isGoodPace = split.average_heartrate && split.average_heartrate < (selectedActivity.average_heartrate || 150);
                             return (
-                              <div key={index} className={`p-2 rounded-lg text-center ${isGoodPace ? 'bg-green-50 dark:bg-green-900/20' : 'bg-gray-50 dark:bg-gray-700/50'}`}>
-                                <p className="text-xs text-gray-500 mb-1">km {index + 1}</p>
-                                <p className="font-mono text-sm font-bold text-gray-900 dark:text-white">{pace}</p>
+                              <div key={index} className={`p-2 rounded-lg text-center ${isGoodPace ? 'bg-green-50 dark:bg-green-900/20' : 'bg-ath-inset'}`}>
+                                <p className="text-xs text-ath-text-muted mb-1">km {index + 1}</p>
+                                <p className="font-mono text-sm font-bold text-ath-text-primary">{pace}</p>
                                 {split.average_heartrate && <p className="text-xs text-red-500 mt-1">{Math.round(split.average_heartrate)}</p>}
                               </div>
                             );
@@ -1236,20 +1236,20 @@ const Training = () => {
                     {/* Segments */}
                     {selectedActivity.segment_efforts && selectedActivity.segment_efforts.length > 0 && (
                       <div>
-                        <h3 className="font-semibold text-slate-900 dark:text-white mb-2 flex items-center gap-2 text-sm">
+                        <h3 className="font-semibold text-ath-text-primary mb-2 flex items-center gap-2 text-sm">
                           <span className="text-slate-500">≡</span> Segmentos ({selectedActivity.segment_efforts.length})
                         </h3>
                         <div className="space-y-1 max-h-64 overflow-y-auto">
                           {selectedActivity.segment_efforts.slice(0, 10).map((effort) => {
                             const distKm = ((effort.segment?.distance || effort.distance || 0) / 1000).toFixed(3);
                             return (
-                              <div key={effort.id} className="flex items-center gap-3 px-3 py-2.5 bg-gray-50 dark:bg-gray-700/40 rounded-xl hover:bg-gray-100 dark:hover:bg-gray-700/60 transition-colors">
+                              <div key={effort.id} className="flex items-center gap-3 px-3 py-2.5 bg-ath-inset rounded-xl hover:bg-ath-inset transition-colors">
                                 <div className="w-8 h-8 rounded-lg bg-orange-100 dark:bg-orange-900/30 flex items-center justify-center flex-shrink-0">
                                   <FiFlag className="w-3.5 h-3.5 text-[#FC4C02]" />
                                 </div>
                                 <div className="flex-1 min-w-0">
-                                  <p className="text-sm font-medium text-slate-900 dark:text-white truncate">{effort.segment?.name || effort.name}</p>
-                                  <p className="text-xs text-slate-400 dark:text-slate-500">{distKm} km</p>
+                                  <p className="text-sm font-medium text-ath-text-primary truncate">{effort.segment?.name || effort.name}</p>
+                                  <p className="text-xs text-ath-text-muted">{distKm} km</p>
                                 </div>
                                 <div className="text-right flex-shrink-0">
                                   <p className="font-mono font-semibold text-[#FC4C02]">{formatDuration(effort.moving_time || effort.elapsed_time)}</p>
@@ -1290,13 +1290,13 @@ const Training = () => {
               initial={{ opacity: 0, scale: 0.95 }}
               animate={{ opacity: 1, scale: 1 }}
               exit={{ opacity: 0, scale: 0.95 }}
-              className="bg-white dark:bg-gray-800 rounded-xl shadow-xl w-full max-w-2xl max-h-[90vh] overflow-hidden flex flex-col"
+              className="bg-ath-surface rounded-xl shadow-xl w-full max-w-2xl max-h-[90vh] overflow-hidden flex flex-col"
             >
               {/* Modal Header */}
-              <div className="p-6 border-b border-gray-200 dark:border-gray-700 flex-shrink-0">
+              <div className="p-6 border-b border-ath-border flex-shrink-0">
                 <div className="flex items-start justify-between">
                   <div>
-                    <p className="text-sm text-gray-500 dark:text-gray-400 mb-1">
+                    <p className="text-sm text-ath-text-muted mb-1">
                       {selectedDayIndex !== null && DAYS_OF_WEEK[selectedDayIndex]} -{' '}
                       {selectedDay.date && new Date(selectedDay.date).toLocaleDateString('es-ES', {
                         day: 'numeric',
@@ -1304,7 +1304,7 @@ const Training = () => {
                         year: 'numeric',
                       })}
                     </p>
-                    <h2 className="text-xl font-bold text-gray-900 dark:text-white">
+                    <h2 className="text-xl font-bold text-ath-text-primary">
                       {selectedDay.title}
                     </h2>
                     <div className="flex items-center gap-2 mt-2">
@@ -1325,9 +1325,9 @@ const Training = () => {
                   </div>
                   <button
                     onClick={closeDayDetail}
-                    className="p-2 hover:bg-gray-100 dark:hover:bg-gray-700 rounded-lg transition-colors"
+                    className="p-2 hover:bg-ath-inset rounded-lg transition-colors"
                   >
-                    <FiX className="w-5 h-5 text-gray-500" />
+                    <FiX className="w-5 h-5 text-ath-text-muted" />
                   </button>
                 </div>
               </div>
@@ -1337,10 +1337,10 @@ const Training = () => {
                 {selectedDay.type === 'rest' ? (
                   <div className="text-center py-12">
                     <span className="text-6xl mb-4 block">💤</span>
-                    <h3 className="text-xl font-semibold text-gray-900 dark:text-white mb-2">
+                    <h3 className="text-xl font-semibold text-ath-text-primary mb-2">
                       Día de Descanso
                     </h3>
-                    <p className="text-gray-500 dark:text-gray-400">
+                    <p className="text-ath-text-muted">
                       Aprovecha para recuperarte y prepararte para el próximo entrenamiento.
                     </p>
                   </div>
@@ -1377,24 +1377,24 @@ const Training = () => {
                         <p className="text-xs font-bold uppercase tracking-widest text-green-600 dark:text-green-400">Resultado</p>
                         <div className="grid grid-cols-2 gap-3">
                           {selectedDay.actualDistanceKm && (
-                            <div className="bg-white dark:bg-gray-800 rounded-xl p-3 border border-green-100 dark:border-green-800/30">
-                              <p className="text-[10px] uppercase tracking-widest text-slate-400 dark:text-slate-500 mb-0.5">Distancia</p>
+                            <div className="bg-ath-surface rounded-xl p-3 border border-green-100 dark:border-green-800/30">
+                              <p className="text-[10px] uppercase tracking-widest text-ath-text-muted mb-0.5">Distancia</p>
                               <p className="text-xl font-bold text-green-700 dark:text-green-400">
                                 {selectedDay.actualDistanceKm} <span className="text-sm font-normal text-slate-400">km</span>
                               </p>
                             </div>
                           )}
                           {selectedDay.actualTimeMinutes && (
-                            <div className="bg-white dark:bg-gray-800 rounded-xl p-3 border border-green-100 dark:border-green-800/30">
-                              <p className="text-[10px] uppercase tracking-widest text-slate-400 dark:text-slate-500 mb-0.5">Tiempo</p>
+                            <div className="bg-ath-surface rounded-xl p-3 border border-green-100 dark:border-green-800/30">
+                              <p className="text-[10px] uppercase tracking-widest text-ath-text-muted mb-0.5">Tiempo</p>
                               <p className="text-xl font-bold text-green-700 dark:text-green-400">
                                 {selectedDay.actualTimeMinutes} <span className="text-sm font-normal text-slate-400">min</span>
                               </p>
                             </div>
                           )}
                           {selectedDay.rpe && (
-                            <div className="bg-white dark:bg-gray-800 rounded-xl p-3 border border-green-100 dark:border-green-800/30">
-                              <p className="text-[10px] uppercase tracking-widest text-slate-400 dark:text-slate-500 mb-0.5">RPE</p>
+                            <div className="bg-ath-surface rounded-xl p-3 border border-green-100 dark:border-green-800/30">
+                              <p className="text-[10px] uppercase tracking-widest text-ath-text-muted mb-0.5">RPE</p>
                               <p className="text-xl font-bold text-green-700 dark:text-green-400">
                                 {selectedDay.rpe}<span className="text-sm font-normal text-slate-400">/10</span>
                               </p>
@@ -1414,18 +1414,18 @@ const Training = () => {
                           <SiStrava className="w-4 h-4 text-[#FC4C02]" />
                           <p className="text-xs font-bold uppercase tracking-widest text-[#FC4C02]">Completado vía Strava</p>
                         </div>
-                        <div className="grid grid-cols-3 divide-x divide-gray-100 dark:divide-gray-700 bg-white dark:bg-gray-800">
+                        <div className="grid grid-cols-3 divide-x divide-ath-border bg-ath-surface">
                           <div className="flex flex-col items-center py-3">
-                            <p className="text-[10px] uppercase tracking-widest text-slate-400 dark:text-slate-500 mb-0.5">Distancia</p>
-                            <p className="text-lg font-bold text-slate-900 dark:text-white">{linkedActivities[selectedDayIndex].distanceKm} <span className="text-xs font-normal text-slate-400">km</span></p>
+                            <p className="text-[10px] uppercase tracking-widest text-ath-text-muted mb-0.5">Distancia</p>
+                            <p className="text-lg font-bold text-ath-text-primary">{linkedActivities[selectedDayIndex].distanceKm} <span className="text-xs font-normal text-slate-400">km</span></p>
                           </div>
                           <div className="flex flex-col items-center py-3">
-                            <p className="text-[10px] uppercase tracking-widest text-slate-400 dark:text-slate-500 mb-0.5">Tiempo</p>
-                            <p className="text-lg font-bold text-slate-900 dark:text-white">{linkedActivities[selectedDayIndex].formattedTime}</p>
+                            <p className="text-[10px] uppercase tracking-widest text-ath-text-muted mb-0.5">Tiempo</p>
+                            <p className="text-lg font-bold text-ath-text-primary">{linkedActivities[selectedDayIndex].formattedTime}</p>
                           </div>
                           <div className="flex flex-col items-center py-3">
-                            <p className="text-[10px] uppercase tracking-widest text-slate-400 dark:text-slate-500 mb-0.5">Ritmo</p>
-                            <p className="text-lg font-bold text-slate-900 dark:text-white">{linkedActivities[selectedDayIndex].pace} <span className="text-xs font-normal text-slate-400">min/km</span></p>
+                            <p className="text-[10px] uppercase tracking-widest text-ath-text-muted mb-0.5">Ritmo</p>
+                            <p className="text-lg font-bold text-ath-text-primary">{linkedActivities[selectedDayIndex].pace} <span className="text-xs font-normal text-slate-400">min/km</span></p>
                           </div>
                         </div>
                         {linkedActivities[selectedDayIndex].average_heartrate && (
@@ -1439,14 +1439,14 @@ const Training = () => {
 
                     {/* Skipped Session Info */}
                     {selectedDay.status === 'skipped' && (
-                      <div className="flex items-center gap-3 bg-gray-100 dark:bg-gray-700/50 rounded-2xl p-4 border border-gray-200 dark:border-gray-600">
+                      <div className="flex items-center gap-3 bg-ath-inset rounded-2xl p-4 border border-ath-border">
                         <div className="w-9 h-9 rounded-xl bg-gray-200 dark:bg-gray-600 flex items-center justify-center flex-shrink-0">
-                          <FiSkipForward className="w-4 h-4 text-gray-500 dark:text-gray-400" />
+                          <FiSkipForward className="w-4 h-4 text-ath-text-muted" />
                         </div>
                         <div>
-                          <p className="text-sm font-semibold text-gray-700 dark:text-gray-300">Sesión omitida</p>
+                          <p className="text-sm font-semibold text-ath-text-secondary">Sesión omitida</p>
                           {selectedDay.notesAthlete && (
-                            <p className="text-xs text-gray-500 dark:text-gray-400 mt-0.5">{selectedDay.notesAthlete}</p>
+                            <p className="text-xs text-ath-text-muted mt-0.5">{selectedDay.notesAthlete}</p>
                           )}
                         </div>
                       </div>
@@ -1455,21 +1455,21 @@ const Training = () => {
                     {/* Summary Stats */}
                     <div className="grid grid-cols-2 gap-3">
                       {selectedDay.totalDistance && (
-                        <div className="bg-white dark:bg-gray-800 border border-gray-100 dark:border-gray-700 rounded-2xl p-4">
-                          <p className="text-[10px] font-bold uppercase tracking-widest text-slate-400 dark:text-slate-500 mb-1 flex items-center gap-1">
+                        <div className="bg-ath-surface border border-ath-border rounded-2xl p-4">
+                          <p className="text-[10px] font-bold uppercase tracking-widest text-ath-text-muted mb-1 flex items-center gap-1">
                             <FiTarget className="w-3 h-3" /> Distancia
                           </p>
-                          <p className="text-2xl font-bold text-slate-900 dark:text-white">
+                          <p className="text-2xl font-bold text-ath-text-primary">
                             {selectedDay.totalDistance}
                           </p>
                         </div>
                       )}
                       {selectedDay.duration && (
-                        <div className="bg-white dark:bg-gray-800 border border-gray-100 dark:border-gray-700 rounded-2xl p-4">
-                          <p className="text-[10px] font-bold uppercase tracking-widest text-slate-400 dark:text-slate-500 mb-1 flex items-center gap-1">
+                        <div className="bg-ath-surface border border-ath-border rounded-2xl p-4">
+                          <p className="text-[10px] font-bold uppercase tracking-widest text-ath-text-muted mb-1 flex items-center gap-1">
                             <FiClock className="w-3 h-3" /> Duración est.
                           </p>
-                          <p className="text-2xl font-bold text-slate-900 dark:text-white">
+                          <p className="text-2xl font-bold text-ath-text-primary">
                             {selectedDay.duration} <span className="text-sm font-normal text-slate-400">min</span>
                           </p>
                         </div>
@@ -1479,8 +1479,8 @@ const Training = () => {
                     {/* Description */}
                     {selectedDay.description && (
                       <div>
-                        <p className="text-[10px] font-bold uppercase tracking-widest text-slate-400 dark:text-slate-500 mb-2">Descripción</p>
-                        <p className="text-sm text-slate-700 dark:text-slate-300 bg-white dark:bg-gray-800 border border-gray-100 dark:border-gray-700 rounded-2xl px-4 py-3 leading-relaxed">
+                        <p className="text-[10px] font-bold uppercase tracking-widest text-ath-text-muted mb-2">Descripción</p>
+                        <p className="text-sm text-ath-text-secondary bg-ath-surface border border-ath-border rounded-2xl px-4 py-3 leading-relaxed">
                           {selectedDay.description}
                         </p>
                       </div>
@@ -1489,14 +1489,14 @@ const Training = () => {
                     {/* Exercises List */}
                     {selectedDay.exercises?.length > 0 && (
                       <div>
-                        <p className="text-[10px] font-bold uppercase tracking-widest text-slate-400 dark:text-slate-500 mb-2">
+                        <p className="text-[10px] font-bold uppercase tracking-widest text-ath-text-muted mb-2">
                           Ejercicios · {selectedDay.exercises.length}
                         </p>
                         <div className="space-y-2">
                           {selectedDay.exercises.map((exercise, index) => (
                             <div
                               key={exercise.id || index}
-                              className="bg-white dark:bg-gray-800 border border-gray-100 dark:border-gray-700 rounded-2xl p-4"
+                              className="bg-ath-surface border border-ath-border rounded-2xl p-4"
                             >
                               <div className="flex items-start justify-between mb-2">
                                 <div className="flex items-start gap-2">
@@ -1505,7 +1505,7 @@ const Training = () => {
                                   ) : (
                                     <span className="w-4 h-4 mt-0.5 flex-shrink-0 flex items-center justify-center text-[10px] font-bold text-slate-400">{index + 1}</span>
                                   )}
-                                  <h5 className="text-sm font-semibold text-slate-900 dark:text-white">
+                                  <h5 className="text-sm font-semibold text-ath-text-primary">
                                     {exercise.name}
                                   </h5>
                                 </div>
@@ -1516,16 +1516,16 @@ const Training = () => {
                                 )}
                               </div>
 
-                              <div className="flex flex-wrap gap-x-4 gap-y-1 text-xs text-slate-500 dark:text-slate-400">
-                                {exercise.sets && <span><span className="font-medium text-slate-700 dark:text-slate-300">{exercise.sets}</span> series</span>}
-                                {exercise.reps && <span><span className="font-medium text-slate-700 dark:text-slate-300">{exercise.reps}</span> reps</span>}
-                                {exercise.distance && <span><span className="font-medium text-slate-700 dark:text-slate-300">{formatDistance(exercise.distance)}</span></span>}
-                                {exercise.rest && <span>r: <span className="font-medium text-slate-700 dark:text-slate-300">{formatRest(exercise.rest)}</span></span>}
-                                {exercise.paceCode && <span>Ritmo: <span className="font-medium text-slate-700 dark:text-slate-300">{getPaceLabel(exercise.paceCode)}</span></span>}
+                              <div className="flex flex-wrap gap-x-4 gap-y-1 text-xs text-ath-text-muted">
+                                {exercise.sets && <span><span className="font-medium text-ath-text-secondary">{exercise.sets}</span> series</span>}
+                                {exercise.reps && <span><span className="font-medium text-ath-text-secondary">{exercise.reps}</span> reps</span>}
+                                {exercise.distance && <span><span className="font-medium text-ath-text-secondary">{formatDistance(exercise.distance)}</span></span>}
+                                {exercise.rest && <span>r: <span className="font-medium text-ath-text-secondary">{formatRest(exercise.rest)}</span></span>}
+                                {exercise.paceCode && <span>Ritmo: <span className="font-medium text-ath-text-secondary">{getPaceLabel(exercise.paceCode)}</span></span>}
                               </div>
 
                               {exercise.notes && (
-                                <p className="mt-2 text-xs text-slate-400 dark:text-slate-500 italic">
+                                <p className="mt-2 text-xs text-ath-text-muted italic">
                                   {exercise.notes}
                                 </p>
                               )}
@@ -1550,9 +1550,9 @@ const Training = () => {
 
                     {/* Strava RPE Section (for auto-completed sessions missing RPE) */}
                     {showStravaRpeFlow && selectedDay.status === 'completed' && selectedDay.stravaActivityId && !selectedDay.rpeScore && (
-                      <div className="bg-white dark:bg-gray-800 rounded-2xl border border-gray-100 dark:border-gray-700 p-5">
-                        <p className="text-[10px] font-bold uppercase tracking-widest text-slate-400 dark:text-slate-500 mb-1">Percepción de esfuerzo</p>
-                        <p className="text-base font-bold text-slate-900 dark:text-white mb-4">¿Cómo te has sentido?</p>
+                      <div className="bg-ath-surface rounded-2xl border border-ath-border p-5">
+                        <p className="text-[10px] font-bold uppercase tracking-widest text-ath-text-muted mb-1">Percepción de esfuerzo</p>
+                        <p className="text-base font-bold text-ath-text-primary mb-4">¿Cómo te has sentido?</p>
 
                         <div className="flex justify-between gap-1 mb-5">
                           {RPE_OPTIONS.map((option) => (
@@ -1566,7 +1566,7 @@ const Training = () => {
                               }`}
                             >
                               <span className="text-2xl mb-1">{option.emoji}</span>
-                              <span className="text-[9px] font-medium text-slate-500 dark:text-slate-400 leading-tight text-center">{option.label}</span>
+                              <span className="text-[9px] font-medium text-ath-text-muted leading-tight text-center">{option.label}</span>
                             </button>
                           ))}
                         </div>
@@ -1576,7 +1576,7 @@ const Training = () => {
                           onChange={(e) => setAthleteNotes(e.target.value)}
                           placeholder="Sensaciones, comentarios... (opcional)"
                           rows={2}
-                          className="w-full px-3 py-2.5 rounded-xl border border-gray-200 dark:border-gray-600 bg-gray-50 dark:bg-gray-700 text-sm text-slate-900 dark:text-white placeholder-slate-400 focus:ring-2 focus:ring-slate-400 focus:border-transparent resize-none mb-3"
+                          className="w-full px-3 py-2.5 rounded-xl border border-ath-border bg-ath-inset text-sm text-ath-text-primary placeholder-slate-400 focus:ring-2 focus:ring-slate-400 focus:border-transparent resize-none mb-3"
                         />
 
                         <div className="flex items-center gap-2">
@@ -1589,7 +1589,7 @@ const Training = () => {
                           </button>
                           <button
                             onClick={() => setShowStravaRpeFlow(false)}
-                            className="px-4 py-2.5 text-sm text-slate-500 dark:text-slate-400 hover:bg-gray-100 dark:hover:bg-gray-700 rounded-xl transition-colors"
+                            className="px-4 py-2.5 text-sm text-ath-text-muted hover:bg-ath-inset rounded-xl transition-colors"
                           >
                             Cancelar
                           </button>
@@ -1599,9 +1599,9 @@ const Training = () => {
 
                     {/* RPE Section (inline, shown when completing) */}
                     {showCompletionFlow && selectedDay.status === 'planned' && (
-                      <div className="bg-white dark:bg-gray-800 rounded-2xl border border-gray-100 dark:border-gray-700 p-5">
-                        <p className="text-[10px] font-bold uppercase tracking-widest text-slate-400 dark:text-slate-500 mb-1">Percepción de esfuerzo</p>
-                        <p className="text-base font-bold text-slate-900 dark:text-white mb-4">¿Cómo te has sentido?</p>
+                      <div className="bg-ath-surface rounded-2xl border border-ath-border p-5">
+                        <p className="text-[10px] font-bold uppercase tracking-widest text-ath-text-muted mb-1">Percepción de esfuerzo</p>
+                        <p className="text-base font-bold text-ath-text-primary mb-4">¿Cómo te has sentido?</p>
 
                         <div className="flex justify-between gap-1 mb-5">
                           {RPE_OPTIONS.map((option) => (
@@ -1615,7 +1615,7 @@ const Training = () => {
                               }`}
                             >
                               <span className="text-2xl mb-1">{option.emoji}</span>
-                              <span className="text-[9px] font-medium text-slate-500 dark:text-slate-400 leading-tight text-center">{option.label}</span>
+                              <span className="text-[9px] font-medium text-ath-text-muted leading-tight text-center">{option.label}</span>
                             </button>
                           ))}
                         </div>
@@ -1625,17 +1625,17 @@ const Training = () => {
                           onChange={(e) => setAthleteNotes(e.target.value)}
                           placeholder="Sensaciones, comentarios... (opcional)"
                           rows={2}
-                          className="w-full px-3 py-2.5 rounded-xl border border-gray-200 dark:border-gray-600 bg-gray-50 dark:bg-gray-700 text-sm text-slate-900 dark:text-white placeholder-slate-400 focus:ring-2 focus:ring-slate-400 focus:border-transparent resize-none mb-3"
+                          className="w-full px-3 py-2.5 rounded-xl border border-ath-border bg-ath-inset text-sm text-ath-text-primary placeholder-slate-400 focus:ring-2 focus:ring-slate-400 focus:border-transparent resize-none mb-3"
                         />
 
                         <div className="flex items-center gap-2 mb-3">
-                          <label className="text-xs text-slate-500 dark:text-slate-400 whitespace-nowrap">Duración real</label>
+                          <label className="text-xs text-ath-text-muted whitespace-nowrap">Duración real</label>
                           <input
                             type="number"
                             value={actualDuration}
                             onChange={(e) => setActualDuration(e.target.value)}
                             placeholder={selectedDay.duration ? `${selectedDay.duration} est.` : 'min'}
-                            className="w-24 px-3 py-2 rounded-xl border border-gray-200 dark:border-gray-600 bg-gray-50 dark:bg-gray-700 text-sm text-slate-900 dark:text-white focus:ring-2 focus:ring-slate-400 focus:border-transparent"
+                            className="w-24 px-3 py-2 rounded-xl border border-ath-border bg-ath-inset text-sm text-ath-text-primary focus:ring-2 focus:ring-slate-400 focus:border-transparent"
                           />
                           <span className="text-xs text-slate-400">min</span>
                         </div>
@@ -1650,7 +1650,7 @@ const Training = () => {
                           </button>
                           <button
                             onClick={() => setShowCompletionFlow(false)}
-                            className="px-4 py-2.5 text-sm text-slate-500 dark:text-slate-400 hover:bg-gray-100 dark:hover:bg-gray-700 rounded-xl transition-colors"
+                            className="px-4 py-2.5 text-sm text-ath-text-muted hover:bg-ath-inset rounded-xl transition-colors"
                           >
                             Cancelar
                           </button>
@@ -1663,7 +1663,7 @@ const Training = () => {
 
               {/* Modal Footer */}
               {selectedDay.type !== 'rest' && !showCompletionFlow && !showStravaRpeFlow && (
-                <div className="p-4 border-t border-gray-200 dark:border-gray-700 flex-shrink-0">
+                <div className="p-4 border-t border-ath-border flex-shrink-0">
                   {selectedDay.status === 'planned' && isPastOrToday(selectedDay.date) ? (
                     <div className="flex items-center gap-2">
                       <button
@@ -1684,7 +1684,7 @@ const Training = () => {
                       <button
                         onClick={handleSkipSession}
                         disabled={saving}
-                        className="flex items-center gap-1 px-4 py-2.5 text-sm text-slate-500 dark:text-slate-400 hover:bg-gray-100 dark:hover:bg-gray-700 rounded-xl transition-colors"
+                        className="flex items-center gap-1 px-4 py-2.5 text-sm text-ath-text-muted hover:bg-ath-inset rounded-xl transition-colors"
                       >
                         <FiSkipForward className="w-4 h-4" />
                         <span>Omitir</span>
@@ -1702,7 +1702,7 @@ const Training = () => {
                       <button
                         onClick={handleRevertSession}
                         disabled={saving}
-                        className="flex items-center gap-1 px-4 py-2.5 text-sm text-slate-500 dark:text-slate-400 hover:bg-gray-100 dark:hover:bg-gray-700 rounded-xl transition-colors"
+                        className="flex items-center gap-1 px-4 py-2.5 text-sm text-ath-text-muted hover:bg-ath-inset rounded-xl transition-colors"
                       >
                         <FiRotateCcw className="w-4 h-4" />
                         <span>Revertir</span>
@@ -1712,14 +1712,14 @@ const Training = () => {
                     <div className="flex items-center gap-2">
                       <button
                         onClick={closeDayDetail}
-                        className="flex-1 px-4 py-2.5 bg-gray-100 dark:bg-gray-700 text-slate-700 dark:text-slate-300 rounded-xl hover:bg-gray-200 dark:hover:bg-gray-600 transition-colors text-sm font-medium"
+                        className="flex-1 px-4 py-2.5 bg-ath-inset text-ath-text-secondary rounded-xl hover:bg-ath-inset transition-colors text-sm font-medium"
                       >
                         Cerrar
                       </button>
                       <button
                         onClick={handleRevertSession}
                         disabled={saving}
-                        className="flex items-center gap-1 px-4 py-2.5 text-sm text-slate-500 dark:text-slate-400 hover:bg-gray-100 dark:hover:bg-gray-700 rounded-xl transition-colors"
+                        className="flex items-center gap-1 px-4 py-2.5 text-sm text-ath-text-muted hover:bg-ath-inset rounded-xl transition-colors"
                       >
                         <FiRotateCcw className="w-4 h-4" />
                         <span>Revertir</span>
@@ -1729,14 +1729,14 @@ const Training = () => {
                     <div className="flex items-center gap-2">
                       <button
                         onClick={closeDayDetail}
-                        className="flex-1 px-4 py-2.5 bg-gray-100 dark:bg-gray-700 text-slate-700 dark:text-slate-300 rounded-xl hover:bg-gray-200 dark:hover:bg-gray-600 transition-colors text-sm font-medium"
+                        className="flex-1 px-4 py-2.5 bg-ath-inset text-ath-text-secondary rounded-xl hover:bg-ath-inset transition-colors text-sm font-medium"
                       >
                         Cerrar
                       </button>
                       <button
                         onClick={handleRevertSession}
                         disabled={saving}
-                        className="flex items-center gap-1 px-4 py-2.5 text-sm text-slate-500 dark:text-slate-400 hover:bg-gray-100 dark:hover:bg-gray-700 rounded-xl transition-colors"
+                        className="flex items-center gap-1 px-4 py-2.5 text-sm text-ath-text-muted hover:bg-ath-inset rounded-xl transition-colors"
                       >
                         <FiRotateCcw className="w-4 h-4" />
                         <span>Revertir</span>
@@ -1745,7 +1745,7 @@ const Training = () => {
                   ) : (
                     <button
                       onClick={closeDayDetail}
-                      className="w-full px-4 py-2.5 bg-gray-100 dark:bg-gray-700 text-slate-700 dark:text-slate-300 rounded-xl hover:bg-gray-200 dark:hover:bg-gray-600 transition-colors text-sm font-medium"
+                      className="w-full px-4 py-2.5 bg-ath-inset text-ath-text-secondary rounded-xl hover:bg-ath-inset transition-colors text-sm font-medium"
                     >
                       Cerrar
                     </button>
@@ -1753,10 +1753,10 @@ const Training = () => {
                 </div>
               )}
               {selectedDay.type === 'rest' && (
-                <div className="p-4 border-t border-gray-200 dark:border-gray-700 flex-shrink-0">
+                <div className="p-4 border-t border-ath-border flex-shrink-0">
                   <button
                     onClick={closeDayDetail}
-                    className="w-full px-4 py-2.5 bg-gray-100 dark:bg-gray-700 text-slate-700 dark:text-slate-300 rounded-xl hover:bg-gray-200 dark:hover:bg-gray-600 transition-colors text-sm font-medium"
+                    className="w-full px-4 py-2.5 bg-ath-inset text-ath-text-secondary rounded-xl hover:bg-ath-inset transition-colors text-sm font-medium"
                   >
                     Cerrar
                   </button>

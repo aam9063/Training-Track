@@ -1,4 +1,4 @@
-import { useState, useEffect } from 'react';
+import { useState, useEffect, useCallback } from 'react';
 import { supabase } from '../lib/supabase';
 
 export default function useAthleteTestData(athleteId) {
@@ -6,6 +6,9 @@ export default function useAthleteTestData(athleteId) {
   const [latestVam, setLatestVam] = useState(null);
   const [latestConconiTest, setLatestConconiTest] = useState(null);
   const [personalBests, setPersonalBests] = useState([]);
+  const [refreshKey, setRefreshKey] = useState(0);
+
+  const refresh = useCallback(() => setRefreshKey(k => k + 1), []);
 
   useEffect(() => {
     const loadTestData = async () => {
@@ -22,11 +25,11 @@ export default function useAthleteTestData(athleteId) {
         setLatestConconiTest(conconiRes.data?.[0] || null);
         setPersonalBests(pbRes.data || []);
       } catch (err) {
-        console.error('Error loading test data:', err);
+        /* silently ignore */
       }
     };
     loadTestData();
-  }, [athleteId]);
+  }, [athleteId, refreshKey]);
 
-  return { athletePaces, latestVam, latestConconiTest, personalBests };
+  return { athletePaces, latestVam, latestConconiTest, personalBests, refresh };
 }

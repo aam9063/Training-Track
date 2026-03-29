@@ -67,26 +67,26 @@ export default function GymFiles() {
   const daysColor = (days) => {
     if (days <= 3) return 'text-red-500';
     if (days <= 7) return 'text-orange-400';
-    return 'text-slate-400 dark:text-slate-500';
+    return 'text-ath-text-muted';
   };
 
   return (
-    <div className="bg-gray-50 dark:bg-gray-900 min-h-screen">
+    <div className="bg-ath-base min-h-screen">
       <div className="px-4 lg:px-8 py-5 lg:py-8 space-y-5">
 
         {/* Header */}
         <div className="flex items-center gap-3">
           <button
             onClick={() => navigate(-1)}
-            className="w-9 h-9 flex items-center justify-center rounded-xl border border-gray-200 dark:border-gray-700 bg-white dark:bg-gray-800 text-slate-500 hover:text-slate-700 dark:hover:text-slate-300 transition-colors"
+            className="w-9 h-9 flex items-center justify-center rounded-xl border border-ath-border bg-ath-surface text-slate-500 hover:text-slate-700 dark:hover:text-slate-300 transition-colors"
           >
             <FiArrowLeft className="w-4 h-4" />
           </button>
           <div>
-            <h1 className="text-xl font-bold text-slate-900 dark:text-white tracking-tight">
+            <h1 className="text-xl font-bold text-ath-text-primary tracking-tight">
               Material de Fuerza
             </h1>
-            <p className="text-xs text-slate-400 dark:text-slate-500 mt-0.5">
+            <p className="text-xs text-ath-text-muted mt-0.5">
               PDFs subidos por tu entrenador
             </p>
           </div>
@@ -99,10 +99,10 @@ export default function GymFiles() {
           </div>
         ) : files.length === 0 ? (
           <div className="flex flex-col items-center justify-center py-20 gap-3 text-center">
-            <div className="w-14 h-14 rounded-2xl bg-gray-100 dark:bg-gray-800 flex items-center justify-center">
-              <FiPackage className="w-6 h-6 text-slate-300 dark:text-slate-600" />
+            <div className="w-14 h-14 rounded-2xl bg-ath-inset flex items-center justify-center">
+              <FiPackage className="w-6 h-6 text-ath-text-muted" />
             </div>
-            <p className="text-sm font-medium text-slate-400 dark:text-slate-500">
+            <p className="text-sm font-medium text-ath-text-muted">
               Tu entrenador aún no ha subido ningún PDF
             </p>
           </div>
@@ -113,7 +113,7 @@ export default function GymFiles() {
               return (
                 <div
                   key={file.id}
-                  className="bg-white dark:bg-gray-800 rounded-2xl border border-gray-100 dark:border-gray-700 px-4 py-4 flex items-center gap-4"
+                  className="bg-ath-surface rounded-2xl border border-ath-border px-4 py-4 flex items-center gap-4"
                 >
                   {/* icon */}
                   <div className="flex-shrink-0 w-12 h-12 rounded-xl bg-gradient-to-br from-red-400 to-orange-500 flex flex-col items-center justify-center shadow-sm">
@@ -123,7 +123,7 @@ export default function GymFiles() {
 
                   {/* info */}
                   <div className="flex-1 min-w-0">
-                    <p className="text-sm font-semibold text-slate-800 dark:text-white truncate">
+                    <p className="text-sm font-semibold text-ath-text-primary truncate">
                       {file.filename}
                     </p>
                     <p className={`text-[11px] mt-0.5 ${daysColor(days)}`}>
@@ -144,7 +144,7 @@ export default function GymFiles() {
                     </button>
                     <button
                       onClick={() => handleDownload(file)}
-                      className="w-8 h-8 flex items-center justify-center rounded-xl border border-gray-200 dark:border-gray-700 bg-gray-50 dark:bg-gray-700 text-slate-500 hover:text-slate-700 dark:hover:text-slate-300 transition-colors"
+                      className="w-8 h-8 flex items-center justify-center rounded-xl border border-ath-border bg-ath-inset text-slate-500 hover:text-slate-700 dark:hover:text-slate-300 transition-colors"
                       title="Descargar"
                     >
                       <FiDownload className="w-3.5 h-3.5" />

@@ -149,9 +149,9 @@ export default function TrainingZonesCard({ bestEfforts, athleteId: propAthleteI
 
   if (loading) {
     return (
-      <div className="bg-white dark:bg-gray-800 rounded-xl p-4 animate-pulse">
-        <div className="h-6 bg-gray-200 dark:bg-gray-700 rounded w-1/3 mb-4" />
-        <div className="h-32 bg-gray-200 dark:bg-gray-700 rounded" />
+      <div className="bg-ath-surface rounded-xl p-4 animate-pulse">
+        <div className="h-6 bg-ath-inset rounded w-1/3 mb-4" />
+        <div className="h-32 bg-ath-inset rounded" />
       </div>
     );
   }
@@ -163,13 +163,13 @@ export default function TrainingZonesCard({ bestEfforts, athleteId: propAthleteI
     <motion.div
       initial={{ opacity: 0, y: 10 }}
       animate={{ opacity: 1, y: 0 }}
-      className="bg-white dark:bg-gray-800 rounded-xl border border-gray-200 dark:border-gray-700 p-4"
+      className="bg-ath-surface rounded-xl border border-ath-border p-4"
     >
       {/* Header */}
       <div className="flex flex-wrap items-center justify-between gap-2 mb-3">
         <div className="flex items-center gap-2 min-w-0">
           <FiTarget className="w-5 h-5 text-purple-500 flex-shrink-0" />
-          <h3 className="text-base sm:text-lg font-semibold text-gray-900 dark:text-white flex items-center truncate">
+          <h3 className="text-base sm:text-lg font-semibold text-ath-text-primary flex items-center truncate">
             <span className="hidden sm:inline">Zonas de Entrenamiento</span>
             <span className="sm:hidden">Zonas</span>
             <InfoTooltip text="Zonas de ritmo basadas en el índice VDOT (Jack Daniels) y zonas de FC con fórmula de Karvonen. El VDOT se calcula automáticamente a partir de tus mejores marcas en Strava." />
@@ -191,13 +191,13 @@ export default function TrainingZonesCard({ bestEfforts, athleteId: propAthleteI
                 value={manualVdot}
                 onChange={(e) => setManualVdot(e.target.value)}
                 onKeyDown={(e) => { if (e.key === 'Enter') handleManualVdot(); if (e.key === 'Escape') setEditingVdot(false); }}
-                className="w-14 text-xs px-1.5 py-0.5 rounded border border-purple-300 dark:border-purple-600 bg-white dark:bg-gray-700 text-gray-900 dark:text-white focus:outline-none focus:ring-1 focus:ring-purple-500"
+                className="w-14 text-xs px-1.5 py-0.5 rounded border border-purple-300 dark:border-purple-600 bg-ath-surface text-ath-text-primary focus:outline-none focus:ring-1 focus:ring-purple-500"
                 min="15"
                 max="85"
                 step="0.1"
                 autoFocus
               />
-              <button onClick={handleManualVdot} disabled={updating} className="p-0.5 text-green-600 hover:text-green-700 disabled:opacity-50">
+              <button onClick={handleManualVdot} disabled={updating} className="p-0.5 text-ath-accent-text hover:text-ath-accent disabled:opacity-50">
                 <FiCheck className="w-3.5 h-3.5" />
               </button>
               <button onClick={() => setEditingVdot(false)} className="p-0.5 text-gray-400 hover:text-gray-600">
@@ -208,7 +208,7 @@ export default function TrainingZonesCard({ bestEfforts, athleteId: propAthleteI
           {!vdot && !editingVdot && (
             <button
               onClick={() => { setEditingVdot(true); setManualVdot(''); }}
-              className="text-xs px-2 py-0.5 rounded-full bg-gray-100 dark:bg-gray-700 text-gray-500 dark:text-gray-400 hover:bg-purple-100 dark:hover:bg-purple-900/30 transition-colors flex items-center gap-1"
+              className="text-xs px-2 py-0.5 rounded-full bg-ath-inset text-ath-text-muted hover:bg-purple-100 dark:hover:bg-purple-900/30 transition-colors flex items-center gap-1"
             >
               <FiEdit2 className="w-3 h-3" /> VDOT
             </button>
@@ -242,7 +242,7 @@ export default function TrainingZonesCard({ bestEfforts, athleteId: propAthleteI
                 className={`px-3 py-1.5 text-xs font-medium rounded-lg transition-colors ${
                   activeTab === 'pace'
                     ? 'bg-purple-100 dark:bg-purple-900/30 text-purple-700 dark:text-purple-300'
-                    : 'text-gray-500 dark:text-gray-400 hover:text-gray-700'
+                    : 'text-ath-text-muted hover:text-gray-700'
                 }`}
               >
                 Ritmos (Daniels)
@@ -252,7 +252,7 @@ export default function TrainingZonesCard({ bestEfforts, athleteId: propAthleteI
                 className={`px-3 py-1.5 text-xs font-medium rounded-lg transition-colors ${
                   activeTab === 'hr'
                     ? 'bg-red-100 dark:bg-red-900/30 text-red-700 dark:text-red-300'
-                    : 'text-gray-500 dark:text-gray-400 hover:text-gray-700'
+                    : 'text-ath-text-muted hover:text-gray-700'
                 }`}
               >
                 Frecuencia Cardíaca
@@ -278,10 +278,10 @@ export default function TrainingZonesCard({ bestEfforts, athleteId: propAthleteI
                     <div className="w-2 h-8 rounded-full" style={{ backgroundColor: ZONE_COLORS[i] }} />
                     <div className="flex-1">
                       <div className="flex items-center justify-between">
-                        <span className="text-sm font-medium text-gray-900 dark:text-white">
+                        <span className="text-sm font-medium text-ath-text-primary">
                           Z{zoneData.zone_number || i + 1} — {zoneData.zone_name}
                         </span>
-                        <span className="text-sm font-mono text-gray-600 dark:text-gray-400">
+                        <span className="text-sm font-mono text-ath-text-secondary">
                           {zoneData.min_value && zoneData.max_value && zoneData.min_value !== zoneData.max_value
                             ? `${formatPace(zoneData.min_value)} – ${formatPace(zoneData.max_value)}`
                             : formatPace(zoneData.min_value || zoneData.max_value)
@@ -293,7 +293,7 @@ export default function TrainingZonesCard({ bestEfforts, athleteId: propAthleteI
                 );
               })}
               {!hasPaceData && (
-                <p className="text-sm text-gray-500 dark:text-gray-400 text-center py-4">
+                <p className="text-sm text-ath-text-muted text-center py-4">
                   {isOwnProfile
                     ? 'Conecta Strava y haz clic en "Auto VDOT" para calcular tus zonas automáticamente'
                     : 'El atleta necesita sincronizar Strava para generar zonas de ritmo'}
@@ -315,10 +315,10 @@ export default function TrainingZonesCard({ bestEfforts, athleteId: propAthleteI
                     <div className="w-2 h-8 rounded-full" style={{ backgroundColor: ZONE_COLORS[i] }} />
                     <div className="flex-1">
                       <div className="flex items-center justify-between">
-                        <span className="text-sm font-medium text-gray-900 dark:text-white">
+                        <span className="text-sm font-medium text-ath-text-primary">
                           Z{zoneData.zone_number || zoneData.zone || i + 1} — {zoneData.zone_name || zoneData.name}
                         </span>
-                        <span className="text-sm font-mono text-gray-600 dark:text-gray-400">
+                        <span className="text-sm font-mono text-ath-text-secondary">
                           {Math.round(zoneData.min_value || zoneData.min)} – {Math.round(zoneData.max_value || zoneData.max)} bpm
                         </span>
                       </div>
@@ -327,7 +327,7 @@ export default function TrainingZonesCard({ bestEfforts, athleteId: propAthleteI
                 );
               })}
               {!hasHrData && (
-                <p className="text-sm text-gray-500 dark:text-gray-400 text-center py-4">
+                <p className="text-sm text-ath-text-muted text-center py-4">
                   {isOwnProfile
                     ? 'Sincroniza actividades con Strava para calcular automáticamente tus zonas de FC'
                     : 'El atleta necesita sincronizar actividades con Strava para generar zonas de FC'}

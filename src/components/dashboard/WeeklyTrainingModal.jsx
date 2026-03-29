@@ -87,9 +87,7 @@ const WeeklyTrainingModal = ({
 
       setRunningExercises(runningRes.data || []);
       setGymExercises(gymRes.data || []);
-    } catch (error) {
-      console.error('Error loading exercises:', error);
-    } finally {
+    } catch { /* silenced */ } finally {
       setLoading(false);
     }
   };
@@ -137,9 +135,7 @@ const WeeklyTrainingModal = ({
         setExistingWeekData(null);
         setDays(initializeEmptyWeek());
       }
-    } catch (error) {
-      console.error('Error loading existing training:', error);
-    }
+    } catch { /* silenced */ }
   };
 
   const handlePreviousWeek = () => {
@@ -281,7 +277,6 @@ const WeeklyTrainingModal = ({
       onSuccess?.();
       onClose();
     } catch (error) {
-      console.error('Error saving weekly training:', error);
       showError('Error al guardar el entrenamiento semanal');
     } finally {
       setSaving(false);
@@ -304,7 +299,6 @@ const WeeklyTrainingModal = ({
       showSuccess('Entrenamiento eliminado');
       onSuccess?.();
     } catch (error) {
-      console.error('Error deleting weekly training:', error);
       showError('Error al eliminar el entrenamiento');
     } finally {
       setSaving(false);
@@ -329,7 +323,7 @@ const WeeklyTrainingModal = ({
   if (!isOpen) return null;
 
   const headerContent = (
-    <div className={`${embedded ? 'px-4 sm:px-6 pb-4' : 'p-6'} border-b border-gray-200 dark:border-gray-700 flex-shrink-0`}>
+    <div className={`${embedded ? 'px-4 sm:px-6 pb-4' : 'p-6'} border-b border-gray-200 dark:border-coach-border flex-shrink-0`}>
       {!embedded && (
         <div className="flex items-center justify-between">
           <div>
@@ -395,7 +389,7 @@ const WeeklyTrainingModal = ({
                           ? 'bg-blue-600 text-white'
                           : hasContent
                           ? 'bg-green-100 dark:bg-green-900/30 text-green-700 dark:text-green-400'
-                          : 'bg-gray-100 dark:bg-gray-700 text-gray-700 dark:text-gray-300'
+                          : 'bg-coach-elevated text-gray-700 dark:text-gray-300'
                       }`}
                     >
                       <span className="hidden sm:inline">{day}</span>
@@ -409,7 +403,7 @@ const WeeklyTrainingModal = ({
               </div>
 
               {/* Active Day Editor */}
-              <div className="bg-gray-50 dark:bg-gray-900/50 rounded-xl p-6">
+              <div className="bg-coach-base/50 rounded-xl p-6">
                 <DayEditor
                   day={days[activeDay]}
                   dayIndex={activeDay}
@@ -432,7 +426,7 @@ const WeeklyTrainingModal = ({
   );
 
   const footerContent = (
-    <div className={`${embedded ? 'px-4 sm:px-6 pt-4 pb-2' : 'p-6'} border-t border-gray-200 dark:border-gray-700 flex-shrink-0`}>
+    <div className={`${embedded ? 'px-4 sm:px-6 pt-4 pb-2' : 'p-6'} border-t border-gray-200 dark:border-coach-border flex-shrink-0`}>
       <div className="flex justify-between">
         <div className="flex items-center gap-2">
           {onBack && (
@@ -497,7 +491,7 @@ const WeeklyTrainingModal = ({
         initial={{ opacity: 0, scale: 0.95 }}
         animate={{ opacity: 1, scale: 1 }}
         exit={{ opacity: 0, scale: 0.95 }}
-        className="bg-white dark:bg-gray-800 rounded-xl shadow-xl w-full max-w-6xl max-h-[90vh] overflow-hidden flex flex-col"
+        className="bg-coach-surface rounded-xl shadow-xl w-full max-w-6xl max-h-[90vh] overflow-hidden flex flex-col"
       >
         {headerContent}
         {bodyContent}
@@ -566,7 +560,7 @@ const DayEditor = ({
           <select
             value={day.type}
             onChange={(e) => updateDay(dayIndex, 'type', e.target.value)}
-            className="w-full px-4 py-2 border border-gray-300 dark:border-gray-600 rounded-lg bg-white dark:bg-gray-700 text-gray-900 dark:text-white"
+            className="w-full px-4 py-2 border border-gray-300 dark:border-coach-border rounded-lg bg-white dark:bg-coach-elevated text-gray-900 dark:text-white"
           >
             <option value="rest">Descanso</option>
             <option value="running">Carrera</option>
@@ -586,7 +580,7 @@ const DayEditor = ({
                 value={day.title}
                 onChange={(e) => updateDay(dayIndex, 'title', e.target.value)}
                 placeholder="Ej: Series 8x400m"
-                className="w-full px-4 py-2 border border-gray-300 dark:border-gray-600 rounded-lg bg-white dark:bg-gray-700 text-gray-900 dark:text-white"
+                className="w-full px-4 py-2 border border-gray-300 dark:border-coach-border rounded-lg bg-white dark:bg-coach-elevated text-gray-900 dark:text-white"
               />
             </div>
 
@@ -601,7 +595,7 @@ const DayEditor = ({
                   updateDay(dayIndex, 'duration', parseInt(e.target.value) || 0)
                 }
                 placeholder="60"
-                className="w-full px-4 py-2 border border-gray-300 dark:border-gray-600 rounded-lg bg-white dark:bg-gray-700 text-gray-900 dark:text-white"
+                className="w-full px-4 py-2 border border-gray-300 dark:border-coach-border rounded-lg bg-white dark:bg-coach-elevated text-gray-900 dark:text-white"
               />
             </div>
           </>
@@ -620,7 +614,7 @@ const DayEditor = ({
               onChange={(e) => updateDay(dayIndex, 'description', e.target.value)}
               rows={2}
               placeholder="Descripción del entrenamiento..."
-              className="w-full px-4 py-2 border border-gray-300 dark:border-gray-600 rounded-lg bg-white dark:bg-gray-700 text-gray-900 dark:text-white resize-none"
+              className="w-full px-4 py-2 border border-gray-300 dark:border-coach-border rounded-lg bg-white dark:bg-coach-elevated text-gray-900 dark:text-white resize-none"
             />
           </div>
 
@@ -634,7 +628,7 @@ const DayEditor = ({
               onChange={(e) => updateDay(dayIndex, 'notes', e.target.value)}
               rows={2}
               placeholder="Instrucciones especiales..."
-              className="w-full px-4 py-2 border border-gray-300 dark:border-gray-600 rounded-lg bg-white dark:bg-gray-700 text-gray-900 dark:text-white resize-none"
+              className="w-full px-4 py-2 border border-gray-300 dark:border-coach-border rounded-lg bg-white dark:bg-coach-elevated text-gray-900 dark:text-white resize-none"
             />
           </div>
 
@@ -702,7 +696,7 @@ const DayEditor = ({
                         min="1"
                         value={gymDefaultSets}
                         onChange={(e) => setGymDefaultSets(parseInt(e.target.value) || 3)}
-                        className="w-full px-3 py-2 text-sm border border-purple-300 dark:border-purple-600 rounded-lg bg-white dark:bg-gray-700 text-gray-900 dark:text-white"
+                        className="w-full px-3 py-2 text-sm border border-purple-300 dark:border-purple-600 rounded-lg bg-white dark:bg-coach-elevated text-gray-900 dark:text-white"
                       />
                     </div>
                     <div>
@@ -715,7 +709,7 @@ const DayEditor = ({
                         min="1"
                         value={gymDefaultReps}
                         onChange={(e) => setGymDefaultReps(parseInt(e.target.value) || 10)}
-                        className="w-full px-3 py-2 text-sm border border-purple-300 dark:border-purple-600 rounded-lg bg-white dark:bg-gray-700 text-gray-900 dark:text-white"
+                        className="w-full px-3 py-2 text-sm border border-purple-300 dark:border-purple-600 rounded-lg bg-white dark:bg-coach-elevated text-gray-900 dark:text-white"
                       />
                     </div>
                     <div>
@@ -728,7 +722,7 @@ const DayEditor = ({
                         min="0"
                         value={gymDefaultRest}
                         onChange={(e) => setGymDefaultRest(parseInt(e.target.value) || 60)}
-                        className="w-full px-3 py-2 text-sm border border-purple-300 dark:border-purple-600 rounded-lg bg-white dark:bg-gray-700 text-gray-900 dark:text-white"
+                        className="w-full px-3 py-2 text-sm border border-purple-300 dark:border-purple-600 rounded-lg bg-white dark:bg-coach-elevated text-gray-900 dark:text-white"
                       />
                     </div>
                   </div>
@@ -750,10 +744,10 @@ const DayEditor = ({
                                 key={ex.id}
                                 className={`flex items-center p-2 rounded-lg cursor-pointer transition-colors ${
                                   isAlreadyAdded
-                                    ? 'bg-gray-200 dark:bg-gray-600 opacity-50 cursor-not-allowed'
+                                    ? 'bg-gray-200 dark:bg-coach-inset opacity-50 cursor-not-allowed'
                                     : isSelected
                                     ? 'bg-purple-200 dark:bg-purple-700'
-                                    : 'bg-white dark:bg-gray-700 hover:bg-purple-100 dark:hover:bg-purple-800'
+                                    : 'bg-white dark:bg-coach-elevated hover:bg-purple-100 dark:hover:bg-purple-800'
                                 }`}
                               >
                                 <input
@@ -832,7 +826,7 @@ const DayEditor = ({
                           Ejercicio
                         </label>
                         {exercise.type === 'gym' ? (
-                          <div className="px-3 py-2 text-sm border border-gray-300 dark:border-gray-600 rounded-lg bg-gray-100 dark:bg-gray-600 text-gray-900 dark:text-white">
+                          <div className="px-3 py-2 text-sm border border-gray-300 dark:border-coach-border rounded-lg bg-gray-100 dark:bg-coach-inset text-gray-900 dark:text-white">
                             {exercise.exerciseName || gymExercisesFlat?.find(e => e.id === exercise.exerciseId)?.name || 'Ejercicio'}
                           </div>
                         ) : (
@@ -846,7 +840,7 @@ const DayEditor = ({
                                 e.target.value
                               )
                             }
-                            className="w-full px-3 py-2 text-sm border border-gray-300 dark:border-gray-600 rounded-lg bg-white dark:bg-gray-700 text-gray-900 dark:text-white"
+                            className="w-full px-3 py-2 text-sm border border-gray-300 dark:border-coach-border rounded-lg bg-white dark:bg-coach-elevated text-gray-900 dark:text-white"
                           >
                             <option value="">Seleccionar ejercicio...</option>
                             {Object.entries(runningExercises).map(
@@ -884,7 +878,7 @@ const DayEditor = ({
                               parseInt(e.target.value) || 1
                             )
                           }
-                          className="w-full px-3 py-2 text-sm border border-gray-300 dark:border-gray-600 rounded-lg bg-white dark:bg-gray-700 text-gray-900 dark:text-white"
+                          className="w-full px-3 py-2 text-sm border border-gray-300 dark:border-coach-border rounded-lg bg-white dark:bg-coach-elevated text-gray-900 dark:text-white"
                         />
                       </div>
 
@@ -905,7 +899,7 @@ const DayEditor = ({
                               parseInt(e.target.value) || 1
                             )
                           }
-                          className="w-full px-3 py-2 text-sm border border-gray-300 dark:border-gray-600 rounded-lg bg-white dark:bg-gray-700 text-gray-900 dark:text-white"
+                          className="w-full px-3 py-2 text-sm border border-gray-300 dark:border-coach-border rounded-lg bg-white dark:bg-coach-elevated text-gray-900 dark:text-white"
                         />
                       </div>
 
@@ -927,7 +921,7 @@ const DayEditor = ({
                               )
                             }
                             placeholder="400"
-                            className="w-full px-3 py-2 text-sm border border-gray-300 dark:border-gray-600 rounded-lg bg-white dark:bg-gray-700 text-gray-900 dark:text-white"
+                            className="w-full px-3 py-2 text-sm border border-gray-300 dark:border-coach-border rounded-lg bg-white dark:bg-coach-elevated text-gray-900 dark:text-white"
                           />
                         </div>
                       )}
@@ -948,7 +942,7 @@ const DayEditor = ({
                                 e.target.value
                               )
                             }
-                            className="w-full px-3 py-2 text-sm border border-gray-300 dark:border-gray-600 rounded-lg bg-white dark:bg-gray-700 text-gray-900 dark:text-white"
+                            className="w-full px-3 py-2 text-sm border border-gray-300 dark:border-coach-border rounded-lg bg-white dark:bg-coach-elevated text-gray-900 dark:text-white"
                           >
                             <option value="">Sin ritmo</option>
                             <option value="R1">R1 - Regenerativo</option>
@@ -982,7 +976,7 @@ const DayEditor = ({
                             )
                           }
                           placeholder="60"
-                          className="w-full px-3 py-2 text-sm border border-gray-300 dark:border-gray-600 rounded-lg bg-white dark:bg-gray-700 text-gray-900 dark:text-white"
+                          className="w-full px-3 py-2 text-sm border border-gray-300 dark:border-coach-border rounded-lg bg-white dark:bg-coach-elevated text-gray-900 dark:text-white"
                         />
                       </div>
 
@@ -1003,7 +997,7 @@ const DayEditor = ({
                             )
                           }
                           placeholder="Notas adicionales..."
-                          className="w-full px-3 py-2 text-sm border border-gray-300 dark:border-gray-600 rounded-lg bg-white dark:bg-gray-700 text-gray-900 dark:text-white"
+                          className="w-full px-3 py-2 text-sm border border-gray-300 dark:border-coach-border rounded-lg bg-white dark:bg-coach-elevated text-gray-900 dark:text-white"
                         />
                       </div>
                     </div>

@@ -20,7 +20,7 @@ const BottomNav = () => {
       : location.pathname.startsWith(tab.path);
 
   return (
-    <nav className="lg:hidden fixed bottom-0 left-0 right-0 h-[72px] bg-white dark:bg-gray-800 border-t border-brand-border dark:border-gray-700 flex items-center justify-around px-2 pb-2 z-50">
+    <nav className="lg:hidden fixed bottom-0 left-0 right-0 h-[72px] bg-white dark:bg-coach-surface border-t border-brand-border dark:border-coach-border flex items-center justify-around px-2 pb-2 z-50">
       {tabs.map((tab) => {
         const active = isActive(tab);
         const Icon = tab.icon;

@@ -24,41 +24,41 @@ const ALERT_CONFIG = {
   critical: {
     label: 'Crítico',
     dot: 'bg-red-500',
-    badge: 'bg-red-50 text-red-700 border border-red-200',
+    badge: 'bg-red-500/10 text-red-600 dark:text-red-400 border border-red-500/20',
     border: 'border-l-red-500',
-    ring: 'ring-red-200',
+    ring: 'ring-red-500/30',
     bar: 'bg-red-500',
     icon: '🔴',
   },
   attention: {
     label: 'Atención',
     dot: 'bg-amber-400',
-    badge: 'bg-amber-50 text-amber-700 border border-amber-200',
+    badge: 'bg-amber-500/10 text-amber-600 dark:text-amber-400 border border-amber-500/20',
     border: 'border-l-amber-400',
-    ring: 'ring-amber-200',
+    ring: 'ring-amber-500/30',
     bar: 'bg-amber-400',
     icon: '🟡',
   },
   ok: {
     label: 'En forma',
     dot: 'bg-green-500',
-    badge: 'bg-green-50 text-green-700 border border-green-200',
+    badge: 'bg-green-500/10 text-green-600 dark:text-green-400 border border-green-500/20',
     border: 'border-l-green-500',
-    ring: 'ring-green-200',
+    ring: 'ring-green-500/30',
     bar: 'bg-green-500',
     icon: '🟢',
   },
 };
 
 const ALERT_COLORS = {
-  critical: 'bg-red-50 border-red-200',
-  attention: 'bg-amber-50 border-amber-200',
-  ok: 'bg-green-50 border-green-200',
+  critical: 'bg-red-500/10 border-red-500/20',
+  attention: 'bg-amber-500/10 border-amber-500/20',
+  ok: 'bg-green-500/10 border-green-500/20',
 };
 const ALERT_TEXT = {
-  critical: 'text-red-700',
-  attention: 'text-amber-700',
-  ok: 'text-green-700',
+  critical: 'text-red-600 dark:text-red-400',
+  attention: 'text-amber-600 dark:text-amber-400',
+  ok: 'text-green-600 dark:text-green-400',
 };
 const ALERT_TITLE_COLOR = {
   critical: 'text-red-800',
@@ -117,7 +117,7 @@ function AthleteAvatar({ firstName, lastName, image, size = 'md' }) {
 function ProgressBar({ value, max, colorClass = 'bg-brand-primary', height = 'h-1.5' }) {
   const pctVal = max > 0 ? Math.min(100, Math.round((value / max) * 100)) : 0;
   return (
-    <div className={`w-full bg-slate-100 dark:bg-gray-700 rounded-full ${height} overflow-hidden`}>
+    <div className={`w-full bg-slate-100 dark:bg-coach-elevated rounded-full ${height} overflow-hidden`}>
       <div
         className={`${height} rounded-full ${colorClass} transition-all duration-500`}
         style={{ width: `${pctVal}%` }}
@@ -148,7 +148,7 @@ function ReportCard({ report, onClick }) {
       initial={{ opacity: 0, y: 8 }}
       animate={{ opacity: 1, y: 0 }}
       onClick={() => onClick(report)}
-      className={`w-full text-left bg-white dark:bg-gray-800 rounded-2xl border border-brand-border dark:border-gray-700 border-l-4 ${cfg.border} p-4 transition-all hover:shadow-md hover:ring-2 ${cfg.ring} dark:ring-opacity-20`}
+      className={`w-full text-left bg-coach-surface rounded-2xl border border-coach-border border-l-4 ${cfg.border} p-4 transition-all hover:shadow-md hover:ring-2 ${cfg.ring} dark:ring-opacity-20`}
     >
       <div className="flex items-start gap-3">
         <AthleteAvatar
@@ -168,7 +168,7 @@ function ReportCard({ report, onClick }) {
           </p>
 
           {/* Metrics row */}
-          <div className="flex items-center gap-4 mt-3 pt-3 border-t border-slate-100 dark:border-gray-700">
+          <div className="flex items-center gap-4 mt-3 pt-3 border-t border-coach-border">
             <MetricPill
               label="ACWR"
               value={report.acwr != null ? report.acwr.toFixed(2) : '—'}
@@ -307,9 +307,9 @@ function ReportDetailView({ report, onBack, coachId }) {
     {showNoteInput && (
       <div className="fixed inset-0 z-50 flex items-center justify-center p-4">
         <div className="absolute inset-0 bg-black/40 backdrop-blur-sm" onClick={() => { setShowNoteInput(false); setNoteText(''); }} />
-        <div className="relative w-full max-w-lg bg-white dark:bg-gray-800 rounded-2xl shadow-2xl overflow-hidden">
+        <div className="relative w-full max-w-lg bg-coach-surface rounded-2xl shadow-2xl overflow-hidden">
           {/* Modal header */}
-          <div className="flex items-center justify-between px-5 pt-5 pb-4 border-b border-slate-100 dark:border-gray-700">
+          <div className="flex items-center justify-between px-5 pt-5 pb-4 border-b border-coach-border">
             <div className="flex items-center gap-3">
               <AthleteAvatar firstName={athlete.first_name} lastName={athlete.last_name} image={athlete.profile_image} size="md" />
               <div>
@@ -322,7 +322,7 @@ function ReportDetailView({ report, onBack, coachId }) {
             </button>
           </div>
           {/* Tabs */}
-          <div className="flex border-b border-slate-100 dark:border-gray-700">
+          <div className="flex border-b border-coach-border">
             {[{ id: 'note', label: 'Nota rápida' }, { id: 'report', label: 'Enviar informe' }].map(tab => (
               <button
                 key={tab.id}
@@ -344,7 +344,7 @@ function ReportDetailView({ report, onBack, coachId }) {
                   onKeyDown={e => { if (e.key === 'Enter' && (e.metaKey || e.ctrlKey)) handleSendNote(); }}
                   placeholder={`Escribe una nota para ${athlete.first_name}...`}
                   rows={5}
-                  className="w-full text-sm text-slate-700 dark:text-slate-200 bg-slate-50 dark:bg-gray-900 border border-slate-200 dark:border-gray-700 rounded-xl px-4 py-3 outline-none focus:ring-2 focus:ring-brand-primary/30 resize-none placeholder-slate-400 leading-relaxed"
+                  className="w-full text-sm text-slate-700 dark:text-slate-200 bg-coach-inset border border-coach-border rounded-xl px-4 py-3 outline-none focus:ring-2 focus:ring-brand-primary/30 resize-none placeholder-slate-400 leading-relaxed"
                 />
                 <div className="flex justify-end gap-2 mt-4">
                   <button onClick={() => { setShowNoteInput(false); setNoteText(''); }} className="text-sm text-slate-400 hover:text-slate-600 px-4 py-2 rounded-xl transition-colors">
@@ -353,8 +353,7 @@ function ReportDetailView({ report, onBack, coachId }) {
                   <button
                     onClick={handleSendNote}
                     disabled={!noteText.trim() || sendingNote}
-                    className="flex items-center gap-2 px-5 py-2.5 rounded-xl text-sm font-semibold text-white disabled:opacity-50 transition-opacity"
-                    style={{ background: '#1A6BFF' }}
+                    className="flex items-center gap-2 px-5 py-2.5 rounded-xl text-sm font-semibold text-coach-on-accent bg-coach-accent disabled:opacity-50 transition-opacity"
                   >
                     {sendingNote ? <FiLoader className="w-4 h-4 animate-spin" /> : <FiSend className="w-4 h-4" />}
                     Enviar nota
@@ -363,9 +362,9 @@ function ReportDetailView({ report, onBack, coachId }) {
               </>
             ) : (
               <>
-                <div className="flex gap-4 p-4 bg-slate-50 dark:bg-gray-900 rounded-xl mb-4 border border-slate-200 dark:border-gray-700">
-                  <div className="w-10 h-10 rounded-xl flex items-center justify-center flex-shrink-0" style={{ background: 'rgba(26,107,255,0.15)' }}>
-                    <FiZap className="w-5 h-5" style={{ color: '#1A6BFF' }} />
+                <div className="flex gap-4 p-4 bg-coach-inset rounded-xl mb-4 border border-coach-border">
+                  <div className="w-10 h-10 rounded-xl flex items-center justify-center flex-shrink-0 bg-coach-accent/15">
+                    <FiZap className="w-5 h-5 text-coach-accent" />
                   </div>
                   <div className="min-w-0">
                     <p className="text-sm font-semibold text-slate-700 dark:text-slate-200">Informe IA · {formatDate(report.week_start)} – {formatDate(report.week_end)}</p>
@@ -382,8 +381,7 @@ function ReportDetailView({ report, onBack, coachId }) {
                   <button
                     onClick={handleSendReport}
                     disabled={sendingNote}
-                    className="flex items-center gap-2 px-5 py-2.5 rounded-xl text-sm font-semibold text-white disabled:opacity-50 transition-opacity"
-                    style={{ background: '#1A6BFF' }}
+                    className="flex items-center gap-2 px-5 py-2.5 rounded-xl text-sm font-semibold text-coach-on-accent bg-coach-accent disabled:opacity-50 transition-opacity"
                   >
                     {sendingNote ? <FiLoader className="w-4 h-4 animate-spin" /> : <FiSend className="w-4 h-4" />}
                     Enviar informe
@@ -435,7 +433,7 @@ function ReportDetailView({ report, onBack, coachId }) {
           <button
             onClick={() => exportReportPDF(report)}
             title="Exportar PDF"
-            className="w-9 h-9 flex items-center justify-center rounded-xl bg-slate-100 dark:bg-gray-700 text-slate-500 dark:text-slate-300 hover:bg-slate-200 dark:hover:bg-gray-600 transition-all"
+            className="w-9 h-9 flex items-center justify-center rounded-xl bg-coach-inset text-coach-text-secondary hover:bg-slate-200 dark:hover:bg-gray-600 transition-all"
           >
             <FiDownload className="w-4 h-4" />
           </button>
@@ -443,12 +441,12 @@ function ReportDetailView({ report, onBack, coachId }) {
       </div>
 
       {/* Key metrics */}
-      <div className="grid grid-cols-3 gap-2 mb-2 bg-slate-900 dark:bg-gray-950 rounded-t-2xl px-4 pt-4 pb-3">
+      <div className="grid grid-cols-3 gap-2 mb-2 bg-slate-900 dark:bg-coach-base rounded-t-2xl px-4 pt-4 pb-3">
         <MetricPill label="ACWR" value={report.acwr != null ? report.acwr.toFixed(2) : '—'} colorClass={report.acwr == null ? 'text-slate-500' : report.acwr > 1.5 ? 'text-red-400' : report.acwr >= 1.2 ? 'text-amber-400' : 'text-green-400'} />
         <MetricPill label="TSB" value={report.tsb != null ? (report.tsb > 0 ? `+${Math.round(report.tsb)}` : Math.round(report.tsb)) : '—'} colorClass={report.tsb == null ? 'text-slate-500' : report.tsb < -30 ? 'text-red-400' : report.tsb < -10 ? 'text-amber-400' : 'text-green-400'} />
         <MetricPill label="Sesiones" value={`${report.sessions_done}/${report.sessions_planned}`} colorClass="text-white" />
       </div>
-      <div className="grid grid-cols-3 gap-2 mb-5 bg-slate-900 dark:bg-gray-950 rounded-b-2xl px-4 pb-4 pt-3 border-t border-white/5">
+      <div className="grid grid-cols-3 gap-2 mb-5 bg-slate-900 dark:bg-coach-base rounded-b-2xl px-4 pb-4 pt-3 border-t border-white/5">
         <MetricPill label="Km ejecutados" value={`${report.actual_km}km`} colorClass="text-amber-400" />
         <MetricPill
           label="RPE medio"
@@ -465,13 +463,13 @@ function ReportDetailView({ report, onBack, coachId }) {
       <div className="space-y-5">
         {/* AI Summary */}
         {ai.resumen && (
-          <div className="flex gap-3 p-4 bg-slate-900 dark:bg-gray-950 rounded-2xl overflow-hidden">
-            <div className="w-8 h-8 rounded-lg flex items-center justify-center flex-shrink-0" style={{ background: 'rgba(26,107,255,0.2)' }}>
-              <FiZap className="w-4 h-4" style={{ color: '#1A6BFF' }} />
+          <div className="flex gap-3 p-4 bg-slate-900 dark:bg-coach-base rounded-2xl overflow-hidden">
+            <div className="w-8 h-8 rounded-lg flex items-center justify-center flex-shrink-0 bg-coach-accent/20">
+              <FiZap className="w-4 h-4 text-coach-accent" />
             </div>
             <div className="min-w-0">
-              <p className="text-[10px] font-bold uppercase tracking-widest mb-1" style={{ color: '#1A6BFF' }}>Hermes · IA</p>
-              <p className="text-sm leading-relaxed break-words" style={{ color: '#e2e8f0' }}>{ai.resumen}</p>
+              <p className="text-[10px] font-bold uppercase tracking-widest mb-1 text-coach-accent">Hermes · IA</p>
+              <p className="text-sm leading-relaxed break-words text-slate-200">{ai.resumen}</p>
             </div>
           </div>
         )}
@@ -485,7 +483,7 @@ function ReportDetailView({ report, onBack, coachId }) {
             {diary === null ? (
               <p className="text-xs text-slate-400 dark:text-slate-500 italic">El atleta no rellenó el diario esta semana.</p>
             ) : (
-              <div className="bg-slate-50 dark:bg-gray-900/50 rounded-xl p-3 space-y-3">
+              <div className="bg-coach-inset rounded-xl p-3 space-y-3">
                 {/* Overall */}
                 <div>
                   <p className="text-[11px] font-semibold text-slate-500 uppercase tracking-wider mb-1">Semana en general</p>
@@ -501,7 +499,7 @@ function ReportDetailView({ report, onBack, coachId }) {
                 </div>
                 {/* Pain */}
                 {diary.pain_notes && (
-                  <div className="bg-amber-50 dark:bg-amber-900/20 border border-amber-200 dark:border-amber-700 rounded-lg px-3 py-2">
+                  <div className="bg-amber-500/10 border border-amber-500/20 rounded-lg px-3 py-2">
                     <p className="text-[11px] font-semibold text-amber-700 dark:text-amber-400 uppercase tracking-wider mb-0.5">Molestias</p>
                     <p className="text-xs text-amber-800 dark:text-amber-300">"{diary.pain_notes}"</p>
                   </div>
@@ -552,7 +550,7 @@ function ReportDetailView({ report, onBack, coachId }) {
           <p className="text-xs font-semibold text-slate-500 dark:text-slate-400 uppercase tracking-widest mb-2.5 flex items-center gap-1">
             <FiBarChart2 className="w-3.5 h-3.5" /> Ejecutado vs Planificado
           </p>
-          <div className="bg-white dark:bg-gray-800 border border-brand-border dark:border-gray-700 rounded-xl p-4 space-y-3">
+          <div className="bg-coach-surface border border-coach-border rounded-xl p-4 space-y-3">
             {[
               { label: 'Km totales', exec: kmExec, plan: kmPlan, execLabel: `${kmExec}km`, planLabel: `${kmPlan}km` },
               { label: 'Sesiones', exec: sessExec, plan: sessPlan, execLabel: `${sessExec}`, planLabel: `${sessPlan}` },
@@ -571,7 +569,7 @@ function ReportDetailView({ report, onBack, coachId }) {
                       <span className="text-slate-400">{planLabel}</span>
                     </span>
                   </div>
-                  <div className="relative h-2 bg-slate-100 dark:bg-gray-700 rounded-full overflow-visible">
+                  <div className="relative h-2 bg-slate-100 dark:bg-coach-elevated rounded-full overflow-visible">
                     <div className="absolute inset-0 rounded-full bg-brand-primary/20" />
                     <div className={`absolute top-0 left-0 h-full rounded-full transition-all duration-500 ${overrideColor ?? (overload ? 'bg-red-500' : 'bg-brand-primary')}`} style={{ width: `${Math.min(execPct, 100)}%` }} />
                   </div>
@@ -593,7 +591,7 @@ function ReportDetailView({ report, onBack, coachId }) {
             </p>
             <div className="space-y-2">
               {recomendaciones.map((rec, i) => (
-                <div key={i} className="flex gap-3 p-3 bg-white dark:bg-gray-800 border border-brand-border dark:border-gray-700 rounded-xl">
+                <div key={i} className="flex gap-3 p-3 bg-coach-surface border border-coach-border rounded-xl">
                   <span className="w-5 h-5 rounded-full bg-brand-primary text-white text-[10px] font-bold flex items-center justify-center flex-shrink-0 mt-0.5">{i + 1}</span>
                   <p className="text-sm text-slate-700 dark:text-slate-300 leading-relaxed">{rec}</p>
                 </div>
@@ -608,7 +606,7 @@ function ReportDetailView({ report, onBack, coachId }) {
             <p className="text-xs font-semibold text-slate-500 dark:text-slate-400 uppercase tracking-widest mb-2.5 flex items-center gap-1">
               <FiTarget className="w-3.5 h-3.5" /> Predicción competición
             </p>
-            <div className="bg-slate-900 dark:bg-gray-950 rounded-2xl p-4">
+            <div className="bg-slate-900 dark:bg-coach-base rounded-2xl p-4">
               <div className="flex items-center gap-1.5 mb-1">
                 <FiCalendar className="w-3.5 h-3.5 text-green-400" />
                 <p className="text-xs font-bold text-green-400 uppercase tracking-widest">Predicción competición</p>
@@ -878,9 +876,7 @@ export default function AIReports() {
     try {
       const data = await getCoachReportWeeks(coachId);
       setWeeks(data);
-    } catch (err) {
-      console.error('Error loading weeks:', err);
-    }
+    } catch { /* silenced */ }
   }, [coachId]);
 
   const loadReports = useCallback(async (weekStart = null) => {
@@ -890,7 +886,6 @@ export default function AIReports() {
       const data = await getCoachWeeklyReports(coachId, weekStart);
       setReports(data);
     } catch (err) {
-      console.error('Error loading weekly reports:', err?.message || err);
       setReports([]);
     } finally {
       setLoading(false);
@@ -965,23 +960,23 @@ export default function AIReports() {
         <p className="text-sm text-slate-500 dark:text-gray-400 mt-1">Análisis semanal de tus atletas</p>
       </div>
       {/* Next report banner */}
-      <div className="flex items-center gap-4 p-4 rounded-2xl mb-5" style={{ background: '#0F172A' }}>
-        <div className="w-10 h-10 rounded-xl flex items-center justify-center flex-shrink-0" style={{ background: 'rgba(26,107,255,0.2)' }}>
-          <FiZap className="w-5 h-5" style={{ color: '#1A6BFF' }} />
+      <div className="flex items-center gap-4 p-4 rounded-2xl mb-5 bg-slate-900 dark:bg-coach-base">
+        <div className="w-10 h-10 rounded-xl flex items-center justify-center flex-shrink-0 bg-coach-accent/20">
+          <FiZap className="w-5 h-5 text-coach-accent" />
         </div>
         <div className="flex-1 min-w-0">
-          <p className="text-sm font-semibold" style={{ color: '#fff' }}>Próximo informe automático</p>
-          <p className="text-xs mt-0.5" style={{ color: '#64748B' }}>Generado cada lunes · 8:00 AM</p>
+          <p className="text-sm font-semibold text-white">Próximo informe automático</p>
+          <p className="text-xs mt-0.5 text-coach-text-muted">Generado cada lunes · 8:00 AM</p>
         </div>
         <div className="text-right flex-shrink-0">
-          <p className="text-2xl font-black leading-none" style={{ color: '#1A6BFF' }}>{nextMonday}d</p>
-          <p className="text-[10px]" style={{ color: '#64748B' }}>restantes</p>
+          <p className="text-2xl font-black leading-none text-coach-accent">{nextMonday}d</p>
+          <p className="text-[10px] text-coach-text-muted">restantes</p>
         </div>
       </div>
 
       {/* Week selector */}
       {weeks.length > 0 && (
-        <div className="flex items-center justify-between bg-white dark:bg-gray-800 border border-brand-border dark:border-gray-700 rounded-xl px-4 py-3 mb-4">
+        <div className="flex items-center justify-between bg-coach-surface border border-coach-border rounded-xl px-4 py-3 mb-4">
           <button
             onClick={() => setSelectedWeekIdx(i => Math.min(i + 1, weeks.length - 1))}
             disabled={selectedWeekIdx >= weeks.length - 1}
@@ -1015,7 +1010,7 @@ export default function AIReports() {
           ].map(({ level, count, label }) => {
             const cfg = ALERT_CONFIG[level];
             return (
-              <div key={level} className="flex flex-col items-center py-3 bg-white dark:bg-gray-800 border border-brand-border dark:border-gray-700 rounded-xl">
+              <div key={level} className="flex flex-col items-center py-3 bg-coach-surface border border-coach-border rounded-xl">
                 <span className={`text-2xl font-black ${level === 'critical' ? 'text-red-600' : level === 'attention' ? 'text-amber-500' : 'text-green-600'}`}>
                   {count}
                 </span>
@@ -1039,7 +1034,7 @@ export default function AIReports() {
       {/* Report list */}
       {loading ? (
         <div className="flex items-center justify-center py-16">
-          <FiLoader className="w-6 h-6 animate-spin" style={{ color: '#1A6BFF' }} />
+          <FiLoader className="w-6 h-6 animate-spin text-coach-accent" />
         </div>
       ) : reports.length === 0 ? (
         <div className="text-center py-14">
@@ -1055,8 +1050,7 @@ export default function AIReports() {
           <button
             onClick={handleGenerate}
             disabled={generating}
-            className="inline-flex items-center gap-2 px-5 py-2.5 rounded-xl font-semibold text-sm transition-colors disabled:opacity-60"
-            style={{ background: '#1A6BFF', color: '#fff' }}
+            className="inline-flex items-center gap-2 px-5 py-2.5 rounded-xl font-semibold text-sm transition-colors disabled:opacity-60 bg-coach-accent text-coach-on-accent"
           >
             {generating ? <FiLoader className="w-4 h-4 animate-spin" /> : <FiZap className="w-4 h-4" />}
             {generating ? 'Generando...' : 'Generar informe ahora'}
@@ -1080,7 +1074,7 @@ export default function AIReports() {
           <button
             onClick={handleGenerate}
             disabled={generating}
-            className="flex items-center gap-2 px-4 py-2 text-xs font-medium text-slate-500 dark:text-slate-400 hover:text-brand-primary border border-brand-border dark:border-gray-700 rounded-lg transition-colors disabled:opacity-60"
+            className="flex items-center gap-2 px-4 py-2 text-xs font-medium text-coach-text-secondary hover:text-brand-primary border border-coach-border rounded-lg transition-colors disabled:opacity-60"
           >
             {generating ? <FiLoader className="w-3.5 h-3.5 animate-spin" /> : <FiRefreshCw className="w-3.5 h-3.5" />}
             {generating ? 'Generando...' : 'Regenerar informes'}

@@ -36,8 +36,8 @@ const StatCardNew = ({ accent, icon: Icon, label, value, sub, trend, trendUp, li
     <div
       className={`rounded-2xl p-4 flex flex-col gap-2 border h-full ${
         accent
-          ? 'bg-[#1A6BFF] border-[#1A6BFF] text-white'
-          : 'bg-white dark:bg-gray-800 border-[#E2E8F0] dark:border-gray-700'
+          ? 'bg-coach-accent border-coach-accent text-coach-on-accent'
+          : 'bg-coach-surface border-coach-border'
       } ${linkTo ? 'cursor-pointer hover:shadow-md transition-shadow' : ''}`}
     >
       <div className="flex items-center justify-between">
@@ -46,10 +46,10 @@ const StatCardNew = ({ accent, icon: Icon, label, value, sub, trend, trendUp, li
         </span>
         <div
           className={`w-8 h-8 rounded-lg flex items-center justify-center ${
-            accent ? 'bg-white/20' : 'bg-[#E8F0FF] dark:bg-blue-900/30'
+            accent ? 'bg-white/20' : 'bg-coach-accent-surface'
           }`}
         >
-          <Icon className={`w-4 h-4 ${accent ? 'text-white' : 'text-[#1A6BFF]'}`} />
+          <Icon className={`w-4 h-4 ${accent ? 'text-white' : 'text-coach-accent'}`} />
         </div>
       </div>
       <div className={`text-3xl font-bold tracking-tight font-mono ${accent ? 'text-white' : 'text-slate-900 dark:text-white'}`}>
@@ -79,12 +79,12 @@ const SectionHeader = ({ icon: Icon, title, linkTo, linkLabel, actionLabel, onAc
       {title}
     </div>
     {linkTo && (
-      <Link to={linkTo} className="text-[13px] font-semibold text-[#1A6BFF]">
+      <Link to={linkTo} className="text-[13px] font-semibold text-coach-accent">
         {linkLabel || 'Ver todo →'}
       </Link>
     )}
     {onAction && (
-      <button onClick={onAction} className="text-[13px] font-semibold text-[#1A6BFF]">
+      <button onClick={onAction} className="text-[13px] font-semibold text-coach-accent">
         {actionLabel}
       </button>
     )}
@@ -162,7 +162,7 @@ const EventCard = ({ comp, onClick }) => {
   return (
     <div
       onClick={onClick}
-      className="bg-white dark:bg-gray-800 rounded-xl p-3.5 border border-[#E2E8F0] dark:border-gray-700 cursor-pointer"
+      className="bg-coach-surface rounded-xl p-3.5 border border-coach-border cursor-pointer"
     >
       <div className="flex items-start justify-between gap-2">
         <span className="text-sm font-semibold text-slate-900 dark:text-white flex-1 leading-snug">
@@ -197,7 +197,7 @@ const EventCard = ({ comp, onClick }) => {
           <span>Preparación del plan</span>
           <span>{Math.round(progressPct)}%</span>
         </div>
-        <div className="h-1 bg-[#EEF1F7] dark:bg-gray-700 rounded-full overflow-hidden">
+        <div className="h-1 bg-coach-inset rounded-full overflow-hidden">
           <div className="h-full rounded-full" style={{ width: `${progressPct}%`, background: progressColor }} />
         </div>
       </div>
@@ -208,7 +208,7 @@ const EventCard = ({ comp, onClick }) => {
 const AthleteRow = ({ athlete, lastSession }) => (
   <Link
     to={`/dashboard/athletes/${athlete.id}`}
-    className="flex items-center gap-3 bg-white dark:bg-gray-800 rounded-xl p-3 border border-[#E2E8F0] dark:border-gray-700"
+    className="flex items-center gap-3 bg-coach-surface rounded-xl p-3 border border-coach-border"
   >
     <AvatarCircle name={`${athlete.firstName} ${athlete.lastName}`} image={athlete.profileImage} size="lg" />
     <div className="flex-1 min-w-0">
@@ -231,10 +231,10 @@ const AthleteRow = ({ athlete, lastSession }) => (
 // ---------------------------------------------------------------------------
 
 const STATUS_COLORS = {
-  planned: 'bg-blue-50 dark:bg-blue-900/30 text-[#1A6BFF] dark:text-blue-400',
+  planned: 'bg-coach-accent-surface text-coach-accent',
   in_progress: 'bg-amber-100 text-amber-700 dark:bg-amber-900/30 dark:text-amber-400',
   completed: 'bg-green-100 text-green-700 dark:bg-green-900/30 dark:text-green-400',
-  skipped: 'bg-slate-100 text-slate-500 dark:bg-gray-700 dark:text-slate-400',
+  skipped: 'bg-slate-100 text-slate-500 dark:bg-coach-elevated dark:text-slate-400',
 };
 
 const getStatusColor = (status) => STATUS_COLORS[status] || STATUS_COLORS.planned;
@@ -255,12 +255,12 @@ const getTrainingTypeLabel = (type) => ({
 
 // Dot color + borde izquierdo + clases Tailwind para bg (light + dark)
 const TYPE_STYLES = {
-  running:       { dot: '#1A6BFF', border: '#1A6BFF', bgClass: 'bg-blue-50 dark:bg-blue-900/20',     pill: '#1A6BFF' },
-  gym:           { dot: '#8B5CF6', border: '#8B5CF6', bgClass: 'bg-violet-50 dark:bg-violet-900/20', pill: '#8B5CF6' },
-  rest:          { dot: '#22C55E', border: '#22C55E', bgClass: 'bg-green-50 dark:bg-green-900/20',   pill: '#22C55E' },
-  cross_training:{ dot: '#F97316', border: '#F97316', bgClass: 'bg-orange-50 dark:bg-orange-900/20', pill: '#F97316' },
+  running:       { dot: '#1A6BFF', border: '#1A6BFF', bgClass: 'bg-blue-50 dark:bg-coach-elevated',     pill: '#1A6BFF' },
+  gym:           { dot: '#8B5CF6', border: '#8B5CF6', bgClass: 'bg-violet-50 dark:bg-coach-elevated', pill: '#8B5CF6' },
+  rest:          { dot: '#22C55E', border: '#22C55E', bgClass: 'bg-green-50 dark:bg-coach-elevated',   pill: '#22C55E' },
+  cross_training:{ dot: '#F97316', border: '#F97316', bgClass: 'bg-orange-50 dark:bg-coach-elevated', pill: '#F97316' },
 };
-const getTypeStyle = (type) => TYPE_STYLES[type] || { dot: '#94A3B8', border: '#94A3B8', bgClass: 'bg-slate-50 dark:bg-slate-700/30', pill: '#94A3B8' };
+const getTypeStyle = (type) => TYPE_STYLES[type] || { dot: '#94A3B8', border: '#94A3B8', bgClass: 'bg-slate-50 dark:bg-coach-elevated', pill: '#94A3B8' };
 
 // ---------------------------------------------------------------------------
 // Dashboard principal
@@ -436,9 +436,9 @@ const Dashboard = () => {
 
   if (loading) {
     return (
-      <div className="flex items-center justify-center min-h-screen bg-[#F4F6FA] dark:bg-gray-900">
+      <div className="flex items-center justify-center min-h-screen bg-coach-base">
         <div className="text-center">
-          <div className="animate-spin rounded-full h-12 w-12 border-b-2 border-[#1A6BFF] mx-auto" />
+          <div className="animate-spin rounded-full h-12 w-12 border-b-2 border-coach-accent mx-auto" />
           <p className="mt-4 text-slate-500 dark:text-slate-400">Cargando dashboard...</p>
         </div>
       </div>
@@ -446,7 +446,7 @@ const Dashboard = () => {
   }
 
   return (
-    <div className="bg-[#F4F6FA] dark:bg-gray-900">
+    <div className="bg-coach-base">
 
       {/* ── SCROLL AREA ── */}
       <div className="px-4 lg:px-8 py-5 lg:py-8">
@@ -505,17 +505,16 @@ const Dashboard = () => {
         {/* IA CARD — mobile: full width */}
         <Link
           to="/dashboard/ai-reports"
-          className="lg:hidden rounded-2xl p-4 flex gap-3 items-start relative overflow-hidden mb-5 active:opacity-80 transition-opacity"
-          style={{ background: '#0F172A', border: '1px solid #334155' }}
+          className="lg:hidden rounded-2xl p-4 flex gap-3 items-start relative overflow-hidden mb-5 active:opacity-80 transition-opacity bg-slate-900 border border-slate-700"
         >
-          <div style={{ position: 'absolute', top: -30, right: -30, width: 100, height: 100, background: 'radial-gradient(circle, rgba(26,107,255,0.35), transparent 70%)', pointerEvents: 'none' }} />
-          <div className="w-9 h-9 rounded-xl flex items-center justify-center flex-shrink-0" style={{ background: '#1A6BFF' }}>
+          <div className="absolute -top-[30px] -right-[30px] w-[100px] h-[100px] pointer-events-none" style={{ background: 'radial-gradient(circle, rgba(26,107,255,0.35), transparent 70%)' }} />
+          <div className="w-9 h-9 rounded-xl flex items-center justify-center flex-shrink-0 bg-coach-accent">
             <FiZap className="w-4 h-4 text-white" />
           </div>
           <div>
-            <p className="text-[10px] font-bold tracking-widest uppercase mb-1" style={{ color: '#1A6BFF' }}>Hermes · IA</p>
+            <p className="text-[10px] font-bold tracking-widest uppercase mb-1 text-coach-accent">Hermes · IA</p>
             <p className="text-sm font-semibold text-white leading-snug">Análisis de carga disponible. Consulta el informe de esta semana.</p>
-            <p className="text-xs mt-1" style={{ color: '#64748B' }}>Ver informe completo →</p>
+            <p className="text-xs mt-1 text-slate-400">Ver informe completo →</p>
           </div>
         </Link>
 
@@ -528,25 +527,24 @@ const Dashboard = () => {
             {/* IA CARD desktop */}
             <Link
               to="/dashboard/ai-reports"
-              className="hidden lg:flex rounded-2xl p-4 gap-3 items-start relative overflow-hidden hover:opacity-90 transition-opacity"
-              style={{ background: '#0F172A', border: '1px solid #334155' }}
+              className="hidden lg:flex rounded-2xl p-4 gap-3 items-start relative overflow-hidden hover:opacity-90 transition-opacity bg-slate-900 border border-slate-700"
             >
-              <div style={{ position: 'absolute', top: -30, right: -30, width: 100, height: 100, background: 'radial-gradient(circle, rgba(26,107,255,0.35), transparent 70%)', pointerEvents: 'none' }} />
-              <div className="w-9 h-9 rounded-xl flex items-center justify-center flex-shrink-0" style={{ background: '#1A6BFF' }}>
+              <div className="absolute -top-[30px] -right-[30px] w-[100px] h-[100px] pointer-events-none" style={{ background: 'radial-gradient(circle, rgba(26,107,255,0.35), transparent 70%)' }} />
+              <div className="w-9 h-9 rounded-xl flex items-center justify-center flex-shrink-0 bg-coach-accent">
                 <FiZap className="w-4 h-4 text-white" />
               </div>
               <div>
-                <p className="text-[10px] font-bold tracking-widest uppercase mb-1" style={{ color: '#1A6BFF' }}>Hermes · IA</p>
+                <p className="text-[10px] font-bold tracking-widest uppercase mb-1 text-coach-accent">Hermes · IA</p>
                 <p className="text-sm font-semibold text-white leading-snug">Análisis de carga disponible. Consulta el informe de esta semana.</p>
-                <p className="text-xs mt-1" style={{ color: '#64748B' }}>Ver informe completo →</p>
+                <p className="text-xs mt-1 text-slate-400">Ver informe completo →</p>
               </div>
             </Link>
 
             {/* AGENDA SEMANAL */}
-            <section className="bg-white dark:bg-gray-800 rounded-2xl border border-[#E2E8F0] dark:border-gray-700 p-4">
+            <section className="bg-coach-surface rounded-2xl border border-coach-border p-4">
               <SectionHeader icon={FiCalendar} title="Agenda Semanal" linkTo="/dashboard/calendar" linkLabel="Ver todo →" />
 
-              <div className="mt-3 flex items-center justify-between rounded-xl px-3 py-2 bg-[#F4F6FA] dark:bg-gray-700/50">
+              <div className="mt-3 flex items-center justify-between rounded-xl px-3 py-2 bg-coach-inset">
                 <button onClick={goToPreviousWeek} className="p-1 text-slate-400 hover:text-slate-600 dark:hover:text-slate-300">
                   <FiChevronLeft className="w-4 h-4" />
                 </button>
@@ -558,7 +556,7 @@ const Dashboard = () => {
               {!isCurrentWeek() && (
                 <button
                   onClick={goToCurrentWeek}
-                  className="mt-2 text-xs px-3 py-1 rounded-full font-medium bg-blue-50 dark:bg-blue-900/30 text-[#1A6BFF] dark:text-blue-400"
+                  className="mt-2 text-xs px-3 py-1 rounded-full font-medium bg-coach-accent-surface text-coach-accent"
                 >
                   Volver a esta semana
                 </button>
@@ -566,7 +564,7 @@ const Dashboard = () => {
 
               {weekLoading ? (
                 <div className="flex justify-center py-10">
-                  <div className="animate-spin rounded-full h-8 w-8 border-b-2 border-[#1A6BFF]" />
+                  <div className="animate-spin rounded-full h-8 w-8 border-b-2 border-coach-accent" />
                 </div>
               ) : weekSessions.length === 0 && weekCompetitions.length === 0 ? (
                 <div className="text-center py-10 text-slate-400">
@@ -581,8 +579,7 @@ const Dashboard = () => {
                       <div key={day.dateStr} className="text-center pb-2">
                         <p className="text-[10px] font-bold uppercase tracking-wider text-slate-400 mb-1">{day.dayName}</p>
                         <div
-                          className="inline-flex items-center justify-center w-8 h-8 rounded-full text-sm font-semibold"
-                          style={day.isToday ? { background: '#1A6BFF', color: 'white' } : { color: '#475569' }}
+                          className={`inline-flex items-center justify-center w-8 h-8 rounded-full text-sm font-semibold ${day.isToday ? 'bg-coach-accent text-coach-on-accent' : 'text-coach-text-secondary'}`}
                         >
                           {day.dayNumber}
                         </div>
@@ -594,12 +591,7 @@ const Dashboard = () => {
                       return (
                         <div
                           key={`col-${day.dateStr}`}
-                          className="min-h-[90px] pt-1 px-0.5 border-t"
-                          style={{
-                            borderColor: '#E2E8F0',
-                            background: day.isToday ? 'rgba(26,107,255,0.04)' : 'transparent',
-                            borderRadius: day.isToday ? '0 0 8px 8px' : undefined,
-                          }}
+                          className={`min-h-[90px] pt-1 px-0.5 border-t border-coach-border ${day.isToday ? 'bg-coach-accent/[0.04] rounded-b-lg' : ''}`}
                         >
                           {grouped.map((group, gi) => {
                             const ts = getTypeStyle(group.training_type);
@@ -611,7 +603,7 @@ const Dashboard = () => {
                                 style={{ borderLeft: `2.5px solid ${ts.border}` }}
                               >
                                 <p className="text-[11px] font-semibold text-slate-900 dark:text-white truncate leading-tight">{group.title}</p>
-                                <p className="text-[10px] text-slate-500 truncate">
+                                <p className="text-[10px] text-coach-text-muted truncate">
                                   {group.athletes.length > 1 ? `${group.athletes.length} atletas` : group.athletes[0]?.name?.split(' ')[0] || ''}
                                 </p>
                               </div>
@@ -621,13 +613,12 @@ const Dashboard = () => {
                             <div
                               key={`c-${comp.id}-${ci}`}
                               onClick={() => setSelectedSession(comp)}
-                              className="mb-1 p-1.5 rounded-md cursor-pointer hover:shadow-sm bg-red-50 dark:bg-red-900/20"
-                              style={{ borderLeft: '2.5px solid #EF4444' }}
+                              className="mb-1 p-1.5 rounded-md cursor-pointer hover:shadow-sm bg-red-50 dark:bg-red-900/20 border-l-[2.5px] border-l-red-500"
                             >
                               <p className="text-[11px] font-semibold text-slate-900 dark:text-white truncate leading-tight flex items-center gap-0.5">
                                 <FiFlag className="w-3 h-3 text-red-500 flex-shrink-0" />{comp.name}
                               </p>
-                              <p className="text-[10px] text-slate-500 truncate">
+                              <p className="text-[10px] text-coach-text-muted truncate">
                                 {comp.athletes.length > 1 ? `${comp.athletes.length} atletas` : comp.athletes[0]?.name?.split(' ')[0] || ''}
                               </p>
                             </div>
@@ -651,12 +642,11 @@ const Dashboard = () => {
                         return (
                           <div key={day.dateStr}>
                             <div
-                              className="flex items-center gap-2 mb-1.5 text-[11px] font-bold uppercase tracking-wider"
-                              style={{ color: day.isToday ? '#1A6BFF' : '#94A3B8' }}
+                              className={`flex items-center gap-2 mb-1.5 text-[11px] font-bold uppercase tracking-wider ${day.isToday ? 'text-coach-accent' : 'text-coach-text-muted'}`}
                             >
                               {day.dayName} · {day.dayNumber}
                               {day.isToday && (
-                                <span className="text-[9px] font-bold px-2 py-0.5 rounded-full text-white" style={{ background: '#1A6BFF' }}>
+                                <span className="text-[9px] font-bold px-2 py-0.5 rounded-full text-coach-on-accent bg-coach-accent">
                                   HOY
                                 </span>
                               )}
@@ -672,7 +662,7 @@ const Dashboard = () => {
                                     <div
                                       key={`s-${group.id}-${gi}`}
                                       onClick={() => setSelectedSession(group)}
-                                      className="bg-white dark:bg-gray-800 rounded-xl px-3.5 py-3 flex items-center gap-3 border border-[#E2E8F0] dark:border-gray-700 cursor-pointer"
+                                      className="bg-coach-surface rounded-xl px-3.5 py-3 flex items-center gap-3 border border-coach-border cursor-pointer"
                                       style={{ borderLeft: `3px solid ${ts.border}` }}
                                     >
                                       <div className="flex-1 min-w-0">
@@ -699,14 +689,13 @@ const Dashboard = () => {
                                   <div
                                     key={`c-${comp.id}-${ci}`}
                                     onClick={() => setSelectedSession(comp)}
-                                    className="bg-white dark:bg-gray-800 rounded-xl px-3.5 py-3 flex items-center gap-3 border border-[#E2E8F0] dark:border-gray-700 cursor-pointer"
-                                    style={{ borderLeft: '3px solid #EF4444' }}
+                                    className="bg-coach-surface rounded-xl px-3.5 py-3 flex items-center gap-3 border border-coach-border cursor-pointer border-l-[3px] border-l-red-500"
                                   >
                                     <div className="flex-1 min-w-0">
                                       <p className="text-sm font-semibold text-slate-900 dark:text-white truncate flex items-center gap-1">
                                         <FiFlag className="w-3.5 h-3.5 text-red-500 flex-shrink-0" />{comp.name}
                                       </p>
-                                      <p className="text-xs text-slate-500 truncate mt-0.5">
+                                      <p className="text-xs text-coach-text-muted truncate mt-0.5">
                                         {comp.athletes.length > 1 ? comp.athletes.map(a => a.name?.split(' ')[0]).join(', ') : comp.athletes[0]?.name || ''}
                                       </p>
                                     </div>
@@ -733,21 +722,21 @@ const Dashboard = () => {
                   {athletesToday.map(a => <AthleteChip key={a.id} athlete={a} />)}
                 </div>
                 <div className="flex gap-4 mt-2.5 text-[11px] text-slate-400">
-                  <span className="flex items-center gap-1"><span className="w-2 h-2 rounded-full inline-block" style={{ background: '#22C55E' }} />Completado</span>
-                  <span className="flex items-center gap-1"><span className="w-2 h-2 rounded-full inline-block" style={{ background: '#1A6BFF' }} />Pendiente</span>
-                  <span className="flex items-center gap-1"><span className="w-2 h-2 rounded-full inline-block" style={{ background: '#CBD5E1' }} />Descanso</span>
+                  <span className="flex items-center gap-1"><span className="w-2 h-2 rounded-full inline-block bg-green-500" />Completado</span>
+                  <span className="flex items-center gap-1"><span className="w-2 h-2 rounded-full inline-block bg-coach-accent" />Pendiente</span>
+                  <span className="flex items-center gap-1"><span className="w-2 h-2 rounded-full inline-block bg-slate-300" />Descanso</span>
                 </div>
               </section>
             )}
 
             {/* PRÓXIMOS EVENTOS — mobile y desktop (col izq) */}
-            <section className="bg-white dark:bg-gray-800 rounded-2xl border border-[#E2E8F0] dark:border-gray-700 p-4">
+            <section className="bg-coach-surface rounded-2xl border border-coach-border p-4">
               <SectionHeader icon={FiStar} title="Próximos Eventos" actionLabel="+ Nueva →" onAction={() => setShowCreateCompetition(true)} />
               {groupedUpcoming.length === 0 ? (
                 <div className="p-4 text-center mt-3">
-                  <FiFlag className="w-8 h-8 mx-auto mb-2" style={{ color: '#CBD5E1' }} />
+                  <FiFlag className="w-8 h-8 mx-auto mb-2 text-slate-300" />
                   <p className="text-sm text-slate-500 dark:text-slate-400">No hay competiciones próximas</p>
-                  <button onClick={() => setShowCreateCompetition(true)} className="mt-2 text-sm font-medium" style={{ color: '#1A6BFF' }}>Crear una competición</button>
+                  <button onClick={() => setShowCreateCompetition(true)} className="mt-2 text-sm font-medium text-coach-accent">Crear una competición</button>
                 </div>
               ) : (
                 <div className="mt-3 max-h-[420px] overflow-y-auto pr-1 custom-scroll">
@@ -766,12 +755,12 @@ const Dashboard = () => {
           <div className="hidden lg:flex lg:flex-col lg:gap-5">
 
             {/* MIS ATLETAS */}
-            <section className="bg-white dark:bg-gray-800 rounded-2xl border border-[#E2E8F0] dark:border-gray-700 p-4 flex flex-col">
+            <section className="bg-coach-surface rounded-2xl border border-coach-border p-4 flex flex-col">
               <SectionHeader icon={FiUsers} title="Mis Atletas" linkTo="/dashboard/athletes" linkLabel="Ver todos →" />
               <div className="space-y-2 mt-3 max-h-[296px] overflow-y-auto pr-1 custom-scroll">
                 {recentAthletes.length === 0 ? (
                   <div className="p-4 text-center">
-                    <FiUsers className="w-8 h-8 mx-auto mb-2" style={{ color: '#CBD5E1' }} />
+                    <FiUsers className="w-8 h-8 mx-auto mb-2 text-slate-300" />
                     <p className="text-sm text-slate-500 dark:text-slate-400">No hay atletas</p>
                   </div>
                 ) : (
@@ -792,15 +781,15 @@ const Dashboard = () => {
 
             {/* ATLETAS HOY — desktop */}
             {athletesToday.length > 0 && (
-              <section className="bg-white dark:bg-gray-800 rounded-2xl border border-[#E2E8F0] dark:border-gray-700 p-4">
+              <section className="bg-coach-surface rounded-2xl border border-coach-border p-4">
                 <SectionHeader icon={FiClock} title="Atletas · Hoy" />
                 <div className="flex flex-wrap gap-3 mt-3">
                   {athletesToday.map(a => <AthleteChip key={a.id} athlete={a} />)}
                 </div>
                 <div className="flex gap-3 mt-3 text-[11px] text-slate-400">
-                  <span className="flex items-center gap-1"><span className="w-2 h-2 rounded-full" style={{ background: '#22C55E' }} />Completado</span>
-                  <span className="flex items-center gap-1"><span className="w-2 h-2 rounded-full" style={{ background: '#1A6BFF' }} />Pendiente</span>
-                  <span className="flex items-center gap-1"><span className="w-2 h-2 rounded-full" style={{ background: '#CBD5E1' }} />Descanso</span>
+                  <span className="flex items-center gap-1"><span className="w-2 h-2 rounded-full bg-green-500" />Completado</span>
+                  <span className="flex items-center gap-1"><span className="w-2 h-2 rounded-full bg-coach-accent" />Pendiente</span>
+                  <span className="flex items-center gap-1"><span className="w-2 h-2 rounded-full bg-slate-300" />Descanso</span>
                 </div>
               </section>
             )}
@@ -814,8 +803,8 @@ const Dashboard = () => {
           <SectionHeader icon={FiUsers} title="Mis Atletas" linkTo="/dashboard/athletes" linkLabel="Ver todos →" />
           <div className="space-y-2 mt-3 max-h-[320px] overflow-y-auto pr-1 custom-scroll">
             {recentAthletes.length === 0 ? (
-              <div className="bg-white dark:bg-gray-800 rounded-xl p-6 border border-[#E2E8F0] dark:border-gray-700 text-center">
-                <FiUsers className="w-10 h-10 mx-auto mb-2" style={{ color: '#CBD5E1' }} />
+              <div className="bg-coach-surface rounded-xl p-6 border border-coach-border text-center">
+                <FiUsers className="w-10 h-10 mx-auto mb-2 text-slate-300" />
                 <p className="text-sm text-slate-500 dark:text-slate-400">No hay atletas registrados</p>
               </div>
             ) : (
@@ -850,7 +839,7 @@ const Dashboard = () => {
               initial={{ opacity: 0, scale: 0.95 }}
               animate={{ opacity: 1, scale: 1 }}
               exit={{ opacity: 0, scale: 0.95 }}
-              className="bg-white dark:bg-gray-800 rounded-2xl shadow-xl max-w-md w-full max-h-[90vh] overflow-y-auto no-scrollbar"
+              className="bg-coach-elevated rounded-2xl shadow-xl max-w-md w-full max-h-[90vh] overflow-y-auto no-scrollbar"
             >
               <div className="p-6">
                 <div className="flex items-center justify-between mb-5">
@@ -858,13 +847,13 @@ const Dashboard = () => {
                     {selectedSession.isCompetition ? 'Detalles de Competición' : 'Detalles del Entrenamiento'}
                   </h3>
                   <button onClick={() => setSelectedSession(null)} className="p-2 hover:bg-slate-100 dark:hover:bg-gray-700 rounded-lg">
-                    <FiX className="w-5 h-5 text-slate-500" />
+                    <FiX className="w-5 h-5 text-slate-500 dark:text-slate-400" />
                   </button>
                 </div>
 
                 <div className="space-y-4">
                   {/* Fecha */}
-                  <div className="p-3 rounded-xl flex items-center gap-3 bg-slate-50 dark:bg-gray-700/50">
+                  <div className="p-3 rounded-xl flex items-center gap-3 bg-coach-inset">
                     <FiCalendar className="w-5 h-5 flex-shrink-0 text-slate-400" />
                     <div>
                       <p className="text-sm font-medium text-slate-700 dark:text-slate-200">
@@ -873,7 +862,7 @@ const Dashboard = () => {
                         ).toLocaleDateString('es-ES', { weekday: 'long', year: 'numeric', month: 'long', day: 'numeric' })}
                       </p>
                       {!selectedSession.isCompetition && selectedSession.scheduled_time && (
-                        <p className="text-sm flex items-center mt-1" style={{ color: '#1A6BFF' }}>
+                        <p className="text-sm flex items-center mt-1 text-coach-accent">
                           <FiClock className="w-3 h-3 mr-1" />{selectedSession.scheduled_time.slice(0, 5)}
                         </p>
                       )}
@@ -886,7 +875,7 @@ const Dashboard = () => {
 
                   {/* Tipo / estado */}
                   {selectedSession.isCompetition ? (
-                    <span className="inline-flex items-center gap-1.5 px-3 py-1 rounded-full text-sm text-white" style={{ background: '#EF4444' }}>
+                    <span className="inline-flex items-center gap-1.5 px-3 py-1 rounded-full text-sm text-white bg-red-500">
                       <FiFlag className="w-3.5 h-3.5" /> Competición
                     </span>
                   ) : (
@@ -907,7 +896,7 @@ const Dashboard = () => {
                         {selectedSession.athletes?.length > 1 ? `${selectedSession.athletes.length} atletas` : 'Atleta'}
                       </p>
                       {selectedSession.isCompetition && (
-                        <button onClick={() => handleOpenAddAthletes(selectedSession)} className="flex items-center gap-1 text-xs font-medium hover:underline text-[#1A6BFF]">
+                        <button onClick={() => handleOpenAddAthletes(selectedSession)} className="flex items-center gap-1 text-xs font-medium hover:underline text-coach-accent">
                           <FiPlus className="w-3 h-3" /> Añadir atletas
                         </button>
                       )}
@@ -919,7 +908,7 @@ const Dashboard = () => {
                         image: selectedSession.athleteImage,
                         status: selectedSession.status,
                       }]).map(athlete => (
-                        <div key={athlete.id} className="flex items-center gap-3 p-3 bg-slate-50 dark:bg-gray-700/50 rounded-xl hover:bg-slate-100 dark:hover:bg-gray-700 transition-colors">
+                        <div key={athlete.id} className="flex items-center gap-3 p-3 bg-coach-inset rounded-xl hover:bg-slate-100 dark:hover:bg-gray-700 transition-colors">
                           <Link
                             to={`/dashboard/athletes/${athlete.id}`}
                             onClick={() => setSelectedSession(null)}
@@ -951,7 +940,7 @@ const Dashboard = () => {
 
                     {/* Panel añadir atletas */}
                     {selectedSession.isCompetition && showAddAthletes && (
-                      <div className="mt-3 p-3 rounded-xl border bg-slate-50 dark:bg-gray-700/50 border-slate-200 dark:border-gray-600">
+                      <div className="mt-3 p-3 rounded-xl border bg-coach-inset border-coach-border">
                         <p className="text-xs font-medium text-slate-700 dark:text-slate-300 mb-2">Selecciona atletas a añadir:</p>
                         {allAthletes.length === 0 ? (
                           <p className="text-xs text-slate-400 text-center py-2">Todos los atletas ya están asignados</p>
@@ -966,11 +955,10 @@ const Dashboard = () => {
                                   onClick={() => setAddingAthleteIds(prev =>
                                     prev.includes(a.id) ? prev.filter(x => x !== a.id) : [...prev, a.id]
                                   )}
-                                  className={`w-full flex items-center gap-2 px-3 py-2 rounded-lg text-left text-sm transition-colors ${selected ? 'bg-[#E8F0FF] dark:bg-blue-900/30 border border-[#1A6BFF]/30 dark:border-blue-700' : 'border border-transparent'}`}
+                                  className={`w-full flex items-center gap-2 px-3 py-2 rounded-lg text-left text-sm transition-colors ${selected ? 'bg-coach-accent-surface border border-coach-accent/30' : 'border border-transparent'}`}
                                 >
                                   <div
-                                    className="w-4 h-4 rounded flex items-center justify-center flex-shrink-0"
-                                    style={{ background: selected ? '#1A6BFF' : 'transparent', border: selected ? 'none' : '2px solid #CBD5E1' }}
+                                    className={`w-4 h-4 rounded flex items-center justify-center flex-shrink-0 ${selected ? 'bg-coach-accent' : 'border-2 border-slate-300'}`}
                                   >
                                     {selected && <FiCheck className="w-2.5 h-2.5 text-white" />}
                                   </div>
@@ -987,8 +975,7 @@ const Dashboard = () => {
                             <button
                               onClick={handleConfirmAddAthletes}
                               disabled={savingAdd || addingAthleteIds.length === 0}
-                              className="text-xs px-3 py-1.5 text-white rounded-lg hover:opacity-90 disabled:opacity-50 font-medium transition-colors"
-                              style={{ background: '#1A6BFF' }}
+                              className="text-xs px-3 py-1.5 text-coach-on-accent rounded-lg hover:opacity-90 disabled:opacity-50 font-medium transition-colors bg-coach-accent"
                             >
                               {savingAdd ? 'Guardando...' : `Añadir${addingAthleteIds.length > 0 ? ` (${addingAthleteIds.length})` : ''}`}
                             </button>
@@ -1002,26 +989,26 @@ const Dashboard = () => {
                   {selectedSession.isCompetition && (
                     <>
                       {selectedSession.distance_km && (
-                        <div className="flex items-center gap-3 p-3 bg-slate-50 dark:bg-gray-700/50 rounded-xl">
+                        <div className="flex items-center gap-3 p-3 bg-coach-inset rounded-xl">
                           <FiActivity className="w-5 h-5 text-slate-400 flex-shrink-0" />
                           <div>
-                            <p className="text-xs text-slate-500">Distancia</p>
+                            <p className="text-xs text-coach-text-muted">Distancia</p>
                             <p className="font-medium text-slate-900 dark:text-white">{selectedSession.distance_km} km</p>
                           </div>
                         </div>
                       )}
                       {selectedSession.location && (
-                        <div className="flex items-center gap-3 p-3 bg-slate-50 dark:bg-gray-700/50 rounded-xl">
+                        <div className="flex items-center gap-3 p-3 bg-coach-inset rounded-xl">
                           <FiMapPin className="w-5 h-5 text-slate-400 flex-shrink-0" />
                           <div>
-                            <p className="text-xs text-slate-500">Ubicación</p>
+                            <p className="text-xs text-coach-text-muted">Ubicación</p>
                             <p className="font-medium text-slate-900 dark:text-white">{selectedSession.location}</p>
                           </div>
                         </div>
                       )}
                       {selectedSession.notes && (
                         <div>
-                          <p className="text-xs text-slate-500 mb-1">Notas</p>
+                          <p className="text-xs text-coach-text-muted mb-1">Notas</p>
                           <p className="text-slate-900 dark:text-white text-sm whitespace-pre-wrap">{selectedSession.notes}</p>
                         </div>
                       )}
@@ -1032,29 +1019,29 @@ const Dashboard = () => {
                   {!selectedSession.isCompetition && (
                     <>
                       {selectedSession.estimated_duration_minutes && (
-                        <div className="flex items-center gap-3 p-3 bg-slate-50 dark:bg-gray-700/50 rounded-xl">
+                        <div className="flex items-center gap-3 p-3 bg-coach-inset rounded-xl">
                           <FiClock className="w-5 h-5 text-slate-400 flex-shrink-0" />
                           <div>
-                            <p className="text-xs text-slate-500">Duración estimada</p>
+                            <p className="text-xs text-coach-text-muted">Duración estimada</p>
                             <p className="font-medium text-slate-900 dark:text-white">{selectedSession.estimated_duration_minutes} min</p>
                           </div>
                         </div>
                       )}
                       {selectedSession.description && (
                         <div>
-                          <p className="text-xs text-slate-500 mb-1">Descripción</p>
+                          <p className="text-xs text-coach-text-muted mb-1">Descripción</p>
                           <p className="text-slate-900 dark:text-white text-sm whitespace-pre-wrap">{selectedSession.description}</p>
                         </div>
                       )}
                       {selectedSession.notes_coach && (
                         <div>
-                          <p className="text-xs text-slate-500 mb-1">Notas del entrenador</p>
+                          <p className="text-xs text-coach-text-muted mb-1">Notas del entrenador</p>
                           <p className="text-slate-900 dark:text-white text-sm whitespace-pre-wrap">{selectedSession.notes_coach}</p>
                         </div>
                       )}
                       {selectedSession.notes_athlete && (
                         <div>
-                          <p className="text-xs text-slate-500 mb-1">Notas del atleta</p>
+                          <p className="text-xs text-coach-text-muted mb-1">Notas del atleta</p>
                           <p className="text-slate-900 dark:text-white text-sm whitespace-pre-wrap">{selectedSession.notes_athlete}</p>
                         </div>
                       )}
@@ -1074,7 +1061,7 @@ const Dashboard = () => {
                     )}
                     <button
                       onClick={() => setSelectedSession(null)}
-                      className="flex-1 py-2.5 bg-slate-100 dark:bg-gray-700 text-slate-700 dark:text-slate-300 rounded-xl hover:bg-slate-200 dark:hover:bg-gray-600 transition-colors text-sm font-medium"
+                      className="flex-1 py-2.5 bg-coach-inset text-coach-text-secondary rounded-xl hover:bg-slate-200 dark:hover:bg-coach-elevated border border-coach-border transition-colors text-sm font-medium"
                     >
                       Cerrar
                     </button>

@@ -18,6 +18,11 @@ import {
   FiDownload,
   FiX,
   FiHeart,
+  FiTrendingUp,
+  FiFlag,
+  FiExternalLink,
+  FiChevronDown,
+  FiPlus,
 } from 'react-icons/fi';
 import { SiStrava } from 'react-icons/si';
 import { useAuth } from '../../contexts/AuthContext';
@@ -32,9 +37,12 @@ import { showError, showSuccess } from '../../lib/toast';
 import { generateWeeklyPDF } from '../../lib/pdfExport';
 import { getMyWeeklySessions } from '../../services/independentPlanService';
 import { DAYS_OF_WEEK } from '../../services/weeklyTrainingService';
-import { getActivityTypeLabel } from '../../services/stravaService';
+import { getActivityTypeLabel, formatDuration, calculatePace } from '../../services/stravaService';
+import useMapbox from '../../hooks/useMapbox';
 import { getRPEEmoji } from '../../services/rpeService';
 import { inferTrainingType, toLocalDateStr } from '../../lib/dateUtils';
+import useAthleteTestData from '../../hooks/useAthleteTestData';
+import VAMTestModal from '../../components/dashboard/VAMTestModal';
 
 // ---------------------------------------------------------------------------
 // Helpers
@@ -81,19 +89,19 @@ function NoPlanCTA({ onGenerate, generating, rateLimit }) {
       animate={{ opacity: 1, y: 0 }}
       className="flex flex-col items-center justify-center gap-6 py-16 px-4 text-center"
     >
-      <div className="w-20 h-20 rounded-2xl bg-green-100 dark:bg-green-900/30 flex items-center justify-center">
-        <FiClipboard className="w-10 h-10 text-green-600 dark:text-green-400" />
+      <div className="w-20 h-20 rounded-2xl bg-ath-accent-surface flex items-center justify-center">
+        <FiClipboard className="w-10 h-10 text-ath-accent-text" />
       </div>
 
       <div>
-        <h2 className="text-2xl font-bold text-slate-900 dark:text-white mb-2">
+        <h2 className="text-2xl font-bold text-ath-text-primary mb-2">
           Aún no tienes un plan
         </h2>
-        <p className="text-slate-500 dark:text-slate-400 max-w-md">
+        <p className="text-ath-text-muted max-w-md">
           ¡Genera uno con IA! La IA analizará tu perfil y creará un plan de entrenamiento
           personalizado de 4 semanas, adaptado a tus objetivos y disponibilidad.
         </p>
-        <p className="text-xs text-slate-400 dark:text-slate-500 mt-2">
+        <p className="text-xs text-ath-text-muted mt-2">
           Basado en tu perfil
         </p>
       </div>
@@ -101,7 +109,7 @@ function NoPlanCTA({ onGenerate, generating, rateLimit }) {
       <button
         onClick={onGenerate}
         disabled={generating || !rateLimit.canGenerate}
-        className="flex items-center gap-2 px-6 py-3 bg-green-600 hover:bg-green-700 disabled:bg-slate-300 dark:disabled:bg-slate-700 text-white font-semibold rounded-xl transition-colors disabled:cursor-not-allowed"
+        className="flex items-center gap-2 px-6 py-3 bg-ath-accent hover:bg-ath-accent-hover disabled:bg-slate-300 dark:disabled:bg-slate-700 text-ath-on-accent font-semibold rounded-xl transition-colors disabled:cursor-not-allowed"
       >
         {generating ? (
           <>
@@ -154,6 +162,45 @@ function ActivePlanView({
     loadActivityDetail, handleEditRPESave, showMoreActivities,
   } = useStravaActivities(profile?.id);
 
+  const { athletePaces, latestVam, latestConconiTest, refresh: refreshTestData } = useAthleteTestData(profile?.id);
+
+  const [showConconiTable, setShowConconiTable] = useState(false);
+  const [showVamTable, setShowVamTable] = useState(false);
+  const [showVamModal, setShowVamModal] = useState(false);
+
+  // ---- Tests de rendimiento: cálculos compartidos ----
+  const paceOrder = ['RM', 'R10', 'R9', 'R8', 'R7', 'R6', 'R5', 'R4', 'R3', 'R2', 'R1', 'RR'];
+  const sortedPaces = paceOrder.map(code => athletePaces.find(p => p.pace_code === code)).filter(Boolean);
+  const bgColors = { RM:'bg-red-600', R10:'bg-red-500', R9:'bg-red-400', R8:'bg-orange-500', R7:'bg-orange-400', R6:'bg-yellow-500', R5:'bg-yellow-400', R4:'bg-lime-400', R3:'bg-lime-500', R2:'bg-green-400', R1:'bg-green-500', RR:'bg-emerald-600' };
+  const pctLabels = { RM:'100%', R10:'92%', R9:'90%', R8:'88%', R7:'86%', R6:'84%', R5:'82%', R4:'78%', R3:'72%', R2:'62%', R1:'50%', RR:'42%' };
+  const seriesRecovery = (() => {
+    const rec = {};
+    if (latestConconiTest?.conconi_test_series) {
+      const series = [...latestConconiTest.conconi_test_series].sort((a, b) => a.series_number - b.series_number);
+      sortedPaces.forEach((pace, i) => {
+        if (pace.pace_code === 'RR') return;
+        const idx = Math.round((i / (sortedPaces.length - 1)) * (series.length - 1));
+        const s = series[Math.min(idx, series.length - 1)];
+        if (s?.recovery_time_seconds) rec[pace.pace_code] = s.recovery_time_seconds;
+      });
+    }
+    return rec;
+  })();
+  const conconiMaxHr = latestConconiTest?.max_hr_reached;
+  const fmtPaceTest = (secs) => { const m=Math.floor(secs/60); const s=Math.round(secs%60); return `${m}'${String(s).padStart(2,'0')}"`; };
+  const fmtRecTest  = (secs) => { if(!secs) return ''; const m=Math.floor(secs/60); const s=secs%60; return s>0?`${m}'${String(s).padStart(2,'0')}"` :`${m}'`; };
+  const conconiR10 = sortedPaces.find(p => p.pace_code === 'R10');
+  const conconiFirstRecov = Object.values(seriesRecovery)[0];
+  const vamKmh = latestVam ? parseFloat(latestVam.vam_kmh) : null;
+  const vamVo2max = vamKmh ? (vamKmh * 3.5).toFixed(1) : null;
+  const vamMlssKmh = vamKmh ? (vamKmh * 0.88).toFixed(1) : null;
+  const vamMlssPace = vamKmh ? Math.round(3600 / (vamKmh * 0.88)) : null;
+  const vamVt2Kmh = vamKmh ? (vamKmh * 0.875).toFixed(1) : null;
+  const vamVt2Pace = vamKmh ? Math.round(3600 / (vamKmh * 0.875)) : null;
+  const fmtVamP = (secs) => { const m=Math.floor(secs/60); const s=Math.round(secs%60); return `${m}'${String(s).padStart(2,'0')}"`; };
+
+  const { mapContainerRef } = useMapbox(selectedActivity?.polyline, selectedActivity?.loading);
+
   const weekDays = getWeekDays(currentWeek);
   const hasAnyTraining = Object.keys(trainings).length > 0;
 
@@ -200,10 +247,10 @@ function ActivePlanView({
       {/* Header */}
       <div className="flex flex-wrap items-start justify-between gap-3">
         <div>
-          <h1 className="text-2xl lg:text-3xl font-bold text-slate-900 dark:text-white tracking-tight">
+          <h1 className="text-2xl lg:text-3xl font-bold text-ath-text-primary tracking-tight">
             Mi Plan
           </h1>
-          <p className="text-sm text-slate-500 dark:text-slate-400 mt-0.5">
+          <p className="text-sm text-ath-text-muted mt-0.5">
             {activeTab === 'week' ? 'Plan semanal de entrenamiento' : 'Últimos 30 días · Strava'}
           </p>
         </div>
@@ -211,7 +258,7 @@ function ActivePlanView({
           <button
             onClick={downloadPDF}
             disabled={!hasAnyTraining}
-            className="flex items-center gap-1.5 px-3 py-2 text-sm font-medium text-slate-600 dark:text-slate-400 border border-gray-200 dark:border-gray-700 rounded-xl hover:bg-white dark:hover:bg-gray-800 disabled:opacity-40 disabled:cursor-not-allowed transition-colors"
+            className="flex items-center gap-1.5 px-3 py-2 text-sm font-medium text-ath-text-secondary border border-ath-border rounded-xl hover:bg-ath-inset disabled:opacity-40 disabled:cursor-not-allowed transition-colors"
           >
             <FiDownload className="w-4 h-4" />
             <span className="hidden sm:inline">PDF</span>
@@ -219,7 +266,7 @@ function ActivePlanView({
           <button
             onClick={onGenerate}
             disabled={generating || !rateLimit.canGenerate}
-            className="flex items-center gap-1.5 px-3 py-2 bg-green-600 hover:bg-green-700 disabled:bg-slate-300 dark:disabled:bg-slate-700 text-white text-sm font-semibold rounded-xl transition-colors disabled:cursor-not-allowed"
+            className="flex items-center gap-1.5 px-3 py-2 bg-ath-accent hover:bg-ath-accent-hover disabled:bg-slate-300 dark:disabled:bg-slate-700 text-ath-on-accent text-sm font-semibold rounded-xl transition-colors disabled:cursor-not-allowed"
           >
             {generating ? (
               <FiLoader className="w-4 h-4 animate-spin" />
@@ -238,9 +285,9 @@ function ActivePlanView({
             initial={{ opacity: 0, height: 0 }}
             animate={{ opacity: 1, height: 'auto' }}
             exit={{ opacity: 0, height: 0 }}
-            className="flex items-center gap-3 p-4 bg-green-50 dark:bg-green-900/20 border border-green-200 dark:border-green-800 rounded-xl"
+            className="flex items-center gap-3 p-4 bg-ath-accent-surface border border-ath-border-accent rounded-xl"
           >
-            <FiLoader className="w-5 h-5 animate-spin text-green-600 dark:text-green-400 flex-shrink-0" />
+            <FiLoader className="w-5 h-5 animate-spin text-ath-accent-text flex-shrink-0" />
             <div>
               <p className="text-sm font-semibold text-green-800 dark:text-green-300">
                 Generando tu nuevo plan…
@@ -263,14 +310,230 @@ function ActivePlanView({
         />
       )}
 
+      {/* ===== TESTS DE RENDIMIENTO ===== */}
+      <div className="space-y-3">
+        <div className="flex items-center justify-between">
+          <p className="text-[10px] font-bold uppercase tracking-widest text-ath-text-muted flex items-center gap-1.5">
+            <FiZap className="w-3 h-3" /> Tests de Rendimiento
+          </p>
+          <button
+            onClick={() => setShowVamModal(true)}
+            className="text-xs font-medium text-ath-accent-text hover:underline flex items-center gap-1"
+          >
+            <FiPlus className="w-3 h-3" /> Añadir test VAM
+          </button>
+        </div>
+
+        {/* Empty state */}
+        {!latestVam && athletePaces.length === 0 && (
+          <div className="bg-ath-surface rounded-2xl border border-ath-border p-6 text-center">
+            <FiZap className="w-8 h-8 text-ath-text-muted mx-auto mb-2" />
+            <p className="text-sm font-medium text-ath-text-primary mb-1">Sin tests de rendimiento</p>
+            <p className="text-xs text-ath-text-muted mb-3">Registra tu primer test VAM para calcular tus zonas</p>
+            <button
+              onClick={() => setShowVamModal(true)}
+              className="px-4 py-2 bg-ath-accent text-ath-on-accent rounded-xl text-sm font-medium hover:bg-ath-accent-hover transition-colors"
+            >
+              Registrar test VAM
+            </button>
+          </div>
+        )}
+
+          {/* CONCONI CARD */}
+          {athletePaces.length > 0 && (
+            <div className="bg-ath-surface rounded-2xl border border-ath-border overflow-hidden">
+              <div className="px-4 py-3 flex items-center justify-between">
+                <div className="flex items-center gap-2">
+                  <FiZap className="w-4 h-4 text-amber-500" />
+                  <span className="text-sm font-bold text-ath-text-primary">Test de Conconi</span>
+                  {latestConconiTest && (
+                    <span className="text-[10px] text-ath-text-muted">
+                      FC Máx: <span className="font-semibold text-ath-text-secondary">{latestConconiTest.max_hr_reached} bpm</span>
+                      {latestConconiTest.test_date && <> · {new Date(latestConconiTest.test_date).toLocaleDateString('es-ES', { day:'numeric', month:'short', year:'numeric' })}</>}
+                    </span>
+                  )}
+                </div>
+                <button
+                  onClick={() => setShowConconiTable(v => !v)}
+                  className="text-xs font-medium text-blue-600 dark:text-blue-400 flex items-center gap-1 hover:underline"
+                >
+                  {showConconiTable ? 'Ocultar' : 'Ver todo'} <FiChevronDown className={`w-3.5 h-3.5 transition-transform ${showConconiTable ? 'rotate-180' : ''}`} />
+                </button>
+              </div>
+
+              <div className="grid grid-cols-3 divide-x divide-ath-border border-t border-ath-border">
+                <div className="px-3 py-3 text-center">
+                  <p className="text-[10px] uppercase tracking-wide text-ath-text-muted mb-1">FC Máxima</p>
+                  <p className="text-2xl font-bold text-red-500 leading-none">{conconiMaxHr ?? '–'}</p>
+                  <p className="text-[10px] text-ath-text-muted mt-0.5">bpm</p>
+                </div>
+                <div className="px-3 py-3 text-center">
+                  <p className="text-[10px] uppercase tracking-wide text-ath-text-muted mb-1">Ritmo R10</p>
+                  <p className="text-2xl font-bold text-orange-500 leading-none font-mono">{conconiR10 ? fmtPaceTest(conconiR10.pace_seconds_per_km) : '–'}</p>
+                  <p className="text-[10px] text-ath-text-muted mt-0.5">min/km</p>
+                </div>
+                <div className="px-3 py-3 text-center">
+                  <p className="text-[10px] uppercase tracking-wide text-ath-text-muted mb-1">Recup. 120p</p>
+                  <p className="text-2xl font-bold text-blue-500 leading-none font-mono">{conconiFirstRecov ? fmtRecTest(conconiFirstRecov) : '–'}</p>
+                  <p className="text-[10px] text-ath-text-muted mt-0.5">al 120 bpm</p>
+                </div>
+              </div>
+
+              {showConconiTable && (
+                <div className="border-t border-ath-border overflow-x-auto">
+                  <table className="w-full text-[11px] min-w-[560px]">
+                    <thead>
+                      <tr>
+                        <th className="text-left py-1.5 px-3 text-slate-400 font-medium whitespace-nowrap sticky left-0 bg-ath-surface z-10 w-20">Zona</th>
+                        {sortedPaces.map(pace => (
+                          <th key={pace.pace_code} className={`px-1.5 py-1.5 text-center text-white font-bold whitespace-nowrap ${bgColors[pace.pace_code] || 'bg-gray-500'}`}>
+                            {pace.pace_code}
+                          </th>
+                        ))}
+                      </tr>
+                    </thead>
+                    <tbody>
+                      <tr className="bg-ath-inset">
+                        <td className="py-1 px-3 text-slate-400 text-[10px] sticky left-0 bg-ath-inset z-10">% FC</td>
+                        {sortedPaces.map(pace => (
+                          <td key={pace.pace_code} className="px-1 py-1 text-center text-ath-text-muted whitespace-nowrap">{pctLabels[pace.pace_code] || ''}</td>
+                        ))}
+                      </tr>
+                      <tr className="border-t border-ath-border">
+                        <td className="py-1.5 px-3 text-ath-text-secondary font-semibold sticky left-0 bg-ath-surface z-10">Ritmo</td>
+                        {sortedPaces.map(pace => (
+                          <td key={pace.pace_code} className="px-1 py-1.5 text-center font-mono font-semibold text-ath-text-primary whitespace-nowrap">{fmtPaceTest(pace.pace_seconds_per_km)}</td>
+                        ))}
+                      </tr>
+                      <tr className="border-t border-ath-border bg-ath-inset">
+                        <td className="py-1.5 px-3 text-ath-text-secondary font-semibold sticky left-0 bg-ath-inset z-10">Pulso</td>
+                        {sortedPaces.map(pace => (
+                          <td key={pace.pace_code} className="px-1 py-1.5 text-center font-mono text-ath-text-secondary whitespace-nowrap">
+                            {pace.heart_rate_max || ''}
+                          </td>
+                        ))}
+                      </tr>
+                      {Object.keys(seriesRecovery).length > 0 && (
+                        <tr className="border-t border-ath-border">
+                          <td className="py-1.5 px-3 text-ath-text-secondary font-semibold whitespace-nowrap sticky left-0 bg-ath-surface z-10">Recu. 120p</td>
+                          {sortedPaces.map(pace => (
+                            <td key={pace.pace_code} className="px-1 py-1.5 text-center font-mono text-ath-text-secondary whitespace-nowrap">
+                              {seriesRecovery[pace.pace_code] ? fmtRecTest(seriesRecovery[pace.pace_code]) : ''}
+                            </td>
+                          ))}
+                        </tr>
+                      )}
+                    </tbody>
+                  </table>
+                </div>
+              )}
+            </div>
+          )}
+
+          {/* VAM CARD */}
+          {latestVam && (
+            <div className="bg-ath-surface rounded-2xl border border-ath-border overflow-hidden">
+              <div className="px-4 py-3 flex items-center justify-between">
+                <div className="flex items-center gap-2">
+                  <FiTrendingUp className="w-4 h-4 text-purple-500" />
+                  <span className="text-sm font-bold text-ath-text-primary">Test VAM</span>
+                  <span className="text-[10px] text-ath-text-muted">
+                    {new Date(latestVam.test_date).toLocaleDateString('es-ES', { day:'numeric', month:'short', year:'numeric' })}
+                    {' · '}{latestVam.distance_meters}m{' · '}{Math.floor(latestVam.duration_seconds/60)}'{String(latestVam.duration_seconds%60).padStart(2,'0')}"
+                  </span>
+                </div>
+                <button
+                  onClick={() => setShowVamTable(v => !v)}
+                  className="text-xs font-medium text-blue-600 dark:text-blue-400 flex items-center gap-1 hover:underline"
+                >
+                  {showVamTable ? 'Ocultar' : 'Ver todo'} <FiChevronDown className={`w-3.5 h-3.5 transition-transform ${showVamTable ? 'rotate-180' : ''}`} />
+                </button>
+              </div>
+
+              <div className="grid grid-cols-2 gap-2.5 px-4 pb-4 border-t border-ath-border pt-3">
+                <div className="rounded-xl bg-red-50 dark:bg-red-900/20 p-3">
+                  <p className="text-[10px] font-bold uppercase tracking-wide text-red-500 mb-1">FC MÁX</p>
+                  <p className="text-2xl font-bold text-red-600 dark:text-red-400 leading-none">{conconiMaxHr ?? '–'} <span className="text-sm font-normal">bpm</span></p>
+                  <p className="text-[10px] text-slate-400 mt-1">–</p>
+                </div>
+                <div className="rounded-xl bg-orange-50 dark:bg-orange-900/20 p-3">
+                  <p className="text-[10px] font-bold uppercase tracking-wide text-orange-500 mb-1">VAM</p>
+                  <p className="text-2xl font-bold text-orange-600 dark:text-orange-400 leading-none">{vamKmh?.toFixed(1)} <span className="text-sm font-normal">km/h</span></p>
+                  <p className="text-[10px] text-slate-400 font-mono mt-1">{fmtVamP(latestVam.pace_seconds_per_km)} min/km</p>
+                </div>
+                <div className="rounded-xl bg-blue-50 dark:bg-blue-900/20 p-3">
+                  <p className="text-[10px] font-bold uppercase tracking-wide text-blue-500 mb-1">VO2 MÁX</p>
+                  <p className="text-2xl font-bold text-blue-600 dark:text-blue-400 leading-none">{vamVo2max} <span className="text-sm font-normal">ml/kg</span></p>
+                  <p className="text-[10px] text-slate-400 mt-1">–</p>
+                </div>
+                <div className="rounded-xl bg-green-50 dark:bg-green-900/20 p-3">
+                  <p className="text-[10px] font-bold uppercase tracking-wide text-green-600 mb-1">MLSS</p>
+                  <p className="text-2xl font-bold text-green-600 dark:text-green-400 leading-none">{vamMlssKmh} <span className="text-sm font-normal">km/h</span></p>
+                  <p className="text-[10px] text-slate-400 font-mono mt-1">{fmtVamP(vamMlssPace)} min/km</p>
+                </div>
+              </div>
+
+              {vamVt2Kmh && (
+                <div className="px-4 py-2 border-t border-ath-border flex items-center gap-1.5 text-xs text-ath-text-muted">
+                  <FiActivity className="w-3.5 h-3.5 text-blue-400" />
+                  VT2: {vamVt2Kmh} km/h · <span className="font-mono">{fmtVamP(vamVt2Pace)}</span> min/km
+                </div>
+              )}
+
+              {showVamTable && (
+                <div className="border-t border-ath-border overflow-x-auto">
+                  <table className="w-full text-[11px] min-w-[440px]">
+                    <thead>
+                      <tr>
+                        {[
+                          { label: 'FCmax', color: 'bg-red-500' },
+                          { label: 'VAM', color: 'bg-orange-500' },
+                          { label: 'VO2max', color: 'bg-blue-500' },
+                          { label: 'MLSS', color: 'bg-green-500' },
+                          { label: 'VT2', color: 'bg-yellow-500' },
+                          { label: 'VT1', color: 'bg-lime-500' },
+                        ].map(col => (
+                          <th key={col.label} className={`px-2 py-1.5 text-center text-white font-bold whitespace-nowrap ${col.color}`}>{col.label}</th>
+                        ))}
+                      </tr>
+                    </thead>
+                    <tbody>
+                      <tr className="border-t border-ath-border">
+                        {[conconiMaxHr??'-', vamKmh?.toFixed(1), vamVo2max, vamMlssKmh, vamVt2Kmh, vamKmh ? (vamKmh*0.775).toFixed(1) : '-'].map((val,i) => (
+                          <td key={i} className="px-2 py-1.5 text-center font-mono font-semibold text-ath-text-primary whitespace-nowrap">{val}</td>
+                        ))}
+                      </tr>
+                      <tr className="bg-ath-inset">
+                        {[conconiMaxHr?'ppm':'','km/h','ml/kg/min','km/h','km/h','km/h'].map((u,i) => (
+                          <td key={i} className="px-2 py-1 text-center text-[10px] text-slate-400 whitespace-nowrap">{u}</td>
+                        ))}
+                      </tr>
+                      <tr className="border-t border-ath-border">
+                        {['', fmtVamP(latestVam.pace_seconds_per_km), '', fmtVamP(vamMlssPace), fmtVamP(vamVt2Pace), vamKmh ? fmtVamP(Math.round(3600/(vamKmh*0.775))) : '-'].map((val,i) => (
+                          <td key={i} className="px-2 py-1.5 text-center font-mono text-ath-text-secondary whitespace-nowrap">{val}</td>
+                        ))}
+                      </tr>
+                      <tr className="bg-ath-inset">
+                        {['','min/km','','min/km','min/km','min/km'].map((u,i) => (
+                          <td key={i} className="px-2 py-1 text-center text-[10px] text-slate-400 whitespace-nowrap">{u}</td>
+                        ))}
+                      </tr>
+                    </tbody>
+                  </table>
+                </div>
+              )}
+            </div>
+          )}
+        </div>
+
       {/* Tab toggle */}
-      <div className="flex bg-white dark:bg-gray-800 rounded-xl border border-gray-200 dark:border-gray-700 p-1 gap-1">
+      <div className="flex bg-ath-surface rounded-xl border border-ath-border p-1 gap-1">
         <button
           onClick={() => setActiveTab('week')}
           className={`flex-1 py-2 text-sm font-semibold rounded-lg transition-colors ${
             activeTab === 'week'
-              ? 'bg-slate-900 dark:bg-white text-white dark:text-slate-900'
-              : 'text-slate-500 dark:text-slate-400 hover:text-slate-700 dark:hover:text-slate-200'
+              ? 'bg-ath-accent text-ath-on-accent'
+              : 'text-ath-text-muted hover:text-ath-text-secondary'
           }`}
         >
           Esta semana
@@ -279,8 +542,8 @@ function ActivePlanView({
           onClick={() => setActiveTab('recents')}
           className={`flex-1 py-2 text-sm font-semibold rounded-lg transition-colors ${
             activeTab === 'recents'
-              ? 'bg-slate-900 dark:bg-white text-white dark:text-slate-900'
-              : 'text-slate-500 dark:text-slate-400 hover:text-slate-700 dark:hover:text-slate-200'
+              ? 'bg-ath-accent text-ath-on-accent'
+              : 'text-ath-text-muted hover:text-ath-text-secondary'
           }`}
         >
           Recientes
@@ -291,47 +554,47 @@ function ActivePlanView({
       {activeTab === 'week' && (
         <>
           {/* Week navigator */}
-          <div className="flex items-center justify-between bg-white dark:bg-gray-800 rounded-xl border border-gray-200 dark:border-gray-700 px-4 py-3">
+          <div className="flex items-center justify-between bg-ath-surface rounded-xl border border-ath-border px-4 py-3">
             <button
               onClick={goToPreviousWeek}
-              className="p-1.5 hover:bg-gray-100 dark:hover:bg-gray-700 rounded-lg transition-colors"
+              className="p-1.5 hover:bg-ath-inset rounded-lg transition-colors"
             >
-              <FiChevronLeft className="w-5 h-5 text-slate-500 dark:text-slate-400" />
+              <FiChevronLeft className="w-5 h-5 text-ath-text-muted" />
             </button>
-            <span className="font-semibold text-sm text-slate-900 dark:text-white">
+            <span className="font-semibold text-sm text-ath-text-primary">
               {weekDays[0].toLocaleDateString('es-ES', { day: 'numeric', month: 'short' })}
               {' – '}
               {weekDays[6].toLocaleDateString('es-ES', { day: 'numeric', month: 'short', year: 'numeric' })}
             </span>
             <button
               onClick={goToNextWeek}
-              className="p-1.5 hover:bg-gray-100 dark:hover:bg-gray-700 rounded-lg transition-colors"
+              className="p-1.5 hover:bg-ath-inset rounded-lg transition-colors"
             >
-              <FiChevronRight className="w-5 h-5 text-slate-500 dark:text-slate-400" />
+              <FiChevronRight className="w-5 h-5 text-ath-text-muted" />
             </button>
           </div>
 
           {/* Loading */}
           {loading ? (
             <div className="flex items-center justify-center py-16">
-              <FiLoader className="w-8 h-8 animate-spin text-green-600" />
+              <FiLoader className="w-8 h-8 animate-spin text-ath-accent" />
             </div>
           ) : !hasAnyTraining ? (
             /* Empty state for this week */
-            <div className="bg-white dark:bg-gray-800 rounded-2xl p-8 text-center border border-gray-200 dark:border-gray-700">
-              <FiCalendar className="w-12 h-12 text-gray-300 dark:text-gray-600 mx-auto mb-3" />
-              <h3 className="text-base font-semibold text-slate-900 dark:text-white mb-1">
+            <div className="bg-ath-surface rounded-2xl p-8 text-center border border-ath-border">
+              <FiCalendar className="w-12 h-12 text-ath-text-muted mx-auto mb-3" />
+              <h3 className="text-base font-semibold text-ath-text-primary mb-1">
                 No hay entrenamientos esta semana
               </h3>
-              <p className="text-sm text-slate-500 dark:text-slate-400">
+              <p className="text-sm text-ath-text-muted">
                 No tienes sesiones planificadas para esta semana. ¡Regenera tu plan!
               </p>
             </div>
           ) : (
             <>
               {/* ===== MOBILE: Session list (< lg) ===== */}
-              <div className="lg:hidden bg-white dark:bg-gray-800 rounded-2xl border border-gray-200 dark:border-gray-700 overflow-hidden">
-                <div className="divide-y divide-gray-100 dark:divide-gray-700">
+              <div className="lg:hidden bg-ath-surface rounded-2xl border border-ath-border overflow-hidden">
+                <div className="divide-y divide-ath-border">
                   {weekDays.map((day, index) => {
                     const training = trainings[index];
                     const isRest = training?.type === 'rest';
@@ -359,14 +622,14 @@ function ActivePlanView({
                         {/* Day column */}
                         <div className="w-10 flex flex-col items-center flex-shrink-0">
                           <span className={`text-[10px] font-bold uppercase ${
-                            isToday ? 'text-blue-600 dark:text-blue-400' : 'text-slate-400 dark:text-slate-500'
+                            isToday ? 'text-blue-600 dark:text-blue-400' : 'text-ath-text-muted'
                           }`}>
                             {DAYS_OF_WEEK[index].slice(0, 3)}
                           </span>
                           <span className={`text-xl font-bold leading-tight ${
                             isCompleted ? 'text-green-600 dark:text-green-400'
                               : isToday ? 'text-blue-600 dark:text-blue-400'
-                              : 'text-slate-900 dark:text-white'
+                              : 'text-ath-text-primary'
                           }`}>
                             {day.getDate()}
                           </span>
@@ -378,7 +641,7 @@ function ActivePlanView({
                             <>
                               <div className="flex items-center gap-2 min-w-0">
                                 <span className={`text-sm font-semibold truncate ${
-                                  isRest ? 'text-slate-400 dark:text-slate-500' : 'text-slate-900 dark:text-white'
+                                  isRest ? 'text-ath-text-muted' : 'text-ath-text-primary'
                                 }`}>
                                   {isRest ? 'Sin entrenamiento' : training.title}
                                 </span>
@@ -394,19 +657,19 @@ function ActivePlanView({
                                     {getTypeLabel(training)}
                                   </span>
                                   {training.totalDistance && (
-                                    <span className="text-[11px] text-slate-500 dark:text-slate-400">{training.totalDistance}</span>
+                                    <span className="text-[11px] text-ath-text-muted">{training.totalDistance}</span>
                                   )}
                                   {training.duration && !training.totalDistance && (
-                                    <span className="text-[11px] text-slate-500 dark:text-slate-400">{training.duration} min</span>
+                                    <span className="text-[11px] text-ath-text-muted">{training.duration} min</span>
                                   )}
                                 </div>
                               )}
                               {isRest && (
-                                <span className="text-[11px] text-slate-400 dark:text-slate-500">Descanso</span>
+                                <span className="text-[11px] text-ath-text-muted">Descanso</span>
                               )}
                             </>
                           ) : (
-                            <span className="text-sm text-slate-300 dark:text-slate-600">Sin entrenamiento</span>
+                            <span className="text-sm text-ath-text-muted">Sin entrenamiento</span>
                           )}
                         </div>
 
@@ -448,14 +711,14 @@ function ActivePlanView({
                               type="button"
                               onClick={(e) => openCompletionModal(e, training)}
                               aria-label="Marcar sesión como completada"
-                              className="flex items-center gap-1 px-2 py-1 rounded-lg bg-green-50 dark:bg-green-900/20 text-green-600 dark:text-green-400 text-[11px] font-semibold border border-green-200 dark:border-green-800/40 hover:bg-green-100 dark:hover:bg-green-900/30 transition-colors"
+                              className="flex items-center gap-1 px-2 py-1 rounded-lg bg-ath-accent-surface text-ath-accent-text text-[11px] font-semibold border border-ath-border-accent hover:bg-ath-accent-surface/80 transition-colors"
                             >
                               <FiCheck className="w-3 h-3" />
                               Completar
                             </button>
                           )}
                           {hasTraining && !isCompleted && !isSkipped && !canComplete && (
-                            <FiChevronRight className="w-4 h-4 text-gray-300 dark:text-gray-600" />
+                            <FiChevronRight className="w-4 h-4 text-ath-text-muted" />
                           )}
                         </div>
                       </motion.div>
@@ -482,24 +745,24 @@ function ActivePlanView({
                       animate={{ opacity: 1, y: 0 }}
                       transition={{ delay: index * 0.05 }}
                       className={`
-                        bg-white dark:bg-gray-800 rounded-xl p-4 shadow-sm border-2 relative flex flex-col
+                        bg-ath-surface rounded-xl p-4 shadow-sm border-2 relative flex flex-col
                         ${isCompleted
-                          ? 'border-green-500 dark:border-green-400'
+                          ? 'border-ath-border-accent'
                           : isSkipped
                             ? 'border-gray-400 dark:border-gray-500'
                             : isToday
                               ? 'border-blue-500 dark:border-blue-400'
-                              : 'border-gray-200 dark:border-gray-700'}
+                              : 'border-ath-border'}
                         ${isRest ? 'bg-gray-50 dark:bg-gray-800/50' : ''}
                         min-h-[300px]
                       `}
                     >
                       {/* Day Header */}
-                      <div className="mb-4 pb-3 border-b border-gray-200 dark:border-gray-700">
-                        <p className="text-xs font-semibold text-gray-500 dark:text-gray-400 uppercase mb-1">
+                      <div className="mb-4 pb-3 border-b border-ath-border">
+                        <p className="text-xs font-semibold text-ath-text-muted uppercase mb-1">
                           {DAYS_OF_WEEK[index]}
                         </p>
-                        <p className="text-lg font-bold text-gray-900 dark:text-white">
+                        <p className="text-lg font-bold text-ath-text-primary">
                           {day.getDate()}
                         </p>
                         {isToday && (
@@ -549,7 +812,7 @@ function ActivePlanView({
                           </div>
 
                           <h3 className={`font-bold text-lg ${
-                            isRest ? 'text-gray-500 dark:text-gray-400' : 'text-gray-900 dark:text-white'
+                            isRest ? 'text-ath-text-muted' : 'text-ath-text-primary'
                           }`}>
                             {training.title}
                           </h3>
@@ -559,27 +822,27 @@ function ActivePlanView({
                               {training.totalDistance && (
                                 <div className="flex items-start space-x-2">
                                   <FiMapPin className="w-4 h-4 text-slate-400 mt-0.5 flex-shrink-0" />
-                                  <p className="text-sm text-gray-700 dark:text-gray-300">{training.totalDistance}</p>
+                                  <p className="text-sm text-ath-text-secondary">{training.totalDistance}</p>
                                 </div>
                               )}
                               {training.duration && (
                                 <div className="flex items-start space-x-2">
                                   <FiClock className="w-4 h-4 text-slate-400 mt-0.5 flex-shrink-0" />
-                                  <p className="text-sm text-gray-700 dark:text-gray-300">{training.duration} min</p>
+                                  <p className="text-sm text-ath-text-secondary">{training.duration} min</p>
                                 </div>
                               )}
                               {training.exercises?.length > 0 && (
-                                <div className="mt-2 pt-2 border-t border-gray-200 dark:border-gray-700">
-                                  <p className="text-xs text-gray-500 dark:text-gray-400 mb-1">Ejercicios:</p>
+                                <div className="mt-2 pt-2 border-t border-ath-border">
+                                  <p className="text-xs text-ath-text-muted mb-1">Ejercicios:</p>
                                   <ul className="space-y-1">
                                     {training.exercises.slice(0, 3).map((ex, i) => (
-                                      <li key={i} className="text-xs text-gray-700 dark:text-gray-300 truncate">
+                                      <li key={i} className="text-xs text-ath-text-secondary truncate">
                                         • {ex.name}
                                         {ex.sets && <span className="text-gray-500"> ({ex.sets}x{ex.reps || ''})</span>}
                                       </li>
                                     ))}
                                     {training.exercises.length > 3 && (
-                                      <li className="text-xs text-gray-500 dark:text-gray-400">
+                                      <li className="text-xs text-ath-text-muted">
                                         +{training.exercises.length - 3} más
                                       </li>
                                     )}
@@ -587,7 +850,7 @@ function ActivePlanView({
                                 </div>
                               )}
                               {training.description && !training.exercises?.length && (
-                                <p className="text-xs text-gray-500 dark:text-gray-400 line-clamp-3">{training.description}</p>
+                                <p className="text-xs text-ath-text-muted line-clamp-3">{training.description}</p>
                               )}
                               <div className="mt-auto pt-2 text-center space-y-1.5">
                                 {canComplete && (
@@ -595,15 +858,15 @@ function ActivePlanView({
                                     type="button"
                                     onClick={(e) => openCompletionModal(e, training)}
                                     aria-label="Marcar sesión como completada"
-                                    className="inline-flex items-center gap-1.5 px-3 py-1.5 rounded-lg bg-green-600 hover:bg-green-700 text-white text-xs font-semibold transition-colors"
+                                    className="inline-flex items-center gap-1.5 px-3 py-1.5 rounded-lg bg-ath-accent hover:bg-ath-accent-hover text-ath-on-accent text-xs font-semibold transition-colors"
                                   >
                                     <FiCheck className="w-3.5 h-3.5" />
                                     Marcar completado
                                   </button>
                                 )}
                                 {isCompleted && training.actualDistanceKm && (
-                                  <div className="flex items-center justify-center gap-3 text-xs text-slate-500 dark:text-slate-400">
-                                    <span className="font-semibold text-green-600 dark:text-green-400">{training.actualDistanceKm} km</span>
+                                  <div className="flex items-center justify-center gap-3 text-xs text-ath-text-muted">
+                                    <span className="font-semibold text-ath-accent-text">{training.actualDistanceKm} km</span>
                                     {(training.rpe || training.rpeScore) && <span>RPE {training.rpe || training.rpeScore}/10</span>}
                                   </div>
                                 )}
@@ -631,7 +894,7 @@ function ActivePlanView({
                           {isRest && (
                             <div className="text-center py-6">
                               <span className="text-4xl">💤</span>
-                              <p className="text-sm text-gray-500 dark:text-gray-400 mt-2">Día de recuperación</p>
+                              <p className="text-sm text-ath-text-muted mt-2">Día de recuperación</p>
                             </div>
                           )}
                         </div>
@@ -653,19 +916,19 @@ function ActivePlanView({
       {activeTab === 'recents' && (
         <>
           {!stravaConnected ? (
-            <div className="bg-white dark:bg-gray-800 rounded-2xl p-8 text-center border border-gray-200 dark:border-gray-700">
+            <div className="bg-ath-surface rounded-2xl p-8 text-center border border-ath-border">
               <SiStrava className="w-10 h-10 text-[#FC4C02] mx-auto mb-3" />
-              <p className="text-sm font-semibold text-slate-700 dark:text-slate-300 mb-1">Conecta Strava</p>
-              <p className="text-xs text-slate-500 dark:text-slate-400">Ve a Dispositivos para conectar tu cuenta de Strava</p>
+              <p className="text-sm font-semibold text-ath-text-secondary mb-1">Conecta Strava</p>
+              <p className="text-xs text-ath-text-muted">Ve a Dispositivos para conectar tu cuenta de Strava</p>
             </div>
           ) : loadingStrava ? (
             <div className="flex items-center justify-center py-16">
               <FiLoader className="w-6 h-6 animate-spin text-[#FC4C02]" />
             </div>
           ) : stravaActivities.length === 0 ? (
-            <div className="bg-white dark:bg-gray-800 rounded-2xl p-8 text-center border border-gray-200 dark:border-gray-700">
-              <FiActivity className="w-10 h-10 text-gray-300 dark:text-gray-600 mx-auto mb-2" />
-              <p className="text-sm text-slate-500 dark:text-slate-400">No hay actividades en los últimos 30 días</p>
+            <div className="bg-ath-surface rounded-2xl p-8 text-center border border-ath-border">
+              <FiActivity className="w-10 h-10 text-ath-text-muted mx-auto mb-2" />
+              <p className="text-sm text-ath-text-muted">No hay actividades en los últimos 30 días</p>
             </div>
           ) : (
             <div className="space-y-3">
@@ -677,11 +940,11 @@ function ActivePlanView({
                     initial={{ opacity: 0, y: 10 }}
                     animate={{ opacity: 1, y: 0 }}
                     onClick={() => loadActivityDetail(activity)}
-                    className="bg-white dark:bg-gray-800 rounded-2xl border border-gray-200 dark:border-gray-700 overflow-hidden cursor-pointer hover:shadow-md transition-all"
+                    className="bg-ath-surface rounded-2xl border border-ath-border overflow-hidden cursor-pointer hover:shadow-md transition-all"
                   >
                     <div className="px-4 pt-4 pb-3">
                       <div className="flex items-start justify-between gap-2 mb-1">
-                        <h4 className="font-bold text-slate-900 dark:text-white text-base leading-tight truncate">
+                        <h4 className="font-bold text-ath-text-primary text-base leading-tight truncate">
                           {activity.name}
                         </h4>
                         {activity.has_heartrate && (
@@ -695,28 +958,28 @@ function ActivePlanView({
                         <span className={`text-[11px] px-1.5 py-0.5 rounded-md font-medium ${getTypeColor(activity.type === 'Run' ? 'running' : activity.type === 'WeightTraining' ? 'gym' : 'cross_training')}`}>
                           {getActivityTypeLabel(activity.type)}
                         </span>
-                        <span className="text-xs text-slate-400 dark:text-slate-500">
+                        <span className="text-xs text-ath-text-muted">
                           {new Date(activity.date).toLocaleDateString('es-ES', { weekday: 'short', day: 'numeric', month: 'short', year: 'numeric' })}
                         </span>
                       </div>
                     </div>
 
-                    <div className="grid grid-cols-4 divide-x divide-gray-100 dark:divide-gray-700 border-t border-gray-100 dark:border-gray-700">
+                    <div className="grid grid-cols-4 divide-x divide-ath-border border-t border-ath-border">
                       {[
-                        { val: activity.distanceKm, unit: 'km', color: 'text-slate-900 dark:text-white' },
-                        { val: activity.formattedTime, unit: 'tiempo', color: 'text-slate-900 dark:text-white' },
-                        { val: activity.pace || '–', unit: 'ritmo', color: 'text-green-600 dark:text-green-400' },
-                        { val: activity.total_elevation_gain ?? 0, unit: 'm+', color: 'text-slate-900 dark:text-white' },
+                        { val: activity.distanceKm, unit: 'km', color: 'text-ath-text-primary' },
+                        { val: activity.formattedTime, unit: 'tiempo', color: 'text-ath-text-primary' },
+                        { val: activity.pace || '–', unit: 'ritmo', color: 'text-ath-accent-text' },
+                        { val: activity.total_elevation_gain ?? 0, unit: 'm+', color: 'text-ath-text-primary' },
                       ].map(({ val, unit, color }, i) => (
                         <div key={i} className="py-2.5 text-center">
                           <p className={`text-sm font-bold font-mono ${color}`}>{val}</p>
-                          <p className="text-[10px] text-slate-400 dark:text-slate-500">{unit}</p>
+                          <p className="text-[10px] text-ath-text-muted">{unit}</p>
                         </div>
                       ))}
                     </div>
 
-                    <div className="px-4 py-2.5 flex items-center justify-between border-t border-gray-100 dark:divide-gray-700">
-                      <div className="flex items-center gap-3 text-xs text-slate-400 dark:text-slate-500">
+                    <div className="px-4 py-2.5 flex items-center justify-between border-t border-ath-border">
+                      <div className="flex items-center gap-3 text-xs text-ath-text-muted">
                         {activity.calories > 0 && <span>{activity.calories} kcal</span>}
                         {activity.kudos_count > 0 && <span>· {activity.kudos_count} kudos</span>}
                       </div>
@@ -736,7 +999,7 @@ function ActivePlanView({
                             + Valorar sesión
                           </button>
                         )}
-                        <span className="text-xs font-medium text-slate-400 dark:text-slate-500">Ver detalle &rsaquo;</span>
+                        <span className="text-xs font-medium text-ath-text-muted">Ver detalle &rsaquo;</span>
                       </div>
                     </div>
                   </motion.div>
@@ -766,44 +1029,200 @@ function ActivePlanView({
               initial={{ opacity: 0, scale: 0.95 }}
               animate={{ opacity: 1, scale: 1 }}
               exit={{ opacity: 0, scale: 0.95 }}
-              className="bg-white dark:bg-gray-800 rounded-2xl shadow-2xl w-full max-w-lg max-h-[90vh] overflow-hidden flex flex-col"
+              className="bg-ath-surface rounded-2xl shadow-2xl w-full max-w-5xl max-h-[90vh] overflow-hidden flex flex-col"
             >
-              <div className="p-5 border-b border-gray-200 dark:border-gray-700 flex items-start justify-between">
-                <div>
-                  <h2 className="text-lg font-bold text-slate-900 dark:text-white">{selectedActivity.name}</h2>
-                  <p className="text-slate-500 dark:text-slate-400 text-sm mt-0.5">
-                    {new Date(selectedActivity.date).toLocaleDateString('es-ES', {
-                      weekday: 'long', day: 'numeric', month: 'long',
-                    })} · {getActivityTypeLabel(selectedActivity.type)}
-                  </p>
+              {/* Modal Header */}
+              <div className={`p-6 border-b border-ath-border ${
+                selectedActivity.type === 'Run' || selectedActivity.type === 'VirtualRun'
+                  ? 'bg-blue-50 dark:bg-blue-900/20'
+                  : selectedActivity.type === 'WeightTraining' || selectedActivity.type === 'Workout'
+                    ? 'bg-purple-50 dark:bg-purple-900/20'
+                    : selectedActivity.type === 'Yoga' || selectedActivity.type === 'Pilates'
+                      ? 'bg-green-50 dark:bg-green-900/20'
+                      : selectedActivity.type === 'Ride' || selectedActivity.type === 'VirtualRide'
+                        ? 'bg-orange-50 dark:bg-orange-900/20'
+                        : 'bg-ath-inset'
+              }`}>
+                <div className="flex items-start justify-between">
+                  <div>
+                    <h2 className="text-xl font-bold text-ath-text-primary">{selectedActivity.name}</h2>
+                    <p className="text-ath-text-muted text-sm mt-1">
+                      {new Date(selectedActivity.date).toLocaleDateString('es-ES', {
+                        weekday: 'long', day: 'numeric', month: 'long', year: 'numeric',
+                      })} · {getActivityTypeLabel(selectedActivity.type)}
+                    </p>
+                  </div>
+                  <button onClick={() => setSelectedActivity(null)} className="p-2 hover:bg-ath-inset rounded-lg transition-colors">
+                    <FiX className="w-6 h-6 text-ath-text-muted" />
+                  </button>
                 </div>
-                <button
-                  onClick={() => setSelectedActivity(null)}
-                  className="p-2 hover:bg-gray-100 dark:hover:bg-gray-700 rounded-lg transition-colors"
-                >
-                  <FiX className="w-5 h-5 text-slate-500 dark:text-slate-400" />
-                </button>
               </div>
-              <div className="flex-1 overflow-y-auto p-5">
+
+              {/* Modal Content */}
+              <div className="flex-1 overflow-y-auto p-6 scrollbar-hover">
                 {selectedActivity.loading ? (
                   <div className="flex items-center justify-center py-12">
                     <FiLoader className="w-8 h-8 animate-spin text-orange-500" />
+                    <span className="ml-3 text-ath-text-muted">Cargando detalles...</span>
                   </div>
                 ) : (
-                  <div className="grid grid-cols-2 gap-3">
-                    {[
-                      { label: 'km', val: selectedActivity.distanceKm, color: 'text-blue-600 dark:text-blue-400' },
-                      { label: 'tiempo', val: selectedActivity.formattedTime, color: 'text-purple-600 dark:text-purple-400' },
-                      { label: 'ritmo', val: selectedActivity.pace || '–', color: 'text-green-600 dark:text-green-400' },
-                      { label: 'bpm medio', val: selectedActivity.average_heartrate || '–', color: 'text-red-600 dark:text-red-400' },
-                      { label: 'desnivel+', val: `${selectedActivity.total_elevation_gain ?? 0}m`, color: 'text-slate-900 dark:text-white' },
-                      { label: 'kcal', val: selectedActivity.calories || '–', color: 'text-slate-900 dark:text-white' },
-                    ].map(({ label, val, color }, i) => (
-                      <div key={i} className="bg-gray-50 dark:bg-gray-700/50 rounded-xl p-3 text-center">
-                        <p className={`text-xl font-bold font-mono ${color}`}>{val}</p>
-                        <p className="text-xs text-slate-400 dark:text-slate-500 mt-0.5">{label}</p>
+                  <div className="space-y-6">
+                    {/* Main Stats */}
+                    <div className="grid grid-cols-2 sm:grid-cols-4 gap-4">
+                      <div className="bg-blue-50 dark:bg-blue-900/20 rounded-xl p-4 text-center">
+                        <p className="text-2xl font-bold text-blue-600 dark:text-blue-400">{selectedActivity.distanceKm}</p>
+                        <p className="text-xs text-blue-500">km</p>
                       </div>
-                    ))}
+                      <div className="bg-purple-50 dark:bg-purple-900/20 rounded-xl p-4 text-center">
+                        <p className="text-2xl font-bold text-purple-600 dark:text-purple-400">{selectedActivity.formattedTime}</p>
+                        <p className="text-xs text-purple-500">tiempo</p>
+                      </div>
+                      <div className="bg-green-50 dark:bg-green-900/20 rounded-xl p-4 text-center">
+                        <p className="text-2xl font-bold text-green-600 dark:text-green-400">{selectedActivity.pace}</p>
+                        <p className="text-xs text-green-500">ritmo medio</p>
+                      </div>
+                      <div className="bg-red-50 dark:bg-red-900/20 rounded-xl p-4 text-center">
+                        <p className="text-2xl font-bold text-red-600 dark:text-red-400">{selectedActivity.average_heartrate || '-'}</p>
+                        <p className="text-xs text-red-500">bpm medio</p>
+                      </div>
+                    </div>
+
+                    {/* Additional Stats */}
+                    <div className="grid grid-cols-3 sm:grid-cols-6 gap-3">
+                      <div className="bg-ath-inset rounded-lg p-3 text-center">
+                        <p className="font-semibold text-ath-text-primary">{selectedActivity.total_elevation_gain || 0}m</p>
+                        <p className="text-xs text-ath-text-muted">desnivel+</p>
+                      </div>
+                      <div className="bg-ath-inset rounded-lg p-3 text-center">
+                        <p className="font-semibold text-ath-text-primary">{selectedActivity.max_heartrate || '-'}</p>
+                        <p className="text-xs text-ath-text-muted">FC max</p>
+                      </div>
+                      <div className="bg-ath-inset rounded-lg p-3 text-center">
+                        <p className="font-semibold text-ath-text-primary">{selectedActivity.calories || '-'}</p>
+                        <p className="text-xs text-ath-text-muted">kcal</p>
+                      </div>
+                      <div className="bg-ath-inset rounded-lg p-3 text-center">
+                        <p className="font-semibold text-ath-text-primary">{selectedActivity.suffer_score || '-'}</p>
+                        <p className="text-xs text-ath-text-muted">esfuerzo</p>
+                      </div>
+                      <div className="bg-ath-inset rounded-lg p-3 text-center">
+                        <p className="font-semibold text-ath-text-primary">{selectedActivity.kudos_count || 0}</p>
+                        <p className="text-xs text-ath-text-muted">kudos</p>
+                      </div>
+                      <div className="bg-ath-inset rounded-lg p-3 text-center">
+                        <p className="font-semibold text-ath-text-primary">{selectedActivity.achievement_count || 0}</p>
+                        <p className="text-xs text-ath-text-muted">logros</p>
+                      </div>
+                    </div>
+
+                    {/* Map */}
+                    {selectedActivity.polyline && (
+                      <div className="bg-ath-inset rounded-xl p-4">
+                        <h3 className="font-semibold text-ath-text-primary mb-3 flex items-center">
+                          <FiMapPin className="w-4 h-4 mr-2 text-orange-500" />Recorrido
+                        </h3>
+                        <div ref={mapContainerRef} className="h-64 rounded-lg overflow-hidden" style={{ minHeight: '256px' }} />
+                      </div>
+                    )}
+
+                    {/* Laps */}
+                    {selectedActivity.laps && selectedActivity.laps.length > 0 && (
+                      <div>
+                        <h3 className="font-semibold text-ath-text-primary mb-3 flex items-center">
+                          <FiActivity className="w-4 h-4 mr-2 text-blue-500" />Vueltas ({selectedActivity.laps.length})
+                        </h3>
+                        <div className="overflow-x-auto">
+                          <table className="w-full text-sm">
+                            <thead>
+                              <tr className="bg-ath-inset">
+                                <th className="px-3 py-2 text-left text-ath-text-secondary">#</th>
+                                <th className="px-3 py-2 text-right text-ath-text-secondary">Distancia</th>
+                                <th className="px-3 py-2 text-right text-ath-text-secondary">Tiempo</th>
+                                <th className="px-3 py-2 text-right text-ath-text-secondary">Ritmo</th>
+                                <th className="px-3 py-2 text-right text-ath-text-secondary">FC</th>
+                                <th className="px-3 py-2 text-right text-ath-text-secondary">Cadencia</th>
+                              </tr>
+                            </thead>
+                            <tbody className="divide-y divide-ath-border">
+                              {selectedActivity.laps.map((lap, index) => (
+                                <tr key={lap.id || index} className="hover:bg-ath-inset">
+                                  <td className="px-3 py-2 font-medium text-ath-text-primary">{lap.name || `Vuelta ${index + 1}`}</td>
+                                  <td className="px-3 py-2 text-right text-ath-text-secondary">{(lap.distance / 1000).toFixed(2)} km</td>
+                                  <td className="px-3 py-2 text-right text-ath-text-secondary">{formatDuration(lap.moving_time)}</td>
+                                  <td className="px-3 py-2 text-right font-mono text-ath-text-primary">{calculatePace(lap.moving_time, lap.distance)}</td>
+                                  <td className="px-3 py-2 text-right text-red-600 dark:text-red-400">{lap.average_heartrate ? `${Math.round(lap.average_heartrate)}` : '-'}</td>
+                                  <td className="px-3 py-2 text-right text-ath-text-secondary">{lap.average_cadence ? `${Math.round(lap.average_cadence * 2)}` : '-'}</td>
+                                </tr>
+                              ))}
+                            </tbody>
+                          </table>
+                        </div>
+                      </div>
+                    )}
+
+                    {/* Splits per KM */}
+                    {selectedActivity.splits_metric && selectedActivity.splits_metric.length > 0 && (
+                      <div>
+                        <h3 className="font-semibold text-ath-text-primary mb-3 flex items-center">
+                          <FiTrendingUp className="w-4 h-4 mr-2 text-green-500" />Parciales por Kilómetro
+                        </h3>
+                        <div className="grid grid-cols-5 sm:grid-cols-10 gap-2">
+                          {selectedActivity.splits_metric.map((split, index) => {
+                            const pace = calculatePace(split.moving_time, split.distance);
+                            const isGoodPace = split.average_heartrate && split.average_heartrate < (selectedActivity.average_heartrate || 150);
+                            return (
+                              <div key={index} className={`p-2 rounded-lg text-center ${isGoodPace ? 'bg-green-50 dark:bg-green-900/20' : 'bg-ath-inset'}`}>
+                                <p className="text-xs text-ath-text-muted mb-1">km {index + 1}</p>
+                                <p className="font-mono text-sm font-bold text-ath-text-primary">{pace}</p>
+                                {split.average_heartrate && <p className="text-xs text-red-500 mt-1">{Math.round(split.average_heartrate)}</p>}
+                              </div>
+                            );
+                          })}
+                        </div>
+                      </div>
+                    )}
+
+                    {/* Segments */}
+                    {selectedActivity.segment_efforts && selectedActivity.segment_efforts.length > 0 && (
+                      <div>
+                        <h3 className="font-semibold text-ath-text-primary mb-2 flex items-center gap-2 text-sm">
+                          <span className="text-slate-500">≡</span> Segmentos ({selectedActivity.segment_efforts.length})
+                        </h3>
+                        <div className="space-y-1 max-h-64 overflow-y-auto">
+                          {selectedActivity.segment_efforts.slice(0, 10).map((effort) => {
+                            const distKm = ((effort.segment?.distance || effort.distance || 0) / 1000).toFixed(3);
+                            return (
+                              <div key={effort.id} className="flex items-center gap-3 px-3 py-2.5 bg-ath-inset rounded-xl hover:bg-ath-inset transition-colors">
+                                <div className="w-8 h-8 rounded-lg bg-orange-100 dark:bg-orange-900/30 flex items-center justify-center flex-shrink-0">
+                                  <FiFlag className="w-3.5 h-3.5 text-[#FC4C02]" />
+                                </div>
+                                <div className="flex-1 min-w-0">
+                                  <p className="text-sm font-medium text-ath-text-primary truncate">{effort.segment?.name || effort.name}</p>
+                                  <p className="text-xs text-ath-text-muted">{distKm} km</p>
+                                </div>
+                                <div className="text-right flex-shrink-0">
+                                  <p className="font-mono font-semibold text-[#FC4C02]">{formatDuration(effort.moving_time || effort.elapsed_time)}</p>
+                                  {effort.pr_rank === 1 && (
+                                    <span className="text-[10px] text-yellow-600 dark:text-yellow-400 font-bold">PR</span>
+                                  )}
+                                </div>
+                              </div>
+                            );
+                          })}
+                        </div>
+                      </div>
+                    )}
+
+                    {/* Strava Link */}
+                    <a
+                      href={`https://www.strava.com/activities/${selectedActivity.id}`}
+                      target="_blank"
+                      rel="noopener noreferrer"
+                      className="flex items-center justify-center gap-2 w-full py-3 bg-slate-900 hover:bg-slate-800 dark:bg-slate-700 dark:hover:bg-slate-600 text-white rounded-xl transition-colors font-medium text-sm"
+                    >
+                      <span>Ver en Strava</span>
+                      <FiExternalLink className="w-4 h-4" />
+                    </a>
                   </div>
                 )}
               </div>
@@ -839,12 +1258,12 @@ function ActivePlanView({
             animate={{ opacity: 1, scale: 1 }}
             exit={{ opacity: 0, scale: 0.95 }}
             onClick={(e) => e.stopPropagation()}
-            className="bg-white dark:bg-slate-900 rounded-2xl shadow-xl w-full max-w-sm p-5"
+            className="bg-ath-surface rounded-2xl shadow-xl w-full max-w-sm p-5"
           >
-            <h3 className="text-base font-bold text-slate-900 dark:text-white mb-1">
+            <h3 className="text-base font-bold text-ath-text-primary mb-1">
               Añadir RPE
             </h3>
-            <p className="text-sm text-slate-500 dark:text-slate-400 mb-4">
+            <p className="text-sm text-ath-text-muted mb-4">
               {rpeSession.title} — ¿Cómo te sentiste?
             </p>
             <div className="flex flex-wrap gap-2 justify-center mb-4">
@@ -864,7 +1283,7 @@ function ActivePlanView({
               ))}
             </div>
             {rpeValue && (
-              <p className="text-center text-sm text-slate-500 dark:text-slate-400 mb-3">
+              <p className="text-center text-sm text-ath-text-muted mb-3">
                 RPE seleccionado: <span className="font-bold text-orange-500">{rpeValue}/10</span>
               </p>
             )}
@@ -872,7 +1291,7 @@ function ActivePlanView({
               <button
                 type="button"
                 onClick={() => setRpeSession(null)}
-                className="flex-1 px-3 py-2 text-sm font-medium text-slate-600 dark:text-slate-400 border border-slate-200 dark:border-slate-700 rounded-xl hover:bg-slate-50 dark:hover:bg-slate-800 transition-colors"
+                className="flex-1 px-3 py-2 text-sm font-medium text-ath-text-secondary border border-ath-border rounded-xl hover:bg-ath-inset transition-colors"
               >
                 Cancelar
               </button>
@@ -905,22 +1324,22 @@ function ActivePlanView({
               animate={{ opacity: 1, scale: 1 }}
               exit={{ opacity: 0, scale: 0.95 }}
               onClick={(e) => e.stopPropagation()}
-              className="bg-white dark:bg-slate-900 rounded-2xl shadow-xl max-w-lg w-full max-h-[80vh] overflow-y-auto"
+              className="bg-ath-surface rounded-2xl shadow-xl max-w-lg w-full max-h-[80vh] overflow-y-auto"
             >
               <div className="p-6">
                 <div className="flex items-start justify-between mb-4">
                   <div>
-                    <h3 className="text-lg font-bold text-slate-900 dark:text-white">
+                    <h3 className="text-lg font-bold text-ath-text-primary">
                       {selectedSession.title || 'Entrenamiento'}
                     </h3>
-                    <p className="text-sm text-slate-500 dark:text-slate-400 mt-0.5">
+                    <p className="text-sm text-ath-text-muted mt-0.5">
                       {selectedSession.date ? new Date(selectedSession.date + 'T12:00:00').toLocaleDateString('es-ES', { weekday: 'long', day: 'numeric', month: 'long' }) : ''}
                     </p>
                   </div>
                   <button
                     type="button"
                     onClick={() => setSelectedSession(null)}
-                    className="p-1 text-slate-400 hover:text-slate-600 dark:hover:text-slate-300"
+                    className="p-1 text-ath-text-muted hover:text-ath-text-secondary"
                     aria-label="Cerrar"
                   >
                     <FiX className="w-5 h-5" />
@@ -939,32 +1358,32 @@ function ActivePlanView({
                 )}
 
                 {selectedSession.description && (
-                  <p className="text-sm text-slate-700 dark:text-slate-300 mb-4 whitespace-pre-line">
+                  <p className="text-sm text-ath-text-secondary mb-4 whitespace-pre-line">
                     {selectedSession.description}
                   </p>
                 )}
 
                 <div className="grid grid-cols-2 gap-3 mb-4">
                   {selectedSession.totalDistance && (
-                    <div className="bg-slate-50 dark:bg-slate-800 rounded-xl p-3">
-                      <p className="text-xs text-slate-500 dark:text-slate-400">Distancia</p>
-                      <p className="text-base font-bold text-slate-900 dark:text-white">{selectedSession.totalDistance}</p>
+                    <div className="bg-ath-inset rounded-xl p-3">
+                      <p className="text-xs text-ath-text-muted">Distancia</p>
+                      <p className="text-base font-bold text-ath-text-primary">{selectedSession.totalDistance}</p>
                     </div>
                   )}
                   {selectedSession.duration && (
-                    <div className="bg-slate-50 dark:bg-slate-800 rounded-xl p-3">
-                      <p className="text-xs text-slate-500 dark:text-slate-400">Duración</p>
-                      <p className="text-base font-bold text-slate-900 dark:text-white">{selectedSession.duration} min</p>
+                    <div className="bg-ath-inset rounded-xl p-3">
+                      <p className="text-xs text-ath-text-muted">Duración</p>
+                      <p className="text-base font-bold text-ath-text-primary">{selectedSession.duration} min</p>
                     </div>
                   )}
                 </div>
 
                 {selectedSession.exercises?.length > 0 && (
-                  <div className="border-t border-slate-200 dark:border-slate-700 pt-4">
-                    <h4 className="text-sm font-semibold text-slate-900 dark:text-white mb-2">Ejercicios</h4>
+                  <div className="border-t border-ath-border pt-4">
+                    <h4 className="text-sm font-semibold text-ath-text-primary mb-2">Ejercicios</h4>
                     <ul className="space-y-2">
                       {selectedSession.exercises.map((ex, i) => (
-                        <li key={i} className="text-sm text-slate-700 dark:text-slate-300 flex items-start gap-2">
+                        <li key={i} className="text-sm text-ath-text-secondary flex items-start gap-2">
                           <span className="w-1.5 h-1.5 rounded-full bg-green-500 mt-1.5 flex-shrink-0" />
                           <span>
                             {ex.name}
@@ -977,26 +1396,26 @@ function ActivePlanView({
                 )}
 
                 {selectedSession.notesCoach && (
-                  <div className="border-t border-slate-200 dark:border-slate-700 pt-4 mt-4">
-                    <h4 className="text-sm font-semibold text-slate-900 dark:text-white mb-1">Notas</h4>
-                    <p className="text-sm text-slate-600 dark:text-slate-400">{selectedSession.notesCoach}</p>
+                  <div className="border-t border-ath-border pt-4 mt-4">
+                    <h4 className="text-sm font-semibold text-ath-text-primary mb-1">Notas</h4>
+                    <p className="text-sm text-ath-text-secondary">{selectedSession.notesCoach}</p>
                   </div>
                 )}
 
                 {selectedSession.status === 'completed' && (
-                  <div className="border-t border-slate-200 dark:border-slate-700 pt-4 mt-4">
-                    <h4 className="text-sm font-semibold text-green-600 dark:text-green-400 mb-2">Resultado</h4>
+                  <div className="border-t border-ath-border pt-4 mt-4">
+                    <h4 className="text-sm font-semibold text-ath-accent-text mb-2">Resultado</h4>
                     <div className="grid grid-cols-2 gap-3">
                       {selectedSession.actualDistanceKm && (
-                        <div className="bg-green-50 dark:bg-green-900/20 rounded-xl p-3">
-                          <p className="text-xs text-green-600 dark:text-green-400">Distancia real</p>
-                          <p className="text-base font-bold text-green-700 dark:text-green-300">{selectedSession.actualDistanceKm} km</p>
+                        <div className="bg-ath-accent-surface rounded-xl p-3">
+                          <p className="text-xs text-ath-accent-text">Distancia real</p>
+                          <p className="text-base font-bold text-ath-accent-text">{selectedSession.actualDistanceKm} km</p>
                         </div>
                       )}
                       {selectedSession.rpe && (
-                        <div className="bg-green-50 dark:bg-green-900/20 rounded-xl p-3">
-                          <p className="text-xs text-green-600 dark:text-green-400">RPE</p>
-                          <p className="text-base font-bold text-green-700 dark:text-green-300">{selectedSession.rpe}/10</p>
+                        <div className="bg-ath-accent-surface rounded-xl p-3">
+                          <p className="text-xs text-ath-accent-text">RPE</p>
+                          <p className="text-base font-bold text-ath-accent-text">{selectedSession.rpe}/10</p>
                         </div>
                       )}
                     </div>
@@ -1007,6 +1426,19 @@ function ActivePlanView({
           </motion.div>
         )}
       </AnimatePresence>, document.body)}
+
+      {showVamModal && (
+        <VAMTestModal
+          isOpen={showVamModal}
+          onClose={() => setShowVamModal(false)}
+          athlete={{ id: profile?.id }}
+          coachId={null}
+          onSuccess={() => {
+            setShowVamModal(false);
+            refreshTestData();
+          }}
+        />
+      )}
     </div>
   );
 }
@@ -1049,7 +1481,7 @@ export default function MyPlan() {
   if (planLoading) {
     return (
       <div className="flex items-center justify-center min-h-[60vh]">
-        <FiLoader className="w-8 h-8 animate-spin text-green-500" />
+        <FiLoader className="w-8 h-8 animate-spin text-ath-accent" />
       </div>
     );
   }
@@ -1059,8 +1491,8 @@ export default function MyPlan() {
     return (
       <div className="px-4 lg:px-8 py-5 lg:py-8">
         <div className="mb-6">
-          <h1 className="text-2xl font-bold text-slate-900 dark:text-white">Mi Plan</h1>
-          <p className="text-slate-500 dark:text-slate-400 mt-1">
+          <h1 className="text-2xl font-bold text-ath-text-primary">Mi Plan</h1>
+          <p className="text-ath-text-muted mt-1">
             Completa tu perfil para generar tu plan personalizado con IA.
           </p>
         </div>
@@ -1078,8 +1510,8 @@ export default function MyPlan() {
       <div className="px-4 lg:px-8 py-5 lg:py-8 space-y-6">
         {/* Header */}
         <div>
-          <h1 className="text-2xl font-bold text-slate-900 dark:text-white">Mi Plan</h1>
-          <p className="text-slate-500 dark:text-slate-400 mt-1">
+          <h1 className="text-2xl font-bold text-ath-text-primary">Mi Plan</h1>
+          <p className="text-ath-text-muted mt-1">
             Genera tu plan de entrenamiento personalizado con IA
           </p>
         </div>
@@ -1091,9 +1523,9 @@ export default function MyPlan() {
               initial={{ opacity: 0, height: 0 }}
               animate={{ opacity: 1, height: 'auto' }}
               exit={{ opacity: 0, height: 0 }}
-              className="flex items-center gap-3 p-4 bg-green-50 dark:bg-green-900/20 border border-green-200 dark:border-green-800 rounded-xl"
+              className="flex items-center gap-3 p-4 bg-ath-accent-surface border border-ath-border-accent rounded-xl"
             >
-              <FiLoader className="w-5 h-5 animate-spin text-green-600 dark:text-green-400 flex-shrink-0" />
+              <FiLoader className="w-5 h-5 animate-spin text-ath-accent-text flex-shrink-0" />
               <div>
                 <p className="text-sm font-semibold text-green-800 dark:text-green-300">
                   Generando tu plan personalizado…
@@ -1126,7 +1558,7 @@ export default function MyPlan() {
 
   // ── Mode 2: Active plan — show Training.jsx-style UI ──
   return (
-    <div className="bg-gray-50 dark:bg-gray-900 min-h-screen">
+    <div className="bg-ath-base min-h-screen">
       <div className="px-4 lg:px-8 py-5 lg:py-8">
         <ActivePlanView
           profile={profile}

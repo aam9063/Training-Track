@@ -27,8 +27,8 @@ const MessageBubble = ({ message }) => {
       <div
         className={`max-w-[85%] rounded-2xl px-4 py-2.5 text-sm leading-relaxed whitespace-pre-wrap ${
           isUser
-            ? 'bg-green-600 text-white rounded-br-sm'
-            : 'bg-gray-100 dark:bg-slate-800 text-gray-800 dark:text-slate-200 rounded-bl-sm'
+            ? 'bg-ath-accent text-ath-on-accent rounded-br-sm'
+            : 'bg-ath-inset text-ath-text-primary rounded-bl-sm'
         }`}
       >
         {message.content}
@@ -41,10 +41,10 @@ const MessageBubble = ({ message }) => {
 
 const TypingIndicator = () => (
   <div className="flex justify-start">
-    <div className="bg-gray-100 dark:bg-slate-800 rounded-2xl rounded-bl-sm px-4 py-3 flex gap-1 items-center">
-      <span className="w-1.5 h-1.5 rounded-full bg-gray-400 dark:bg-slate-500 animate-bounce" style={{ animationDelay: '0ms' }} />
-      <span className="w-1.5 h-1.5 rounded-full bg-gray-400 dark:bg-slate-500 animate-bounce" style={{ animationDelay: '150ms' }} />
-      <span className="w-1.5 h-1.5 rounded-full bg-gray-400 dark:bg-slate-500 animate-bounce" style={{ animationDelay: '300ms' }} />
+    <div className="bg-ath-inset rounded-2xl rounded-bl-sm px-4 py-3 flex gap-1 items-center">
+      <span className="w-1.5 h-1.5 rounded-full bg-ath-text-muted animate-bounce" style={{ animationDelay: '0ms' }} />
+      <span className="w-1.5 h-1.5 rounded-full bg-ath-text-muted animate-bounce" style={{ animationDelay: '150ms' }} />
+      <span className="w-1.5 h-1.5 rounded-full bg-ath-text-muted animate-bounce" style={{ animationDelay: '300ms' }} />
     </div>
   </div>
 );
@@ -115,19 +115,19 @@ export default function AIAssistant() {
   const displayName = profile?.first_name || user?.user_metadata?.first_name || 'Atleta';
 
   return (
-    <div className="flex flex-col h-[calc(100vh-62px-72px)] lg:h-[calc(100vh-52px)] overflow-hidden bg-gray-50 dark:bg-gray-900">
+    <div className="flex flex-col h-[calc(100vh-62px-72px)] lg:h-[calc(100vh-52px)] overflow-hidden bg-ath-base">
 
       {/* ── Header ─────────────────────────────────────────────────────────── */}
-      <div className="flex items-center justify-between px-4 lg:px-8 py-4 bg-white dark:bg-gray-800 border-b border-gray-200 dark:border-gray-700 flex-shrink-0">
+      <div className="flex items-center justify-between px-4 lg:px-8 py-4 bg-ath-surface border-b border-ath-border flex-shrink-0">
         <div className="flex items-center gap-3">
-          <div className="w-9 h-9 rounded-xl bg-green-600 flex items-center justify-center flex-shrink-0">
+          <div className="w-9 h-9 rounded-xl bg-ath-accent flex items-center justify-center flex-shrink-0">
             <FiZap className="w-4 h-4 text-white" />
           </div>
           <div>
-            <p className="text-[10px] uppercase tracking-widest text-green-500 font-semibold leading-none">
+            <p className="text-[10px] uppercase tracking-widest text-ath-accent-text font-semibold leading-none">
               Hermes IA
             </p>
-            <p className="text-sm font-semibold text-slate-900 dark:text-white mt-0.5">
+            <p className="text-sm font-semibold text-ath-text-primary mt-0.5">
               Tu entrenador virtual
             </p>
           </div>
@@ -136,7 +136,7 @@ export default function AIAssistant() {
           <button
             onClick={handleClear}
             title="Limpiar conversación"
-            className="flex items-center gap-1.5 text-xs text-gray-400 dark:text-slate-500 hover:text-red-500 dark:hover:text-red-400 transition-colors px-2 py-1.5 rounded-lg hover:bg-red-50 dark:hover:bg-red-900/20"
+            className="flex items-center gap-1.5 text-xs text-ath-text-muted hover:text-red-500 dark:hover:text-red-400 transition-colors px-2 py-1.5 rounded-lg hover:bg-red-50 dark:hover:bg-red-900/20"
           >
             <FiTrash2 className="w-3.5 h-3.5" />
             Limpiar
@@ -148,7 +148,7 @@ export default function AIAssistant() {
       <div className="flex-1 overflow-y-auto px-4 lg:px-8 py-4 space-y-3">
         {loadingHistory ? (
           <div className="flex items-center justify-center h-full">
-            <FiLoader className="w-6 h-6 animate-spin text-gray-300 dark:text-slate-600" />
+            <FiLoader className="w-6 h-6 animate-spin text-ath-text-muted" />
           </div>
         ) : messages.length === 0 ? (
           <motion.div
@@ -158,7 +158,7 @@ export default function AIAssistant() {
           >
             {/* Welcome bubble */}
             <div className="flex justify-start">
-              <div className="max-w-[85%] bg-gray-100 dark:bg-slate-800 rounded-2xl rounded-bl-sm px-4 py-3 text-sm leading-relaxed text-gray-800 dark:text-slate-200">
+              <div className="max-w-[85%] bg-ath-inset rounded-2xl rounded-bl-sm px-4 py-3 text-sm leading-relaxed text-ath-text-primary">
                 ¡Hola, <span className="font-semibold">{displayName}</span>! Soy{' '}
                 <span className="font-semibold">Hermes</span>, tu asistente de entrenamiento personal.
                 Tengo acceso a tu historial de entrenamientos, métricas y competiciones para darte
@@ -168,13 +168,13 @@ export default function AIAssistant() {
 
             {/* Suggested prompts */}
             <div>
-              <p className="text-xs text-gray-400 dark:text-slate-500 mb-2 font-medium">Preguntas sugeridas:</p>
+              <p className="text-xs text-ath-text-muted mb-2 font-medium">Preguntas sugeridas:</p>
               <div className="flex flex-wrap gap-2">
                 {SUGGESTED_PROMPTS.map(q => (
                   <button
                     key={q}
                     onClick={() => handleSend(q)}
-                    className="text-xs px-3 py-1.5 rounded-full bg-white dark:bg-slate-800 border border-gray-200 dark:border-slate-700 text-gray-700 dark:text-slate-300 hover:bg-green-50 dark:hover:bg-green-900/20 hover:border-green-300 dark:hover:border-green-700 hover:text-green-700 dark:hover:text-green-400 transition-colors text-left"
+                    className="text-xs px-3 py-1.5 rounded-full bg-white dark:bg-ath-inset border border-ath-border text-ath-text-secondary hover:bg-green-50 dark:hover:bg-green-900/20 hover:border-green-300 dark:hover:border-green-700 hover:text-green-700 dark:hover:text-green-400 transition-colors text-left"
                   >
                     {q}
                   </button>
@@ -199,7 +199,7 @@ export default function AIAssistant() {
                   <button
                     key={q}
                     onClick={() => handleSend(q)}
-                    className="text-xs px-3 py-1.5 rounded-full bg-white dark:bg-slate-900 border border-gray-200 dark:border-slate-700 text-gray-500 dark:text-slate-400 hover:bg-green-50 dark:hover:bg-green-900/20 hover:border-green-300 dark:hover:border-green-700 hover:text-green-700 dark:hover:text-green-400 transition-colors"
+                    className="text-xs px-3 py-1.5 rounded-full bg-white dark:bg-ath-base border border-ath-border text-ath-text-muted hover:bg-green-50 dark:hover:bg-green-900/20 hover:border-green-300 dark:hover:border-green-700 hover:text-green-700 dark:hover:text-green-400 transition-colors"
                   >
                     {q}
                   </button>
@@ -213,8 +213,8 @@ export default function AIAssistant() {
       </div>
 
       {/* ── Input area ─────────────────────────────────────────────────────── */}
-      <div className="flex-shrink-0 px-4 lg:px-8 pb-4 pt-2 bg-white dark:bg-gray-800 border-t border-gray-100 dark:border-gray-700">
-        <div className="flex gap-2 bg-gray-100 dark:bg-slate-900 rounded-xl px-3 py-2">
+      <div className="flex-shrink-0 px-4 lg:px-8 pb-4 pt-2 bg-ath-surface border-t border-ath-border">
+        <div className="flex gap-2 bg-ath-inset rounded-xl px-3 py-2">
           <textarea
             ref={textareaRef}
             value={input}
@@ -222,13 +222,13 @@ export default function AIAssistant() {
             onKeyDown={handleKeyDown}
             placeholder="Pregunta a tu entrenador virtual..."
             rows={1}
-            className="flex-1 bg-transparent text-sm resize-none outline-none leading-relaxed text-gray-800 dark:text-slate-200 placeholder-gray-400 dark:placeholder-slate-500"
+            className="flex-1 bg-transparent text-sm resize-none outline-none leading-relaxed text-ath-text-primary placeholder-gray-400 dark:placeholder-slate-500"
             style={{ maxHeight: '80px' }}
           />
           <button
             onClick={() => handleSend()}
             disabled={!input.trim() || loading}
-            className="flex-shrink-0 w-8 h-8 rounded-lg bg-green-600 hover:bg-green-500 disabled:opacity-40 disabled:cursor-not-allowed flex items-center justify-center transition-colors self-end"
+            className="flex-shrink-0 w-8 h-8 rounded-lg bg-ath-accent hover:bg-ath-accent-hover disabled:opacity-40 disabled:cursor-not-allowed flex items-center justify-center transition-colors self-end"
           >
             {loading
               ? <FiLoader className="w-4 h-4 text-white animate-spin" />
@@ -236,7 +236,7 @@ export default function AIAssistant() {
             }
           </button>
         </div>
-        <p className="hidden lg:block text-[10px] mt-1.5 text-center text-gray-400 dark:text-slate-600">
+        <p className="hidden lg:block text-[10px] mt-1.5 text-center text-ath-text-muted">
           Enter para enviar · Shift+Enter para nueva línea
         </p>
       </div>

@@ -20,7 +20,7 @@ export const PHASE_OPTIONS = [
   { value: 'taper', label: 'Taper', color: '#10B981', bg: 'bg-green-100 dark:bg-green-900/30 text-green-700 dark:text-green-300' },
   { value: 'recovery', label: 'Recuperación', color: '#8B5CF6', bg: 'bg-purple-100 dark:bg-purple-900/30 text-purple-700 dark:text-purple-300' },
   { value: 'competition', label: 'Competición', color: '#EC4899', bg: 'bg-pink-100 dark:bg-pink-900/30 text-pink-700 dark:text-pink-300' },
-  { value: 'transition', label: 'Transición', color: '#6B7280', bg: 'bg-gray-100 dark:bg-gray-700 text-gray-700 dark:text-gray-300' },
+  { value: 'transition', label: 'Transición', color: '#6B7280', bg: 'bg-coach-elevated text-gray-700 dark:text-gray-300' },
 ];
 
 export const WEEK_TYPES = [
@@ -48,12 +48,35 @@ export default function PeriodizationManager({ planId: externalPlanId, athleteId
   });
 
   useEffect(() => {
-    if (externalPlanId) {
-      setResolvedPlanId(externalPlanId);
-      loadMesocycles(externalPlanId);
-    } else if (athleteId) {
-      loadMesocyclesByAthlete();
-    }
+    let cancelled = false;
+
+    const load = async () => {
+      if (externalPlanId) {
+        setResolvedPlanId(externalPlanId);
+        try {
+          const data = await getMesocycles(externalPlanId);
+          if (!cancelled) {
+            setMesocycles(data);
+            if (data.length > 0 && !expandedMeso) setExpandedMeso(data[0].id);
+          }
+        } catch { /* silenced */ } finally {
+          if (!cancelled) setLoading(false);
+        }
+      } else if (athleteId) {
+        try {
+          const data = await getMesocyclesByAthlete(athleteId);
+          if (!cancelled) {
+            setMesocycles(data);
+            if (data.length > 0 && !expandedMeso) setExpandedMeso(data[0].id);
+          }
+        } catch { /* silenced */ } finally {
+          if (!cancelled) setLoading(false);
+        }
+      }
+    };
+
+    load();
+    return () => { cancelled = true; };
   }, [externalPlanId, athleteId]);
 
   const loadMesocyclesByAthlete = async () => {
@@ -61,9 +84,7 @@ export default function PeriodizationManager({ planId: externalPlanId, athleteId
       const data = await getMesocyclesByAthlete(athleteId);
       setMesocycles(data);
       if (data.length > 0 && !expandedMeso) setExpandedMeso(data[0].id);
-    } catch (err) {
-      console.error('Error loading mesocycles by athlete:', err);
-    } finally {
+    } catch { /* silenced */ } finally {
       setLoading(false);
     }
   };
@@ -73,9 +94,7 @@ export default function PeriodizationManager({ planId: externalPlanId, athleteId
       const data = await getMesocycles(pId || resolvedPlanId);
       setMesocycles(data);
       if (data.length > 0 && !expandedMeso) setExpandedMeso(data[0].id);
-    } catch (err) {
-      console.error('Error loading mesocycles:', err);
-    } finally {
+    } catch { /* silenced */ } finally {
       setLoading(false);
     }
   };
@@ -129,7 +148,6 @@ export default function PeriodizationManager({ planId: externalPlanId, athleteId
       setNewMeso({ name: '', phase: 'base', start_date: '', end_date: '', weeks: 4, focus: '', target_weekly_km: '', target_weekly_tss: '' });
       reload();
     } catch (err) {
-      console.error('Error creating mesocycle:', err);
       showError('Error al crear mesociclo');
     }
   };
@@ -156,8 +174,8 @@ export default function PeriodizationManager({ planId: externalPlanId, athleteId
   if (loading) {
     return (
       <div className="animate-pulse space-y-4">
-        <div className="h-8 bg-gray-200 dark:bg-gray-700 rounded w-1/3" />
-        <div className="h-32 bg-gray-200 dark:bg-gray-700 rounded" />
+        <div className="h-8 bg-gray-200 dark:bg-coach-elevated rounded w-1/3" />
+        <div className="h-32 bg-gray-200 dark:bg-coach-elevated rounded" />
       </div>
     );
   }
@@ -209,7 +227,7 @@ export default function PeriodizationManager({ planId: externalPlanId, athleteId
             initial={{ opacity: 0, height: 0 }}
             animate={{ opacity: 1, height: 'auto' }}
             exit={{ opacity: 0, height: 0 }}
-            className="bg-white dark:bg-gray-800 rounded-xl border border-gray-200 dark:border-gray-700 p-4 space-y-3"
+            className="bg-coach-surface rounded-xl border border-gray-200 dark:border-coach-border p-4 space-y-3"
           >
             <h4 className="text-sm font-semibold text-gray-900 dark:text-white">Nuevo Mesociclo</h4>
             <div className="grid grid-cols-1 sm:grid-cols-2 gap-3">
@@ -219,7 +237,7 @@ export default function PeriodizationManager({ planId: externalPlanId, athleteId
                   value={newMeso.name}
                   onChange={(e) => setNewMeso({ ...newMeso, name: e.target.value })}
                   placeholder="Ej: Fase de Base 1"
-                  className="w-full px-3 py-2 text-sm border border-gray-300 dark:border-gray-600 rounded-lg bg-white dark:bg-gray-700 text-gray-900 dark:text-white"
+                  className="w-full px-3 py-2 text-sm border border-gray-300 dark:border-coach-border rounded-lg bg-white dark:bg-coach-elevated text-gray-900 dark:text-white"
                 />
               </div>
               <div>
@@ -227,7 +245,7 @@ export default function PeriodizationManager({ planId: externalPlanId, athleteId
                 <select
                   value={newMeso.phase}
                   onChange={(e) => setNewMeso({ ...newMeso, phase: e.target.value })}
-                  className="w-full px-3 py-2 text-sm border border-gray-300 dark:border-gray-600 rounded-lg bg-white dark:bg-gray-700 text-gray-900 dark:text-white"
+                  className="w-full px-3 py-2 text-sm border border-gray-300 dark:border-coach-border rounded-lg bg-white dark:bg-coach-elevated text-gray-900 dark:text-white"
                 >
                   {PHASE_OPTIONS.map(p => (
                     <option key={p.value} value={p.value}>{p.label}</option>
@@ -240,7 +258,7 @@ export default function PeriodizationManager({ planId: externalPlanId, athleteId
                   type="date"
                   value={newMeso.start_date}
                   onChange={(e) => setNewMeso({ ...newMeso, start_date: e.target.value })}
-                  className="w-full min-w-0 px-2 py-2 text-sm border border-gray-300 dark:border-gray-600 rounded-lg bg-white dark:bg-gray-700 text-gray-900 dark:text-white"
+                  className="w-full min-w-0 px-2 py-2 text-sm border border-gray-300 dark:border-coach-border rounded-lg bg-white dark:bg-coach-elevated text-gray-900 dark:text-white"
                 />
               </div>
               <div>
@@ -249,7 +267,7 @@ export default function PeriodizationManager({ planId: externalPlanId, athleteId
                   type="date"
                   value={newMeso.end_date}
                   onChange={(e) => setNewMeso({ ...newMeso, end_date: e.target.value })}
-                  className="w-full min-w-0 px-2 py-2 text-sm border border-gray-300 dark:border-gray-600 rounded-lg bg-white dark:bg-gray-700 text-gray-900 dark:text-white"
+                  className="w-full min-w-0 px-2 py-2 text-sm border border-gray-300 dark:border-coach-border rounded-lg bg-white dark:bg-coach-elevated text-gray-900 dark:text-white"
                 />
               </div>
               <div>
@@ -260,7 +278,7 @@ export default function PeriodizationManager({ planId: externalPlanId, athleteId
                   max={16}
                   value={newMeso.weeks}
                   onChange={(e) => setNewMeso({ ...newMeso, weeks: parseInt(e.target.value) || 4 })}
-                  className="w-full px-3 py-2 text-sm border border-gray-300 dark:border-gray-600 rounded-lg bg-white dark:bg-gray-700 text-gray-900 dark:text-white"
+                  className="w-full px-3 py-2 text-sm border border-gray-300 dark:border-coach-border rounded-lg bg-white dark:bg-coach-elevated text-gray-900 dark:text-white"
                 />
               </div>
               <div>
@@ -270,7 +288,7 @@ export default function PeriodizationManager({ planId: externalPlanId, athleteId
                   value={newMeso.target_weekly_km}
                   onChange={(e) => setNewMeso({ ...newMeso, target_weekly_km: e.target.value })}
                   placeholder="Ej: 60"
-                  className="w-full px-3 py-2 text-sm border border-gray-300 dark:border-gray-600 rounded-lg bg-white dark:bg-gray-700 text-gray-900 dark:text-white"
+                  className="w-full px-3 py-2 text-sm border border-gray-300 dark:border-coach-border rounded-lg bg-white dark:bg-coach-elevated text-gray-900 dark:text-white"
                 />
               </div>
             </div>
@@ -280,13 +298,13 @@ export default function PeriodizationManager({ planId: externalPlanId, athleteId
                 value={newMeso.focus}
                 onChange={(e) => setNewMeso({ ...newMeso, focus: e.target.value })}
                 placeholder="Ej: Desarrollo VO2max + progresión de umbral"
-                className="w-full px-3 py-2 text-sm border border-gray-300 dark:border-gray-600 rounded-lg bg-white dark:bg-gray-700 text-gray-900 dark:text-white"
+                className="w-full px-3 py-2 text-sm border border-gray-300 dark:border-coach-border rounded-lg bg-white dark:bg-coach-elevated text-gray-900 dark:text-white"
               />
             </div>
             <div className="flex gap-2 justify-end">
               <button
                 onClick={() => setShowAddForm(false)}
-                className="px-3 py-1.5 text-sm rounded-lg border border-gray-300 dark:border-gray-600 text-gray-700 dark:text-gray-300 hover:bg-gray-50 dark:hover:bg-gray-700"
+                className="px-3 py-1.5 text-sm rounded-lg border border-gray-300 dark:border-coach-border text-gray-700 dark:text-gray-300 hover:bg-gray-50 dark:hover:bg-gray-700"
               >
                 Cancelar
               </button>
@@ -319,7 +337,7 @@ export default function PeriodizationManager({ planId: externalPlanId, athleteId
           <motion.div
             key={meso.id}
             layout
-            className="bg-white dark:bg-gray-800 rounded-xl border border-gray-200 dark:border-gray-700 overflow-hidden"
+            className="bg-coach-surface rounded-xl border border-gray-200 dark:border-coach-border overflow-hidden"
           >
             {/* Mesocycle Header */}
             <div
@@ -363,7 +381,7 @@ export default function PeriodizationManager({ planId: externalPlanId, athleteId
                   initial={{ height: 0 }}
                   animate={{ height: 'auto' }}
                   exit={{ height: 0 }}
-                  className="overflow-hidden border-t border-gray-100 dark:border-gray-700"
+                  className="overflow-hidden border-t border-gray-100 dark:border-coach-border"
                 >
                   <div className="p-4 space-y-2">
                     {/* Desktop table header */}
@@ -395,7 +413,7 @@ export default function PeriodizationManager({ planId: externalPlanId, athleteId
                                 <select
                                   value={micro.week_type}
                                   onChange={(e) => handleUpdateMicrocycle(micro.id, { week_type: e.target.value })}
-                                  className="text-xs px-1.5 py-0.5 rounded border border-gray-200 dark:border-gray-600 bg-white dark:bg-gray-700 text-gray-700 dark:text-gray-300"
+                                  className="text-xs px-1.5 py-0.5 rounded border border-gray-200 dark:border-coach-border bg-white dark:bg-coach-elevated text-gray-700 dark:text-gray-300"
                                 >
                                   {WEEK_TYPES.map(t => (
                                     <option key={t.value} value={t.value}>{t.label}</option>
@@ -424,7 +442,7 @@ export default function PeriodizationManager({ planId: externalPlanId, athleteId
                             </div>
 
                             {/* Mobile card */}
-                            <div className="sm:hidden flex items-center justify-between px-3 py-3 rounded-lg hover:bg-gray-50 dark:hover:bg-gray-750 transition-colors border-b border-gray-100 dark:border-gray-700 last:border-b-0">
+                            <div className="sm:hidden flex items-center justify-between px-3 py-3 rounded-lg hover:bg-gray-50 dark:hover:bg-gray-750 transition-colors border-b border-gray-100 dark:border-coach-border last:border-b-0">
                               <div className="flex items-center gap-3">
                                 <span className="text-sm font-bold text-gray-900 dark:text-white w-8">
                                   S{micro.week_number}
@@ -436,7 +454,7 @@ export default function PeriodizationManager({ planId: externalPlanId, athleteId
                                   <select
                                     value={micro.week_type}
                                     onChange={(e) => handleUpdateMicrocycle(micro.id, { week_type: e.target.value })}
-                                    className="text-xs mt-0.5 px-1.5 py-0.5 rounded border border-gray-200 dark:border-gray-600 bg-white dark:bg-gray-700 text-gray-700 dark:text-gray-300"
+                                    className="text-xs mt-0.5 px-1.5 py-0.5 rounded border border-gray-200 dark:border-coach-border bg-white dark:bg-coach-elevated text-gray-700 dark:text-gray-300"
                                   >
                                     {WEEK_TYPES.map(t => (
                                       <option key={t.value} value={t.value}>{t.label}</option>

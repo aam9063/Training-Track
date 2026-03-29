@@ -59,7 +59,7 @@ const Athletes = () => {
       <div className="flex items-center justify-center min-h-screen">
         <div className="text-center">
           <div className="animate-spin rounded-full h-12 w-12 border-b-2 border-blue-600 mx-auto"></div>
-          <p className="mt-4 text-gray-600 dark:text-gray-400">Cargando atletas...</p>
+          <p className="mt-4 text-coach-text-secondary">Cargando atletas...</p>
         </div>
       </div>
     );
@@ -71,10 +71,10 @@ const Athletes = () => {
       <div className="mb-8">
         <div className="flex flex-col sm:flex-row sm:items-center sm:justify-between mb-4 gap-3">
           <div>
-            <h1 className="text-3xl font-bold text-gray-900 dark:text-white mb-2">
+            <h1 className="text-3xl font-bold text-coach-text-primary mb-2">
               Mis Atletas
             </h1>
-            <p className="text-gray-600 dark:text-gray-400">
+            <p className="text-coach-text-secondary">
               Gestiona tus atletas y su rendimiento
             </p>
           </div>
@@ -96,27 +96,27 @@ const Athletes = () => {
         </div>
 
         {/* Filters */}
-        <div className="bg-white dark:bg-gray-800 rounded-lg shadow-sm border border-gray-200 dark:border-gray-700 p-4">
+        <div className="bg-coach-surface rounded-lg shadow-sm border border-coach-border p-4">
           <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
             {/* Search */}
             <div className="relative">
-              <FiSearch className="absolute left-3 top-1/2 transform -translate-y-1/2 text-gray-400 w-5 h-5" />
+              <FiSearch className="absolute left-3 top-1/2 transform -translate-y-1/2 text-coach-text-muted w-5 h-5" />
               <input
                 type="text"
                 placeholder="Buscar por nombre o email..."
                 value={searchTerm}
                 onChange={(e) => setSearchTerm(e.target.value)}
-                className="w-full pl-10 pr-4 py-2 border border-gray-300 dark:border-gray-600 rounded-lg bg-white dark:bg-gray-700 text-gray-900 dark:text-white focus:ring-2 focus:ring-blue-500 focus:border-transparent"
+                className="w-full pl-10 pr-4 py-2 border border-coach-border rounded-lg bg-coach-surface text-coach-text-primary focus:ring-2 focus:ring-blue-500 focus:border-transparent"
               />
             </div>
 
             {/* Specialty Filter */}
             <div className="relative">
-              <FiFilter className="absolute left-3 top-1/2 transform -translate-y-1/2 text-gray-400 w-5 h-5" />
+              <FiFilter className="absolute left-3 top-1/2 transform -translate-y-1/2 text-coach-text-muted w-5 h-5" />
               <select
                 value={selectedSpecialty}
                 onChange={(e) => setSelectedSpecialty(e.target.value)}
-                className="w-full pl-10 pr-4 py-2 border border-gray-300 dark:border-gray-600 rounded-lg bg-white dark:bg-gray-700 text-gray-900 dark:text-white focus:ring-2 focus:ring-blue-500 focus:border-transparent appearance-none cursor-pointer"
+                className="w-full pl-10 pr-4 py-2 border border-coach-border rounded-lg bg-coach-surface text-coach-text-primary focus:ring-2 focus:ring-blue-500 focus:border-transparent appearance-none cursor-pointer"
               >
                 <option value="all">Todas las distancias</option>
                 {raceDistances.filter(d => d !== 'all').map((distance) => (
@@ -168,10 +168,10 @@ const Athletes = () => {
                     className="w-12 h-12 rounded-full"
                   />
                   <div>
-                    <p className="font-medium text-gray-900 dark:text-white">
+                    <p className="font-medium text-coach-text-primary">
                       {request.firstName} {request.lastName}
                     </p>
-                    <p className="text-sm text-gray-500 dark:text-gray-400">
+                    <p className="text-sm text-coach-text-muted">
                       {request.email}
                     </p>
                   </div>
@@ -201,14 +201,14 @@ const Athletes = () => {
       )}
 
       {/* Athletes List */}
-      <div className="bg-white dark:bg-gray-800 rounded-xl shadow-sm border border-gray-200 dark:border-gray-700">
+      <div className="bg-coach-surface rounded-xl shadow-sm border border-coach-border">
         {filteredAthletes.length === 0 ? (
           <div className="text-center py-16">
-            <FiUser className="w-16 h-16 text-gray-300 dark:text-gray-600 mx-auto mb-4" />
-            <h3 className="text-lg font-medium text-gray-900 dark:text-white mb-2">
+            <FiUser className="w-16 h-16 text-coach-text-muted mx-auto mb-4" />
+            <h3 className="text-lg font-medium text-coach-text-primary mb-2">
               No se encontraron atletas
             </h3>
-            <p className="text-gray-500 dark:text-gray-400">
+            <p className="text-coach-text-muted">
               {searchTerm || selectedSpecialty !== 'all'
                 ? 'Intenta cambiar los filtros de búsqueda'
                 : 'Los atletas aparecerán aquí cuando se registren con tu email'}
@@ -217,7 +217,7 @@ const Athletes = () => {
         ) : (
           <>
             {/* Mobile accordion list */}
-            <div className="md:hidden divide-y divide-gray-100 dark:divide-gray-700">
+            <div className="md:hidden divide-y divide-coach-border">
               {filteredAthletes.map((athlete, index) => {
                 const isExpanded = expandedAthleteId === athlete.id;
                 return (
@@ -244,17 +244,17 @@ const Athletes = () => {
                         className="w-11 h-11 rounded-full object-cover flex-shrink-0"
                       />
                       <div className="flex-1 min-w-0">
-                        <p className="text-sm font-semibold text-gray-900 dark:text-white truncate">
+                        <p className="text-sm font-semibold text-coach-text-primary truncate">
                           {athlete.firstName} {athlete.lastName}
                         </p>
-                        <p className="text-xs text-gray-500 dark:text-gray-400 truncate">
+                        <p className="text-xs text-coach-text-muted truncate">
                           {athlete.email}
                         </p>
                       </div>
                       <motion.div
                         animate={{ rotate: isExpanded ? 180 : 0 }}
                         transition={{ duration: 0.2 }}
-                        className="text-gray-400 flex-shrink-0"
+                        className="text-coach-text-muted flex-shrink-0"
                       >
                         <svg className="w-4 h-4" fill="none" viewBox="0 0 24 24" stroke="currentColor">
                           <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M19 9l-7 7-7-7" />
@@ -272,7 +272,7 @@ const Athletes = () => {
                           transition={{ duration: 0.2 }}
                           className="overflow-hidden"
                         >
-                          <div className="px-4 pb-4 pt-1 bg-gray-50 dark:bg-gray-700/40">
+                          <div className="px-4 pb-4 pt-1 bg-coach-inset/40">
                             {/* Distances */}
                             {athlete.raceDistances?.length > 0 && (
                               <div className="flex flex-wrap gap-1 mb-3">
@@ -291,21 +291,21 @@ const Athletes = () => {
                             <div className="grid grid-cols-2 gap-2">
                               <Link
                                 to={`/dashboard/athletes/${athlete.id}`}
-                                className="flex items-center gap-2.5 px-3 py-2.5 bg-white dark:bg-gray-700 rounded-xl border border-gray-200 dark:border-gray-600 text-sm font-medium text-gray-700 dark:text-gray-300 hover:bg-blue-50 dark:hover:bg-blue-900/20 hover:text-blue-600 dark:hover:text-blue-400 hover:border-blue-200 dark:hover:border-blue-700 transition-colors"
+                                className="flex items-center gap-2.5 px-3 py-2.5 bg-coach-surface rounded-xl border border-coach-border text-sm font-medium text-coach-text-secondary hover:bg-blue-50 dark:hover:bg-blue-900/20 hover:text-blue-600 dark:hover:text-blue-400 hover:border-blue-200 dark:hover:border-blue-700 transition-colors"
                               >
                                 <FiUser className="w-4 h-4 text-blue-500" />
                                 Perfil
                               </Link>
                               <Link
                                 to="/dashboard/planning"
-                                className="flex items-center gap-2.5 px-3 py-2.5 bg-white dark:bg-gray-700 rounded-xl border border-gray-200 dark:border-gray-600 text-sm font-medium text-gray-700 dark:text-gray-300 hover:bg-orange-50 dark:hover:bg-orange-900/20 hover:text-orange-600 dark:hover:text-orange-400 hover:border-orange-200 dark:hover:border-orange-700 transition-colors"
+                                className="flex items-center gap-2.5 px-3 py-2.5 bg-coach-surface rounded-xl border border-coach-border text-sm font-medium text-coach-text-secondary hover:bg-orange-50 dark:hover:bg-orange-900/20 hover:text-orange-600 dark:hover:text-orange-400 hover:border-orange-200 dark:hover:border-orange-700 transition-colors"
                               >
                                 <FiCalendar className="w-4 h-4 text-orange-500" />
                                 Planificación
                               </Link>
                               <Link
                                 to={`/dashboard/athletes/${athlete.id}/metrics`}
-                                className="flex items-center gap-2.5 px-3 py-2.5 bg-white dark:bg-gray-700 rounded-xl border border-gray-200 dark:border-gray-600 text-sm font-medium text-gray-700 dark:text-gray-300 hover:bg-purple-50 dark:hover:bg-purple-900/20 hover:text-purple-600 dark:hover:text-purple-400 hover:border-purple-200 dark:hover:border-purple-700 transition-colors"
+                                className="flex items-center gap-2.5 px-3 py-2.5 bg-coach-surface rounded-xl border border-coach-border text-sm font-medium text-coach-text-secondary hover:bg-purple-50 dark:hover:bg-purple-900/20 hover:text-purple-600 dark:hover:text-purple-400 hover:border-purple-200 dark:hover:border-purple-700 transition-colors"
                               >
                                 <FiBarChart2 className="w-4 h-4 text-purple-500" />
                                 Métricas
@@ -316,7 +316,7 @@ const Athletes = () => {
                                   setExpandedAthleteId(null);
                                   setConconiModal({ show: true, athlete });
                                 }}
-                                className="flex items-center gap-2.5 px-3 py-2.5 bg-white dark:bg-gray-700 rounded-xl border border-gray-200 dark:border-gray-600 text-sm font-medium text-gray-700 dark:text-gray-300 hover:bg-amber-50 dark:hover:bg-amber-900/20 hover:text-amber-600 dark:hover:text-amber-400 hover:border-amber-200 dark:hover:border-amber-700 transition-colors text-left"
+                                className="flex items-center gap-2.5 px-3 py-2.5 bg-coach-surface rounded-xl border border-coach-border text-sm font-medium text-coach-text-secondary hover:bg-amber-50 dark:hover:bg-amber-900/20 hover:text-amber-600 dark:hover:text-amber-400 hover:border-amber-200 dark:hover:border-amber-700 transition-colors text-left"
                               >
                                 <FiFileText className="w-4 h-4 text-amber-500" />
                                 Test Conconi
@@ -327,7 +327,7 @@ const Athletes = () => {
                                   setExpandedAthleteId(null);
                                   setVamModal({ show: true, athlete });
                                 }}
-                                className="flex items-center gap-2.5 px-3 py-2.5 bg-white dark:bg-gray-700 rounded-xl border border-gray-200 dark:border-gray-600 text-sm font-medium text-gray-700 dark:text-gray-300 hover:bg-amber-50 dark:hover:bg-amber-900/20 hover:text-amber-600 dark:hover:text-amber-400 hover:border-amber-200 dark:hover:border-amber-700 transition-colors text-left"
+                                className="flex items-center gap-2.5 px-3 py-2.5 bg-coach-surface rounded-xl border border-coach-border text-sm font-medium text-coach-text-secondary hover:bg-amber-50 dark:hover:bg-amber-900/20 hover:text-amber-600 dark:hover:text-amber-400 hover:border-amber-200 dark:hover:border-amber-700 transition-colors text-left"
                               >
                                 <FiFileText className="w-4 h-4 text-amber-500" />
                                 Test VAM
@@ -338,7 +338,7 @@ const Athletes = () => {
                                   setExpandedAthleteId(null);
                                   setDeleteModal({ show: true, athlete });
                                 }}
-                                className="flex items-center gap-2.5 px-3 py-2.5 bg-white dark:bg-gray-700 rounded-xl border border-red-100 dark:border-red-900/30 text-sm font-medium text-red-600 dark:text-red-400 hover:bg-red-50 dark:hover:bg-red-900/20 transition-colors text-left"
+                                className="flex items-center gap-2.5 px-3 py-2.5 bg-coach-surface rounded-xl border border-red-100 dark:border-red-900/30 text-sm font-medium text-red-600 dark:text-red-400 hover:bg-red-50 dark:hover:bg-red-900/20 transition-colors text-left"
                               >
                                 <FiTrash2 className="w-4 h-4" />
                                 Eliminar
@@ -356,30 +356,30 @@ const Athletes = () => {
             {/* Desktop table */}
             <div className="hidden md:block overflow-x-auto overflow-y-visible">
               <table className="w-full">
-                <thead className="bg-gray-50 dark:bg-gray-700 border-b border-gray-200 dark:border-gray-600">
+                <thead className="bg-coach-inset border-b border-coach-border">
                   <tr>
-                    <th className="px-6 py-3 text-left text-xs font-medium text-gray-500 dark:text-gray-400 uppercase tracking-wider">
+                    <th className="px-6 py-3 text-left text-xs font-medium text-coach-text-muted uppercase tracking-wider">
                       Atleta
                     </th>
-                    <th className="px-6 py-3 text-left text-xs font-medium text-gray-500 dark:text-gray-400 uppercase tracking-wider">
+                    <th className="px-6 py-3 text-left text-xs font-medium text-coach-text-muted uppercase tracking-wider">
                       Email
                     </th>
-                    <th className="px-6 py-3 text-left text-xs font-medium text-gray-500 dark:text-gray-400 uppercase tracking-wider">
+                    <th className="px-6 py-3 text-left text-xs font-medium text-coach-text-muted uppercase tracking-wider">
                       Distancias
                     </th>
-                    <th className="px-6 py-3 text-right text-xs font-medium text-gray-500 dark:text-gray-400 uppercase tracking-wider">
+                    <th className="px-6 py-3 text-right text-xs font-medium text-coach-text-muted uppercase tracking-wider">
                       Acciones
                     </th>
                   </tr>
                 </thead>
-                <tbody className="divide-y divide-gray-200 dark:divide-gray-700">
+                <tbody className="divide-y divide-coach-border">
                   {filteredAthletes.map((athlete, index) => (
                     <motion.tr
                       key={athlete.id}
                       initial={{ opacity: 0, y: 20 }}
                       animate={{ opacity: 1, y: 0 }}
                       transition={{ delay: index * 0.05 }}
-                      className="hover:bg-gray-50 dark:hover:bg-gray-700/50 transition-colors"
+                      className="hover:bg-coach-inset transition-colors"
                     >
                       <td className="px-6 py-4 whitespace-nowrap">
                         <div className="flex items-center">
@@ -396,18 +396,18 @@ const Athletes = () => {
                           <div>
                             <Link
                               to={`/dashboard/athletes/${athlete.id}`}
-                              className="text-sm font-medium text-gray-900 dark:text-white hover:text-blue-600 dark:hover:text-blue-400 transition-colors"
+                              className="text-sm font-medium text-coach-text-primary hover:text-blue-600 dark:hover:text-blue-400 transition-colors"
                             >
                               {athlete.firstName} {athlete.lastName}
                             </Link>
-                            <div className="text-sm text-gray-500 dark:text-gray-400">
+                            <div className="text-sm text-coach-text-muted">
                               {athlete.gender || 'N/A'}
                             </div>
                           </div>
                         </div>
                       </td>
                       <td className="px-6 py-4 whitespace-nowrap">
-                        <div className="text-sm text-gray-900 dark:text-white">
+                        <div className="text-sm text-coach-text-primary">
                           {athlete.email}
                         </div>
                       </td>
@@ -423,7 +423,7 @@ const Athletes = () => {
                               </span>
                             ))
                           ) : (
-                            <span className="text-sm text-gray-500 dark:text-gray-400">
+                            <span className="text-sm text-coach-text-muted">
                               Sin distancias
                             </span>
                           )}
@@ -475,7 +475,7 @@ const Athletes = () => {
         <>
           <div className="fixed inset-0 z-40" onClick={() => setTestMenuAthleteId(null)} />
           <div
-            className="fixed z-50 bg-white dark:bg-gray-800 rounded-xl shadow-lg border border-gray-200 dark:border-gray-700 overflow-hidden min-w-[170px]"
+            className="fixed z-50 bg-coach-surface rounded-xl shadow-lg border border-coach-border overflow-hidden min-w-[170px]"
             style={{ top: testMenuPos.top, left: testMenuPos.left, transform: 'translate(-100%, -100%)' }}
           >
             <button
@@ -484,7 +484,7 @@ const Athletes = () => {
                 setTestMenuAthleteId(null);
                 if (athlete) setConconiModal({ show: true, athlete });
               }}
-              className="w-full px-4 py-2.5 text-left text-sm text-gray-700 dark:text-gray-300 hover:bg-amber-50 dark:hover:bg-amber-900/20 flex items-center gap-2 transition-colors"
+              className="w-full px-4 py-2.5 text-left text-sm text-coach-text-secondary hover:bg-amber-50 dark:hover:bg-amber-900/20 flex items-center gap-2 transition-colors"
             >
               <span className="w-2 h-2 rounded-full bg-amber-500" />
               Test de Conconi
@@ -495,7 +495,7 @@ const Athletes = () => {
                 setTestMenuAthleteId(null);
                 if (athlete) setVamModal({ show: true, athlete });
               }}
-              className="w-full px-4 py-2.5 text-left text-sm text-gray-700 dark:text-gray-300 hover:bg-purple-50 dark:hover:bg-purple-900/20 flex items-center gap-2 transition-colors"
+              className="w-full px-4 py-2.5 text-left text-sm text-coach-text-secondary hover:bg-purple-50 dark:hover:bg-purple-900/20 flex items-center gap-2 transition-colors"
             >
               <span className="w-2 h-2 rounded-full bg-purple-500" />
               Test VAM
@@ -512,12 +512,12 @@ const Athletes = () => {
               initial={{ opacity: 0, scale: 0.95 }}
               animate={{ opacity: 1, scale: 1 }}
               exit={{ opacity: 0, scale: 0.95 }}
-              className="bg-white dark:bg-gray-800 rounded-xl shadow-xl max-w-md w-full p-6"
+              className="bg-coach-surface rounded-xl shadow-xl max-w-md w-full p-6"
             >
-              <h3 className="text-lg font-bold text-gray-900 dark:text-white mb-2">
+              <h3 className="text-lg font-bold text-coach-text-primary mb-2">
                 Eliminar Atleta
               </h3>
-              <p className="text-gray-600 dark:text-gray-400 mb-6">
+              <p className="text-coach-text-secondary mb-6">
                 ¿Estás seguro de que quieres eliminar a{' '}
                 <strong>
                   {deleteModal.athlete?.firstName} {deleteModal.athlete?.lastName}
@@ -527,7 +527,7 @@ const Athletes = () => {
               <div className="flex justify-end space-x-3">
                 <button
                   onClick={() => setDeleteModal({ show: false, athlete: null })}
-                  className="px-4 py-2 text-gray-700 dark:text-gray-300 hover:bg-gray-100 dark:hover:bg-gray-700 rounded-lg transition-colors"
+                  className="px-4 py-2 text-coach-text-secondary hover:bg-coach-inset rounded-lg transition-colors"
                 >
                   Cancelar
                 </button>
@@ -551,7 +551,6 @@ const Athletes = () => {
         athlete={conconiModal.athlete}
         coachId={profile?.coach_id || profile?.id}
         onSuccess={() => {
-          console.log('Test de Conconi guardado exitosamente');
         }}
       />
 
@@ -562,7 +561,6 @@ const Athletes = () => {
         athlete={vamModal.athlete}
         coachId={profile?.coach_id || profile?.id}
         onSuccess={() => {
-          console.log('Test VAM guardado exitosamente');
         }}
       />
     </div>

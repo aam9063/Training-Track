@@ -13,10 +13,10 @@ const AthleteDashboardLayout = () => {
 
   if (loading && !user) {
     return (
-      <div className="min-h-screen flex items-center justify-center bg-gray-50 dark:bg-gray-900">
+      <div className="min-h-screen flex items-center justify-center bg-ath-base">
         <div className="text-center">
-          <div className="animate-spin rounded-full h-12 w-12 border-b-2 border-green-600 mx-auto"></div>
-          <p className="mt-4 text-gray-600 dark:text-gray-400">Cargando...</p>
+          <div className="animate-spin rounded-full h-12 w-12 border-b-2 border-ath-border-accent mx-auto"></div>
+          <p className="mt-4 text-ath-text-secondary">Cargando...</p>
         </div>
       </div>
     );
@@ -32,7 +32,7 @@ const AthleteDashboardLayout = () => {
   }
 
   return (
-    <div className="min-h-screen bg-gray-50 dark:bg-gray-900">
+    <div className="min-h-screen bg-ath-base">
       <AthleteSidebar onCollapse={setSidebarCollapsed} />
       <AthleteBottomNav />
       <AthleteMobileHeader />
@@ -41,7 +41,7 @@ const AthleteDashboardLayout = () => {
       <div
         className={`
           hidden lg:flex items-center justify-end px-8
-          bg-white dark:bg-gray-800 border-b border-gray-200 dark:border-gray-700
+          bg-ath-surface border-b border-ath-border
           h-[52px] fixed top-0 right-0 z-20
           transition-all duration-300
           ${sidebarCollapsed ? 'lg:left-20' : 'lg:left-64'}

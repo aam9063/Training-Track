@@ -390,7 +390,7 @@ const Metrics = () => {
             Panel del Equipo
           </h1>
         </div>
-        <div className="bg-white dark:bg-gray-800 rounded-2xl p-8 sm:p-12 text-center shadow-sm border border-gray-200 dark:border-gray-700">
+        <div className="bg-coach-surface rounded-2xl p-8 sm:p-12 text-center shadow-sm border border-gray-200 dark:border-coach-border">
           <div className="w-20 h-20 bg-blue-100 dark:bg-blue-900/30 rounded-full flex items-center justify-center mx-auto mb-6">
             <FiUsers className="w-10 h-10 text-blue-500" />
           </div>
@@ -419,7 +419,7 @@ const Metrics = () => {
 
       {/* Tabs + selector de rango en la misma fila */}
       <div className="flex items-center justify-between gap-3 mb-6">
-        <div className="flex gap-1 p-1 bg-gray-100 dark:bg-gray-800 rounded-xl">
+        <div className="flex gap-1 p-1 bg-gray-100 dark:bg-coach-surface rounded-xl">
           {TABS.map(tab => {
             const Icon = tab.icon;
             return (
@@ -428,7 +428,7 @@ const Metrics = () => {
                 onClick={() => setActiveTab(tab.id)}
                 className={`flex items-center justify-center gap-2 px-4 py-2 rounded-lg text-sm font-medium transition-all ${
                   activeTab === tab.id
-                    ? 'bg-white dark:bg-gray-700 text-gray-900 dark:text-white shadow-sm'
+                    ? 'bg-white dark:bg-coach-elevated text-gray-900 dark:text-white shadow-sm'
                     : 'text-gray-500 dark:text-gray-400 hover:text-gray-700 dark:hover:text-gray-200'
                 }`}
               >
@@ -443,7 +443,7 @@ const Metrics = () => {
           <select
             value={dateRange}
             onChange={(e) => setDateRange(e.target.value)}
-            className="px-3 py-2 border border-gray-300 dark:border-gray-600 rounded-lg bg-white dark:bg-gray-700 text-gray-900 dark:text-white text-sm focus:ring-2 focus:ring-blue-500 focus:border-transparent"
+            className="px-3 py-2 border border-gray-300 dark:border-coach-border rounded-lg bg-white dark:bg-coach-elevated text-gray-900 dark:text-white text-sm focus:ring-2 focus:ring-blue-500 focus:border-transparent"
           >
             <option value="7">7 días</option>
             <option value="30">30 días</option>
@@ -459,7 +459,7 @@ const Metrics = () => {
           initial={{ opacity: 0, y: 12 }}
           animate={{ opacity: 1, y: 0 }}
           transition={{ duration: 0.25 }}
-          className="bg-white dark:bg-gray-800 rounded-xl shadow-sm border border-gray-200 dark:border-gray-700 p-4 sm:p-6"
+          className="bg-coach-surface rounded-xl shadow-sm border border-gray-200 dark:border-coach-border p-4 sm:p-6"
         >
           <h3 className="text-base sm:text-lg font-bold text-gray-900 dark:text-white mb-4 flex items-center gap-2">
             <FiHeart className="w-5 h-5 text-rose-500 flex-shrink-0" />
@@ -544,7 +544,7 @@ const Metrics = () => {
           initial={{ opacity: 0, y: 20 }}
           animate={{ opacity: 1, y: 0 }}
           transition={{ delay: 0.2 }}
-          className="bg-white dark:bg-gray-800 rounded-xl shadow-sm border border-gray-200 dark:border-gray-700 p-4 sm:p-6 mb-6 sm:mb-8"
+          className="bg-coach-surface rounded-xl shadow-sm border border-gray-200 dark:border-coach-border p-4 sm:p-6 mb-6 sm:mb-8"
         >
           <h3 className="text-base sm:text-lg font-bold text-gray-900 dark:text-white mb-4 flex items-center">
             <FiAlertTriangle className="w-5 h-5 mr-2 text-amber-500 flex-shrink-0" />
@@ -559,7 +559,7 @@ const Metrics = () => {
                   alert.type === 'warning' ? 'bg-amber-50 dark:bg-amber-900/20 border border-amber-200 dark:border-amber-800' :
                   alert.type === 'overload' ? 'bg-red-50 dark:bg-red-900/20 border border-red-200 dark:border-red-800' :
                   alert.type === 'volume_drop' ? 'bg-orange-50 dark:bg-orange-900/20 border border-orange-200 dark:border-orange-800' :
-                  'bg-gray-50 dark:bg-gray-700/50 border border-gray-200 dark:border-gray-600'
+                  'bg-coach-inset/50 border border-gray-200 dark:border-coach-border'
                 }`}
               >
                 <div className={`mt-0.5 flex-shrink-0 ${
@@ -587,7 +587,7 @@ const Metrics = () => {
           initial={{ opacity: 0, y: 20 }}
           animate={{ opacity: 1, y: 0 }}
           transition={{ delay: 0.25 }}
-          className="bg-white dark:bg-gray-800 rounded-xl shadow-sm border border-gray-200 dark:border-gray-700 p-4 sm:p-6"
+          className="bg-coach-surface rounded-xl shadow-sm border border-gray-200 dark:border-coach-border p-4 sm:p-6"
         >
           <h3 className="text-base sm:text-lg font-bold text-gray-900 dark:text-white mb-4 flex items-center">
             <FiTrendingUp className="w-5 h-5 mr-2 text-orange-500 flex-shrink-0" />
@@ -613,7 +613,7 @@ const Metrics = () => {
           initial={{ opacity: 0, y: 20 }}
           animate={{ opacity: 1, y: 0 }}
           transition={{ delay: 0.3 }}
-          className="bg-white dark:bg-gray-800 rounded-xl shadow-sm border border-gray-200 dark:border-gray-700 p-4 sm:p-6"
+          className="bg-coach-surface rounded-xl shadow-sm border border-gray-200 dark:border-coach-border p-4 sm:p-6"
         >
           <h3 className="text-base sm:text-lg font-bold text-gray-900 dark:text-white mb-4 flex items-center">
             <FiCheckCircle className="w-5 h-5 mr-2 text-green-500 flex-shrink-0" />
@@ -627,7 +627,7 @@ const Metrics = () => {
                   {a.name}
                 </span>
                 <div className="flex-1 min-w-0">
-                  <div className="w-full bg-gray-200 dark:bg-gray-700 rounded-full h-5 relative overflow-hidden">
+                  <div className="w-full bg-gray-200 dark:bg-coach-elevated rounded-full h-5 relative overflow-hidden">
                     {a.rate != null ? (
                       <div
                         className={`h-full rounded-full transition-all duration-500 ${
@@ -664,7 +664,7 @@ const Metrics = () => {
           initial={{ opacity: 0, y: 20 }}
           animate={{ opacity: 1, y: 0 }}
           transition={{ delay: 0.35 }}
-          className="bg-white dark:bg-gray-800 rounded-xl shadow-sm border border-gray-200 dark:border-gray-700 p-4 sm:p-6"
+          className="bg-coach-surface rounded-xl shadow-sm border border-gray-200 dark:border-coach-border p-4 sm:p-6"
         >
           <div className="flex items-center justify-between mb-4">
             <h3 className="text-base sm:text-lg font-bold text-gray-900 dark:text-white flex items-center">
@@ -678,7 +678,7 @@ const Metrics = () => {
                 className={`flex items-center gap-1.5 px-3 py-1.5 rounded-lg text-sm font-medium transition-colors ${
                   compareMode
                     ? 'bg-purple-100 text-purple-700 dark:bg-purple-900/50 dark:text-purple-300'
-                    : 'bg-gray-100 text-gray-600 dark:bg-gray-700 dark:text-gray-400 hover:bg-gray-200 dark:hover:bg-gray-600'
+                    : 'bg-gray-100 text-gray-600 dark:bg-coach-elevated dark:text-gray-400 hover:bg-gray-200 dark:hover:bg-gray-600'
                 }`}
               >
                 <FiUsers className="w-4 h-4" />
@@ -708,7 +708,7 @@ const Metrics = () => {
                   className={`rounded-xl border p-3 transition-colors ${
                     isSelected
                       ? 'bg-purple-50 dark:bg-purple-900/20 border-purple-300 dark:border-purple-700'
-                      : 'bg-gray-50 dark:bg-gray-700/30 border-gray-200 dark:border-gray-700'
+                      : 'bg-coach-inset/30 border-gray-200 dark:border-coach-border'
                   } ${compareMode ? 'cursor-pointer' : ''}`}
                 >
                   <div className="flex items-center gap-3">
@@ -762,7 +762,7 @@ const Metrics = () => {
           <div className="hidden sm:block overflow-x-auto">
             <table className="w-full text-sm">
               <thead>
-                <tr className="border-b border-gray-200 dark:border-gray-700">
+                <tr className="border-b border-gray-200 dark:border-coach-border">
                   {compareMode && <th className="py-2 px-1 w-8" />}
                   <th className="py-2 px-2 text-left text-xs font-medium text-gray-500 dark:text-gray-400 w-8">#</th>
                   <th className="py-2 px-2 text-left text-xs font-medium text-gray-500 dark:text-gray-400">Atleta</th>
@@ -800,7 +800,7 @@ const Metrics = () => {
                   return (
                     <tr
                       key={athlete.id}
-                      className={`border-b border-gray-100 dark:border-gray-700/50 transition-colors ${
+                      className={`border-b border-gray-100 dark:border-coach-border/50 transition-colors ${
                         isSelected ? 'bg-purple-50 dark:bg-purple-900/20' : 'hover:bg-gray-50 dark:hover:bg-gray-700/30'
                       }`}
                     >
@@ -896,7 +896,7 @@ const Metrics = () => {
               <motion.div
                 initial={{ opacity: 0, height: 0 }}
                 animate={{ opacity: 1, height: 'auto' }}
-                className="mt-6 pt-6 border-t border-gray-200 dark:border-gray-700"
+                className="mt-6 pt-6 border-t border-gray-200 dark:border-coach-border"
               >
                 <h4 className="text-sm font-bold text-gray-900 dark:text-white mb-4 flex items-center">
                   <FiUsers className="w-4 h-4 mr-2 text-purple-500" />
@@ -938,7 +938,7 @@ const Metrics = () => {
                 <div className="overflow-x-auto">
                   <table className="w-full text-sm">
                     <thead>
-                      <tr className="border-b border-gray-200 dark:border-gray-700">
+                      <tr className="border-b border-gray-200 dark:border-coach-border">
                         <th className="py-2 px-3 text-left text-xs font-medium text-gray-500 dark:text-gray-400">Métrica</th>
                         {compared.map((a, i) => (
                           <th key={a.id} className="py-2 px-3 text-right text-xs font-medium" style={{ color: compareColors[i] }}>
@@ -949,7 +949,7 @@ const Metrics = () => {
                     </thead>
                     <tbody>
                       {comparisonMetrics.map(metric => (
-                        <tr key={metric.key} className="border-b border-gray-100 dark:border-gray-700/50">
+                        <tr key={metric.key} className="border-b border-gray-100 dark:border-coach-border/50">
                           <td className="py-2 px-3 text-gray-600 dark:text-gray-400">{metric.label}</td>
                           {compared.map(a => (
                             <td key={a.id} className="py-2 px-3 text-right font-medium text-gray-900 dark:text-white">

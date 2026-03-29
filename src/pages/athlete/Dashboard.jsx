@@ -36,24 +36,24 @@ import useAthleteDashboardData from '../../hooks/useAthleteDashboardData';
 const StatCard = ({ icon: Icon, label, value, sub, accent, iconBg, iconColor }) => (
   <div className={`rounded-2xl p-4 flex flex-col gap-2 border ${
     accent
-      ? 'bg-green-600 border-green-600 text-white'
-      : 'bg-white dark:bg-gray-800 border-gray-200 dark:border-gray-700'
+      ? 'bg-ath-accent border-ath-border-accent text-ath-on-accent'
+      : 'bg-ath-surface border-ath-border'
   }`}>
     <div className="flex items-center justify-between">
-      <span className={`text-xs font-medium ${accent ? 'text-white/80' : 'text-slate-500 dark:text-slate-400'}`}>
+      <span className={`text-xs font-medium ${accent ? 'text-ath-on-accent/80' : 'text-ath-text-muted'}`}>
         {label}
       </span>
       <div className={`w-8 h-8 rounded-lg flex items-center justify-center ${
-        accent ? 'bg-white/20' : (iconBg || 'bg-green-50 dark:bg-green-900/30')
+        accent ? 'bg-white/20' : (iconBg || 'bg-ath-accent-surface')
       }`}>
-        <Icon className={`w-4 h-4 ${accent ? 'text-white' : (iconColor || 'text-green-600 dark:text-green-400')}`} />
+        <Icon className={`w-4 h-4 ${accent ? 'text-ath-on-accent' : (iconColor || 'text-ath-accent-text')}`} />
       </div>
     </div>
-    <div className={`text-3xl font-bold tracking-tight font-mono ${accent ? 'text-white' : 'text-slate-900 dark:text-white'}`}>
+    <div className={`text-3xl font-bold tracking-tight font-mono ${accent ? 'text-ath-on-accent' : 'text-ath-text-primary'}`}>
       {value}
     </div>
     {sub && (
-      <div className={`text-[11px] ${accent ? 'text-white/70' : 'text-slate-400 dark:text-slate-500'}`}>{sub}</div>
+      <div className={`text-[11px] ${accent ? 'text-ath-on-accent/70' : 'text-ath-text-muted'}`}>{sub}</div>
     )}
   </div>
 );
@@ -102,7 +102,7 @@ const AthleteDashboard = () => {
   if (loading) {
     return (
       <div className="flex items-center justify-center min-h-[60vh]">
-        <FiLoader className="w-8 h-8 animate-spin text-green-600" />
+        <FiLoader className="w-8 h-8 animate-spin text-ath-accent" />
       </div>
     );
   }
@@ -117,16 +117,16 @@ const AthleteDashboard = () => {
   };
 
   return (
-    <div className="bg-gray-50 dark:bg-gray-900">
+    <div className="bg-ath-base">
 
       <div className="px-4 lg:px-8 py-5 lg:py-8 space-y-5">
 
         {/* GREETING */}
         <div>
-          <h1 className="text-2xl lg:text-3xl font-bold text-slate-900 dark:text-white tracking-tight">
+          <h1 className="text-2xl lg:text-3xl font-bold text-ath-text-primary tracking-tight">
             ¡Hola, {displayName}! <span role="img" aria-label="saludo">👋</span>
           </h1>
-          <p className="text-sm text-slate-500 dark:text-slate-400 mt-1">
+          <p className="text-sm text-ath-text-muted mt-1">
             Aquí está tu resumen de entrenamiento
           </p>
         </div>
@@ -170,28 +170,28 @@ const AthleteDashboard = () => {
         {isIndependent && (
           <div className="grid grid-cols-1 gap-3">
             {/* Weekly progress bar */}
-            <div className="bg-white dark:bg-gray-800 rounded-2xl border border-gray-200 dark:border-gray-700 p-4">
+            <div className="bg-ath-surface rounded-2xl border border-ath-border p-4">
               <div className="flex items-center justify-between mb-2">
-                <span className="text-xs font-semibold text-slate-500 dark:text-slate-400 flex items-center gap-1.5">
-                  <FiCheckSquare className="w-3.5 h-3.5 text-green-500" />
+                <span className="text-xs font-semibold text-ath-text-muted flex items-center gap-1.5">
+                  <FiCheckSquare className="w-3.5 h-3.5 text-ath-accent" />
                   Progreso semanal
                 </span>
-                <span className="text-xs font-bold text-slate-700 dark:text-slate-300">
+                <span className="text-xs font-bold text-ath-text-secondary">
                   {weekStats.completed}/{weekStats.sessions} sesiones
                 </span>
               </div>
-              <div className="w-full h-2 bg-gray-100 dark:bg-gray-700 rounded-full overflow-hidden">
+              <div className="w-full h-2 bg-ath-inset rounded-full overflow-hidden">
                 <div
-                  className="h-2 bg-green-500 rounded-full transition-all duration-500"
+                  className="h-2 bg-ath-accent rounded-full transition-all duration-500"
                   style={{ width: weekStats.sessions > 0 ? `${Math.round((weekStats.completed / weekStats.sessions) * 100)}%` : '0%' }}
                 />
               </div>
               <div className="flex items-center justify-between mt-2">
-                <span className="text-[11px] text-slate-400 dark:text-slate-500">
+                <span className="text-[11px] text-ath-text-muted">
                   {weekStats.totalKm} km esta semana
                 </span>
                 {weeklyRpeAvg != null && (
-                  <span className="text-[11px] text-slate-400 dark:text-slate-500 flex items-center gap-1">
+                  <span className="text-[11px] text-ath-text-muted flex items-center gap-1">
                     <FiStar className="w-3 h-3 text-orange-400" />
                     RPE medio: {weeklyRpeAvg}
                   </span>
@@ -284,11 +284,11 @@ const AthleteDashboard = () => {
         {/* ENTRENAMIENTOS DE LA SEMANA */}
         <section>
           <div className="flex items-center justify-between mb-3">
-            <div className="flex items-center gap-2 text-base font-bold text-slate-900 dark:text-white">
+            <div className="flex items-center gap-2 text-base font-bold text-ath-text-primary">
               <FiActivity className="w-4 h-4" />
               Entrenamientos de la semana
             </div>
-            <Link to={isIndependent ? '/athlete/my-plan' : '/athlete/training'} className="text-xs font-medium text-green-600 dark:text-green-400 flex items-center gap-1">
+            <Link to={isIndependent ? '/athlete/my-plan' : '/athlete/training'} className="text-xs font-medium text-ath-accent-text flex items-center gap-1">
               Ver todos <FiArrowRight className="w-3 h-3" />
             </Link>
           </div>
@@ -302,14 +302,14 @@ const AthleteDashboard = () => {
                   <Link
                     key={session.id}
                     to={isIndependent ? '/athlete/my-plan' : '/athlete/training'}
-                    className="flex items-center gap-3 bg-white dark:bg-gray-800 rounded-xl p-3 border border-gray-200 dark:border-gray-700"
+                    className="flex items-center gap-3 bg-ath-surface rounded-xl p-3 border border-ath-border"
                   >
                     <div className={`w-9 h-9 rounded-xl flex items-center justify-center flex-shrink-0 ${s.bg}`}>
                       <FiActivity className={`w-4 h-4 ${s.icon}`} />
                     </div>
                     <div className="flex-1 min-w-0">
-                      <p className="text-sm font-semibold text-slate-900 dark:text-white truncate">{session.title}</p>
-                      <p className="text-xs text-slate-500 dark:text-slate-400 truncate">
+                      <p className="text-sm font-semibold text-ath-text-primary truncate">{session.title}</p>
+                      <p className="text-xs text-ath-text-muted truncate">
                         {isToday ? 'Hoy' : new Date(session.date + 'T00:00:00').toLocaleDateString('es-ES', { weekday: 'long', day: 'numeric', month: 'long' })}
                         {isToday && ` · ${new Date(session.date + 'T00:00:00').toLocaleDateString('es-ES', { day: 'numeric', month: 'long' })}`}
                       </p>
@@ -326,9 +326,9 @@ const AthleteDashboard = () => {
               })}
             </div>
           ) : (
-            <div className="text-center py-10 bg-white dark:bg-gray-800 rounded-2xl border border-gray-200 dark:border-gray-700">
-              <FiCalendar className="w-10 h-10 text-gray-300 dark:text-gray-600 mx-auto mb-2" />
-              <p className="text-sm text-slate-500 dark:text-slate-400">No hay entrenamientos esta semana</p>
+            <div className="text-center py-10 bg-ath-surface rounded-2xl border border-ath-border">
+              <FiCalendar className="w-10 h-10 text-ath-text-muted mx-auto mb-2" />
+              <p className="text-sm text-ath-text-muted">No hay entrenamientos esta semana</p>
             </div>
           )}
         </section>
@@ -346,7 +346,7 @@ const AthleteDashboard = () => {
               const daysUntil = Math.ceil((eventDate - new Date().setHours(0,0,0,0)) / 86400000);
               const progressPct = Math.min(100, Math.max(5, (90 - daysUntil) / 90 * 100));
               return (
-                <div className="relative rounded-2xl overflow-hidden flex-1 bg-gradient-to-br from-blue-600 to-blue-800">
+                <div className="relative rounded-2xl overflow-hidden flex-1 bg-gradient-to-br from-ath-accent to-ath-accent-hover">
                   {/* Decorative circles */}
                   <div className="absolute -top-10 -right-10 w-40 h-40 rounded-full opacity-10 bg-white" />
                   <div className="absolute -bottom-8 -left-8 w-32 h-32 rounded-full opacity-10 bg-white" />
@@ -410,7 +410,7 @@ const AthleteDashboard = () => {
                 </div>
               );
             })() : (
-              <div className="relative rounded-2xl overflow-hidden flex flex-col items-center justify-center py-10 text-center bg-gradient-to-br from-blue-600 to-blue-800">
+              <div className="relative rounded-2xl overflow-hidden flex flex-col items-center justify-center py-10 text-center bg-gradient-to-br from-ath-accent to-ath-accent-hover">
                 <div className="absolute -top-10 -right-10 w-40 h-40 rounded-full opacity-10 bg-white" />
                 <FiFlag className="w-10 h-10 text-white/40 mb-2" />
                 <p className="text-sm text-white/70 font-medium">No hay competiciones programadas</p>
@@ -419,9 +419,9 @@ const AthleteDashboard = () => {
           </section>
 
           {/* ACCESO RÁPIDO */}
-          <section className="bg-white dark:bg-gray-800 rounded-2xl p-4 border border-gray-200 dark:border-gray-700 flex flex-col">
-            <div className="flex items-center gap-2 text-base font-bold text-slate-900 dark:text-white mb-3">
-              <FiBarChart2 className="w-4 h-4 text-green-600" />
+          <section className="bg-ath-surface rounded-2xl p-4 border border-ath-border flex flex-col">
+            <div className="flex items-center gap-2 text-base font-bold text-ath-text-primary mb-3">
+              <FiBarChart2 className="w-4 h-4 text-ath-accent-text" />
               Acceso Rápido
             </div>
             <div className="grid grid-cols-2 gap-2.5">
@@ -429,24 +429,24 @@ const AthleteDashboard = () => {
                 <div className="w-9 h-9 bg-blue-500 rounded-lg flex items-center justify-center mb-2.5 group-hover:scale-110 transition-transform">
                   <FiBarChart2 className="w-4 h-4 text-white" />
                 </div>
-                <p className="text-xs font-semibold text-slate-900 dark:text-white">Mis Métricas</p>
-                <p className="text-[11px] text-slate-500 dark:text-slate-400 mt-0.5">Ritmos, progreso</p>
+                <p className="text-xs font-semibold text-ath-text-primary">Mis Métricas</p>
+                <p className="text-[11px] text-ath-text-muted mt-0.5">Ritmos, progreso</p>
               </Link>
               {isIndependent ? (
                 <Link to="/athlete/my-plan" className="p-3.5 rounded-xl border border-green-100 dark:border-green-800/30 bg-gradient-to-br from-green-50 to-emerald-50 dark:from-green-900/20 dark:to-emerald-900/20 hover:shadow-md transition-all group">
                   <div className="w-9 h-9 bg-green-500 rounded-lg flex items-center justify-center mb-2.5 group-hover:scale-110 transition-transform">
                     <FiZap className="w-4 h-4 text-white" />
                   </div>
-                  <p className="text-xs font-semibold text-slate-900 dark:text-white">Mi Plan</p>
-                  <p className="text-[11px] text-slate-500 dark:text-slate-400 mt-0.5">Plan generado por IA</p>
+                  <p className="text-xs font-semibold text-ath-text-primary">Mi Plan</p>
+                  <p className="text-[11px] text-ath-text-muted mt-0.5">Plan generado por IA</p>
                 </Link>
               ) : (
                 <Link to="/athlete/devices" className="p-3.5 rounded-xl border border-green-100 dark:border-green-800/30 bg-gradient-to-br from-green-50 to-emerald-50 dark:from-green-900/20 dark:to-emerald-900/20 hover:shadow-md transition-all group">
                   <div className="w-9 h-9 bg-green-500 rounded-lg flex items-center justify-center mb-2.5 group-hover:scale-110 transition-transform">
                     <FiSmartphone className="w-4 h-4 text-white" />
                   </div>
-                  <p className="text-xs font-semibold text-slate-900 dark:text-white">Dispositivos</p>
-                  <p className="text-[11px] text-slate-500 dark:text-slate-400 mt-0.5">Conecta tus dispositivos</p>
+                  <p className="text-xs font-semibold text-ath-text-primary">Dispositivos</p>
+                  <p className="text-[11px] text-ath-text-muted mt-0.5">Conecta tus dispositivos</p>
                 </Link>
               )}
               {isIndependent ? (
@@ -454,16 +454,16 @@ const AthleteDashboard = () => {
                   <div className="w-9 h-9 bg-yellow-500 rounded-lg flex items-center justify-center mb-2.5 group-hover:scale-110 transition-transform">
                     <FiFlag className="w-4 h-4 text-white" />
                   </div>
-                  <p className="text-xs font-semibold text-slate-900 dark:text-white">Competiciones</p>
-                  <p className="text-[11px] text-slate-500 dark:text-slate-400 mt-0.5">Gestiona tus carreras</p>
+                  <p className="text-xs font-semibold text-ath-text-primary">Competiciones</p>
+                  <p className="text-[11px] text-ath-text-muted mt-0.5">Gestiona tus carreras</p>
                 </Link>
               ) : (
                 <Link to="/athlete/messages" className="p-3.5 rounded-xl border border-yellow-100 dark:border-yellow-800/30 bg-gradient-to-br from-yellow-50 to-orange-50 dark:from-yellow-900/20 dark:to-orange-900/20 hover:shadow-md transition-all group">
                   <div className="w-9 h-9 bg-yellow-500 rounded-lg flex items-center justify-center mb-2.5 group-hover:scale-110 transition-transform">
                     <FiMessageSquare className="w-4 h-4 text-white" />
                   </div>
-                  <p className="text-xs font-semibold text-slate-900 dark:text-white">Mensajes</p>
-                  <p className="text-[11px] text-slate-500 dark:text-slate-400 mt-0.5">Chat con tu entrenador</p>
+                  <p className="text-xs font-semibold text-ath-text-primary">Mensajes</p>
+                  <p className="text-[11px] text-ath-text-muted mt-0.5">Chat con tu entrenador</p>
                 </Link>
               )}
               {isIndependent ? (
@@ -471,16 +471,16 @@ const AthleteDashboard = () => {
                   <div className="w-9 h-9 bg-orange-500 rounded-lg flex items-center justify-center mb-2.5 group-hover:scale-110 transition-transform">
                     <FiWatch className="w-4 h-4 text-white" />
                   </div>
-                  <p className="text-xs font-semibold text-slate-900 dark:text-white">Dispositivos</p>
-                  <p className="text-[11px] text-slate-500 dark:text-slate-400 mt-0.5">Conecta tu reloj</p>
+                  <p className="text-xs font-semibold text-ath-text-primary">Dispositivos</p>
+                  <p className="text-[11px] text-ath-text-muted mt-0.5">Conecta tu reloj</p>
                 </Link>
               ) : (
                 <Link to="/athlete/calendar" className="p-3.5 rounded-xl border border-orange-100 dark:border-orange-800/30 bg-gradient-to-br from-orange-50 to-pink-50 dark:from-orange-900/20 dark:to-pink-900/20 hover:shadow-md transition-all group">
                   <div className="w-9 h-9 bg-orange-500 rounded-lg flex items-center justify-center mb-2.5 group-hover:scale-110 transition-transform">
                     <FiCalendar className="w-4 h-4 text-white" />
                   </div>
-                  <p className="text-xs font-semibold text-slate-900 dark:text-white">Calendario</p>
-                  <p className="text-[11px] text-slate-500 dark:text-slate-400 mt-0.5">Vista mensual completa</p>
+                  <p className="text-xs font-semibold text-ath-text-primary">Calendario</p>
+                  <p className="text-[11px] text-ath-text-muted mt-0.5">Vista mensual completa</p>
                 </Link>
               )}
             </div>
@@ -488,13 +488,13 @@ const AthleteDashboard = () => {
 
         </div>
 
-        {/* ACHIEVEMENTS — independent athletes only */}
-        {isIndependent && achievements.length > 0 && (
-          <section className="bg-white dark:bg-gray-800 rounded-2xl p-4 border border-gray-200 dark:border-gray-700">
-            <div className="flex items-center gap-2 text-base font-bold text-slate-900 dark:text-white mb-3">
+        {/* ACHIEVEMENTS — hidden until redesign with Strava-style records */}
+        {false && isIndependent && achievements.length > 0 && (
+          <section className="bg-ath-surface rounded-2xl p-4 border border-ath-border">
+            <div className="flex items-center gap-2 text-base font-bold text-ath-text-primary mb-3">
               <FiAward className="w-4 h-4 text-yellow-500" />
               Mis Logros
-              <span className="ml-auto text-xs font-medium text-slate-400 dark:text-slate-500">
+              <span className="ml-auto text-xs font-medium text-ath-text-muted">
                 {achievements.length} desbloqueado{achievements.length !== 1 ? 's' : ''}
               </span>
             </div>
@@ -506,7 +506,7 @@ const AthleteDashboard = () => {
                   className="flex flex-col items-center gap-1.5 p-2.5 rounded-xl bg-yellow-50 dark:bg-yellow-900/20 border border-yellow-100 dark:border-yellow-800/30"
                 >
                   <span className="text-2xl" role="img" aria-label={a.title}>{a.icon}</span>
-                  <p className="text-[10px] font-semibold text-center text-slate-700 dark:text-slate-300 leading-tight line-clamp-2">
+                  <p className="text-[10px] font-semibold text-center text-ath-text-secondary leading-tight line-clamp-2">
                     {a.title}
                   </p>
                 </div>

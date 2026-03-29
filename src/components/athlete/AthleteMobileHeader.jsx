@@ -28,12 +28,12 @@ const AthleteMobileHeader = () => {
   };
 
   return (
-    <header className="lg:hidden fixed top-0 left-0 right-0 z-30 bg-white dark:bg-gray-800 border-b border-gray-200 dark:border-gray-700 px-5 py-3 flex items-center justify-between">
+    <header className="lg:hidden fixed top-0 left-0 right-0 z-30 bg-ath-surface border-b border-ath-border px-5 py-3 flex items-center justify-between">
       {/* Logo */}
       <button onClick={() => navigate('/athlete/dashboard')} className="flex items-center gap-2">
-        <img src="/img/logo.png" alt="TrainingTrack" className="h-8 w-auto" />
-        <span className="text-xl font-bold tracking-tight text-slate-900 dark:text-white">
-          Training<span className="text-green-600">Track</span>
+        <img src={theme === 'dark' ? '/img/logo-user-dark.png' : '/img/logo-user.png'} alt="TrainingTrack" className="h-8 w-auto" />
+        <span className="text-xl font-bold tracking-tight text-ath-text-primary">
+          Training<span className="text-ath-accent">Track</span>
         </span>
       </button>
 
@@ -45,7 +45,7 @@ const AthleteMobileHeader = () => {
         <div className="relative" ref={menuRef}>
           <button
             onClick={() => setShowUserMenu(v => !v)}
-            className="w-[38px] h-[38px] rounded-full flex items-center justify-center text-white text-sm font-semibold overflow-hidden flex-shrink-0 bg-green-600"
+            className="w-[38px] h-[38px] rounded-full flex items-center justify-center text-white text-sm font-semibold overflow-hidden flex-shrink-0 bg-ath-accent"
           >
             {profile?.profile_image
               ? <img src={profile.profile_image} alt="" className="w-full h-full object-cover" />
@@ -62,36 +62,36 @@ const AthleteMobileHeader = () => {
                   animate={{ opacity: 1, scale: 1, y: 0 }}
                   exit={{ opacity: 0, scale: 0.95, y: -4 }}
                   transition={{ duration: 0.15 }}
-                  className="absolute right-0 top-11 w-52 bg-white dark:bg-gray-800 rounded-xl shadow-lg border border-gray-200 dark:border-gray-700 py-1.5 z-50 overflow-hidden"
+                  className="absolute right-0 top-11 w-52 bg-ath-surface rounded-xl shadow-lg border border-ath-border py-1.5 z-50 overflow-hidden"
                 >
                   {/* User info */}
-                  <div className="px-4 py-2.5 border-b border-gray-200 dark:border-gray-700">
-                    <p className="text-sm font-semibold text-slate-900 dark:text-white truncate">
+                  <div className="px-4 py-2.5 border-b border-ath-border">
+                    <p className="text-sm font-semibold text-ath-text-primary truncate">
                       {displayName} {displayLastName}
                     </p>
-                    <p className="text-xs text-slate-500 dark:text-slate-400">Atleta</p>
+                    <p className="text-xs text-ath-text-muted">Atleta</p>
                   </div>
 
                   <button
                     onClick={() => { navigate('/athlete/profile'); setShowUserMenu(false); }}
-                    className="w-full flex items-center gap-2.5 px-4 py-2.5 text-sm text-slate-700 dark:text-slate-300 hover:bg-slate-50 dark:hover:bg-gray-700 transition-colors"
+                    className="w-full flex items-center gap-2.5 px-4 py-2.5 text-sm text-ath-text-secondary hover:bg-ath-inset transition-colors"
                   >
                     <FiUser className="w-4 h-4" /> Mi Perfil
                   </button>
                   {!isIndependent && (
                     <button
                       onClick={() => { navigate('/athlete/messages'); setShowUserMenu(false); }}
-                      className="w-full flex items-center gap-2.5 px-4 py-2.5 text-sm text-slate-700 dark:text-slate-300 hover:bg-slate-50 dark:hover:bg-gray-700 transition-colors"
+                      className="w-full flex items-center gap-2.5 px-4 py-2.5 text-sm text-ath-text-secondary hover:bg-ath-inset transition-colors"
                     >
                       <FiMessageSquare className="w-4 h-4" /> Mis Mensajes
                     </button>
                   )}
 
                   {/* Dark mode toggle */}
-                  <div className="border-t border-gray-200 dark:border-gray-700 my-1" />
+                  <div className="border-t border-ath-border my-1" />
                   <button
                     onClick={toggleTheme}
-                    className="w-full flex items-center justify-between px-4 py-2.5 text-sm text-slate-700 dark:text-slate-300 hover:bg-slate-50 dark:hover:bg-gray-700 transition-colors"
+                    className="w-full flex items-center justify-between px-4 py-2.5 text-sm text-ath-text-secondary hover:bg-ath-inset transition-colors"
                   >
                     <div className="flex items-center gap-2.5">
                       {theme === 'light'
@@ -100,12 +100,12 @@ const AthleteMobileHeader = () => {
                       }
                       {theme === 'light' ? 'Modo oscuro' : 'Modo claro'}
                     </div>
-                    <div className={`w-9 h-5 rounded-full relative transition-colors ${theme === 'dark' ? 'bg-green-600' : 'bg-slate-200'}`}>
+                    <div className={`w-9 h-5 rounded-full relative transition-colors ${theme === 'dark' ? 'bg-ath-accent' : 'bg-slate-200'}`}>
                       <div className={`absolute top-0.5 w-4 h-4 rounded-full bg-white shadow transition-transform ${theme === 'dark' ? 'translate-x-[18px]' : 'translate-x-0.5'}`} />
                     </div>
                   </button>
 
-                  <div className="border-t border-gray-200 dark:border-gray-700 my-1" />
+                  <div className="border-t border-ath-border my-1" />
                   <button
                     onClick={handleSignOut}
                     className="w-full flex items-center gap-2.5 px-4 py-2.5 text-sm text-red-600 dark:text-red-400 hover:bg-red-50 dark:hover:bg-red-900/20 transition-colors"

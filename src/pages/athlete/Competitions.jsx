@@ -99,13 +99,13 @@ const CompetitionFormModal = ({ initial, onSave, onClose }) => {
         initial={{ opacity: 0, scale: 0.95 }}
         animate={{ opacity: 1, scale: 1 }}
         exit={{ opacity: 0, scale: 0.95 }}
-        className="bg-white dark:bg-gray-800 rounded-2xl shadow-xl max-w-md w-full max-h-[90vh] overflow-y-auto"
+        className="bg-ath-surface rounded-2xl shadow-xl max-w-md w-full max-h-[90vh] overflow-y-auto"
       >
         {/* Header */}
-        <div className="flex items-center justify-between px-6 py-4 border-b border-gray-200 dark:border-gray-700 bg-green-50 dark:bg-green-900/20">
+        <div className="flex items-center justify-between px-6 py-4 border-b border-ath-border bg-ath-accent-surface">
           <div className="flex items-center gap-2">
-            <FiFlag className="w-5 h-5 text-green-600 dark:text-green-400" />
-            <h2 className="text-lg font-bold text-gray-900 dark:text-white">
+            <FiFlag className="w-5 h-5 text-ath-accent-text" />
+            <h2 className="text-lg font-bold text-ath-text-primary">
               {isEditing ? 'Editar Competición' : 'Nueva Competición'}
             </h2>
           </div>
@@ -122,7 +122,7 @@ const CompetitionFormModal = ({ initial, onSave, onClose }) => {
         <form onSubmit={handleSubmit} className="px-6 py-5 space-y-4">
           {/* Nombre */}
           <div>
-            <label className="block text-xs font-semibold text-slate-600 dark:text-slate-400 mb-1">
+            <label className="block text-xs font-semibold text-ath-text-secondary mb-1">
               Nombre <span className="text-red-500">*</span>
             </label>
             <input
@@ -130,28 +130,28 @@ const CompetitionFormModal = ({ initial, onSave, onClose }) => {
               value={form.name}
               onChange={(e) => update('name', e.target.value)}
               placeholder="Media Maratón Valencia"
-              className="w-full px-3 py-2 rounded-xl border border-gray-200 dark:border-gray-700 bg-white dark:bg-gray-900 text-slate-900 dark:text-white text-sm focus:outline-none focus:ring-2 focus:ring-green-500"
+              className="w-full px-3 py-2 rounded-xl border border-ath-border bg-ath-base text-ath-text-primary text-sm focus:outline-none focus:ring-2 focus:ring-ath-accent"
               required
             />
           </div>
 
           {/* Fecha */}
           <div>
-            <label className="block text-xs font-semibold text-slate-600 dark:text-slate-400 mb-1">
+            <label className="block text-xs font-semibold text-ath-text-secondary mb-1">
               Fecha <span className="text-red-500">*</span>
             </label>
             <input
               type="date"
               value={form.event_date}
               onChange={(e) => update('event_date', e.target.value)}
-              className="w-full px-3 py-2 rounded-xl border border-gray-200 dark:border-gray-700 bg-white dark:bg-gray-900 text-slate-900 dark:text-white text-sm focus:outline-none focus:ring-2 focus:ring-green-500"
+              className="w-full px-3 py-2 rounded-xl border border-ath-border bg-ath-base text-ath-text-primary text-sm focus:outline-none focus:ring-2 focus:ring-ath-accent"
               required
             />
           </div>
 
           {/* Distancia */}
           <div>
-            <label className="block text-xs font-semibold text-slate-600 dark:text-slate-400 mb-1">
+            <label className="block text-xs font-semibold text-ath-text-secondary mb-1">
               Distancia (km)
             </label>
             <input
@@ -161,13 +161,13 @@ const CompetitionFormModal = ({ initial, onSave, onClose }) => {
               value={form.distance_km}
               onChange={(e) => update('distance_km', e.target.value)}
               placeholder="21.1"
-              className="w-full px-3 py-2 rounded-xl border border-gray-200 dark:border-gray-700 bg-white dark:bg-gray-900 text-slate-900 dark:text-white text-sm focus:outline-none focus:ring-2 focus:ring-green-500"
+              className="w-full px-3 py-2 rounded-xl border border-ath-border bg-ath-base text-ath-text-primary text-sm focus:outline-none focus:ring-2 focus:ring-ath-accent"
             />
           </div>
 
           {/* Ubicación */}
           <div>
-            <label className="block text-xs font-semibold text-slate-600 dark:text-slate-400 mb-1">
+            <label className="block text-xs font-semibold text-ath-text-secondary mb-1">
               Ubicación
             </label>
             <input
@@ -175,13 +175,13 @@ const CompetitionFormModal = ({ initial, onSave, onClose }) => {
               value={form.location}
               onChange={(e) => update('location', e.target.value)}
               placeholder="Valencia, España"
-              className="w-full px-3 py-2 rounded-xl border border-gray-200 dark:border-gray-700 bg-white dark:bg-gray-900 text-slate-900 dark:text-white text-sm focus:outline-none focus:ring-2 focus:ring-green-500"
+              className="w-full px-3 py-2 rounded-xl border border-ath-border bg-ath-base text-ath-text-primary text-sm focus:outline-none focus:ring-2 focus:ring-ath-accent"
             />
           </div>
 
           {/* Tiempo objetivo */}
           <div>
-            <label className="block text-xs font-semibold text-slate-600 dark:text-slate-400 mb-1">
+            <label className="block text-xs font-semibold text-ath-text-secondary mb-1">
               Tiempo objetivo (minutos)
             </label>
             <input
@@ -190,7 +190,7 @@ const CompetitionFormModal = ({ initial, onSave, onClose }) => {
               value={form.goal_time_minutes}
               onChange={(e) => update('goal_time_minutes', e.target.value)}
               placeholder="95"
-              className="w-full px-3 py-2 rounded-xl border border-gray-200 dark:border-gray-700 bg-white dark:bg-gray-900 text-slate-900 dark:text-white text-sm focus:outline-none focus:ring-2 focus:ring-green-500"
+              className="w-full px-3 py-2 rounded-xl border border-ath-border bg-ath-base text-ath-text-primary text-sm focus:outline-none focus:ring-2 focus:ring-ath-accent"
             />
             {form.goal_time_minutes && parseInt(form.goal_time_minutes, 10) > 0 && (
               <p className="text-xs text-slate-400 mt-1">
@@ -201,7 +201,7 @@ const CompetitionFormModal = ({ initial, onSave, onClose }) => {
 
           {/* Notas */}
           <div>
-            <label className="block text-xs font-semibold text-slate-600 dark:text-slate-400 mb-1">
+            <label className="block text-xs font-semibold text-ath-text-secondary mb-1">
               Notas
             </label>
             <textarea
@@ -209,7 +209,7 @@ const CompetitionFormModal = ({ initial, onSave, onClose }) => {
               onChange={(e) => update('notes', e.target.value)}
               rows={3}
               placeholder="Estrategia de carrera, objetivos secundarios..."
-              className="w-full px-3 py-2 rounded-xl border border-gray-200 dark:border-gray-700 bg-white dark:bg-gray-900 text-slate-900 dark:text-white text-sm focus:outline-none focus:ring-2 focus:ring-green-500 resize-none"
+              className="w-full px-3 py-2 rounded-xl border border-ath-border bg-ath-base text-ath-text-primary text-sm focus:outline-none focus:ring-2 focus:ring-ath-accent resize-none"
             />
           </div>
 
@@ -218,14 +218,14 @@ const CompetitionFormModal = ({ initial, onSave, onClose }) => {
             <button
               type="button"
               onClick={onClose}
-              className="flex-1 px-4 py-2.5 rounded-xl border border-gray-200 dark:border-gray-700 text-sm font-semibold text-slate-600 dark:text-slate-400 hover:bg-gray-50 dark:hover:bg-gray-700 transition-colors"
+              className="flex-1 px-4 py-2.5 rounded-xl border border-ath-border text-sm font-semibold text-ath-text-secondary hover:bg-ath-inset transition-colors"
             >
               Cancelar
             </button>
             <button
               type="submit"
               disabled={saving}
-              className="flex-1 px-4 py-2.5 rounded-xl bg-green-600 hover:bg-green-700 disabled:opacity-60 text-white text-sm font-semibold transition-colors flex items-center justify-center gap-2"
+              className="flex-1 px-4 py-2.5 rounded-xl bg-ath-accent hover:bg-ath-accent-hover disabled:opacity-60 text-white text-sm font-semibold transition-colors flex items-center justify-center gap-2"
             >
               {saving && <FiLoader className="w-4 h-4 animate-spin" />}
               {isEditing ? 'Guardar cambios' : 'Añadir'}
@@ -270,22 +270,22 @@ const ResultModal = ({ competition, onSave, onClose }) => {
         initial={{ opacity: 0, scale: 0.95 }}
         animate={{ opacity: 1, scale: 1 }}
         exit={{ opacity: 0, scale: 0.95 }}
-        className="bg-white dark:bg-gray-800 rounded-2xl shadow-xl max-w-sm w-full"
+        className="bg-ath-surface rounded-2xl shadow-xl max-w-sm w-full"
       >
-        <div className="flex items-center justify-between px-6 py-4 border-b border-gray-200 dark:border-gray-700">
-          <h2 className="text-base font-bold text-slate-900 dark:text-white">
+        <div className="flex items-center justify-between px-6 py-4 border-b border-ath-border">
+          <h2 className="text-base font-bold text-ath-text-primary">
             Registrar resultado
           </h2>
-          <button onClick={onClose} type="button" className="p-2 hover:bg-gray-100 dark:hover:bg-gray-700 rounded-xl transition-colors">
+          <button onClick={onClose} type="button" className="p-2 hover:bg-ath-inset rounded-xl transition-colors">
             <FiX className="w-4 h-4 text-gray-500" />
           </button>
         </div>
 
         <form onSubmit={handleSubmit} className="px-6 py-5 space-y-4">
-          <p className="text-sm text-slate-600 dark:text-slate-400 font-medium">{competition.name}</p>
+          <p className="text-sm text-ath-text-secondary font-medium">{competition.name}</p>
 
           <div>
-            <label className="block text-xs font-semibold text-slate-600 dark:text-slate-400 mb-1">
+            <label className="block text-xs font-semibold text-ath-text-secondary mb-1">
               Tiempo real (minutos)
             </label>
             <input
@@ -294,7 +294,7 @@ const ResultModal = ({ competition, onSave, onClose }) => {
               value={actualTime}
               onChange={(e) => setActualTime(e.target.value)}
               placeholder="92"
-              className="w-full px-3 py-2 rounded-xl border border-gray-200 dark:border-gray-700 bg-white dark:bg-gray-900 text-slate-900 dark:text-white text-sm focus:outline-none focus:ring-2 focus:ring-green-500"
+              className="w-full px-3 py-2 rounded-xl border border-ath-border bg-ath-base text-ath-text-primary text-sm focus:outline-none focus:ring-2 focus:ring-ath-accent"
             />
             {actualTime && parseInt(actualTime, 10) > 0 && (
               <p className="text-xs text-slate-400 mt-1">= {formatTime(parseInt(actualTime, 10))}</p>
@@ -302,7 +302,7 @@ const ResultModal = ({ competition, onSave, onClose }) => {
           </div>
 
           <div>
-            <label className="block text-xs font-semibold text-slate-600 dark:text-slate-400 mb-1">
+            <label className="block text-xs font-semibold text-ath-text-secondary mb-1">
               Posición
             </label>
             <input
@@ -311,7 +311,7 @@ const ResultModal = ({ competition, onSave, onClose }) => {
               value={position}
               onChange={(e) => setPosition(e.target.value)}
               placeholder="145"
-              className="w-full px-3 py-2 rounded-xl border border-gray-200 dark:border-gray-700 bg-white dark:bg-gray-900 text-slate-900 dark:text-white text-sm focus:outline-none focus:ring-2 focus:ring-green-500"
+              className="w-full px-3 py-2 rounded-xl border border-ath-border bg-ath-base text-ath-text-primary text-sm focus:outline-none focus:ring-2 focus:ring-ath-accent"
             />
           </div>
 
@@ -319,14 +319,14 @@ const ResultModal = ({ competition, onSave, onClose }) => {
             <button
               type="button"
               onClick={onClose}
-              className="flex-1 px-4 py-2.5 rounded-xl border border-gray-200 dark:border-gray-700 text-sm font-semibold text-slate-600 dark:text-slate-400 hover:bg-gray-50 dark:hover:bg-gray-700 transition-colors"
+              className="flex-1 px-4 py-2.5 rounded-xl border border-ath-border text-sm font-semibold text-ath-text-secondary hover:bg-ath-inset transition-colors"
             >
               Cancelar
             </button>
             <button
               type="submit"
               disabled={saving}
-              className="flex-1 px-4 py-2.5 rounded-xl bg-green-600 hover:bg-green-700 disabled:opacity-60 text-white text-sm font-semibold transition-colors flex items-center justify-center gap-2"
+              className="flex-1 px-4 py-2.5 rounded-xl bg-ath-accent hover:bg-ath-accent-hover disabled:opacity-60 text-white text-sm font-semibold transition-colors flex items-center justify-center gap-2"
             >
               {saving && <FiLoader className="w-4 h-4 animate-spin" />}
               Guardar
@@ -351,24 +351,24 @@ const CompetitionCard = ({ competition, onEdit, onDelete, onResult, isPast }) =>
   const dateLabel = eventDate.toLocaleDateString('es-ES', { day: 'numeric', month: 'long', year: 'numeric' });
 
   return (
-    <div className="bg-white dark:bg-gray-800 rounded-2xl border border-gray-200 dark:border-gray-700 p-4">
+    <div className="bg-ath-surface rounded-2xl border border-ath-border p-4">
       <div className="flex items-start justify-between gap-2">
         <div className="flex-1 min-w-0">
-          <h3 className="text-base font-bold text-slate-900 dark:text-white leading-tight">
+          <h3 className="text-base font-bold text-ath-text-primary leading-tight">
             {name}
           </h3>
           <div className="flex flex-wrap items-center gap-x-3 gap-y-1 mt-1">
-            <span className="flex items-center gap-1 text-xs text-slate-500 dark:text-slate-400">
+            <span className="flex items-center gap-1 text-xs text-ath-text-muted">
               <FiCalendar className="w-3.5 h-3.5 flex-shrink-0" />
               {dateLabel}
             </span>
             {distance_km && (
-              <span className="text-xs text-slate-500 dark:text-slate-400">
+              <span className="text-xs text-ath-text-muted">
                 {distance_km} km
               </span>
             )}
             {location && (
-              <span className="flex items-center gap-1 text-xs text-slate-500 dark:text-slate-400">
+              <span className="flex items-center gap-1 text-xs text-ath-text-muted">
                 <FiMapPin className="w-3.5 h-3.5 flex-shrink-0" />
                 {location}
               </span>
@@ -398,29 +398,29 @@ const CompetitionCard = ({ competition, onEdit, onDelete, onResult, isPast }) =>
         {/* Countdown badge (upcoming only) */}
         {!isPast && daysUntil != null && (
           <div className="flex-shrink-0 flex flex-col items-center">
-            <span className="text-2xl font-bold text-green-600 dark:text-green-400 leading-none">
+            <span className="text-2xl font-bold text-ath-accent-text leading-none">
               {daysUntil === 0 ? 'Hoy' : daysUntil}
             </span>
             {daysUntil !== 0 && (
-              <span className="text-[10px] text-slate-400 dark:text-slate-500 font-medium">días</span>
+              <span className="text-[10px] text-ath-text-muted font-medium">días</span>
             )}
           </div>
         )}
       </div>
 
       {/* Actions */}
-      <div className="flex gap-2 mt-3 pt-3 border-t border-gray-100 dark:border-gray-700">
+      <div className="flex gap-2 mt-3 pt-3 border-t border-ath-border">
         {isPast && (
           <button
             onClick={() => onResult(competition)}
-            className="flex-1 text-xs font-semibold py-1.5 px-3 rounded-lg bg-green-50 hover:bg-green-100 dark:bg-green-900/20 dark:hover:bg-green-900/40 text-green-700 dark:text-green-400 transition-colors"
+            className="flex-1 text-xs font-semibold py-1.5 px-3 rounded-lg bg-green-50 hover:bg-green-100 dark:bg-green-900/20 dark:hover:bg-green-900/40 text-ath-accent-text transition-colors"
           >
             Registrar resultado
           </button>
         )}
         <button
           onClick={() => onEdit(competition)}
-          className="p-2 rounded-lg hover:bg-gray-100 dark:hover:bg-gray-700 text-slate-500 dark:text-slate-400 transition-colors"
+          className="p-2 rounded-lg hover:bg-ath-inset text-ath-text-muted transition-colors"
           aria-label="Editar"
         >
           <FiEdit2 className="w-4 h-4" />
@@ -480,28 +480,28 @@ export default function Competitions() {
   if (loading) {
     return (
       <div className="flex items-center justify-center min-h-[60vh]">
-        <FiLoader className="w-8 h-8 animate-spin text-green-600" />
+        <FiLoader className="w-8 h-8 animate-spin text-ath-accent" />
       </div>
     );
   }
 
   return (
-    <div className="bg-gray-50 dark:bg-gray-900 min-h-screen">
+    <div className="bg-ath-base min-h-screen">
       <div className="px-4 lg:px-8 py-5 lg:py-8 space-y-6">
 
         {/* Header */}
         <div className="flex items-center justify-between">
           <div>
-            <h1 className="text-2xl font-bold text-slate-900 dark:text-white tracking-tight">
+            <h1 className="text-2xl font-bold text-ath-text-primary tracking-tight">
               Mis Competiciones
             </h1>
-            <p className="text-sm text-slate-500 dark:text-slate-400 mt-0.5">
+            <p className="text-sm text-ath-text-muted mt-0.5">
               Gestiona tus objetivos y registra tus resultados
             </p>
           </div>
           <button
             onClick={openAdd}
-            className="flex items-center gap-1.5 px-3 py-2 rounded-xl bg-green-600 hover:bg-green-700 text-white text-sm font-semibold transition-colors"
+            className="flex items-center gap-1.5 px-3 py-2 rounded-xl bg-ath-accent hover:bg-ath-accent-hover text-white text-sm font-semibold transition-colors"
           >
             <FiPlus className="w-4 h-4" />
             Añadir
@@ -510,24 +510,24 @@ export default function Competitions() {
 
         {/* Upcoming */}
         <section>
-          <h2 className="text-sm font-bold text-slate-700 dark:text-slate-300 uppercase tracking-wide mb-3">
+          <h2 className="text-sm font-bold text-ath-text-secondary uppercase tracking-wide mb-3">
             Próximas
           </h2>
 
           {upcoming.length === 0 ? (
-            <div className="flex flex-col items-center justify-center py-12 bg-white dark:bg-gray-800 rounded-2xl border border-dashed border-gray-300 dark:border-gray-700 gap-3">
+            <div className="flex flex-col items-center justify-center py-12 bg-ath-surface rounded-2xl border border-dashed border-ath-border gap-3">
               <div className="w-14 h-14 rounded-2xl bg-green-100 dark:bg-green-900/30 flex items-center justify-center">
-                <FiFlag className="w-7 h-7 text-green-600 dark:text-green-400" />
+                <FiFlag className="w-7 h-7 text-ath-accent-text" />
               </div>
-              <p className="text-sm font-semibold text-slate-700 dark:text-slate-300">
+              <p className="text-sm font-semibold text-ath-text-secondary">
                 No tienes competiciones próximas
               </p>
-              <p className="text-xs text-slate-400 dark:text-slate-500 text-center max-w-xs">
+              <p className="text-xs text-ath-text-muted text-center max-w-xs">
                 ¡Añade tu próximo reto!
               </p>
               <button
                 onClick={openAdd}
-                className="mt-1 flex items-center gap-1.5 px-4 py-2 rounded-xl bg-green-600 hover:bg-green-700 text-white text-sm font-semibold transition-colors"
+                className="mt-1 flex items-center gap-1.5 px-4 py-2 rounded-xl bg-ath-accent hover:bg-ath-accent-hover text-white text-sm font-semibold transition-colors"
               >
                 <FiPlus className="w-4 h-4" />
                 Añadir competición
@@ -557,7 +557,7 @@ export default function Competitions() {
               className="flex items-center gap-2 w-full text-left"
               type="button"
             >
-              <h2 className="text-sm font-bold text-slate-700 dark:text-slate-300 uppercase tracking-wide flex-1">
+              <h2 className="text-sm font-bold text-ath-text-secondary uppercase tracking-wide flex-1">
                 Anteriores ({past.length})
               </h2>
               {showPast

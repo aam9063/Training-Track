@@ -27,7 +27,7 @@ const formatGoalTime = (minutes) => {
 const CompetitionCountdown = ({ competition }) => {
   if (!competition) {
     return (
-      <div className="relative rounded-2xl overflow-hidden flex flex-col items-center justify-center py-10 text-center bg-gradient-to-br from-blue-600 to-blue-800">
+      <div className="relative rounded-2xl overflow-hidden flex flex-col items-center justify-center py-10 text-center bg-gradient-to-br from-ath-accent to-ath-accent-hover">
         <div className="absolute -top-10 -right-10 w-40 h-40 rounded-full opacity-10 bg-white" />
         <FiFlag className="w-10 h-10 text-white/40 mb-2" />
         <p className="text-sm text-white/70 font-medium">No hay competiciones programadas</p>
@@ -46,7 +46,7 @@ const CompetitionCountdown = ({ competition }) => {
   return (
     <Link
       to="/athlete/competitions"
-      className="relative rounded-2xl overflow-hidden flex-1 bg-gradient-to-br from-blue-600 to-blue-800 block"
+      className="relative rounded-2xl overflow-hidden flex-1 bg-gradient-to-br from-ath-accent to-ath-accent-hover block"
     >
       {/* Decorative circles */}
       <div className="absolute -top-10 -right-10 w-40 h-40 rounded-full opacity-10 bg-white" />

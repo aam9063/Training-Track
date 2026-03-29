@@ -182,12 +182,12 @@ const Sidebar = ({ onCollapse }) => {
           `}
           title={collapsed ? (theme === 'light' ? 'Modo oscuro' : 'Modo claro') : ''}
         >
-          <div className="relative w-11 h-6 bg-gray-300 dark:bg-coach-inset rounded-full flex-shrink-0 transition-colors">
+          <div className={`relative w-11 h-6 rounded-full flex-shrink-0 transition-colors ${theme === 'dark' ? 'bg-coach-accent' : 'bg-gray-300'}`}>
             <div className={`absolute top-0.5 w-5 h-5 rounded-full bg-white shadow-md flex items-center justify-center transition-transform duration-300 ${theme === 'dark' ? 'translate-x-[22px]' : 'translate-x-0.5'}`}>
               {theme === 'light' ? (
                 <FiSun className="w-3 h-3 text-blue-500" />
               ) : (
-                <FiMoon className="w-3 h-3 text-sky-600" />
+                <FiMoon className="w-3 h-3 text-coach-accent" />
               )}
             </div>
           </div>

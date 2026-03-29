@@ -503,8 +503,8 @@ export const getConconiTests = async (athleteId) => {
  * Returns { data: vamTest (with computed vam_kmh and pace_seconds_per_km), error }
  */
 export const createVAMTest = async (athleteId, coachId, testData) => {
-  if (!athleteId || !coachId) {
-    return { data: null, error: new Error('Faltan athleteId o coachId') };
+  if (!athleteId) {
+    return { data: null, error: new Error('Falta athleteId') };
   }
 
   const distanceMeters = parseInt(testData.distance_meters);
@@ -522,7 +522,7 @@ export const createVAMTest = async (athleteId, coachId, testData) => {
       .from('vam_tests')
       .insert({
         athlete_id: athleteId,
-        coach_id: coachId,
+        coach_id: coachId || null,
         test_date: testData.test_date || toLocalDateStr(new Date()),
         distance_meters: distanceMeters,
         duration_seconds: durationSeconds,
@@ -535,7 +535,6 @@ export const createVAMTest = async (athleteId, coachId, testData) => {
     if (error) throw error;
     return { data, error: null };
   } catch (error) {
-    console.error('Error creating VAM test:', error);
     return { data: null, error };
   }
 };

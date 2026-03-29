@@ -186,13 +186,13 @@ export default function PMCChart({ activities, athleteProfile, athleteId: propAt
     <motion.div
       initial={{ opacity: 0, y: 10 }}
       animate={{ opacity: 1, y: 0 }}
-      className="bg-white dark:bg-gray-800 rounded-xl border border-gray-200 dark:border-gray-700 p-4"
+      className="bg-ath-surface rounded-xl border border-ath-border p-4"
     >
       {/* Header */}
       <div className="flex flex-wrap items-center justify-between gap-2 mb-4">
         <div className="flex items-center gap-2">
           <FiTrendingUp className="w-5 h-5 text-blue-500 flex-shrink-0" />
-          <h3 className="text-base sm:text-lg font-semibold text-gray-900 dark:text-white flex items-center">
+          <h3 className="text-base sm:text-lg font-semibold text-ath-text-primary flex items-center">
             <span className="hidden sm:inline">Curva de Rendimiento (PMC)</span>
             <span className="sm:hidden">PMC</span>
             <InfoTooltip text="Gráfico de gestión del rendimiento. CTL (azul) = fitness acumulado. ATL (rojo) = fatiga reciente. TSB = forma actual (CTL − ATL). Un TSB positivo indica frescura; negativo indica fatiga acumulada." />
@@ -202,7 +202,7 @@ export default function PMCChart({ activities, athleteProfile, athleteId: propAt
           <select
             value={period}
             onChange={(e) => setPeriod(e.target.value)}
-            className="text-xs px-2 py-1 rounded-lg border border-gray-300 dark:border-gray-600 bg-white dark:bg-gray-700 text-gray-700 dark:text-gray-300"
+            className="text-xs px-2 py-1 rounded-lg border border-ath-border bg-ath-surface text-ath-text-secondary"
           >
             {PERIOD_OPTIONS.map(p => (
               <option key={p.value} value={p.value}>{p.label}</option>
@@ -254,7 +254,7 @@ export default function PMCChart({ activities, athleteProfile, athleteId: propAt
           <Line data={chartData} options={chartOptions} />
         </div>
       ) : (
-        <div className="flex flex-col items-center justify-center h-48 text-gray-500 dark:text-gray-400">
+        <div className="flex flex-col items-center justify-center h-48 text-ath-text-muted">
           <FiInfo className="w-8 h-8 mb-2" />
           <p className="text-sm">No hay datos de carga de entrenamiento</p>
           {activities && activities.length > 0 && (
@@ -270,7 +270,7 @@ export default function PMCChart({ activities, athleteProfile, athleteId: propAt
       )}
 
       {/* TSB Guidelines info */}
-      <div className="mt-3 flex flex-wrap gap-3 text-[10px] text-gray-500 dark:text-gray-400">
+      <div className="mt-3 flex flex-wrap gap-3 text-[10px] text-ath-text-muted">
         <span className="flex items-center gap-1"><span className="w-2 h-2 rounded-full bg-green-500" /> Listo para competir (TSB +15 a +25)</span>
         <span className="flex items-center gap-1"><span className="w-2 h-2 rounded-full bg-yellow-500" /> Entrenamiento productivo (TSB -10 a -30)</span>
         <span className="flex items-center gap-1"><span className="w-2 h-2 rounded-full bg-red-500" /> Sobrecarga (TSB &lt; -30)</span>

@@ -111,10 +111,11 @@ const AthleteMetricsView = () => {
       const startIdx = w * 7;
       const weekSlice = daily56.slice(startIdx, startIdx + 7);
       const weekKm = weekSlice.reduce((s, v) => s + v, 0);
+      const wStart = new Date(); wStart.setDate(wStart.getDate() - w * 7 - wStart.getDay() + 1);
       weeklyLoads.push({
         weekIndex: 7 - w,
         km: +weekKm.toFixed(1),
-        label: w === 0 ? 'Esta sem.' : w === 1 ? 'Sem. -1' : `Sem. -${w}`,
+        label: w === 0 ? 'Esta sem.' : wStart.toLocaleDateString('es-ES', { day: 'numeric', month: 'short' }),
       });
     }
 
@@ -217,8 +218,9 @@ const AthleteMetricsView = () => {
           return d >= weekStart && d <= weekEnd;
         });
 
+        const wLabel = w === 0 ? 'Esta sem.' : weekStart.toLocaleDateString('es-ES', { day: 'numeric', month: 'short' });
         weeks.push({
-          label: w === 0 ? 'Esta sem.' : w === 1 ? 'Sem. -1' : `Sem. -${w}`,
+          label: wLabel,
           ...metricFn(weekActs),
         });
       }
@@ -316,9 +318,7 @@ const AthleteMetricsView = () => {
         const { data, error } = await getAthleteDetails(athleteId);
         if (error) throw error;
         setAthlete(data);
-      } catch (error) {
-        console.error('Error loading athlete:', error);
-      }
+      } catch { /* silenced */ }
     };
 
     loadAthlete();
@@ -363,9 +363,7 @@ const AthleteMetricsView = () => {
             setPeriodComparison(calculatePeriodComparison(currentPeriod, previousPeriod));
           }
         }
-      } catch (error) {
-        console.error('Error loading Strava data:', error);
-      } finally {
+      } catch { /* silenced */ } finally {
         setLoading(false);
       }
     };
@@ -547,7 +545,6 @@ const AthleteMetricsView = () => {
 
       showSuccess('Informe de rendimiento generado correctamente');
     } catch (error) {
-      console.error('Error generating report:', error);
       setReportError(error.message || 'Error al generar el informe');
       showError('Error al generar el informe');
       // Auto-dismiss after 10 seconds
@@ -575,27 +572,27 @@ const AthleteMetricsView = () => {
   }
 
   return (
-    <div className="p-4 sm:p-6 lg:p-8 min-h-screen bg-gray-50 dark:bg-gray-900">
+    <div className="p-4 sm:p-6 lg:p-8 min-h-screen bg-coach-base">
       {/* Header */}
       <div className="flex flex-col sm:flex-row sm:items-center sm:justify-between gap-3 mb-6">
         <div className="flex items-center space-x-3 sm:space-x-4 min-w-0">
           <button
             onClick={() => navigate(`/dashboard/athletes/${athleteId}`)}
-            className="p-2 hover:bg-gray-200 dark:hover:bg-gray-700 rounded-lg transition-colors flex-shrink-0"
+            className="p-2 hover:bg-coach-inset rounded-lg transition-colors flex-shrink-0"
           >
-            <FiArrowLeft className="w-5 h-5 text-gray-600 dark:text-gray-400" />
+            <FiArrowLeft className="w-5 h-5 text-coach-text-secondary" />
           </button>
           <div className="min-w-0">
-            <h1 className="text-xl sm:text-2xl font-bold text-gray-900 dark:text-white truncate">
+            <h1 className="text-xl sm:text-2xl font-bold text-coach-text-primary truncate">
               Métricas de Rendimiento
             </h1>
-            <p className="text-sm text-gray-500 dark:text-gray-400 truncate">{athleteName}</p>
+            <p className="text-sm text-coach-text-muted truncate">{athleteName}</p>
           </div>
         </div>
 
         <div className="flex items-center gap-2 self-start sm:self-auto">
           {/* Period Selector */}
-          <div className="flex items-center space-x-1 sm:space-x-2 bg-white dark:bg-gray-800 rounded-lg p-1 border border-gray-200 dark:border-gray-700">
+          <div className="flex items-center space-x-1 sm:space-x-2 bg-coach-surface rounded-lg p-1 border border-coach-border">
             {[
               { value: '4weeks', label: '4', labelFull: 'Semanas' },
               { value: '8weeks', label: '8', labelFull: 'Semanas' },
@@ -607,7 +604,7 @@ const AthleteMetricsView = () => {
                 className={`px-2 sm:px-3 py-1.5 text-xs sm:text-sm font-medium rounded-md transition-colors whitespace-nowrap ${
                   selectedPeriod === period.value
                     ? 'bg-sky-600 text-white'
-                    : 'text-gray-600 dark:text-gray-400 hover:bg-gray-100 dark:hover:bg-gray-700'
+                    : 'text-coach-text-secondary hover:bg-coach-inset'
                 }`}
               >
                 {period.label} <span className="hidden sm:inline">{period.labelFull}</span><span className="sm:hidden">Sem.</span>
@@ -656,12 +653,12 @@ const AthleteMetricsView = () => {
       )}
 
       {!stravaConnected ? (
-        <div className="bg-white dark:bg-gray-800 rounded-2xl p-12 text-center">
+        <div className="bg-coach-surface rounded-2xl p-12 text-center">
           <FiActivity className="w-16 h-16 text-gray-300 mx-auto mb-4" />
-          <h2 className="text-xl font-bold text-gray-900 dark:text-white mb-2">
+          <h2 className="text-xl font-bold text-coach-text-primary mb-2">
             Sin conexión a Strava
           </h2>
-          <p className="text-gray-500 dark:text-gray-400">
+          <p className="text-coach-text-muted">
             Este atleta no tiene Strava conectado. Las métricas se mostrarán cuando conecte su cuenta.
           </p>
         </div>
@@ -751,16 +748,16 @@ const AthleteMetricsView = () => {
               initial={{ opacity: 0, y: 20 }}
               animate={{ opacity: 1, y: 0 }}
               transition={{ delay: 0.4 }}
-              className="bg-white dark:bg-gray-800 rounded-xl p-4 sm:p-6 shadow-sm border border-gray-200 dark:border-gray-700"
+              className="bg-coach-surface rounded-xl p-4 sm:p-6 shadow-sm border border-coach-border"
             >
               <div className="flex items-center space-x-2 mb-2">
                 <FiTarget className="w-5 h-5 sm:w-6 sm:h-6 text-purple-500" />
-                <h3 className="text-lg sm:text-xl font-bold text-gray-900 dark:text-white flex items-center">
+                <h3 className="text-lg sm:text-xl font-bold text-coach-text-primary flex items-center">
                   Predictor de Tiempos
                   <InfoTooltip text="Estimación de tiempos usando el modelo VDOT de Jack Daniels, el mismo sistema que usan relojes deportivos como COROS y Garmin. Basado en la mejor marca registrada del atleta." />
                 </h3>
               </div>
-              <p className="text-sm text-gray-500 dark:text-gray-400 mb-4 sm:mb-6">
+              <p className="text-sm text-coach-text-muted mb-4 sm:mb-6">
                 VDOT: {racePredictions.vdot} — Modelo Daniels-Gilbert
               </p>
 
@@ -769,17 +766,17 @@ const AthleteMetricsView = () => {
                 return (
                   <div className="grid grid-cols-2 gap-2.5">
                     {Object.entries(racePredictions.predictions).slice(0, 4).map(([distance, data]) => (
-                      <div key={distance} className="bg-gray-50 dark:bg-gray-700/50 rounded-xl p-3.5">
-                        <p className="text-[10px] font-bold uppercase tracking-widest text-slate-400 dark:text-slate-500 mb-1">
+                      <div key={distance} className="bg-coach-inset/50 rounded-xl p-3.5">
+                        <p className="text-[10px] font-bold uppercase tracking-widest text-coach-text-muted mb-1">
                           {distance.toUpperCase()}
                         </p>
-                        <p className="text-2xl font-bold text-slate-900 dark:text-white leading-none mb-0.5">
+                        <p className="text-2xl font-bold text-coach-text-primary leading-none mb-0.5">
                           {data.timeFormatted}
                         </p>
-                        <p className="text-xs text-slate-400 dark:text-slate-500 mb-2">
+                        <p className="text-xs text-coach-text-muted mb-2">
                           {data.pace} min/km
                         </p>
-                        <div className="w-full h-1 bg-gray-200 dark:bg-gray-600 rounded-full overflow-hidden">
+                        <div className="w-full h-1 bg-coach-inset rounded-full overflow-hidden">
                           <div className={`h-1 rounded-full ${barColors[distance] || 'bg-violet-500'}`} style={{ width: '100%' }} />
                         </div>
                       </div>
@@ -796,17 +793,17 @@ const AthleteMetricsView = () => {
               initial={{ opacity: 0, y: 20 }}
               animate={{ opacity: 1, y: 0 }}
               transition={{ delay: 0.45 }}
-              className="bg-white dark:bg-gray-800 rounded-2xl p-4 sm:p-5 border border-gray-200 dark:border-gray-700"
+              className="bg-coach-surface rounded-2xl p-4 sm:p-5 border border-coach-border"
             >
               {/* Header */}
               <div className="flex items-center gap-2 mb-0.5">
                 <FiHeart className="w-4 h-4 text-red-500" />
-                <h3 className="text-base font-bold text-slate-900 dark:text-white">
+                <h3 className="text-base font-bold text-coach-text-primary">
                   Zonas de Entrenamiento
                   <InfoTooltip text="Zonas de entrenamiento basadas en frecuencia cardíaca calculadas con la fórmula de Karvonen (% de la frecuencia cardíaca de reserva). Cada zona trabaja un sistema energético diferente." />
                 </h3>
               </div>
-              <p className="text-xs text-slate-400 dark:text-slate-500 mb-4">
+              <p className="text-xs text-coach-text-muted mb-4">
                 FC Máx: {hrZoneData.maxHR} bpm · FC Reposo: {hrZoneData.restingHR} bpm
               </p>
 
@@ -815,8 +812,8 @@ const AthleteMetricsView = () => {
                 {hrZoneData.zones.map((zone) => (
                   <div key={zone.name} className="flex items-center gap-3">
                     <div className="w-2.5 h-2.5 rounded-full flex-shrink-0" style={{ backgroundColor: zone.color }} />
-                    <span className="flex-1 text-sm font-medium text-slate-700 dark:text-slate-300">{zone.name}</span>
-                    <span className="text-xs font-mono text-slate-400 dark:text-slate-500 whitespace-nowrap">
+                    <span className="flex-1 text-sm font-medium text-coach-text-secondary">{zone.name}</span>
+                    <span className="text-xs font-mono text-coach-text-muted whitespace-nowrap">
                       {zone.bpmMin}–{zone.bpmMax} bpm
                     </span>
                   </div>
@@ -824,9 +821,9 @@ const AthleteMetricsView = () => {
               </div>
 
               {/* Distribución por zona */}
-              <div className="border-t border-gray-100 dark:border-gray-700 pt-4">
-                <p className="text-xs font-semibold text-slate-600 dark:text-slate-300 mb-0.5">Distribución por zona</p>
-                <p className="text-[11px] text-slate-400 dark:text-slate-500 mb-3">
+              <div className="border-t border-coach-border pt-4">
+                <p className="text-xs font-semibold text-coach-text-secondary mb-0.5">Distribución por zona</p>
+                <p className="text-[11px] text-coach-text-muted mb-3">
                   Basado en FC media de cada actividad
                 </p>
 
@@ -865,7 +862,7 @@ const AthleteMetricsView = () => {
                       />
                       {/* Center label */}
                       <div className="absolute inset-0 flex items-center justify-center pointer-events-none">
-                        <span className="text-lg font-bold text-slate-900 dark:text-white">
+                        <span className="text-lg font-bold text-coach-text-primary">
                           {hrZoneData.zones[1] && hrZoneData.totalHRActivities > 0
                             ? Math.round((hrZoneData.zones[1].count / hrZoneData.totalHRActivities) * 100)
                             : 0}%
@@ -883,8 +880,8 @@ const AthleteMetricsView = () => {
                         return (
                           <div key={zone.name} className="flex items-center gap-2">
                             <div className="w-2 h-2 rounded-full flex-shrink-0" style={{ backgroundColor: zone.color }} />
-                            <span className="text-[11px] text-slate-500 dark:text-slate-400 w-20 truncate">{shortName}</span>
-                            <span className="text-[11px] font-semibold text-slate-700 dark:text-slate-300 w-8 text-right flex-shrink-0">{pct}%</span>
+                            <span className="text-[11px] text-coach-text-muted w-20 truncate">{shortName}</span>
+                            <span className="text-[11px] font-semibold text-coach-text-secondary w-8 text-right flex-shrink-0">{pct}%</span>
                           </div>
                         );
                       })}
@@ -892,8 +889,8 @@ const AthleteMetricsView = () => {
                   </div>
                 ) : (
                   <div className="text-center py-6">
-                    <FiHeart className="w-8 h-8 text-gray-300 dark:text-gray-600 mx-auto mb-2" />
-                    <p className="text-sm text-gray-500 dark:text-gray-400">No hay datos de frecuencia cardíaca</p>
+                    <FiHeart className="w-8 h-8 text-coach-text-muted mx-auto mb-2" />
+                    <p className="text-sm text-coach-text-muted">No hay datos de frecuencia cardíaca</p>
                   </div>
                 )}
 
@@ -907,14 +904,14 @@ const AthleteMetricsView = () => {
                       const shortName = zone.name.replace('Z1 - ', 'Z1 ').replace('Z2 - ', 'Z2 ').replace('Z3 - ', 'Z3 ').replace('Z4 - ', 'Z4 ').replace('Z5 - ', 'Z5 ');
                       return (
                         <div key={zone.name} className="flex items-center gap-2">
-                          <span className="text-[11px] text-slate-500 dark:text-slate-400 w-24 flex-shrink-0">{shortName}</span>
-                          <div className="flex-1 h-2 bg-gray-100 dark:bg-gray-700 rounded-full overflow-hidden">
+                          <span className="text-[11px] text-coach-text-muted w-24 flex-shrink-0">{shortName}</span>
+                          <div className="flex-1 h-2 bg-coach-elevated rounded-full overflow-hidden">
                             <div
                               className="h-2 rounded-full transition-all duration-500"
                               style={{ width: `${Math.max(pct, 1)}%`, backgroundColor: zone.color }}
                             />
                           </div>
-                          <span className="text-[11px] font-semibold text-slate-500 dark:text-slate-400 w-7 text-right flex-shrink-0">{pct}%</span>
+                          <span className="text-[11px] font-semibold text-coach-text-muted w-7 text-right flex-shrink-0">{pct}%</span>
                         </div>
                       );
                     })}
@@ -930,17 +927,17 @@ const AthleteMetricsView = () => {
               initial={{ opacity: 0, y: 20 }}
               animate={{ opacity: 1, y: 0 }}
               transition={{ delay: 0.05 }}
-              className="bg-white dark:bg-gray-800 rounded-2xl p-4 sm:p-5 border border-gray-200 dark:border-gray-700"
+              className="bg-coach-surface rounded-2xl p-4 sm:p-5 border border-coach-border"
             >
               {/* Header */}
               <div className="flex items-center gap-2 mb-1">
                 <FiZap className="w-4 h-4 text-amber-500" />
-                <h3 className="text-base font-bold text-slate-900 dark:text-white">
+                <h3 className="text-base font-bold text-coach-text-primary">
                   Gestión de Carga
                   <InfoTooltip text="Ratio de carga aguda/crónica (ACWR): compara el volumen de la última semana con la media de las 4 anteriores. Zona óptima: 0.8–1.3. Por encima de 1.5 aumenta el riesgo de lesión." />
                 </h3>
               </div>
-              <p className="text-xs text-slate-400 dark:text-slate-500 mb-3">ACWR · ratio carga aguda/crónica</p>
+              <p className="text-xs text-coach-text-muted mb-3">ACWR · ratio carga aguda/crónica</p>
 
               {/* Alert banner */}
               {(() => {
@@ -966,25 +963,25 @@ const AthleteMetricsView = () => {
 
               {/* 3 stat chips */}
               <div className="grid grid-cols-3 gap-2.5 mb-4">
-                <div className="bg-gray-50 dark:bg-gray-700/50 rounded-xl p-3 text-center">
-                  <p className="text-[10px] text-slate-400 dark:text-slate-500 mb-1">Carga aguda</p>
-                  <p className="text-xl font-bold text-slate-900 dark:text-white">{loadData.acuteLoad}</p>
+                <div className="bg-coach-inset/50 rounded-xl p-3 text-center">
+                  <p className="text-[10px] text-coach-text-muted mb-1">Carga aguda</p>
+                  <p className="text-xl font-bold text-coach-text-primary">{loadData.acuteLoad}</p>
                   <p className="text-[10px] text-slate-400">km · 7 días</p>
                 </div>
-                <div className="bg-gray-50 dark:bg-gray-700/50 rounded-xl p-3 text-center">
-                  <p className="text-[10px] text-slate-400 dark:text-slate-500 mb-1">Carga crónica</p>
-                  <p className="text-xl font-bold text-slate-900 dark:text-white">{loadData.chronicLoadWeekly}</p>
+                <div className="bg-coach-inset/50 rounded-xl p-3 text-center">
+                  <p className="text-[10px] text-coach-text-muted mb-1">Carga crónica</p>
+                  <p className="text-xl font-bold text-coach-text-primary">{loadData.chronicLoadWeekly}</p>
                   <p className="text-[10px] text-slate-400">km/sem · 4 sem</p>
                 </div>
-                <div className="bg-gray-50 dark:bg-gray-700/50 rounded-xl p-3 text-center">
-                  <p className="text-[10px] text-slate-400 dark:text-slate-500 mb-1">ACWR</p>
+                <div className="bg-coach-inset/50 rounded-xl p-3 text-center">
+                  <p className="text-[10px] text-coach-text-muted mb-1">ACWR</p>
                   <p className={`text-xl font-bold ${getACWRZone(loadData.acwr).textClass}`}>{loadData.acwr.toFixed(2)}</p>
                   <p className={`text-[10px] font-medium ${getACWRZone(loadData.acwr).textClass}`}>{getACWRZone(loadData.acwr).label}</p>
                 </div>
               </div>
 
               {/* Weekly Load Bar Chart */}
-              <p className="text-xs font-semibold text-slate-600 dark:text-slate-300 mb-2">
+              <p className="text-xs font-semibold text-coach-text-secondary mb-2">
                 Carga semanal · últimas 8 semanas
               </p>
               <div className="h-44">
@@ -1023,7 +1020,7 @@ const AthleteMetricsView = () => {
               </div>
 
               {/* Zone legend */}
-              <div className="flex flex-wrap items-center gap-3 mt-3 text-[11px] text-slate-400 dark:text-slate-500">
+              <div className="flex flex-wrap items-center gap-3 mt-3 text-[11px] text-coach-text-muted">
                 <span className="flex items-center gap-1"><span className="w-2.5 h-2.5 rounded-full bg-blue-500" />Bajo</span>
                 <span className="flex items-center gap-1"><span className="w-2.5 h-2.5 rounded-full bg-green-500" />Óptimo</span>
                 <span className="flex items-center gap-1"><span className="w-2.5 h-2.5 rounded-full bg-orange-500" />Alto</span>
@@ -1038,9 +1035,9 @@ const AthleteMetricsView = () => {
               initial={{ opacity: 0, y: 20 }}
               animate={{ opacity: 1, y: 0 }}
               transition={{ delay: 0.1 }}
-              className="bg-white dark:bg-gray-800 rounded-2xl p-4 sm:p-6 border border-gray-200 dark:border-gray-700"
+              className="bg-coach-surface rounded-2xl p-4 sm:p-6 border border-coach-border"
             >
-              <h3 className="text-lg font-bold text-gray-900 dark:text-white mb-4 flex items-center">
+              <h3 className="text-lg font-bold text-coach-text-primary mb-4 flex items-center">
                 <FiBarChart2 className="w-5 h-5 mr-2 text-orange-500" />
                 Volumen Semanal Running (km)
                 <InfoTooltip text="Kilómetros de running recorridos cada semana. Solo incluye carrera, trail y carrera virtual. Permite ver la progresión del volumen y detectar aumentos bruscos de carga." />
@@ -1118,9 +1115,9 @@ const AthleteMetricsView = () => {
                 initial={{ opacity: 0, y: 20 }}
                 animate={{ opacity: 1, y: 0 }}
                 transition={{ delay: 0.2 }}
-                className="bg-white dark:bg-gray-800 rounded-2xl p-4 sm:p-6 border border-gray-200 dark:border-gray-700"
+                className="bg-coach-surface rounded-2xl p-4 sm:p-6 border border-coach-border"
               >
-                <h3 className="text-lg font-bold text-gray-900 dark:text-white mb-4 flex items-center">
+                <h3 className="text-lg font-bold text-coach-text-primary mb-4 flex items-center">
                   <FiClock className="w-5 h-5 mr-2 text-blue-500" />
                   Tiempo Semanal (min)
                   <InfoTooltip text="Minutos totales de entrenamiento por semana. Complementa el volumen en km ya que incluye todas las actividades independientemente de la distancia." />
@@ -1167,9 +1164,9 @@ const AthleteMetricsView = () => {
                 initial={{ opacity: 0, y: 20 }}
                 animate={{ opacity: 1, y: 0 }}
                 transition={{ delay: 0.3 }}
-                className="bg-white dark:bg-gray-800 rounded-2xl p-4 sm:p-6 border border-gray-200 dark:border-gray-700"
+                className="bg-coach-surface rounded-2xl p-4 sm:p-6 border border-coach-border"
               >
-                <h3 className="text-lg font-bold text-gray-900 dark:text-white mb-4 flex items-center">
+                <h3 className="text-lg font-bold text-coach-text-primary mb-4 flex items-center">
                   <FiTrendingUp className="w-5 h-5 mr-2 text-green-500" />
                   Desnivel Semanal (m)
                   <InfoTooltip text="Metros de desnivel positivo acumulado cada semana. Indicador clave para corredores de montaña y trail." />
@@ -1215,15 +1212,15 @@ const AthleteMetricsView = () => {
               initial={{ opacity: 0, y: 20 }}
               animate={{ opacity: 1, y: 0 }}
               transition={{ delay: 0.35 }}
-              className="bg-white dark:bg-gray-800 rounded-2xl p-4 sm:p-6 border border-gray-200 dark:border-gray-700"
+              className="bg-coach-surface rounded-2xl p-4 sm:p-6 border border-coach-border"
             >
-              <h3 className="text-lg font-bold text-gray-900 dark:text-white mb-4 flex items-center">
+              <h3 className="text-lg font-bold text-coach-text-primary mb-4 flex items-center">
                 <FiZap className="w-5 h-5 mr-2 text-blue-500" />
                 Velocidad Media por Actividad
                 <InfoTooltip text="Velocidad media (km/h) de cada actividad a lo largo del tiempo. La línea punteada indica la media general. Permite ver tendencias de mejora o fatiga." />
               </h3>
               {/* Average line indicator */}
-              <div className="flex items-center justify-end mb-2 text-sm text-gray-500 dark:text-gray-400">
+              <div className="flex items-center justify-end mb-2 text-sm text-coach-text-muted">
                 <div className="flex items-center">
                   <div className="w-8 h-0.5 bg-gray-400 dark:bg-gray-500 mr-2"></div>
                   <span>Media = {averageSpeedData.avgSpeed} km/h</span>
@@ -1303,9 +1300,9 @@ const AthleteMetricsView = () => {
                 initial={{ opacity: 0, y: 20 }}
                 animate={{ opacity: 1, y: 0 }}
                 transition={{ delay: 0.4 }}
-                className="bg-white dark:bg-gray-800 rounded-2xl p-4 sm:p-6 border border-gray-200 dark:border-gray-700"
+                className="bg-coach-surface rounded-2xl p-4 sm:p-6 border border-coach-border"
               >
-                <h3 className="text-lg font-bold text-gray-900 dark:text-white mb-4 flex items-center">
+                <h3 className="text-lg font-bold text-coach-text-primary mb-4 flex items-center">
                   <FiHeart className="w-5 h-5 mr-2 text-red-500" />
                   FC Media Semanal Running (ppm)
                   <InfoTooltip text="Frecuencia cardíaca media de las actividades de running de cada semana. Si baja a mismo ritmo, indica mejora de eficiencia cardíaca. Si sube sin aumentar intensidad, puede indicar fatiga." />
@@ -1354,9 +1351,9 @@ const AthleteMetricsView = () => {
                 initial={{ opacity: 0, y: 20 }}
                 animate={{ opacity: 1, y: 0 }}
                 transition={{ delay: 0.5 }}
-                className="bg-white dark:bg-gray-800 rounded-2xl p-4 sm:p-6 border border-gray-200 dark:border-gray-700"
+                className="bg-coach-surface rounded-2xl p-4 sm:p-6 border border-coach-border"
               >
-                <h3 className="text-lg font-bold text-gray-900 dark:text-white mb-4 flex items-center">
+                <h3 className="text-lg font-bold text-coach-text-primary mb-4 flex items-center">
                   <FiZap className="w-5 h-5 mr-2 text-purple-500" />
                   Ritmo Medio Semanal (min/km)
                   <InfoTooltip text="Ritmo medio de carrera (minutos por kilómetro) cada semana. Un descenso indica que se corre más rápido. El eje está invertido: más abajo = más rápido." />
@@ -1424,9 +1421,9 @@ const AthleteMetricsView = () => {
               initial={{ opacity: 0, y: 20 }}
               animate={{ opacity: 1, y: 0 }}
               transition={{ delay: 0.55 }}
-              className="bg-white dark:bg-gray-800 rounded-2xl p-4 sm:p-6 border border-gray-200 dark:border-gray-700"
+              className="bg-coach-surface rounded-2xl p-4 sm:p-6 border border-coach-border"
             >
-              <h3 className="text-lg font-bold text-gray-900 dark:text-white mb-4 flex items-center">
+              <h3 className="text-lg font-bold text-coach-text-primary mb-4 flex items-center">
                 <FiNavigation className="w-5 h-5 mr-2 text-yellow-500" />
                 Ciclismo
                 <InfoTooltip text="Métricas de ciclismo: km semanales, velocidad media y desnivel acumulado. Solo incluye Ride y VirtualRide." />
@@ -1436,26 +1433,26 @@ const AthleteMetricsView = () => {
               <div className="grid grid-cols-2 sm:grid-cols-4 gap-3 mb-6">
                 <div className="bg-yellow-50 dark:bg-yellow-900/20 rounded-lg p-3 text-center">
                   <p className="text-xl sm:text-2xl font-bold text-yellow-700 dark:text-yellow-300">{sportCharts.cycling.totalKm}</p>
-                  <p className="text-[10px] sm:text-xs text-gray-500 dark:text-gray-400">km totales</p>
+                  <p className="text-[10px] sm:text-xs text-coach-text-muted">km totales</p>
                 </div>
                 <div className="bg-yellow-50 dark:bg-yellow-900/20 rounded-lg p-3 text-center">
                   <p className="text-xl sm:text-2xl font-bold text-yellow-700 dark:text-yellow-300">{sportCharts.cycling.avgSpeed}</p>
-                  <p className="text-[10px] sm:text-xs text-gray-500 dark:text-gray-400">km/h media</p>
+                  <p className="text-[10px] sm:text-xs text-coach-text-muted">km/h media</p>
                 </div>
                 <div className="bg-yellow-50 dark:bg-yellow-900/20 rounded-lg p-3 text-center">
                   <p className="text-xl sm:text-2xl font-bold text-yellow-700 dark:text-yellow-300">{sportCharts.cycling.totalElevation}</p>
-                  <p className="text-[10px] sm:text-xs text-gray-500 dark:text-gray-400">m desnivel</p>
+                  <p className="text-[10px] sm:text-xs text-coach-text-muted">m desnivel</p>
                 </div>
                 <div className="bg-yellow-50 dark:bg-yellow-900/20 rounded-lg p-3 text-center">
                   <p className="text-xl sm:text-2xl font-bold text-yellow-700 dark:text-yellow-300">{sportCharts.cycling.avgHR || '-'}</p>
-                  <p className="text-[10px] sm:text-xs text-gray-500 dark:text-gray-400">bpm media</p>
+                  <p className="text-[10px] sm:text-xs text-coach-text-muted">bpm media</p>
                 </div>
               </div>
 
               {/* Weekly km + speed chart */}
               <div className="grid grid-cols-1 lg:grid-cols-2 gap-4">
                 <div>
-                  <h4 className="text-sm font-semibold text-gray-700 dark:text-gray-300 mb-3">Km semanales</h4>
+                  <h4 className="text-sm font-semibold text-coach-text-secondary mb-3">Km semanales</h4>
                   <div className="h-48">
                     <Bar
                       data={{
@@ -1481,7 +1478,7 @@ const AthleteMetricsView = () => {
                   </div>
                 </div>
                 <div>
-                  <h4 className="text-sm font-semibold text-gray-700 dark:text-gray-300 mb-3">Velocidad media semanal</h4>
+                  <h4 className="text-sm font-semibold text-coach-text-secondary mb-3">Velocidad media semanal</h4>
                   <div className="h-48">
                     <Line
                       data={{
@@ -1519,9 +1516,9 @@ const AthleteMetricsView = () => {
               initial={{ opacity: 0, y: 20 }}
               animate={{ opacity: 1, y: 0 }}
               transition={{ delay: 0.6 }}
-              className="bg-white dark:bg-gray-800 rounded-2xl p-4 sm:p-6 border border-gray-200 dark:border-gray-700"
+              className="bg-coach-surface rounded-2xl p-4 sm:p-6 border border-coach-border"
             >
-              <h3 className="text-lg font-bold text-gray-900 dark:text-white mb-4 flex items-center">
+              <h3 className="text-lg font-bold text-coach-text-primary mb-4 flex items-center">
                 <FiActivity className="w-5 h-5 mr-2 text-cyan-500" />
                 Natación
                 <InfoTooltip text="Métricas de natación: metros semanales y ritmo medio por 100m." />
@@ -1531,22 +1528,22 @@ const AthleteMetricsView = () => {
               <div className="grid grid-cols-3 gap-3 mb-6">
                 <div className="bg-cyan-50 dark:bg-cyan-900/20 rounded-lg p-3 text-center">
                   <p className="text-xl sm:text-2xl font-bold text-cyan-700 dark:text-cyan-300">{sportCharts.swimming.totalMeters}</p>
-                  <p className="text-[10px] sm:text-xs text-gray-500 dark:text-gray-400">metros totales</p>
+                  <p className="text-[10px] sm:text-xs text-coach-text-muted">metros totales</p>
                 </div>
                 <div className="bg-cyan-50 dark:bg-cyan-900/20 rounded-lg p-3 text-center">
                   <p className="text-xl sm:text-2xl font-bold text-cyan-700 dark:text-cyan-300">{sportCharts.swimming.avgPace100m}</p>
-                  <p className="text-[10px] sm:text-xs text-gray-500 dark:text-gray-400">min/100m</p>
+                  <p className="text-[10px] sm:text-xs text-coach-text-muted">min/100m</p>
                 </div>
                 <div className="bg-cyan-50 dark:bg-cyan-900/20 rounded-lg p-3 text-center">
                   <p className="text-xl sm:text-2xl font-bold text-cyan-700 dark:text-cyan-300">{sportCharts.swimming.count}</p>
-                  <p className="text-[10px] sm:text-xs text-gray-500 dark:text-gray-400">sesiones</p>
+                  <p className="text-[10px] sm:text-xs text-coach-text-muted">sesiones</p>
                 </div>
               </div>
 
               {/* Weekly meters chart */}
               <div className="grid grid-cols-1 lg:grid-cols-2 gap-4">
                 <div>
-                  <h4 className="text-sm font-semibold text-gray-700 dark:text-gray-300 mb-3">Metros semanales</h4>
+                  <h4 className="text-sm font-semibold text-coach-text-secondary mb-3">Metros semanales</h4>
                   <div className="h-48">
                     <Bar
                       data={{
@@ -1572,7 +1569,7 @@ const AthleteMetricsView = () => {
                   </div>
                 </div>
                 <div>
-                  <h4 className="text-sm font-semibold text-gray-700 dark:text-gray-300 mb-3">Ritmo medio /100m</h4>
+                  <h4 className="text-sm font-semibold text-coach-text-secondary mb-3">Ritmo medio /100m</h4>
                   <div className="h-48">
                     <Line
                       data={{
@@ -1628,9 +1625,9 @@ const AthleteMetricsView = () => {
               initial={{ opacity: 0, y: 20 }}
               animate={{ opacity: 1, y: 0 }}
               transition={{ delay: 0.65 }}
-              className="bg-white dark:bg-gray-800 rounded-2xl p-4 sm:p-6 border border-gray-200 dark:border-gray-700"
+              className="bg-coach-surface rounded-2xl p-4 sm:p-6 border border-coach-border"
             >
-              <h3 className="text-lg font-bold text-gray-900 dark:text-white mb-4 flex items-center">
+              <h3 className="text-lg font-bold text-coach-text-primary mb-4 flex items-center">
                 <FiZap className="w-5 h-5 mr-2 text-indigo-500" />
                 Fuerza / Gimnasio
                 <InfoTooltip text="Sesiones de fuerza, pesas, CrossFit y yoga. Muestra frecuencia semanal y duración media." />
@@ -1640,22 +1637,22 @@ const AthleteMetricsView = () => {
               <div className="grid grid-cols-3 gap-3 mb-6">
                 <div className="bg-indigo-50 dark:bg-indigo-900/20 rounded-lg p-3 text-center">
                   <p className="text-xl sm:text-2xl font-bold text-indigo-700 dark:text-indigo-300">{sportCharts.gym.totalSessions}</p>
-                  <p className="text-[10px] sm:text-xs text-gray-500 dark:text-gray-400">sesiones</p>
+                  <p className="text-[10px] sm:text-xs text-coach-text-muted">sesiones</p>
                 </div>
                 <div className="bg-indigo-50 dark:bg-indigo-900/20 rounded-lg p-3 text-center">
                   <p className="text-xl sm:text-2xl font-bold text-indigo-700 dark:text-indigo-300">{sportCharts.gym.avgDurationMin}</p>
-                  <p className="text-[10px] sm:text-xs text-gray-500 dark:text-gray-400">min/sesión</p>
+                  <p className="text-[10px] sm:text-xs text-coach-text-muted">min/sesión</p>
                 </div>
                 <div className="bg-indigo-50 dark:bg-indigo-900/20 rounded-lg p-3 text-center">
                   <p className="text-xl sm:text-2xl font-bold text-indigo-700 dark:text-indigo-300">{sportCharts.gym.totalMinutes}</p>
-                  <p className="text-[10px] sm:text-xs text-gray-500 dark:text-gray-400">min totales</p>
+                  <p className="text-[10px] sm:text-xs text-coach-text-muted">min totales</p>
                 </div>
               </div>
 
               {/* Weekly sessions + duration chart */}
               <div className="grid grid-cols-1 lg:grid-cols-2 gap-4">
                 <div>
-                  <h4 className="text-sm font-semibold text-gray-700 dark:text-gray-300 mb-3">Sesiones semanales</h4>
+                  <h4 className="text-sm font-semibold text-coach-text-secondary mb-3">Sesiones semanales</h4>
                   <div className="h-48">
                     <Bar
                       data={{
@@ -1686,7 +1683,7 @@ const AthleteMetricsView = () => {
                   </div>
                 </div>
                 <div>
-                  <h4 className="text-sm font-semibold text-gray-700 dark:text-gray-300 mb-3">Duración semanal</h4>
+                  <h4 className="text-sm font-semibold text-coach-text-secondary mb-3">Duración semanal</h4>
                   <div className="h-48">
                     <Bar
                       data={{
@@ -1725,9 +1722,9 @@ const AthleteMetricsView = () => {
                 initial={{ opacity: 0, y: 20 }}
                 animate={{ opacity: 1, y: 0 }}
                 transition={{ delay: 0.6 }}
-                className="bg-white dark:bg-gray-800 rounded-2xl p-4 sm:p-6 border border-gray-200 dark:border-gray-700"
+                className="bg-coach-surface rounded-2xl p-4 sm:p-6 border border-coach-border"
               >
-                <h3 className="text-lg font-bold text-gray-900 dark:text-white mb-4 flex items-center">
+                <h3 className="text-lg font-bold text-coach-text-primary mb-4 flex items-center">
                   <FiActivity className="w-5 h-5 mr-2 text-indigo-500" />
                   Distribución por Tipo de Actividad
                   <InfoTooltip text="Proporción de cada tipo de actividad (carrera, ciclismo, natación, etc.) registrada en Strava durante el período seleccionado." />
@@ -1770,8 +1767,8 @@ const AthleteMetricsView = () => {
                 <div className="mt-4 space-y-1">
                   {activityTypes.slice(0, 3).map((type, i) => (
                     <div key={type.type} className="flex items-center justify-between text-sm">
-                      <span className="text-gray-600 dark:text-gray-400">{type.label}</span>
-                      <span className="font-medium text-gray-900 dark:text-white">
+                      <span className="text-coach-text-secondary">{type.label}</span>
+                      <span className="font-medium text-coach-text-primary">
                         {type.distance.toFixed(1)} km
                       </span>
                     </div>
@@ -1786,16 +1783,16 @@ const AthleteMetricsView = () => {
                 initial={{ opacity: 0, y: 20 }}
                 animate={{ opacity: 1, y: 0 }}
                 transition={{ delay: 0.7 }}
-                className="bg-white dark:bg-gray-800 rounded-2xl p-6 border border-gray-200 dark:border-gray-700 lg:col-span-2"
+                className="bg-coach-surface rounded-2xl p-6 border border-coach-border lg:col-span-2"
               >
-                <h3 className="text-lg font-bold text-gray-900 dark:text-white mb-4 flex items-center">
+                <h3 className="text-lg font-bold text-coach-text-primary mb-4 flex items-center">
                   <FiCalendar className="w-5 h-5 mr-2 text-teal-500" />
                   Calendario de Actividad
                   <InfoTooltip text="Mapa de calor diario del período. El color más intenso indica mayor distancia recorrida ese día. Permite ver patrones de entrenamiento y descanso." />
                 </h3>
                 <div className="grid grid-cols-7 gap-1">
                   {['L', 'M', 'X', 'J', 'V', 'S', 'D'].map((day) => (
-                    <div key={day} className="text-center text-xs text-gray-500 font-medium py-1">
+                    <div key={day} className="text-center text-xs text-coach-text-muted font-medium py-1">
                       {day}
                     </div>
                   ))}
@@ -1810,7 +1807,7 @@ const AthleteMetricsView = () => {
                         className={`aspect-square rounded-sm flex items-center justify-center text-xs ${
                           day.hasActivity
                             ? 'text-white'
-                            : 'text-gray-400 dark:text-gray-600'
+                            : 'text-coach-text-muted'
                         }`}
                         style={{
                           backgroundColor: day.hasActivity
@@ -1824,7 +1821,7 @@ const AthleteMetricsView = () => {
                     );
                   })}
                 </div>
-                <div className="mt-4 flex items-center justify-end space-x-2 text-xs text-gray-500">
+                <div className="mt-4 flex items-center justify-end space-x-2 text-xs text-coach-text-muted">
                   <span>Menos</span>
                   <div className="flex space-x-1">
                     {[0.1, 0.3, 0.5, 0.7, 1].map((opacity) => (

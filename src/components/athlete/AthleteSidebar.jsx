@@ -106,8 +106,8 @@ const AthleteSidebar = ({ onCollapse }) => {
         className={`
           ${collapsed ? 'lg:w-20' : 'lg:w-64'}
           w-64
-          bg-white dark:bg-gray-800 
-          border-r border-gray-200 dark:border-gray-700 
+          bg-ath-surface
+          border-r border-ath-border
           transition-all duration-300 ease-in-out
           flex flex-col
           h-screen
@@ -118,19 +118,19 @@ const AthleteSidebar = ({ onCollapse }) => {
         style={{ overflowX: 'clip' }}
       >
         {/* Logo & Toggle */}
-        <div className={`h-16 flex items-center border-b border-gray-200 dark:border-gray-700 ${collapsed ? 'justify-center px-2' : 'justify-between px-4'}`}>
+        <div className={`h-16 flex items-center border-b border-ath-border ${collapsed ? 'justify-center px-2' : 'justify-between px-4'}`}>
           <Link to="/athlete/dashboard" className={`flex items-center ${collapsed ? '' : 'space-x-2'}`}>
-            <img src="/img/logo.png" alt="trainingtrack" className="w-8 h-8 object-contain flex-shrink-0" />
+            <img src={theme === 'dark' ? '/img/logo-user-dark.png' : '/img/logo-user.png'} alt="trainingtrack" className="w-8 h-8 object-contain flex-shrink-0" />
             {!collapsed && (
-              <span className="text-xl font-bold text-gray-900 dark:text-white">
-                Training<span className="text-green-600">Track</span>
+              <span className="text-xl font-bold text-ath-text-primary">
+                Training<span className="text-ath-accent">Track</span>
               </span>
             )}
           </Link>
           {!collapsed && (
             <button
               onClick={() => setCollapsed(!collapsed)}
-              className="hidden lg:block p-1.5 rounded-lg hover:bg-gray-100 dark:hover:bg-gray-700 text-gray-500 dark:text-gray-400 transition-colors"
+              className="hidden lg:block p-1.5 rounded-lg hover:bg-ath-inset text-ath-text-muted transition-colors"
               aria-label="Colapsar sidebar"
             >
               <FiChevronLeft className="w-5 h-5" />
@@ -139,7 +139,7 @@ const AthleteSidebar = ({ onCollapse }) => {
           {collapsed && (
             <button
               onClick={() => setCollapsed(!collapsed)}
-              className="hidden lg:block absolute top-16 left-1/2 -translate-x-1/2 -translate-y-1/2 p-1 rounded-full bg-white dark:bg-gray-800 border border-gray-200 dark:border-gray-700 shadow-sm hover:bg-gray-100 dark:hover:bg-gray-700 text-gray-500 dark:text-gray-400 transition-colors z-10"
+              className="hidden lg:block absolute top-16 left-1/2 -translate-x-1/2 -translate-y-1/2 p-1 rounded-full bg-ath-surface border border-ath-border shadow-sm hover:bg-ath-inset text-ath-text-muted transition-colors z-10"
               aria-label="Expandir sidebar"
             >
               <FiChevronRight className="w-4 h-4" />
@@ -163,12 +163,12 @@ const AthleteSidebar = ({ onCollapse }) => {
                   ${collapsed ? 'lg:justify-center' : ''}
                   ${
                     active
-                      ? 'bg-green-50 dark:bg-green-900/20 text-green-600 dark:text-green-400'
-                      : 'text-gray-700 dark:text-gray-300 hover:bg-gray-100 dark:hover:bg-gray-700'
+                      ? 'bg-ath-accent-surface text-ath-accent-text'
+                      : 'text-ath-text-secondary hover:bg-ath-inset'
                   }
                 `}
               >
-                <Icon className={`w-5 h-5 flex-shrink-0 ${active ? 'text-green-600 dark:text-green-400' : ''}`} />
+                <Icon className={`w-5 h-5 flex-shrink-0 ${active ? 'text-ath-accent-text' : ''}`} />
                 <span className={`text-sm font-medium flex-1 ${collapsed ? 'lg:hidden' : ''}`}>{item.label}</span>
                 {item.badge > 0 && (
                   collapsed ? (
@@ -192,18 +192,18 @@ const AthleteSidebar = ({ onCollapse }) => {
             onClick={toggleTheme}
             className={`
               w-full flex items-center px-3 py-2.5 rounded-lg
-              text-gray-700 dark:text-gray-300 hover:bg-gray-100 dark:hover:bg-gray-700
+              text-ath-text-secondary hover:bg-ath-inset
               transition-colors
               ${collapsed ? 'lg:justify-center' : 'space-x-3'}
             `}
             title={collapsed ? (theme === 'light' ? 'Modo oscuro' : 'Modo claro') : ''}
           >
-            <div className="relative w-11 h-6 bg-gray-300 dark:bg-gray-600 rounded-full flex-shrink-0 transition-colors">
+            <div className={`relative w-11 h-6 rounded-full flex-shrink-0 transition-colors ${theme === 'dark' ? 'bg-ath-accent' : 'bg-gray-300'}`}>
               <div className={`absolute top-0.5 w-5 h-5 rounded-full bg-white shadow-md flex items-center justify-center transition-transform duration-300 ${theme === 'dark' ? 'translate-x-[22px]' : 'translate-x-0.5'}`}>
                 {theme === 'light' ? (
-                  <FiSun className="w-3 h-3 text-yellow-500" />
+                  <FiSun className="w-3 h-3 text-ath-accent" />
                 ) : (
-                  <FiMoon className="w-3 h-3 text-green-600" />
+                  <FiMoon className="w-3 h-3 text-ath-accent-text" />
                 )}
               </div>
             </div>
@@ -214,7 +214,7 @@ const AthleteSidebar = ({ onCollapse }) => {
         </div>
 
         {/* User Profile Section */}
-        <div className="border-t border-gray-200 dark:border-gray-700 p-3">
+        <div className="border-t border-ath-border p-3">
           <button
             ref={userBtnRef}
             onClick={() => {
@@ -226,7 +226,7 @@ const AthleteSidebar = ({ onCollapse }) => {
             }}
             className={`
               w-full flex items-center space-x-3 px-3 py-2.5 rounded-lg
-              hover:bg-gray-100 dark:hover:bg-gray-700
+              hover:bg-ath-inset
               transition-colors
               ${collapsed ? 'lg:justify-center' : ''}
             `}
@@ -238,17 +238,17 @@ const AthleteSidebar = ({ onCollapse }) => {
                 className="w-8 h-8 rounded-full object-cover flex-shrink-0"
               />
             ) : (
-              <div className="w-8 h-8 rounded-full bg-green-600 flex items-center justify-center flex-shrink-0">
-                <span className="text-white font-semibold text-sm">
+              <div className="w-8 h-8 rounded-full bg-ath-accent flex items-center justify-center flex-shrink-0">
+                <span className="text-ath-on-accent font-semibold text-sm">
                   {displayName[0]}{displayLastName[0] || 'A'}
                 </span>
               </div>
             )}
             <div className={`flex-1 text-left min-w-0 ${collapsed ? 'lg:hidden' : ''}`}>
-              <p className="text-sm font-medium text-gray-900 dark:text-white truncate">
+              <p className="text-sm font-medium text-ath-text-primary truncate">
                 {displayName} {displayLastName}
               </p>
-              <p className="text-xs text-gray-500 dark:text-gray-400">
+              <p className="text-xs text-ath-text-muted">
                 Atleta
               </p>
             </div>
@@ -264,7 +264,7 @@ const AthleteSidebar = ({ onCollapse }) => {
             onClick={() => setShowUserMenu(false)}
           />
           <div
-            className="fixed w-48 bg-white dark:bg-gray-800 rounded-lg shadow-lg border border-gray-200 dark:border-gray-700 py-1 z-50"
+            className="fixed w-48 bg-ath-surface rounded-lg shadow-lg border border-ath-border py-1 z-50"
             style={{ bottom: menuPos.bottom, left: menuPos.left }}
           >
             <button
@@ -272,7 +272,7 @@ const AthleteSidebar = ({ onCollapse }) => {
                 navigate('/athlete/profile');
                 setShowUserMenu(false);
               }}
-              className="w-full flex items-center space-x-2 px-4 py-2 text-sm text-gray-700 dark:text-gray-300 hover:bg-gray-100 dark:hover:bg-gray-700 transition-colors"
+              className="w-full flex items-center space-x-2 px-4 py-2 text-sm text-ath-text-secondary hover:bg-ath-inset transition-colors"
             >
               <FiUser className="w-4 h-4" />
               <span>Mi Perfil</span>
@@ -283,13 +283,13 @@ const AthleteSidebar = ({ onCollapse }) => {
                   navigate('/athlete/messages');
                   setShowUserMenu(false);
                 }}
-                className="w-full flex items-center space-x-2 px-4 py-2 text-sm text-gray-700 dark:text-gray-300 hover:bg-gray-100 dark:hover:bg-gray-700 transition-colors"
+                className="w-full flex items-center space-x-2 px-4 py-2 text-sm text-ath-text-secondary hover:bg-ath-inset transition-colors"
               >
                 <FiMessageSquare className="w-4 h-4" />
                 <span>Mis Mensajes</span>
               </button>
             )}
-            <div className="border-t border-gray-200 dark:border-gray-700 my-1"></div>
+            <div className="border-t border-ath-border my-1"></div>
             <button
               onClick={handleSignOut}
               className="w-full flex items-center space-x-2 px-4 py-2 text-sm text-red-600 dark:text-red-400 hover:bg-red-50 dark:hover:bg-red-900/20 transition-colors"

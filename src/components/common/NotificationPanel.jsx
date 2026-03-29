@@ -74,12 +74,12 @@ const NotificationPanel = ({ accentColor = '#1A6BFF', isCoach = true }) => {
       {/* Bell button */}
       <button
         onClick={handleOpen}
-        className="w-[38px] h-[38px] rounded-full bg-[#EEF1F7] dark:bg-gray-700 flex items-center justify-center relative transition-colors hover:bg-slate-200 dark:hover:bg-gray-600"
+        className="w-[38px] h-[38px] rounded-full bg-ath-inset flex items-center justify-center relative transition-colors hover:bg-ath-border"
       >
-        <FiBell className="w-[18px] h-[18px] text-slate-500 dark:text-slate-400" />
+        <FiBell className="w-[18px] h-[18px] text-ath-text-muted" />
         {unreadNotifications > 0 && (
           <span
-            className="absolute top-1 right-1 min-w-[16px] h-[16px] rounded-full border-2 border-white dark:border-gray-800 flex items-center justify-center text-white font-bold"
+            className="absolute top-1 right-1 min-w-[16px] h-[16px] rounded-full border-2 border-ath-surface flex items-center justify-center text-white font-bold"
             style={{ background: '#FF6B35', fontSize: '9px', lineHeight: 1 }}
           >
             {unreadNotifications > 9 ? '9+' : unreadNotifications}
@@ -97,17 +97,17 @@ const NotificationPanel = ({ accentColor = '#1A6BFF', isCoach = true }) => {
               animate={{ opacity: 1, scale: 1, y: 0 }}
               exit={{ opacity: 0, scale: 0.95, y: -6 }}
               transition={{ duration: 0.15 }}
-              className="absolute right-0 top-11 w-80 bg-white dark:bg-gray-800 rounded-2xl shadow-xl border border-[#E2E8F0] dark:border-gray-700 z-50 overflow-hidden"
+              className="absolute right-0 top-11 w-80 bg-ath-surface rounded-2xl shadow-xl border border-ath-border z-50 overflow-hidden"
             >
               {/* Header */}
-              <div className="flex items-center justify-between px-4 py-3 border-b border-[#E2E8F0] dark:border-gray-700">
+              <div className="flex items-center justify-between px-4 py-3 border-b border-ath-border">
                 <div className="flex items-center gap-2">
                   <FiBell className="w-4 h-4" style={{ color: accentColor }} />
-                  <span className="text-sm font-semibold text-slate-900 dark:text-white">Notificaciones</span>
+                  <span className="text-sm font-semibold text-ath-text-primary">Notificaciones</span>
                 </div>
                 <button
                   onClick={() => setOpen(false)}
-                  className="p-1 rounded-lg hover:bg-slate-100 dark:hover:bg-gray-700 transition-colors"
+                  className="p-1 rounded-lg hover:bg-ath-inset transition-colors"
                 >
                   <FiX className="w-4 h-4 text-slate-400" />
                 </button>
@@ -120,7 +120,7 @@ const NotificationPanel = ({ accentColor = '#1A6BFF', isCoach = true }) => {
                     <div className="w-5 h-5 border-2 border-slate-200 border-t-blue-500 rounded-full animate-spin" />
                   </div>
                 ) : notifications.length === 0 ? (
-                  <div className="flex flex-col items-center justify-center py-10 gap-2 text-slate-400 dark:text-slate-500">
+                  <div className="flex flex-col items-center justify-center py-10 gap-2 text-ath-text-muted">
                     <FiInbox className="w-8 h-8" />
                     <p className="text-sm">Sin notificaciones</p>
                   </div>
@@ -133,20 +133,20 @@ const NotificationPanel = ({ accentColor = '#1A6BFF', isCoach = true }) => {
                       <button
                         key={notif.id}
                         onClick={() => handleNotifClick(notif)}
-                        className={`w-full flex items-start gap-3 px-4 py-3 text-left hover:bg-slate-50 dark:hover:bg-gray-700/50 transition-colors border-b border-slate-100 dark:border-gray-700/50 last:border-0 ${isUnread ? 'bg-blue-50/40 dark:bg-blue-900/10' : ''}`}
+                        className={`w-full flex items-start gap-3 px-4 py-3 text-left hover:bg-ath-inset transition-colors border-b border-ath-border last:border-0 ${isUnread ? 'bg-ath-accent-surface/40' : ''}`}
                       >
                         <div className={`w-8 h-8 rounded-full flex items-center justify-center flex-shrink-0 mt-0.5 ${cfg.bg}`}>
                           <Icon className={`w-4 h-4 ${cfg.color}`} />
                         </div>
                         <div className="flex-1 min-w-0">
                           <div className="flex items-start justify-between gap-2">
-                            <p className={`text-sm leading-snug ${isUnread ? 'font-semibold text-slate-900 dark:text-white' : 'font-medium text-slate-700 dark:text-slate-300'}`}>
+                            <p className={`text-sm leading-snug ${isUnread ? 'font-semibold text-ath-text-primary' : 'font-medium text-ath-text-secondary'}`}>
                               {notif.title}
                             </p>
                             <span className="text-[10px] text-slate-400 flex-shrink-0 mt-0.5">{timeAgo(notif.created_at)}</span>
                           </div>
                           {notif.message && (
-                            <p className="text-xs text-slate-500 dark:text-slate-400 mt-0.5 truncate">
+                            <p className="text-xs text-ath-text-muted mt-0.5 truncate">
                               {notif.message.startsWith('__REPORT__:') ? '📊 Informe IA semanal' : notif.message}
                             </p>
                           )}

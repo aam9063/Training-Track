@@ -77,12 +77,12 @@ function PreviewSessionCard({ session }) {
       className={`rounded-xl border p-3 ${
         isRest
           ? 'border-slate-200 dark:border-slate-700 bg-slate-50 dark:bg-slate-800/30'
-          : 'border-slate-200 dark:border-slate-700 bg-white dark:bg-slate-800'
+          : 'border-slate-200 dark:border-slate-700 bg-ath-surface'
       }`}
     >
       {/* Day + type badge */}
       <div className="flex items-center justify-between mb-2">
-        <span className="text-xs font-semibold text-slate-400 dark:text-slate-500 uppercase tracking-wide">
+        <span className="text-xs font-semibold text-ath-text-muted uppercase tracking-wide">
           {dayInfo.label}
         </span>
         <span className={`text-xs font-medium px-2 py-0.5 rounded-full ${typeConf.color}`}>
@@ -91,36 +91,36 @@ function PreviewSessionCard({ session }) {
       </div>
 
       {isRest ? (
-        <p className="text-xs text-slate-400 dark:text-slate-500 italic">
+        <p className="text-xs text-ath-text-muted italic">
           Descanso — recuperación completa
         </p>
       ) : (
         <>
-          <h4 className="font-semibold text-slate-900 dark:text-white text-sm mb-1 line-clamp-1">
+          <h4 className="font-semibold text-ath-text-primary text-sm mb-1 line-clamp-1">
             {session.title || 'Entrenamiento'}
           </h4>
 
           {session.description && (
-            <p className="text-xs text-slate-500 dark:text-slate-400 mb-2 line-clamp-2">
+            <p className="text-xs text-ath-text-muted mb-2 line-clamp-2">
               {session.description}
             </p>
           )}
 
           <div className="flex items-center gap-3 flex-wrap">
             {(session.estimated_distance_km ?? 0) > 0 && (
-              <div className="flex items-center gap-1 text-xs text-slate-500 dark:text-slate-400">
+              <div className="flex items-center gap-1 text-xs text-ath-text-muted">
                 <FiMapPin className="w-3 h-3" />
                 <span>{session.estimated_distance_km} km</span>
               </div>
             )}
             {(session.estimated_duration_minutes ?? 0) > 0 && (
-              <div className="flex items-center gap-1 text-xs text-slate-500 dark:text-slate-400">
+              <div className="flex items-center gap-1 text-xs text-ath-text-muted">
                 <FiClock className="w-3 h-3" />
                 <span>{session.estimated_duration_minutes} min</span>
               </div>
             )}
             {session.intensity && (
-              <div className="flex items-center gap-1 text-xs text-slate-500 dark:text-slate-400">
+              <div className="flex items-center gap-1 text-xs text-ath-text-muted">
                 <span className={`w-2 h-2 rounded-full ${intensityConf.dot}`} />
                 <span>{intensityConf.label}</span>
               </div>
@@ -168,7 +168,7 @@ export default function PlanPreviewModal({ plan, onAssign, onDiscard, isAssignin
           <div className="px-4 sm:px-6 py-4 border-b border-slate-200 dark:border-slate-700 flex-shrink-0">
             <div className="flex items-start justify-between gap-3">
               <div className="min-w-0">
-                <h2 className="text-lg font-bold text-slate-900 dark:text-white truncate">
+                <h2 className="text-lg font-bold text-ath-text-primary truncate">
                   {plan.plan_name || 'Plan generado con IA'}
                 </h2>
                 <div className="flex items-center gap-2 mt-1 flex-wrap">
@@ -176,7 +176,7 @@ export default function PlanPreviewModal({ plan, onAssign, onDiscard, isAssignin
                     <FiZap className="w-3 h-3" />
                     {tierLabel}
                   </span>
-                  <span className="text-xs text-slate-500 dark:text-slate-400">
+                  <span className="text-xs text-ath-text-muted">
                     {plan.duration_weeks ?? weeks.length} semanas
                   </span>
                 </div>
@@ -201,8 +201,8 @@ export default function PlanPreviewModal({ plan, onAssign, onDiscard, isAssignin
                   onClick={() => setActiveWeek(idx)}
                   className={`flex-shrink-0 px-3 py-2 rounded-xl text-sm font-medium transition-all ${
                     activeWeek === idx
-                      ? 'bg-green-600 text-white shadow-sm'
-                      : 'bg-slate-100 dark:bg-slate-800 text-slate-700 dark:text-slate-300 hover:bg-slate-200 dark:hover:bg-slate-700'
+                      ? 'bg-ath-accent text-ath-on-accent shadow-sm'
+                      : 'bg-slate-100 dark:bg-slate-800 text-ath-text-secondary hover:bg-slate-200 dark:hover:bg-slate-700'
                   }`}
                 >
                   <span className="block">Sem {w.week_number ?? idx + 1}</span>
@@ -217,7 +217,7 @@ export default function PlanPreviewModal({ plan, onAssign, onDiscard, isAssignin
           {/* ── Body ── */}
           <div className="flex-1 overflow-y-auto px-4 sm:px-6 py-4">
             {activeSessions.length === 0 ? (
-              <p className="text-sm text-slate-400 dark:text-slate-500 text-center py-12">
+              <p className="text-sm text-ath-text-muted text-center py-12">
                 No hay sesiones para esta semana.
               </p>
             ) : (
@@ -239,7 +239,7 @@ export default function PlanPreviewModal({ plan, onAssign, onDiscard, isAssignin
                 type="button"
                 onClick={onDiscard}
                 disabled={isAssigning}
-                className="px-4 py-2 text-sm font-medium text-slate-700 dark:text-slate-300 hover:bg-slate-100 dark:hover:bg-slate-800 rounded-xl transition-colors disabled:opacity-50"
+                className="px-4 py-2 text-sm font-medium text-ath-text-secondary hover:bg-slate-100 dark:hover:bg-slate-800 rounded-xl transition-colors disabled:opacity-50"
               >
                 Descartar
               </button>
@@ -247,7 +247,7 @@ export default function PlanPreviewModal({ plan, onAssign, onDiscard, isAssignin
                 type="button"
                 onClick={onAssign}
                 disabled={isAssigning}
-                className="flex items-center gap-2 px-6 py-2 bg-green-600 hover:bg-green-700 disabled:opacity-50 text-white text-sm font-semibold rounded-xl transition-colors"
+                className="flex items-center gap-2 px-6 py-2 bg-ath-accent hover:bg-ath-accent-hover disabled:opacity-50 text-white text-sm font-semibold rounded-xl transition-colors"
               >
                 {isAssigning ? (
                   <>

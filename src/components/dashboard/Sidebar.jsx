@@ -59,17 +59,9 @@ const Sidebar = ({ onCollapse }) => {
   ];
 
   const handleSignOut = async () => {
-    console.log('🚪 Cerrando sesión...');
     setShowUserMenu(false);
-    
-    // Ejecutar signOut pero NO esperar
-    signOut().catch(err => console.error('Error en signOut:', err));
-    
-    // Limpiar localStorage y redirigir inmediatamente
-    console.log('🧹 Limpiando localStorage...');
+    try { await signOut(); } catch { /* ignore */ }
     localStorage.clear();
-    
-    console.log('🔄 Redirigiendo a login...');
     window.location.href = '/login';
   };
 
@@ -95,8 +87,8 @@ const Sidebar = ({ onCollapse }) => {
         className={`
           ${collapsed ? 'lg:w-20' : 'lg:w-64'}
           w-64
-          bg-white dark:bg-gray-800 
-          border-r border-gray-200 dark:border-gray-700 
+          bg-coach-surface 
+          border-r border-gray-200 dark:border-coach-border 
           transition-all duration-300 ease-in-out
           flex flex-col
           h-screen
@@ -107,7 +99,7 @@ const Sidebar = ({ onCollapse }) => {
         style={{ overflowX: 'clip' }}
       >
       {/* Logo & Toggle */}
-      <div className={`h-16 flex items-center border-b border-gray-200 dark:border-gray-700 ${collapsed ? 'justify-center px-2' : 'justify-between px-4'}`}>
+      <div className={`h-16 flex items-center border-b border-gray-200 dark:border-coach-border ${collapsed ? 'justify-center px-2' : 'justify-between px-4'}`}>
         <Link to="/dashboard" className={`flex items-center ${collapsed ? '' : 'space-x-2'}`}>
           <img src="/img/logo.png" alt="trainingtrack" className="w-8 h-8 object-contain flex-shrink-0" />
           {!collapsed && (
@@ -128,7 +120,7 @@ const Sidebar = ({ onCollapse }) => {
         {collapsed && (
           <button
             onClick={() => setCollapsed(!collapsed)}
-            className="hidden lg:block absolute top-16 left-1/2 -translate-x-1/2 -translate-y-1/2 p-1 rounded-full bg-white dark:bg-gray-800 border border-gray-200 dark:border-gray-700 shadow-sm hover:bg-gray-100 dark:hover:bg-gray-700 text-gray-500 dark:text-gray-400 transition-colors z-10"
+            className="hidden lg:block absolute top-16 left-1/2 -translate-x-1/2 -translate-y-1/2 p-1 rounded-full bg-coach-surface border border-gray-200 dark:border-coach-border shadow-sm hover:bg-gray-100 dark:hover:bg-gray-700 text-gray-500 dark:text-gray-400 transition-colors z-10"
             aria-label="Expandir sidebar"
           >
             <FiChevronRight className="w-4 h-4" />
@@ -190,10 +182,10 @@ const Sidebar = ({ onCollapse }) => {
           `}
           title={collapsed ? (theme === 'light' ? 'Modo oscuro' : 'Modo claro') : ''}
         >
-          <div className="relative w-11 h-6 bg-gray-300 dark:bg-gray-600 rounded-full flex-shrink-0 transition-colors">
+          <div className="relative w-11 h-6 bg-gray-300 dark:bg-coach-inset rounded-full flex-shrink-0 transition-colors">
             <div className={`absolute top-0.5 w-5 h-5 rounded-full bg-white shadow-md flex items-center justify-center transition-transform duration-300 ${theme === 'dark' ? 'translate-x-[22px]' : 'translate-x-0.5'}`}>
               {theme === 'light' ? (
-                <FiSun className="w-3 h-3 text-yellow-500" />
+                <FiSun className="w-3 h-3 text-blue-500" />
               ) : (
                 <FiMoon className="w-3 h-3 text-sky-600" />
               )}
@@ -208,7 +200,7 @@ const Sidebar = ({ onCollapse }) => {
       </div>
 
       {/* User Section */}
-      <div className="border-t border-gray-200 dark:border-gray-700 p-3">
+      <div className="border-t border-gray-200 dark:border-coach-border p-3">
           <button
             ref={userBtnRef}
             onClick={() => {
@@ -258,7 +250,7 @@ const Sidebar = ({ onCollapse }) => {
             onClick={() => setShowUserMenu(false)}
           />
           <div
-            className="fixed w-48 bg-white dark:bg-gray-800 rounded-lg shadow-lg border border-gray-200 dark:border-gray-700 py-1 z-50"
+            className="fixed w-48 bg-coach-surface rounded-lg shadow-lg border border-gray-200 dark:border-coach-border py-1 z-50"
             style={{ bottom: menuPos.bottom, left: menuPos.left }}
           >
             <button
@@ -281,7 +273,7 @@ const Sidebar = ({ onCollapse }) => {
               <FiMessageSquare className="w-4 h-4" />
               <span>Mis Mensajes</span>
             </button>
-            <div className="border-t border-gray-200 dark:border-gray-700 my-1"></div>
+            <div className="border-t border-gray-200 dark:border-coach-border my-1"></div>
             <button
               onClick={handleSignOut}
               className="w-full flex items-center space-x-2 px-4 py-2 text-sm text-red-600 dark:text-red-400 hover:bg-red-50 dark:hover:bg-red-900/20 transition-colors"

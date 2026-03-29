@@ -35,7 +35,7 @@ const TYPE_CONFIG = {
   carrera: { label: 'Carrera', color: 'bg-sky-100 text-sky-700 dark:bg-sky-900/30 dark:text-sky-300' },
   gimnasio: { label: 'Fuerza', color: 'bg-orange-100 text-orange-700 dark:bg-orange-900/30 dark:text-orange-300' },
   cross_training: { label: 'Cross', color: 'bg-emerald-100 text-emerald-700 dark:bg-emerald-900/30 dark:text-emerald-300' },
-  descanso: { label: 'Descanso', color: 'bg-gray-100 text-gray-500 dark:bg-gray-700 dark:text-gray-400' },
+  descanso: { label: 'Descanso', color: 'bg-gray-100 text-gray-500 dark:bg-coach-elevated dark:text-gray-400' },
 };
 
 const INTENSITY_CONFIG = {
@@ -287,10 +287,10 @@ const AIPlanReviewModal = ({ isOpen, onClose, planData, athleteId, athleteName, 
             animate={{ opacity: 1, scale: 1, y: 0 }}
             exit={{ opacity: 0, scale: 0.95, y: 20 }}
             transition={{ type: 'spring', stiffness: 300, damping: 30 }}
-            className="bg-white dark:bg-gray-800 rounded-2xl shadow-2xl w-[95vw] max-w-7xl max-h-[90vh] overflow-hidden flex flex-col"
+            className="bg-coach-surface rounded-2xl shadow-2xl w-[95vw] max-w-7xl max-h-[90vh] overflow-hidden flex flex-col"
           >
             {/* ─── Header ──────────────────────────────────────── */}
-            <div className="px-4 sm:px-6 py-4 border-b border-gray-200 dark:border-gray-700 flex-shrink-0">
+            <div className="px-4 sm:px-6 py-4 border-b border-gray-200 dark:border-coach-border flex-shrink-0">
               <div className="flex items-center justify-between">
                 <div className="min-w-0">
                   <h2 className="text-lg sm:text-xl font-bold text-gray-900 dark:text-white truncate">
@@ -309,7 +309,7 @@ const AIPlanReviewModal = ({ isOpen, onClose, planData, athleteId, athleteName, 
                   onClick={onClose}
                   className="p-2 hover:bg-gray-100 dark:hover:bg-gray-700 rounded-lg transition-colors flex-shrink-0"
                 >
-                  <FiX className="w-5 h-5 text-gray-500" />
+                  <FiX className="w-5 h-5 text-coach-text-muted" />
                 </button>
               </div>
 
@@ -327,7 +327,7 @@ const AIPlanReviewModal = ({ isOpen, onClose, planData, athleteId, athleteName, 
                       className={`flex-shrink-0 px-3 sm:px-4 py-2 rounded-xl text-sm font-medium transition-all ${
                         activeWeek === idx
                           ? 'bg-sky-600 text-white shadow-sm'
-                          : 'bg-gray-100 dark:bg-gray-700 text-gray-700 dark:text-gray-300 hover:bg-gray-200 dark:hover:bg-gray-600'
+                          : 'bg-coach-elevated text-gray-700 dark:text-gray-300 hover:bg-gray-200 dark:hover:bg-gray-600'
                       }`}
                     >
                       <span className="block">Sem {w.week_number}</span>
@@ -344,13 +344,13 @@ const AIPlanReviewModal = ({ isOpen, onClose, planData, athleteId, athleteName, 
             <div className="flex-1 overflow-y-auto px-4 sm:px-6 py-4">
               {/* Week summary bar */}
               <div className="flex items-center flex-wrap gap-2 mb-4">
-                <span className="inline-flex items-center px-3 py-1 rounded-full border border-gray-200 dark:border-gray-600 bg-white dark:bg-gray-700 text-sm text-gray-700 dark:text-gray-300">
+                <span className="inline-flex items-center px-3 py-1 rounded-full border border-gray-200 dark:border-coach-border bg-white dark:bg-coach-elevated text-sm text-gray-700 dark:text-gray-300">
                   {weekStats[activeWeek]?.trainingDays} días de entreno
                 </span>
-                <span className="inline-flex items-center px-3 py-1 rounded-full border border-gray-200 dark:border-gray-600 bg-white dark:bg-gray-700 text-sm text-gray-700 dark:text-gray-300">
+                <span className="inline-flex items-center px-3 py-1 rounded-full border border-gray-200 dark:border-coach-border bg-white dark:bg-coach-elevated text-sm text-gray-700 dark:text-gray-300">
                   {weekStats[activeWeek]?.totalKm} km total
                 </span>
-                <span className="inline-flex items-center px-3 py-1 rounded-full border border-gray-200 dark:border-gray-600 bg-white dark:bg-gray-700 text-sm text-gray-700 dark:text-gray-300">
+                <span className="inline-flex items-center px-3 py-1 rounded-full border border-gray-200 dark:border-coach-border bg-white dark:bg-coach-elevated text-sm text-gray-700 dark:text-gray-300">
                   {weekStats[activeWeek]?.totalMin} min total
                 </span>
               </div>
@@ -375,8 +375,8 @@ const AIPlanReviewModal = ({ isOpen, onClose, planData, athleteId, athleteName, 
                       layout
                       className={`rounded-xl border transition-all ${
                         isRest
-                          ? 'border-gray-200 dark:border-gray-700 bg-gray-50 dark:bg-gray-800/50'
-                          : 'border-gray-200 dark:border-gray-700 bg-white dark:bg-gray-800 hover:shadow-md'
+                          ? 'border-gray-200 dark:border-coach-border bg-gray-50 dark:bg-coach-surface/50'
+                          : 'border-gray-200 dark:border-coach-border bg-coach-surface hover:shadow-md'
                       }`}
                     >
                       {/* Day header */}
@@ -390,7 +390,7 @@ const AIPlanReviewModal = ({ isOpen, onClose, planData, athleteId, athleteName, 
                               <span className="hidden lg:inline">{dayInfo.label}</span>
                               <span className="lg:hidden">{dayInfo.short}</span>
                             </span>
-                            <span className="text-xs text-gray-400">
+                            <span className="text-xs text-coach-text-muted">
                               {dayDate.getDate()}/{dayDate.getMonth() + 1}
                             </span>
                           </div>
@@ -405,7 +405,7 @@ const AIPlanReviewModal = ({ isOpen, onClose, planData, athleteId, athleteName, 
                                 e.stopPropagation();
                                 deleteSession(activeWeek, sIdx);
                               }}
-                              className="p-1 text-gray-400 hover:text-red-500 hover:bg-red-50 dark:hover:bg-red-900/20 rounded transition-colors"
+                              className="p-1 text-coach-text-muted hover:text-red-500 hover:bg-red-50 dark:hover:bg-red-900/20 rounded transition-colors"
                               title="Convertir a descanso"
                             >
                               <FiTrash2 className="w-3.5 h-3.5" />
@@ -417,16 +417,16 @@ const AIPlanReviewModal = ({ isOpen, onClose, planData, athleteId, athleteName, 
                                 e.stopPropagation();
                                 addSession(activeWeek, sIdx);
                               }}
-                              className="p-1 text-gray-400 hover:text-sky-500 hover:bg-sky-50 dark:hover:bg-sky-900/20 rounded transition-colors"
+                              className="p-1 text-coach-text-muted hover:text-sky-500 hover:bg-sky-50 dark:hover:bg-sky-900/20 rounded transition-colors"
                               title="Agregar entrenamiento"
                             >
                               <FiPlus className="w-3.5 h-3.5" />
                             </button>
                           )}
                           {isExpanded ? (
-                            <FiChevronUp className="w-4 h-4 text-gray-400" />
+                            <FiChevronUp className="w-4 h-4 text-coach-text-muted" />
                           ) : (
-                            <FiChevronDown className="w-4 h-4 text-gray-400" />
+                            <FiChevronDown className="w-4 h-4 text-coach-text-muted" />
                           )}
                         </div>
                       </div>
@@ -466,7 +466,7 @@ const AIPlanReviewModal = ({ isOpen, onClose, planData, athleteId, athleteName, 
                                 <select
                                   value={session.training_type}
                                   onChange={(e) => updateSession(activeWeek, sIdx, 'training_type', e.target.value)}
-                                  className="w-full px-2 py-1.5 text-xs border border-gray-300 dark:border-gray-600 rounded-lg bg-white dark:bg-gray-700 text-gray-900 dark:text-white"
+                                  className="w-full px-2 py-1.5 text-xs border border-gray-300 dark:border-coach-border rounded-lg bg-white dark:bg-coach-elevated text-gray-900 dark:text-white"
                                 >
                                   {TRAINING_TYPE_OPTIONS.map((opt) => (
                                     <option key={opt.value} value={opt.value}>{opt.label}</option>
@@ -483,7 +483,7 @@ const AIPlanReviewModal = ({ isOpen, onClose, planData, athleteId, athleteName, 
                                       type="text"
                                       value={session.title}
                                       onChange={(e) => updateSession(activeWeek, sIdx, 'title', e.target.value)}
-                                      className="w-full px-2 py-1.5 text-xs border border-gray-300 dark:border-gray-600 rounded-lg bg-white dark:bg-gray-700 text-gray-900 dark:text-white"
+                                      className="w-full px-2 py-1.5 text-xs border border-gray-300 dark:border-coach-border rounded-lg bg-white dark:bg-coach-elevated text-gray-900 dark:text-white"
                                     />
                                   </div>
 
@@ -494,7 +494,7 @@ const AIPlanReviewModal = ({ isOpen, onClose, planData, athleteId, athleteName, 
                                       value={session.description}
                                       onChange={(e) => updateSession(activeWeek, sIdx, 'description', e.target.value)}
                                       rows={3}
-                                      className="w-full px-2 py-1.5 text-xs border border-gray-300 dark:border-gray-600 rounded-lg bg-white dark:bg-gray-700 text-gray-900 dark:text-white resize-none"
+                                      className="w-full px-2 py-1.5 text-xs border border-gray-300 dark:border-coach-border rounded-lg bg-white dark:bg-coach-elevated text-gray-900 dark:text-white resize-none"
                                     />
                                   </div>
 
@@ -508,7 +508,7 @@ const AIPlanReviewModal = ({ isOpen, onClose, planData, athleteId, athleteName, 
                                         min="0"
                                         value={session.estimated_distance_km || ''}
                                         onChange={(e) => updateSession(activeWeek, sIdx, 'estimated_distance_km', parseFloat(e.target.value) || 0)}
-                                        className="w-full px-2 py-1.5 text-xs border border-gray-300 dark:border-gray-600 rounded-lg bg-white dark:bg-gray-700 text-gray-900 dark:text-white"
+                                        className="w-full px-2 py-1.5 text-xs border border-gray-300 dark:border-coach-border rounded-lg bg-white dark:bg-coach-elevated text-gray-900 dark:text-white"
                                       />
                                     </div>
                                     <div>
@@ -518,7 +518,7 @@ const AIPlanReviewModal = ({ isOpen, onClose, planData, athleteId, athleteName, 
                                         min="0"
                                         value={session.estimated_duration_minutes || ''}
                                         onChange={(e) => updateSession(activeWeek, sIdx, 'estimated_duration_minutes', parseInt(e.target.value) || 0)}
-                                        className="w-full px-2 py-1.5 text-xs border border-gray-300 dark:border-gray-600 rounded-lg bg-white dark:bg-gray-700 text-gray-900 dark:text-white"
+                                        className="w-full px-2 py-1.5 text-xs border border-gray-300 dark:border-coach-border rounded-lg bg-white dark:bg-coach-elevated text-gray-900 dark:text-white"
                                       />
                                     </div>
                                   </div>
@@ -536,7 +536,7 @@ const AIPlanReviewModal = ({ isOpen, onClose, planData, athleteId, athleteName, 
             </div>
 
             {/* ─── Footer ──────────────────────────────────────── */}
-            <div className="px-4 sm:px-6 py-4 border-t border-gray-200 dark:border-gray-700 flex-shrink-0">
+            <div className="px-4 sm:px-6 py-4 border-t border-gray-200 dark:border-coach-border flex-shrink-0">
               <div className="flex items-center justify-between">
                 <button
                   onClick={onClose}
@@ -580,7 +580,7 @@ const AIPlanReviewModal = ({ isOpen, onClose, planData, athleteId, athleteName, 
                   initial={{ scale: 0.9, opacity: 0 }}
                   animate={{ scale: 1, opacity: 1 }}
                   exit={{ scale: 0.9, opacity: 0 }}
-                  className="bg-white dark:bg-gray-800 rounded-2xl shadow-xl p-6 max-w-sm mx-4"
+                  className="bg-coach-surface rounded-2xl shadow-xl p-6 max-w-sm mx-4"
                   onClick={(e) => e.stopPropagation()}
                 >
                   <h3 className="text-lg font-bold text-gray-900 dark:text-white mb-2">

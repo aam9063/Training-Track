@@ -1,4 +1,4 @@
-import { useState, useMemo, useCallback, useEffect } from 'react';
+import { useState, useMemo, useCallback, useEffect, useRef } from 'react';
 import { motion } from 'framer-motion';
 import {
   FiChevronLeft,
@@ -35,12 +35,12 @@ const COLOR_MAP = {
   bike:           { bg: 'bg-yellow-500', border: 'border-yellow-500', text: 'text-yellow-600 dark:text-yellow-400', light: 'bg-yellow-50 dark:bg-yellow-900/20' },
   rest:           { bg: 'bg-teal-500',   border: 'border-teal-500',   text: 'text-teal-600 dark:text-teal-400',     light: 'bg-teal-50 dark:bg-teal-900/20' },
 };
-const COLOR_FALLBACK = { bg: 'bg-gray-500', border: 'border-gray-500', text: 'text-gray-600 dark:text-gray-400', light: 'bg-gray-50 dark:bg-gray-800' };
+const COLOR_FALLBACK = { bg: 'bg-gray-500', border: 'border-gray-500', text: 'text-ath-text-secondary', light: 'bg-ath-inset' };
 
 export const getEventColor = (event) => {
   if (event.isCompetition) return { bg: 'bg-red-500', border: 'border-red-500', text: 'text-red-600 dark:text-red-400', light: 'bg-red-50 dark:bg-red-900/20' };
   if (event.status === 'completed') return { bg: 'bg-green-500', border: 'border-green-500', text: 'text-green-600 dark:text-green-400', light: 'bg-green-50 dark:bg-green-900/20' };
-  if (event.status === 'skipped') return { bg: 'bg-gray-400', border: 'border-gray-400', text: 'text-gray-500 dark:text-gray-400', light: 'bg-gray-50 dark:bg-gray-800' };
+  if (event.status === 'skipped') return { bg: 'bg-gray-400', border: 'border-gray-400', text: 'text-ath-text-muted', light: 'bg-ath-inset' };
 
   const inferred = inferTrainingType(event);
   return COLOR_MAP[inferred] || COLOR_FALLBACK;
@@ -74,11 +74,11 @@ const DraggableEventCard = ({ event, onClick, isCoach }) => {
       {...(canDrag ? { ...listeners, ...attributes } : {})}
       onClick={(e) => { e.stopPropagation(); onClick(event, e); }}
       style={{ opacity: isDragging ? 0.3 : 1 }}
-      className={`event-pill group relative rounded-lg border-l-[3px] ${color.border} bg-white dark:bg-gray-800 shadow-sm hover:shadow-md transition-all ${canDrag ? 'cursor-grab active:cursor-grabbing' : 'cursor-pointer'} p-2.5`}
+      className={`event-pill group relative rounded-lg border-l-[3px] ${color.border} bg-ath-elevated shadow-sm hover:shadow-md transition-all ${canDrag ? 'cursor-grab active:cursor-grabbing' : 'cursor-pointer'} p-2.5`}
     >
       {/* Status icon top-right */}
       <div className="flex items-start justify-between gap-1">
-        <p className="text-xs font-semibold text-gray-900 dark:text-white truncate leading-tight flex-1">
+        <p className="text-xs font-semibold text-ath-text-primary truncate leading-tight flex-1">
           {event.isCompetition && <FiFlag className="inline w-3 h-3 mr-1 text-red-500 flex-shrink-0" />}
           {event.status === 'completed' && <FiCheck className="inline w-3 h-3 mr-1 text-green-500 flex-shrink-0" />}
           {event.status === 'skipped' && <FiSkipForward className="inline w-3 h-3 mr-1 text-gray-400 flex-shrink-0" />}
@@ -96,11 +96,11 @@ const DraggableEventCard = ({ event, onClick, isCoach }) => {
               src={a.image || `https://ui-avatars.com/api/?name=${encodeURIComponent(a.name || 'A')}&background=random&size=24`}
               alt={a.name}
               title={a.name}
-              className="w-5 h-5 rounded-full border-[1.5px] border-white dark:border-gray-800"
+              className="w-5 h-5 rounded-full border-[1.5px] border-ath-surface"
             />
           ))}
           {athletes.length > 4 && (
-            <span className="w-5 h-5 rounded-full bg-gray-200 dark:bg-gray-600 border-[1.5px] border-white dark:border-gray-800 flex items-center justify-center text-[8px] font-bold text-gray-600 dark:text-gray-300">
+            <span className="w-5 h-5 rounded-full bg-ath-inset border-[1.5px] border-ath-surface flex items-center justify-center text-[8px] font-bold text-ath-text-secondary">
               +{athletes.length - 4}
             </span>
           )}
@@ -129,7 +129,26 @@ const DroppableDayColumn = ({ dateStr, children }) => {
 };
 
 // ── Mini Month Calendar ────────────────────────────────────────────────────
-const MiniMonthCalendar = ({ currentDate, onDateChange, selectedWeekStart, getEventsForDate }) => {
+const ACCENT = {
+  green: {
+    weekBg: 'bg-ath-accent-surface text-ath-accent-text',
+    todayBg: 'bg-ath-accent text-ath-on-accent',
+    dot: 'bg-ath-accent',
+    headerBg: 'bg-ath-accent-surface',
+    headerText: 'text-ath-accent-text',
+    hoyBtn: 'bg-ath-accent-surface text-ath-accent-text hover:bg-ath-accent/20',
+  },
+  blue: {
+    weekBg: 'bg-blue-100 dark:bg-blue-900/40 text-blue-700 dark:text-blue-300',
+    todayBg: 'bg-blue-600 text-white',
+    dot: 'bg-blue-500',
+    headerBg: 'bg-blue-50 dark:bg-blue-900/20',
+    headerText: 'text-blue-600 dark:text-blue-400',
+    hoyBtn: 'bg-blue-100 dark:bg-blue-900/30 text-blue-600 dark:text-blue-400 hover:bg-blue-200 dark:hover:bg-blue-900/50',
+  },
+};
+
+const MiniMonthCalendar = ({ currentDate, onDateChange, selectedWeekStart, getEventsForDate, accent = 'blue' }) => {
   const [viewDate, setViewDate] = useState(currentDate);
   const year = viewDate.getFullYear();
   const month = viewDate.getMonth();
@@ -162,24 +181,24 @@ const MiniMonthCalendar = ({ currentDate, onDateChange, selectedWeekStart, getEv
 
   return (
     <div className="w-64 flex-shrink-0">
-      <div className="bg-white dark:bg-gray-800 rounded-xl shadow-sm border border-gray-200 dark:border-gray-700 p-4">
+      <div className="bg-ath-surface rounded-xl shadow-sm border border-ath-border p-4">
         {/* Month nav */}
         <div className="flex items-center justify-between mb-3">
-          <button onClick={prevMonth} className="p-1 hover:bg-gray-100 dark:hover:bg-gray-700 rounded transition-colors">
-            <FiChevronLeft className="w-4 h-4 text-gray-600 dark:text-gray-400" />
+          <button onClick={prevMonth} className="p-1 hover:bg-ath-inset rounded transition-colors">
+            <FiChevronLeft className="w-4 h-4 text-ath-text-secondary" />
           </button>
-          <span className="text-sm font-semibold text-gray-900 dark:text-white">
+          <span className="text-sm font-semibold text-ath-text-primary">
             {MONTHS[month]} {year}
           </span>
-          <button onClick={nextMonth} className="p-1 hover:bg-gray-100 dark:hover:bg-gray-700 rounded transition-colors">
-            <FiChevronRight className="w-4 h-4 text-gray-600 dark:text-gray-400" />
+          <button onClick={nextMonth} className="p-1 hover:bg-ath-inset rounded transition-colors">
+            <FiChevronRight className="w-4 h-4 text-ath-text-secondary" />
           </button>
         </div>
 
         {/* Day headers */}
         <div className="grid grid-cols-7 mb-1">
           {DAYS_OF_WEEK.map(d => (
-            <div key={d} className="text-center text-[10px] font-semibold text-gray-400 dark:text-gray-500 py-1">{d[0]}</div>
+            <div key={d} className="text-center text-[10px] font-semibold text-ath-text-muted py-1">{d[0]}</div>
           ))}
         </div>
 
@@ -200,14 +219,14 @@ const MiniMonthCalendar = ({ currentDate, onDateChange, selectedWeekStart, getEv
               >
                 <span className={`w-7 h-7 flex items-center justify-center rounded-md text-xs transition-colors
                   ${inWeek
-                    ? 'bg-blue-100 dark:bg-blue-900/40 text-blue-700 dark:text-blue-300 font-semibold'
+                    ? `${ACCENT[accent].weekBg} font-semibold`
                     : today
-                      ? 'bg-blue-600 text-white font-bold'
-                      : 'text-gray-700 dark:text-gray-300 hover:bg-gray-100 dark:hover:bg-gray-700'}
+                      ? `${ACCENT[accent].todayBg} font-bold`
+                      : 'text-ath-text-secondary hover:bg-ath-inset'}
                 `}>
                   {d.getDate()}
                 </span>
-                <span className={`w-1 h-1 rounded-full mt-0.5 ${hasEvents && !inWeek && !today ? 'bg-blue-500' : 'bg-transparent'}`} />
+                <span className={`w-1 h-1 rounded-full mt-0.5 ${hasEvents && !inWeek && !today ? ACCENT[accent].dot : 'bg-transparent'}`} />
               </button>
             );
           })}
@@ -263,11 +282,11 @@ export default function WeeklyDesktopView({
   }, [weekDays]);
 
   // Notify parent when week crosses into a different month
+  const onMonthChangeRef = useRef(onMonthChange);
+  onMonthChangeRef.current = onMonthChange;
   useEffect(() => {
-    if (onMonthChange) {
-      onMonthChange(weekStart);
-    }
-  }, [weekStart, onMonthChange]);
+    onMonthChangeRef.current?.(weekStart);
+  }, [weekStart]);
 
   // Navigation
   const goToPrevWeek = () => {
@@ -336,31 +355,32 @@ export default function WeeklyDesktopView({
         onDateChange={handleMiniCalClick}
         selectedWeekStart={weekStart}
         getEventsForDate={getEventsForDate}
+        accent={accentColor}
       />
 
       {/* Right: Weekly grid */}
       <div className="flex-1 min-w-0">
-        <div className="bg-white dark:bg-gray-800 rounded-xl shadow-sm border border-gray-200 dark:border-gray-700">
+        <div className="bg-ath-surface rounded-xl shadow-sm border border-ath-border">
           {/* Week header with navigation */}
-          <div className="flex items-center justify-between px-5 py-3 border-b border-gray-200 dark:border-gray-700">
+          <div className="flex items-center justify-between px-5 py-3 border-b border-ath-border">
             <div className="flex items-center gap-2">
-              <button onClick={goToToday} className={`px-3 py-1.5 text-xs font-medium rounded-lg transition-colors ${accentColor === 'green' ? 'bg-green-100 dark:bg-green-900/30 text-green-600 dark:text-green-400 hover:bg-green-200' : 'bg-blue-100 dark:bg-blue-900/30 text-blue-600 dark:text-blue-400 hover:bg-blue-200'}`}>
+              <button onClick={goToToday} className={`px-3 py-1.5 text-xs font-medium rounded-lg transition-colors ${ACCENT[accentColor].hoyBtn}`}>
                 Hoy
               </button>
-              <button onClick={goToPrevWeek} className="p-1.5 hover:bg-gray-100 dark:hover:bg-gray-700 rounded-lg transition-colors">
-                <FiChevronLeft className="w-4 h-4 text-gray-600 dark:text-gray-400" />
+              <button onClick={goToPrevWeek} className="p-1.5 hover:bg-ath-inset rounded-lg transition-colors">
+                <FiChevronLeft className="w-4 h-4 text-ath-text-secondary" />
               </button>
-              <button onClick={goToNextWeek} className="p-1.5 hover:bg-gray-100 dark:hover:bg-gray-700 rounded-lg transition-colors">
-                <FiChevronRight className="w-4 h-4 text-gray-600 dark:text-gray-400" />
+              <button onClick={goToNextWeek} className="p-1.5 hover:bg-ath-inset rounded-lg transition-colors">
+                <FiChevronRight className="w-4 h-4 text-ath-text-secondary" />
               </button>
             </div>
-            <h2 className="text-base font-bold text-gray-900 dark:text-white">{weekLabel}</h2>
+            <h2 className="text-base font-bold text-ath-text-primary">{weekLabel}</h2>
             <div className="w-20" /> {/* spacer for alignment */}
           </div>
 
           {/* Day columns */}
           <DndContext sensors={sensors} onDragStart={handleDragStart} onDragEnd={handleDragEnd} onDragCancel={handleDragCancel}>
-            <div className="grid grid-cols-7 divide-x divide-gray-200 dark:divide-gray-700">
+            <div className="grid grid-cols-7 divide-x divide-ath-border">
               {weekDays.map((day, i) => {
                 const dateStr = toLocalDateStr(day);
                 const dayEvents = getEventsForDate ? getEventsForDate(day) : [];
@@ -370,11 +390,11 @@ export default function WeeklyDesktopView({
                   <DroppableDayColumn key={i} dateStr={dateStr}>
                     <div className="min-h-[420px] flex flex-col">
                       {/* Day header */}
-                      <div className={`px-2 py-2.5 text-center border-b border-gray-100 dark:border-gray-700 ${today ? 'bg-blue-50 dark:bg-blue-900/20' : ''}`}>
-                        <p className={`text-[10px] uppercase tracking-wider font-semibold ${today ? 'text-blue-600 dark:text-blue-400' : 'text-gray-400 dark:text-gray-500'}`}>
+                      <div className={`px-2 py-2.5 text-center border-b border-ath-border ${today ? ACCENT[accentColor].headerBg : ''}`}>
+                        <p className={`text-[10px] uppercase tracking-wider font-semibold ${today ? ACCENT[accentColor].headerText : 'text-ath-text-muted'}`}>
                           {DAYS_FULL[i]}
                         </p>
-                        <p className={`text-lg font-bold mt-0.5 ${today ? 'text-blue-600 dark:text-blue-400' : 'text-gray-900 dark:text-white'}`}>
+                        <p className={`text-lg font-bold mt-0.5 ${today ? ACCENT[accentColor].headerText : 'text-ath-text-primary'}`}>
                           {day.getDate()}
                         </p>
                       </div>
@@ -391,7 +411,7 @@ export default function WeeklyDesktopView({
                         ))}
                         {dayEvents.length === 0 && (
                           <div className="h-full flex items-center justify-center min-h-[60px]">
-                            <FiCalendar className="w-4 h-4 text-gray-200 dark:text-gray-700" />
+                            <FiCalendar className="w-4 h-4 text-ath-text-muted" />
                           </div>
                         )}
                       </div>
@@ -406,9 +426,9 @@ export default function WeeklyDesktopView({
               {activeDragEvent && (() => {
                 const color = getEventColor(activeDragEvent);
                 return (
-                  <div className={`text-xs px-3 py-2 rounded-lg shadow-xl border-l-[3px] ${color.border} bg-white dark:bg-gray-800 flex items-center gap-1.5 opacity-95`}>
+                  <div className={`text-xs px-3 py-2 rounded-lg shadow-xl border-l-[3px] ${color.border} bg-ath-elevated flex items-center gap-1.5 opacity-95`}>
                     <FiMove className="w-3 h-3 text-gray-400" />
-                    <span className="font-semibold text-gray-900 dark:text-white truncate">{activeDragEvent.title}</span>
+                    <span className="font-semibold text-ath-text-primary truncate">{activeDragEvent.title}</span>
                   </div>
                 );
               })()}
@@ -417,40 +437,40 @@ export default function WeeklyDesktopView({
         </div>
 
         {/* Legend */}
-        <div className="mt-4 bg-white dark:bg-gray-800 rounded-xl shadow-sm border border-gray-200 dark:border-gray-700 px-4 py-3">
+        <div className="mt-4 bg-ath-surface rounded-xl shadow-sm border border-ath-border px-4 py-3">
           <div className="flex flex-wrap items-center gap-4">
             <div className="flex items-center gap-1.5">
               <div className="w-3 h-0.5 bg-blue-500 rounded" />
-              <span className="text-xs text-gray-600 dark:text-gray-400">Carrera</span>
+              <span className="text-xs text-ath-text-secondary">Carrera</span>
             </div>
             <div className="flex items-center gap-1.5">
               <div className="w-3 h-0.5 bg-orange-500 rounded" />
-              <span className="text-xs text-gray-600 dark:text-gray-400">Fuerza</span>
+              <span className="text-xs text-ath-text-secondary">Fuerza</span>
             </div>
             <div className="flex items-center gap-1.5">
               <div className="w-3 h-0.5 bg-yellow-500 rounded" />
-              <span className="text-xs text-gray-600 dark:text-gray-400">Bici / Rodillo</span>
+              <span className="text-xs text-ath-text-secondary">Bici / Rodillo</span>
             </div>
             <div className="flex items-center gap-1.5">
               <div className="w-3 h-0.5 bg-teal-500 rounded" />
-              <span className="text-xs text-gray-600 dark:text-gray-400">Descanso</span>
+              <span className="text-xs text-ath-text-secondary">Descanso</span>
             </div>
             <div className="flex items-center gap-1.5">
               <div className="w-3 h-0.5 bg-red-500 rounded" />
-              <span className="text-xs text-gray-600 dark:text-gray-400">Competición</span>
+              <span className="text-xs text-ath-text-secondary">Competición</span>
             </div>
-            <div className="border-l border-gray-300 dark:border-gray-600 h-3 mx-0.5" />
+            <div className="border-l border-ath-border h-3 mx-0.5" />
             <div className="flex items-center gap-1.5">
               <div className="w-3 h-0.5 bg-green-500 rounded" />
-              <span className="text-xs text-gray-600 dark:text-gray-400">Completado</span>
+              <span className="text-xs text-ath-text-secondary">Completado</span>
             </div>
             <div className="flex items-center gap-1.5">
               <div className="w-3 h-0.5 bg-gray-400 rounded" />
-              <span className="text-xs text-gray-600 dark:text-gray-400">Omitido</span>
+              <span className="text-xs text-ath-text-secondary">Omitido</span>
             </div>
             <div className="flex items-center gap-1.5">
               <FiMove className="w-3 h-3 text-gray-400" />
-              <span className="text-xs text-gray-600 dark:text-gray-400">Arrastra para mover</span>
+              <span className="text-xs text-ath-text-secondary">Arrastra para mover</span>
             </div>
           </div>
         </div>

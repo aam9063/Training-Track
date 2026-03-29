@@ -23,7 +23,7 @@ const buildWeekBuckets = (weeks) => {
     start.setDate(start.getDate() - 6);
     start.setHours(0, 0, 0, 0);
     buckets.push({
-      label: w === 0 ? 'Esta sem.' : w === 1 ? 'Sem. -1' : `Sem. -${w}`,
+      label: w === 0 ? 'Esta sem.' : start.toLocaleDateString('es-ES', { day: 'numeric', month: 'short' }),
       weekStart: toLocalDateStr(start),
       weekEnd: toLocalDateStr(end),
     });

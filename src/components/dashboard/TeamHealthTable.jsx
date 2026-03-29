@@ -23,7 +23,7 @@ const getInjuryOption = (status) =>
 const getTrafficLight = (acwr, injuryStatus, tsb) => {
   if (injuryStatus === 'injured')    return { color: 'bg-red-500',    ring: 'ring-red-400',    label: 'Lesionado' };
   if (injuryStatus === 'precaution') return { color: 'bg-yellow-500', ring: 'ring-yellow-400', label: 'Precaución' };
-  if (acwr === null)                 return { color: 'bg-gray-300 dark:bg-gray-600', ring: 'ring-gray-400', label: 'Sin datos' };
+  if (acwr === null)                 return { color: 'bg-gray-300 dark:bg-coach-inset', ring: 'ring-gray-400', label: 'Sin datos' };
   if (acwr > 1.5 || tsb < -30)      return { color: 'bg-red-500',    ring: 'ring-red-400',    label: 'Riesgo' };
   if (acwr >= 0.8 && acwr <= 1.3 && (tsb === null || tsb >= -30)) {
     return { color: 'bg-green-500', ring: 'ring-green-400', label: 'Óptimo' };
@@ -86,7 +86,7 @@ const InjuryPicker = ({ athleteId, current, onUpdate, disabled }) => {
               animate={{ opacity: 1, scale: 1, y: 0 }}
               exit={{ opacity: 0, scale: 0.95, y: -4 }}
               transition={{ duration: 0.12 }}
-              className="absolute left-0 top-full mt-1 z-50 bg-white dark:bg-gray-800 rounded-xl shadow-xl border border-gray-200 dark:border-gray-700 py-1 min-w-[130px]"
+              className="absolute left-0 top-full mt-1 z-50 bg-coach-surface rounded-xl shadow-xl border border-gray-200 dark:border-coach-border py-1 min-w-[130px]"
             >
               {INJURY_OPTIONS.map(o => (
                 <button
@@ -177,7 +177,7 @@ const NotesRow = ({ athlete, onUpdate, disabled }) => {
         value={notes}
         onChange={e => setNotes(e.target.value)}
         placeholder="Notas (opcional)"
-        className="flex-1 text-xs px-2 py-1.5 rounded-lg border border-gray-200 dark:border-gray-600 bg-white dark:bg-gray-700 text-gray-900 dark:text-white placeholder-gray-400 focus:outline-none focus:border-sky-500"
+        className="flex-1 text-xs px-2 py-1.5 rounded-lg border border-gray-200 dark:border-coach-border bg-white dark:bg-coach-elevated text-gray-900 dark:text-white placeholder-gray-400 focus:outline-none focus:border-sky-500"
       />
       <button
         onClick={save}
@@ -287,7 +287,7 @@ export default function TeamHealthTable({ athletes, loading, updatingId, onUpdat
             <motion.div
               key={athlete.id}
               layout
-              className="bg-white dark:bg-gray-800 rounded-xl border border-gray-200 dark:border-gray-700 overflow-hidden"
+              className="bg-coach-surface rounded-xl border border-gray-200 dark:border-coach-border overflow-hidden"
             >
               {/* Main row */}
               <div className="flex items-center gap-3 px-3 py-3">
@@ -340,7 +340,7 @@ export default function TeamHealthTable({ athletes, loading, updatingId, onUpdat
                     animate={{ height: 'auto', opacity: 1 }}
                     exit={{ height: 0, opacity: 0 }}
                     transition={{ duration: 0.18 }}
-                    className="border-t border-gray-100 dark:border-gray-700 px-3 py-3 bg-gray-50 dark:bg-gray-700/30"
+                    className="border-t border-gray-100 dark:border-coach-border px-3 py-3 bg-coach-inset/30"
                   >
                     <p className="text-xs font-medium text-gray-600 dark:text-gray-400 mb-2">Estado del atleta</p>
                     <div className="flex gap-2">
@@ -352,7 +352,7 @@ export default function TeamHealthTable({ athletes, loading, updatingId, onUpdat
                           className={`flex items-center gap-1.5 px-3 py-1.5 rounded-lg text-xs font-medium transition-all border-2 ${
                             athlete.injuryStatus === o.value
                               ? `${o.bg} ${o.text} border-current`
-                              : 'bg-white dark:bg-gray-800 text-gray-600 dark:text-gray-400 border-gray-200 dark:border-gray-600 hover:border-gray-400'
+                              : 'bg-coach-surface text-gray-600 dark:text-gray-400 border-gray-200 dark:border-coach-border hover:border-gray-400'
                           } ${updatingId === athlete.id ? 'opacity-50 cursor-not-allowed' : ''}`}
                         >
                           <span className={`w-2 h-2 rounded-full ${o.dot}`} />
@@ -371,7 +371,7 @@ export default function TeamHealthTable({ athletes, loading, updatingId, onUpdat
                         { label: 'CTL', value: athlete.ctl ?? '—' },
                         { label: 'TSB', value: athlete.tsb != null ? (athlete.tsb > 0 ? `+${athlete.tsb}` : athlete.tsb) : '—' },
                       ].map(m => (
-                        <div key={m.label} className="bg-white dark:bg-gray-800 rounded-lg py-2">
+                        <div key={m.label} className="bg-coach-surface rounded-lg py-2">
                           <p className="text-[10px] text-gray-400 mb-0.5">{m.label}</p>
                           <p className="text-sm font-bold text-gray-900 dark:text-white">{m.value}</p>
                         </div>
@@ -386,9 +386,9 @@ export default function TeamHealthTable({ athletes, loading, updatingId, onUpdat
       </div>
 
       {/* ── DESKTOP: dense table ───────────────────────────── */}
-      <div className="hidden sm:block overflow-x-auto rounded-xl border border-gray-200 dark:border-gray-700">
+      <div className="hidden sm:block overflow-x-auto rounded-xl border border-gray-200 dark:border-coach-border">
         <table className="w-full text-sm">
-          <thead className="bg-gray-50 dark:bg-gray-700/50">
+          <thead className="bg-coach-inset/50">
             <tr>
               <th className="py-2.5 px-3 w-8" />
               <TH col="name"   label="Atleta" />
@@ -400,7 +400,7 @@ export default function TeamHealthTable({ athletes, loading, updatingId, onUpdat
               <th className="py-2.5 px-3 text-xs font-medium text-gray-500 dark:text-gray-400">Notas</th>
             </tr>
           </thead>
-          <tbody className="divide-y divide-gray-100 dark:divide-gray-700/50">
+          <tbody className="divide-y divide-gray-100 dark:divide-coach-border/50">
             {sorted.map(athlete => {
               const light = getTrafficLight(athlete.acwr, athlete.injuryStatus, athlete.tsb);
               return (
@@ -516,7 +516,7 @@ function DesktopNotesCell({ athlete, onUpdate, disabled }) {
         onChange={e => setVal(e.target.value)}
         onBlur={save}
         onKeyDown={e => { if (e.key === 'Enter') save(); if (e.key === 'Escape') setEditing(false); }}
-        className="w-full text-xs px-2 py-1 rounded border border-sky-400 bg-white dark:bg-gray-700 text-gray-900 dark:text-white focus:outline-none"
+        className="w-full text-xs px-2 py-1 rounded border border-sky-400 bg-white dark:bg-coach-elevated text-gray-900 dark:text-white focus:outline-none"
         disabled={disabled}
       />
     );

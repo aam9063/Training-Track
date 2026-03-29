@@ -4,6 +4,76 @@
 @tailwind components;
 @tailwind utilities;
 
+/* ── Athlete theme tokens ── */
+:root {
+  --ath-bg-base: #FFFFFF;
+  --ath-bg-surface: #F9FAFB;
+  --ath-bg-elevated: #FFFFFF;
+  --ath-bg-accent: #E8F5EF;
+  --ath-bg-inset: #F3F4F6;
+  --ath-text-primary: #111827;
+  --ath-text-secondary: #4B5563;
+  --ath-text-muted: #9CA3AF;
+  --ath-accent: #438474;
+  --ath-accent-hover: #3A7366;
+  --ath-accent-text: #2D6B55;
+  --ath-accent-surface: #E8F5EF;
+  --ath-border: #E5E7EB;
+  --ath-border-accent: #438474;
+  --ath-on-accent: #FFFFFF;
+}
+
+.dark {
+  --ath-bg-base: #0A0A0A;
+  --ath-bg-surface: #141414;
+  --ath-bg-elevated: #242424;
+  --ath-bg-accent: #1B3B30;
+  --ath-bg-inset: #0A0A0A;
+  --ath-text-primary: #F3F4F6;
+  --ath-text-secondary: #9CA3AF;
+  --ath-text-muted: #6B7280;
+  --ath-accent: #5BBF9E;
+  --ath-accent-hover: #4DAF8E;
+  --ath-accent-text: #5BBF9E;
+  --ath-accent-surface: #1B3B30;
+  --ath-border: #2A2A2A;
+  --ath-border-accent: #5BBF9E;
+  --ath-on-accent: #FFFFFF;
+}
+
+/* ── Coach theme tokens ── */
+:root {
+  --coach-bg-base: #F4F6FA;
+  --coach-bg-surface: #FFFFFF;
+  --coach-bg-elevated: #FFFFFF;
+  --coach-bg-inset: #F3F4F6;
+  --coach-text-primary: #0F172A;
+  --coach-text-secondary: #475569;
+  --coach-text-muted: #94A3B8;
+  --coach-accent: #1A6BFF;
+  --coach-accent-hover: #1558D4;
+  --coach-accent-light: #5B9BFF;
+  --coach-accent-surface: #E8F0FF;
+  --coach-border: #E2E8F0;
+  --coach-on-accent: #FFFFFF;
+}
+
+.dark {
+  --coach-bg-base: #0A0A0A;
+  --coach-bg-surface: #141414;
+  --coach-bg-elevated: #242424;
+  --coach-bg-inset: #1A1A1A;
+  --coach-text-primary: #F1F5F9;
+  --coach-text-secondary: #94A3B8;
+  --coach-text-muted: #64748B;
+  --coach-accent: #5B9BFF;
+  --coach-accent-hover: #4A8AEE;
+  --coach-accent-light: #7CB3FF;
+  --coach-accent-surface: #1A2744;
+  --coach-border: #2A2A2A;
+  --coach-on-accent: #FFFFFF;
+}
+
 @layer base {
   * {
     @apply scroll-smooth;

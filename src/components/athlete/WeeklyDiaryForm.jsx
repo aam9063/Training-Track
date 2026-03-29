@@ -24,7 +24,7 @@ function RatingRow({ emojis, value, onChange }) {
             className={`flex-1 py-2 rounded-xl text-lg transition-all ${
               selected
                 ? 'bg-green-100 dark:bg-green-900/40 ring-2 ring-green-500 scale-105'
-                : 'bg-gray-100 dark:bg-gray-700 hover:bg-green-50 dark:hover:bg-green-900/20'
+                : 'bg-ath-inset hover:bg-green-50 dark:hover:bg-green-900/20'
             }`}
             title={`${val}/5`}
           >
@@ -98,8 +98,8 @@ export default function WeeklyDiaryForm({ compact = true, onSaved, defaultExpand
 
   if (loading) {
     return (
-      <div className="bg-white dark:bg-gray-800 rounded-xl p-4 animate-pulse">
-        <div className="h-5 bg-gray-200 dark:bg-gray-700 rounded w-1/3" />
+      <div className="bg-ath-surface rounded-xl p-4 animate-pulse">
+        <div className="h-5 bg-ath-inset rounded w-1/3" />
       </div>
     );
   }
@@ -110,25 +110,25 @@ export default function WeeklyDiaryForm({ compact = true, onSaved, defaultExpand
       <motion.div
         initial={{ opacity: 0, y: 10 }}
         animate={{ opacity: 1, y: 0 }}
-        className="bg-white dark:bg-gray-800 rounded-xl border border-gray-200 dark:border-gray-700 p-3 cursor-pointer hover:border-green-300 dark:hover:border-green-700 transition-colors"
+        className="bg-ath-surface rounded-xl border border-ath-border p-3 cursor-pointer hover:border-green-300 dark:hover:border-green-700 transition-colors"
         onClick={() => setExpanded(true)}
       >
         <div className="flex items-center justify-between">
           <div className="flex items-center gap-2">
             <FiEdit3 className="w-4 h-4 text-green-500" />
-            <span className="text-sm font-medium text-gray-900 dark:text-white">
+            <span className="text-sm font-medium text-ath-text-primary">
               Diario semanal
             </span>
             {saved && (
-              <span className="text-xs text-gray-500 dark:text-gray-400">
+              <span className="text-xs text-ath-text-muted">
                 ({OVERALL_EMOJI[overallRating - 1]} · {NEXT_EMOJI[nextWeekRating - 1]})
               </span>
             )}
           </div>
           <div className="flex items-center gap-2">
             {saved
-              ? <span className="flex items-center gap-1 text-xs text-green-600 dark:text-green-400"><FiCheck className="w-3 h-3" />Rellenado</span>
-              : <span className="text-xs text-gray-500 dark:text-gray-400">¿Cómo fue la semana?</span>
+              ? <span className="flex items-center gap-1 text-xs text-ath-accent-text"><FiCheck className="w-3 h-3" />Rellenado</span>
+              : <span className="text-xs text-ath-text-muted">¿Cómo fue la semana?</span>
             }
             <FiChevronDown className="w-4 h-4 text-gray-400" />
           </div>
@@ -142,14 +142,14 @@ export default function WeeklyDiaryForm({ compact = true, onSaved, defaultExpand
     <motion.div
       initial={{ opacity: 0, y: 10 }}
       animate={{ opacity: 1, y: 0 }}
-      className="bg-white dark:bg-gray-800 rounded-xl border border-gray-200 dark:border-gray-700 p-4"
+      className="bg-ath-surface rounded-xl border border-ath-border p-4"
     >
       <div className="flex items-center justify-between mb-4">
         <div className="flex items-center gap-2">
           <FiEdit3 className="w-5 h-5 text-green-500" />
-          <h3 className="text-base font-semibold text-gray-900 dark:text-white">Diario semanal</h3>
+          <h3 className="text-base font-semibold text-ath-text-primary">Diario semanal</h3>
           {saved && (
-            <span className="flex items-center gap-1 text-xs text-green-600 dark:text-green-400">
+            <span className="flex items-center gap-1 text-xs text-ath-accent-text">
               <FiCheck className="w-3 h-3" /> Guardado
             </span>
           )}
@@ -164,7 +164,7 @@ export default function WeeklyDiaryForm({ compact = true, onSaved, defaultExpand
       <div className="space-y-5">
         {/* Q1 */}
         <div>
-          <p className="text-sm font-medium text-gray-700 dark:text-gray-300">
+          <p className="text-sm font-medium text-ath-text-secondary">
             ¿Cómo fue la semana en general?
           </p>
           <RatingRow emojis={OVERALL_EMOJI} value={overallRating} onChange={setOverallRating} />
@@ -173,13 +173,13 @@ export default function WeeklyDiaryForm({ compact = true, onSaved, defaultExpand
             onChange={e => setOverallNotes(e.target.value)}
             placeholder="Añade notas si quieres... (opcional)"
             rows={2}
-            className="mt-2 w-full px-3 py-2 text-sm border border-gray-300 dark:border-gray-600 rounded-lg bg-white dark:bg-gray-700 text-gray-900 dark:text-white focus:ring-2 focus:ring-green-500 resize-none"
+            className="mt-2 w-full px-3 py-2 text-sm border border-ath-border rounded-lg bg-ath-surface text-ath-text-primary focus:ring-2 focus:ring-ath-accent resize-none"
           />
         </div>
 
         {/* Q2 */}
         <div>
-          <p className="text-sm font-medium text-gray-700 dark:text-gray-300">
+          <p className="text-sm font-medium text-ath-text-secondary">
             ¿Qué dolió o molestó?
           </p>
           <textarea
@@ -187,13 +187,13 @@ export default function WeeklyDiaryForm({ compact = true, onSaved, defaultExpand
             onChange={e => setPainNotes(e.target.value)}
             placeholder="Molestias, dolores, zonas que notar... (opcional)"
             rows={2}
-            className="mt-2 w-full px-3 py-2 text-sm border border-gray-300 dark:border-gray-600 rounded-lg bg-white dark:bg-gray-700 text-gray-900 dark:text-white focus:ring-2 focus:ring-green-500 resize-none"
+            className="mt-2 w-full px-3 py-2 text-sm border border-ath-border rounded-lg bg-ath-surface text-ath-text-primary focus:ring-2 focus:ring-ath-accent resize-none"
           />
         </div>
 
         {/* Q3 */}
         <div>
-          <p className="text-sm font-medium text-gray-700 dark:text-gray-300">
+          <p className="text-sm font-medium text-ath-text-secondary">
             ¿Cómo te sientes de cara a la próxima semana?
           </p>
           <RatingRow emojis={NEXT_EMOJI} value={nextWeekRating} onChange={setNextWeekRating} />
@@ -202,7 +202,7 @@ export default function WeeklyDiaryForm({ compact = true, onSaved, defaultExpand
             onChange={e => setNextWeekNotes(e.target.value)}
             placeholder="Añade notas si quieres... (opcional)"
             rows={2}
-            className="mt-2 w-full px-3 py-2 text-sm border border-gray-300 dark:border-gray-600 rounded-lg bg-white dark:bg-gray-700 text-gray-900 dark:text-white focus:ring-2 focus:ring-green-500 resize-none"
+            className="mt-2 w-full px-3 py-2 text-sm border border-ath-border rounded-lg bg-ath-surface text-ath-text-primary focus:ring-2 focus:ring-ath-accent resize-none"
           />
         </div>
 
@@ -210,7 +210,7 @@ export default function WeeklyDiaryForm({ compact = true, onSaved, defaultExpand
         <button
           onClick={handleSave}
           disabled={saving}
-          className="flex items-center gap-2 px-5 py-2 rounded-xl text-sm font-semibold text-white bg-green-600 hover:bg-green-700 disabled:opacity-50 transition-colors"
+          className="flex items-center gap-2 px-5 py-2 rounded-xl text-sm font-semibold text-white bg-ath-accent hover:bg-ath-accent-hover disabled:opacity-50 transition-colors"
         >
           {saving ? (
             <>

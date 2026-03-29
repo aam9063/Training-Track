@@ -4,6 +4,43 @@
 @tailwind components;
 @tailwind utilities;
 
+/* ── Athlete theme tokens ── */
+:root {
+  --ath-bg-base: #FFFFFF;
+  --ath-bg-surface: #F9FAFB;
+  --ath-bg-elevated: #FFFFFF;
+  --ath-bg-accent: #E8F5EF;
+  --ath-bg-inset: #F3F4F6;
+  --ath-text-primary: #111827;
+  --ath-text-secondary: #4B5563;
+  --ath-text-muted: #9CA3AF;
+  --ath-accent: #438474;
+  --ath-accent-hover: #3A7366;
+  --ath-accent-text: #2D6B55;
+  --ath-accent-surface: #E8F5EF;
+  --ath-border: #E5E7EB;
+  --ath-border-accent: #438474;
+  --ath-on-accent: #FFFFFF;
+}
+
+.dark {
+  --ath-bg-base: #0A0A0A;
+  --ath-bg-surface: #141414;
+  --ath-bg-elevated: #242424;
+  --ath-bg-accent: #1B3B30;
+  --ath-bg-inset: #0A0A0A;
+  --ath-text-primary: #F3F4F6;
+  --ath-text-secondary: #9CA3AF;
+  --ath-text-muted: #6B7280;
+  --ath-accent: #5BBF9E;
+  --ath-accent-hover: #4DAF8E;
+  --ath-accent-text: #5BBF9E;
+  --ath-accent-surface: #1B3B30;
+  --ath-border: #2A2A2A;
+  --ath-border-accent: #5BBF9E;
+  --ath-on-accent: #FFFFFF;
+}
+
 @layer base {
   * {
     @apply scroll-smooth;

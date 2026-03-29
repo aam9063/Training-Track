@@ -169,8 +169,8 @@ const Devices = () => {
     return (
       <div className="flex items-center justify-center min-h-[60vh]">
         <div className="text-center">
-          <FiLoader className="w-7 h-7 animate-spin text-brand-primary mx-auto mb-3" />
-          <p className="text-sm text-slate-500 dark:text-gray-400">Cargando dispositivos...</p>
+          <FiLoader className="w-7 h-7 animate-spin text-ath-accent mx-auto mb-3" />
+          <p className="text-sm text-ath-text-muted">Cargando dispositivos...</p>
         </div>
       </div>
     );
@@ -180,10 +180,10 @@ const Devices = () => {
     <div className="px-4 lg:px-8 py-6 lg:py-8 max-w-3xl">
       {/* Page Header */}
       <div className="mb-7">
-        <h1 className="text-2xl font-bold text-slate-900 dark:text-white tracking-tight">
+        <h1 className="text-2xl font-bold text-ath-text-primary tracking-tight">
           Integraciones
         </h1>
-        <p className="text-sm text-slate-500 dark:text-gray-400 mt-1">
+        <p className="text-sm text-ath-text-muted mt-1">
           Conecta tus aplicaciones y dispositivos para sincronizar entrenamientos automáticamente
         </p>
       </div>
@@ -204,7 +204,7 @@ const Devices = () => {
       )}
 
       {/* Section: Activas */}
-      <p className="text-xs font-semibold text-slate-400 dark:text-slate-500 uppercase tracking-widest mb-3">
+      <p className="text-xs font-semibold text-ath-text-muted uppercase tracking-widest mb-3">
         Aplicaciones
       </p>
 
@@ -212,7 +212,7 @@ const Devices = () => {
       <motion.div
         initial={{ opacity: 0, y: 16 }}
         animate={{ opacity: 1, y: 0 }}
-        className="bg-white dark:bg-gray-800 rounded-2xl border border-brand-border dark:border-gray-700 overflow-hidden mb-3"
+        className="bg-ath-surface rounded-2xl border border-ath-border overflow-hidden mb-3"
       >
         {/* Card top row */}
         <div className="flex items-center gap-4 p-5">
@@ -228,15 +228,15 @@ const Devices = () => {
           {/* Name + description */}
           <div className="flex-1 min-w-0">
             <div className="flex items-center gap-2">
-              <span className="font-semibold text-slate-900 dark:text-white text-sm">Strava</span>
+              <span className="font-semibold text-ath-text-primary text-sm">Strava</span>
               {stravaConnected && (
-                <span className="inline-flex items-center gap-1 px-2 py-0.5 bg-green-50 dark:bg-green-900/30 text-green-700 dark:text-green-400 text-xs font-medium rounded-full border border-green-200 dark:border-green-700">
+                <span className="inline-flex items-center gap-1 px-2 py-0.5 bg-ath-accent-surface text-ath-accent-text text-xs font-medium rounded-full border border-green-200 dark:border-green-700">
                   <FiCheckCircle className="w-3 h-3" />
                   Conectado
                 </span>
               )}
             </div>
-            <p className="text-xs text-slate-500 dark:text-gray-400 mt-0.5 truncate">
+            <p className="text-xs text-ath-text-muted mt-0.5 truncate">
               {stravaConnected && stravaAthlete
                 ? `${stravaAthlete.firstname} ${stravaAthlete.lastname}`
                 : 'Sincroniza tus actividades de running y ciclismo'}
@@ -247,7 +247,7 @@ const Devices = () => {
           {stravaConnected ? (
             <button
               onClick={handleDisconnectStrava}
-              className="flex items-center gap-1.5 px-3 py-1.5 text-xs font-medium text-slate-500 dark:text-slate-400 hover:text-red-600 dark:hover:text-red-400 hover:bg-red-50 dark:hover:bg-red-900/20 rounded-lg transition-colors border border-brand-border dark:border-gray-600"
+              className="flex items-center gap-1.5 px-3 py-1.5 text-xs font-medium text-ath-text-muted hover:text-red-600 dark:hover:text-red-400 hover:bg-red-50 dark:hover:bg-red-900/20 rounded-lg transition-colors border border-ath-border"
             >
               <FiMinusCircle className="w-3.5 h-3.5" />
               Desvincular
@@ -265,15 +265,15 @@ const Devices = () => {
 
         {/* Connected: stats + sync */}
         {stravaConnected && (
-          <div className="border-t border-brand-border dark:border-gray-700 px-5 py-4 bg-slate-50/50 dark:bg-gray-800/50">
+          <div className="border-t border-ath-border px-5 py-4 bg-slate-50/50 dark:bg-gray-800/50">
             <div className="flex items-center justify-between">
               <div>
-                <p className="text-xs font-medium text-slate-700 dark:text-slate-300">
+                <p className="text-xs font-medium text-ath-text-secondary">
                   Histórico sincronizado
                 </p>
-                <p className="text-xs text-slate-500 dark:text-gray-400 mt-0.5">
+                <p className="text-xs text-ath-text-muted mt-0.5">
                   {cachedCount !== null ? (
-                    <><span className="font-semibold text-slate-900 dark:text-white">{cachedCount}</span> actividades en caché</>
+                    <><span className="font-semibold text-ath-text-primary">{cachedCount}</span> actividades en caché</>
                   ) : (
                     'Calculando...'
                   )}
@@ -287,7 +287,7 @@ const Devices = () => {
               <button
                 onClick={handleFullSync}
                 disabled={syncing}
-                className="flex items-center gap-1.5 px-3 py-1.5 text-xs font-medium bg-white dark:bg-gray-700 border border-brand-border dark:border-gray-600 text-slate-700 dark:text-slate-200 hover:bg-brand-primary hover:text-white hover:border-brand-primary dark:hover:bg-brand-primary dark:hover:border-brand-primary rounded-lg transition-colors disabled:opacity-50 disabled:cursor-not-allowed"
+                className="flex items-center gap-1.5 px-3 py-1.5 text-xs font-medium bg-ath-surface border border-ath-border text-ath-text-secondary hover:bg-ath-accent hover:text-ath-on-accent hover:border-ath-accent rounded-lg transition-colors disabled:opacity-50 disabled:cursor-not-allowed"
               >
                 {syncing ? (
                   <FiLoader className="w-3.5 h-3.5 animate-spin" />
@@ -301,7 +301,7 @@ const Devices = () => {
             {/* Progress */}
             {syncProgress && (
               <div className="mt-3 flex items-center gap-2 p-3 bg-brand-primary/5 dark:bg-brand-primary/10 rounded-lg">
-                <FiLoader className="w-3.5 h-3.5 text-brand-primary animate-spin flex-shrink-0" />
+                <FiLoader className="w-3.5 h-3.5 text-ath-accent animate-spin flex-shrink-0" />
                 <p className="text-xs text-brand-primary">{syncProgress}</p>
               </div>
             )}
@@ -314,11 +314,11 @@ const Devices = () => {
                 className={`mt-3 flex items-center gap-2 p-3 rounded-lg ${
                   syncResult.startsWith('Error')
                     ? 'bg-red-50 dark:bg-red-900/20'
-                    : 'bg-green-50 dark:bg-green-900/20'
+                    : 'bg-ath-accent-surface'
                 }`}
               >
-                <FiCheckCircle className={`w-3.5 h-3.5 flex-shrink-0 ${syncResult.startsWith('Error') ? 'text-red-500' : 'text-green-600'}`} />
-                <p className={`text-xs ${syncResult.startsWith('Error') ? 'text-red-700 dark:text-red-300' : 'text-green-700 dark:text-green-300'}`}>
+                <FiCheckCircle className={`w-3.5 h-3.5 flex-shrink-0 ${syncResult.startsWith('Error') ? 'text-red-500' : 'text-ath-accent'}`} />
+                <p className={`text-xs ${syncResult.startsWith('Error') ? 'text-red-700 dark:text-red-300' : 'text-ath-accent-text'}`}>
                   {syncResult}
                 </p>
               </motion.div>
@@ -328,7 +328,7 @@ const Devices = () => {
       </motion.div>
 
       {/* Section: Próximamente */}
-      <p className="text-xs font-semibold text-slate-400 dark:text-slate-500 uppercase tracking-widest mb-3 mt-7">
+      <p className="text-xs font-semibold text-ath-text-muted uppercase tracking-widest mb-3 mt-7">
         Próximamente
       </p>
 
@@ -338,10 +338,10 @@ const Devices = () => {
           initial={{ opacity: 0, y: 16 }}
           animate={{ opacity: 1, y: 0 }}
           transition={{ delay: 0.08 }}
-          className="bg-white dark:bg-gray-800 rounded-2xl border border-brand-border dark:border-gray-700 p-5 opacity-60"
+          className="bg-ath-surface rounded-2xl border border-ath-border p-5 opacity-60"
         >
           <div className="flex items-center gap-3 mb-3">
-            <div className="w-10 h-10 rounded-xl bg-blue-50 dark:bg-blue-900/30 flex items-center justify-center flex-shrink-0">
+            <div className="w-10 h-10 rounded-xl bg-white flex items-center justify-center flex-shrink-0">
               <img
                 src="/img/integrations/garmin.svg"
                 alt="Garmin"
@@ -350,11 +350,11 @@ const Devices = () => {
               />
             </div>
             <div>
-              <p className="text-sm font-semibold text-slate-900 dark:text-white">Garmin Connect</p>
+              <p className="text-sm font-semibold text-ath-text-primary">Garmin Connect</p>
               <span className="text-[10px] font-semibold text-amber-600 dark:text-amber-400 uppercase tracking-wide">Próximamente</span>
             </div>
           </div>
-          <p className="text-xs text-slate-500 dark:text-gray-400 leading-relaxed">
+          <p className="text-xs text-ath-text-muted leading-relaxed">
             Sincroniza automáticamente tus entrenamientos desde tu reloj Garmin
           </p>
         </motion.div>
@@ -364,10 +364,10 @@ const Devices = () => {
           initial={{ opacity: 0, y: 16 }}
           animate={{ opacity: 1, y: 0 }}
           transition={{ delay: 0.14 }}
-          className="bg-white dark:bg-gray-800 rounded-2xl border border-brand-border dark:border-gray-700 p-5 opacity-60"
+          className="bg-ath-surface rounded-2xl border border-ath-border p-5 opacity-60"
         >
           <div className="flex items-center gap-3 mb-3">
-            <div className="w-10 h-10 rounded-xl bg-gray-100 dark:bg-gray-700 flex items-center justify-center flex-shrink-0">
+            <div className="w-10 h-10 rounded-xl bg-ath-inset flex items-center justify-center flex-shrink-0">
               <img
                 src="/img/integrations/coros.jpeg"
                 alt="COROS"
@@ -376,11 +376,11 @@ const Devices = () => {
               />
             </div>
             <div>
-              <p className="text-sm font-semibold text-slate-900 dark:text-white">COROS</p>
+              <p className="text-sm font-semibold text-ath-text-primary">COROS</p>
               <span className="text-[10px] font-semibold text-amber-600 dark:text-amber-400 uppercase tracking-wide">Próximamente</span>
             </div>
           </div>
-          <p className="text-xs text-slate-500 dark:text-gray-400 leading-relaxed">
+          <p className="text-xs text-ath-text-muted leading-relaxed">
             Importa datos de tus entrenamientos desde tu dispositivo COROS
           </p>
         </motion.div>
@@ -389,8 +389,8 @@ const Devices = () => {
       {/* Info note */}
       <div className="mt-6 flex items-start gap-3 p-4 bg-brand-primary/5 dark:bg-brand-primary/10 rounded-xl border border-brand-primary/10 dark:border-brand-primary/20">
         <FiZap className="w-4 h-4 text-brand-primary flex-shrink-0 mt-0.5" />
-        <p className="text-xs text-slate-600 dark:text-slate-300 leading-relaxed">
-          Las actividades sincronizadas desde Strava se vinculan automáticamente con tus sesiones de entrenamiento y se muestran en <span className="font-medium text-slate-900 dark:text-white">Mis Entrenamientos</span>.
+        <p className="text-xs text-ath-text-secondary leading-relaxed">
+          Las actividades sincronizadas desde Strava se vinculan automáticamente con tus sesiones de entrenamiento y se muestran en <span className="font-medium text-ath-text-primary">Mis Entrenamientos</span>.
         </p>
       </div>
     </div>

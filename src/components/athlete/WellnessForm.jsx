@@ -86,9 +86,9 @@ export default function WellnessForm({ compact = false, onSaved }) {
 
   if (loading) {
     return (
-      <div className="bg-white dark:bg-gray-800 rounded-xl p-4 animate-pulse">
-        <div className="h-6 bg-gray-200 dark:bg-gray-700 rounded w-1/3 mb-4" />
-        <div className="h-20 bg-gray-200 dark:bg-gray-700 rounded" />
+      <div className="bg-ath-surface rounded-xl p-4 animate-pulse">
+        <div className="h-6 bg-ath-inset rounded w-1/3 mb-4" />
+        <div className="h-20 bg-ath-inset rounded" />
       </div>
     );
   }
@@ -107,14 +107,14 @@ export default function WellnessForm({ compact = false, onSaved }) {
         <motion.div
           initial={{ opacity: 0, y: 10 }}
           animate={{ opacity: 1, y: 0 }}
-          className="bg-white dark:bg-gray-800 rounded-xl border border-gray-200 dark:border-gray-700 p-3 cursor-pointer hover:border-green-300 dark:hover:border-green-700 transition-colors"
+          className="bg-ath-surface rounded-xl border border-ath-border p-3 cursor-pointer hover:border-green-300 dark:hover:border-green-700 transition-colors"
           onClick={() => setExpanded(true)}
         >
           <div className="flex items-center justify-between">
             <div className="flex items-center gap-2">
               <FiHeart className="w-4 h-4 text-green-500" />
-              <span className="text-sm font-medium text-gray-900 dark:text-white">Wellness hoy</span>
-              <span className="text-xs text-gray-500 dark:text-gray-400">({avgRound}/10)</span>
+              <span className="text-sm font-medium text-ath-text-primary">Wellness hoy</span>
+              <span className="text-xs text-ath-text-muted">({avgRound}/10)</span>
             </div>
             <div className="flex items-center gap-2">
               {WELLNESS_FIELDS.map(f => (
@@ -134,16 +134,16 @@ export default function WellnessForm({ compact = false, onSaved }) {
       <motion.div
         initial={{ opacity: 0, y: 10 }}
         animate={{ opacity: 1, y: 0 }}
-        className="bg-white dark:bg-gray-800 rounded-xl border border-gray-200 dark:border-gray-700 p-3 cursor-pointer hover:border-green-300 dark:hover:border-green-700 transition-colors"
+        className="bg-ath-surface rounded-xl border border-ath-border p-3 cursor-pointer hover:border-green-300 dark:hover:border-green-700 transition-colors"
         onClick={() => setExpanded(true)}
       >
         <div className="flex items-center justify-between">
           <div className="flex items-center gap-2">
             <FiHeart className="w-4 h-4 text-green-500" />
-            <span className="text-sm font-medium text-gray-900 dark:text-white">¿Cómo te encuentras hoy?</span>
+            <span className="text-sm font-medium text-ath-text-primary">¿Cómo te encuentras hoy?</span>
           </div>
           <div className="flex items-center gap-2">
-            <span className="text-xs text-gray-500 dark:text-gray-400">Rellenar wellness</span>
+            <span className="text-xs text-ath-text-muted">Rellenar wellness</span>
             <FiChevronDown className="w-4 h-4 text-gray-400" />
           </div>
         </div>
@@ -155,12 +155,12 @@ export default function WellnessForm({ compact = false, onSaved }) {
     <motion.div
       initial={{ opacity: 0, y: 10 }}
       animate={{ opacity: 1, y: 0 }}
-      className="bg-white dark:bg-gray-800 rounded-xl border border-gray-200 dark:border-gray-700 p-4"
+      className="bg-ath-surface rounded-xl border border-ath-border p-4"
     >
       <div className="flex items-center justify-between mb-4">
         <div className="flex items-center gap-2">
           <FiHeart className="w-5 h-5 text-green-500" />
-          <h3 className="text-lg font-semibold text-gray-900 dark:text-white">
+          <h3 className="text-lg font-semibold text-ath-text-primary">
             {saved ? 'Wellness de hoy' : '¿Cómo te encuentras hoy?'}
           </h3>
         </div>
@@ -170,7 +170,7 @@ export default function WellnessForm({ compact = false, onSaved }) {
           </button>
         )}
         {saved && (
-          <span className="flex items-center gap-1 text-xs text-green-600 dark:text-green-400">
+          <span className="flex items-center gap-1 text-xs text-ath-accent-text">
             <FiCheck className="w-3 h-3" /> Guardado
           </span>
         )}
@@ -180,7 +180,7 @@ export default function WellnessForm({ compact = false, onSaved }) {
         {WELLNESS_FIELDS.map((field) => (
           <div key={field.key}>
             <div className="flex items-center justify-between mb-1">
-              <label className="text-sm font-medium text-gray-700 dark:text-gray-300 flex items-center gap-1.5">
+              <label className="text-sm font-medium text-ath-text-secondary flex items-center gap-1.5">
                 <field.icon className="w-3.5 h-3.5" />
                 {field.label}
               </label>
@@ -190,11 +190,11 @@ export default function WellnessForm({ compact = false, onSaved }) {
               {Array.from({ length: 10 }, (_, i) => i + 1).map((val) => {
                 const isSelected = values[field.key] === val;
                 const colorMap = {
-                  indigo: isSelected ? 'bg-indigo-500 text-white' : 'bg-gray-100 dark:bg-gray-700 text-gray-600 dark:text-gray-400 hover:bg-indigo-100 dark:hover:bg-indigo-900/30',
-                  orange: isSelected ? 'bg-orange-500 text-white' : 'bg-gray-100 dark:bg-gray-700 text-gray-600 dark:text-gray-400 hover:bg-orange-100 dark:hover:bg-orange-900/30',
-                  red: isSelected ? 'bg-red-500 text-white' : 'bg-gray-100 dark:bg-gray-700 text-gray-600 dark:text-gray-400 hover:bg-red-100 dark:hover:bg-red-900/30',
-                  yellow: isSelected ? 'bg-yellow-500 text-white' : 'bg-gray-100 dark:bg-gray-700 text-gray-600 dark:text-gray-400 hover:bg-yellow-100 dark:hover:bg-yellow-900/30',
-                  green: isSelected ? 'bg-green-500 text-white' : 'bg-gray-100 dark:bg-gray-700 text-gray-600 dark:text-gray-400 hover:bg-green-100 dark:hover:bg-green-900/30',
+                  indigo: isSelected ? 'bg-indigo-500 text-white' : 'bg-ath-inset text-ath-text-secondary hover:bg-indigo-100 dark:hover:bg-indigo-900/30',
+                  orange: isSelected ? 'bg-orange-500 text-white' : 'bg-ath-inset text-ath-text-secondary hover:bg-orange-100 dark:hover:bg-orange-900/30',
+                  red: isSelected ? 'bg-red-500 text-white' : 'bg-ath-inset text-ath-text-secondary hover:bg-red-100 dark:hover:bg-red-900/30',
+                  yellow: isSelected ? 'bg-yellow-500 text-white' : 'bg-ath-inset text-ath-text-secondary hover:bg-yellow-100 dark:hover:bg-yellow-900/30',
+                  green: isSelected ? 'bg-green-500 text-white' : 'bg-ath-inset text-ath-text-secondary hover:bg-green-100 dark:hover:bg-green-900/30',
                 };
                 return (
                   <button
@@ -213,7 +213,7 @@ export default function WellnessForm({ compact = false, onSaved }) {
         {/* Extra fields */}
         <div className="grid grid-cols-3 gap-3 pt-2">
           <div>
-            <label className="text-xs font-medium text-gray-600 dark:text-gray-400 mb-1 block">Horas sueño</label>
+            <label className="text-xs font-medium text-ath-text-secondary mb-1 block">Horas sueño</label>
             <input
               type="number"
               step="0.5"
@@ -222,11 +222,11 @@ export default function WellnessForm({ compact = false, onSaved }) {
               value={sleepHours}
               onChange={(e) => setSleepHours(e.target.value)}
               placeholder="7.5"
-              className="w-full px-2 py-1.5 text-sm border border-gray-300 dark:border-gray-600 rounded-lg bg-white dark:bg-gray-700 text-gray-900 dark:text-white focus:ring-2 focus:ring-green-500"
+              className="w-full px-2 py-1.5 text-sm border border-ath-border rounded-lg bg-ath-surface text-ath-text-primary focus:ring-2 focus:ring-ath-accent"
             />
           </div>
           <div>
-            <label className="text-xs font-medium text-gray-600 dark:text-gray-400 mb-1 block">Peso (kg)</label>
+            <label className="text-xs font-medium text-ath-text-secondary mb-1 block">Peso (kg)</label>
             <input
               type="number"
               step="0.1"
@@ -235,11 +235,11 @@ export default function WellnessForm({ compact = false, onSaved }) {
               value={bodyWeight}
               onChange={(e) => setBodyWeight(e.target.value)}
               placeholder="70.0"
-              className="w-full px-2 py-1.5 text-sm border border-gray-300 dark:border-gray-600 rounded-lg bg-white dark:bg-gray-700 text-gray-900 dark:text-white focus:ring-2 focus:ring-green-500"
+              className="w-full px-2 py-1.5 text-sm border border-ath-border rounded-lg bg-ath-surface text-ath-text-primary focus:ring-2 focus:ring-ath-accent"
             />
           </div>
           <div>
-            <label className="text-xs font-medium text-gray-600 dark:text-gray-400 mb-1 block">FC reposo</label>
+            <label className="text-xs font-medium text-ath-text-secondary mb-1 block">FC reposo</label>
             <input
               type="number"
               min="30"
@@ -247,20 +247,20 @@ export default function WellnessForm({ compact = false, onSaved }) {
               value={restingHr}
               onChange={(e) => setRestingHr(e.target.value)}
               placeholder="52"
-              className="w-full px-2 py-1.5 text-sm border border-gray-300 dark:border-gray-600 rounded-lg bg-white dark:bg-gray-700 text-gray-900 dark:text-white focus:ring-2 focus:ring-green-500"
+              className="w-full px-2 py-1.5 text-sm border border-ath-border rounded-lg bg-ath-surface text-ath-text-primary focus:ring-2 focus:ring-ath-accent"
             />
           </div>
         </div>
 
         {/* Notes */}
         <div>
-          <label className="text-xs font-medium text-gray-600 dark:text-gray-400 mb-1 block">Notas (opcional)</label>
+          <label className="text-xs font-medium text-ath-text-secondary mb-1 block">Notas (opcional)</label>
           <textarea
             value={notes}
             onChange={(e) => setNotes(e.target.value)}
             placeholder="¿Algo que destacar hoy?"
             rows={2}
-            className="w-full px-3 py-2 text-sm border border-gray-300 dark:border-gray-600 rounded-lg bg-white dark:bg-gray-700 text-gray-900 dark:text-white focus:ring-2 focus:ring-green-500 resize-none"
+            className="w-full px-3 py-2 text-sm border border-ath-border rounded-lg bg-ath-surface text-ath-text-primary focus:ring-2 focus:ring-ath-accent resize-none"
           />
         </div>
 
@@ -268,7 +268,7 @@ export default function WellnessForm({ compact = false, onSaved }) {
           <button
             onClick={handleSave}
             disabled={saving}
-            className="flex items-center gap-2 px-5 py-2 rounded-xl text-sm font-semibold text-white bg-green-600 hover:bg-green-700 disabled:opacity-50 transition-colors"
+            className="flex items-center gap-2 px-5 py-2 rounded-xl text-sm font-semibold text-white bg-ath-accent hover:bg-ath-accent-hover disabled:opacity-50 transition-colors"
           >
             {saving ? (
               <>

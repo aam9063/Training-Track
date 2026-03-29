@@ -89,15 +89,10 @@ const Calendar = () => {
     goToPreviousMonth, goToNextMonth, goToToday,
   } = useCalendarData(profile?.id, fetchCoachCalendar);
 
-  // When the weekly view navigates to a different month, reload data
+  // When the weekly view navigates to a different month (desktop only)
   const handleWeekMonthChange = useCallback((weekStartDate) => {
-    const weekMonth = weekStartDate.getMonth();
-    const weekYear = weekStartDate.getFullYear();
-    // If visible week is in a different month, update currentDate to trigger data reload
-    if (weekMonth !== currentDate.getMonth() || weekYear !== currentDate.getFullYear()) {
-      setCurrentDate(new Date(weekStartDate));
-    }
-  }, [currentDate, setCurrentDate]);
+    setCurrentDate(new Date(weekStartDate));
+  }, [setCurrentDate]);
 
   const [showEventModal, setShowEventModal] = useState(false);
   const [showDayModal, setShowDayModal] = useState(false);

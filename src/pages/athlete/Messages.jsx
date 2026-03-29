@@ -42,7 +42,7 @@ function ReportMessageCard({ data }) {
   const alertas = ai.alertas || [];
 
   return (
-    <div className={`w-full bg-white dark:bg-gray-800 rounded-2xl border-l-4 ${ALERT_BORDER[level] || ALERT_BORDER.ok} border border-gray-200 dark:border-gray-700 overflow-hidden shadow-sm`}>
+    <div className={`w-full bg-ath-surface rounded-2xl border-l-4 ${ALERT_BORDER[level] || ALERT_BORDER.ok} border border-ath-border overflow-hidden shadow-sm`}>
       {/* Header */}
       <div className="flex items-center gap-2 px-3 pt-3 pb-2">
         <div className="w-7 h-7 rounded-lg flex items-center justify-center flex-shrink-0" style={{ background: 'rgba(26,107,255,0.12)' }}>
@@ -50,23 +50,23 @@ function ReportMessageCard({ data }) {
         </div>
         <div className="flex-1 min-w-0">
           <p className="text-[10px] font-bold uppercase tracking-widest" style={{ color: '#1A6BFF' }}>Informe IA</p>
-          <p className="text-xs text-gray-500 dark:text-gray-400">{fmtDate(data.week_start)} – {fmtDate(data.week_end)}</p>
+          <p className="text-xs text-ath-text-muted">{fmtDate(data.week_start)} – {fmtDate(data.week_end)}</p>
         </div>
-        <span className={`flex items-center gap-1 px-2 py-0.5 rounded-full text-[10px] font-semibold bg-gray-50 dark:bg-gray-900 border border-gray-200 dark:border-gray-700`}>
+        <span className={`flex items-center gap-1 px-2 py-0.5 rounded-full text-[10px] font-semibold bg-ath-base border border-ath-border`}>
           <span className={`w-1.5 h-1.5 rounded-full ${ALERT_DOT[level]}`} />
           {ALERT_LABEL[level]}
         </span>
       </div>
 
       {/* Metrics row */}
-      <div className="grid grid-cols-3 gap-px bg-gray-100 dark:bg-gray-700 border-t border-gray-100 dark:border-gray-700 text-center">
+      <div className="grid grid-cols-3 gap-px bg-ath-inset border-t border-ath-border text-center">
         {[
           { label: 'ACWR', value: data.acwr != null ? data.acwr.toFixed(2) : '—' },
           { label: 'Sesiones', value: `${data.sessions_done}/${data.sessions_planned}` },
           { label: 'Km', value: data.actual_km != null ? `${data.actual_km}` : '—' },
         ].map(m => (
-          <div key={m.label} className="bg-white dark:bg-gray-800 py-2">
-            <p className="text-sm font-bold text-gray-900 dark:text-white leading-none">{m.value}</p>
+          <div key={m.label} className="bg-ath-surface py-2">
+            <p className="text-sm font-bold text-ath-text-primary leading-none">{m.value}</p>
             <p className="text-[10px] text-gray-400 mt-0.5 uppercase tracking-wide">{m.label}</p>
           </div>
         ))}
@@ -74,8 +74,8 @@ function ReportMessageCard({ data }) {
 
       {/* Summary */}
       {ai.resumen && (
-        <div className="px-3 py-2 border-t border-gray-100 dark:border-gray-700">
-          <p className="text-xs text-gray-600 dark:text-gray-300 leading-relaxed line-clamp-3">{ai.resumen}</p>
+        <div className="px-3 py-2 border-t border-ath-border">
+          <p className="text-xs text-ath-text-secondary leading-relaxed line-clamp-3">{ai.resumen}</p>
         </div>
       )}
 
@@ -83,7 +83,7 @@ function ReportMessageCard({ data }) {
       {(recomendaciones.length > 0 || alertas.length > 0) && (
         <button
           onClick={() => setExpanded(v => !v)}
-          className="w-full px-3 py-2 text-[11px] font-semibold border-t border-gray-100 dark:border-gray-700 text-blue-600 dark:text-blue-400 hover:bg-gray-50 dark:hover:bg-gray-700 transition-colors text-left"
+          className="w-full px-3 py-2 text-[11px] font-semibold border-t border-ath-border text-blue-600 dark:text-blue-400 hover:bg-ath-inset transition-colors text-left"
         >
           {expanded ? 'Ver menos ↑' : `Ver detalles ↓ (${recomendaciones.length} recomendaciones)`}
         </button>
@@ -91,14 +91,14 @@ function ReportMessageCard({ data }) {
 
       {/* Expanded content */}
       {expanded && (
-        <div className="px-3 pb-3 space-y-2 border-t border-gray-100 dark:border-gray-700 pt-2">
+        <div className="px-3 pb-3 space-y-2 border-t border-ath-border pt-2">
           {alertas.length > 0 && (
             <div>
               <p className="text-[10px] font-bold uppercase tracking-widest text-gray-400 mb-1.5 flex items-center gap-1">
                 <FiAlertTriangle className="w-3 h-3" /> Alertas
               </p>
               {alertas.map((a, i) => (
-                <div key={i} className="text-xs text-gray-600 dark:text-gray-300 mb-1">
+                <div key={i} className="text-xs text-ath-text-secondary mb-1">
                   <span className="font-semibold">{a.tipo}: </span>{a.descripcion}
                 </div>
               ))}
@@ -110,7 +110,7 @@ function ReportMessageCard({ data }) {
                 <FiBarChart2 className="w-3 h-3" /> Recomendaciones
               </p>
               {recomendaciones.map((r, i) => (
-                <div key={i} className="flex gap-1.5 text-xs text-gray-600 dark:text-gray-300 mb-1">
+                <div key={i} className="flex gap-1.5 text-xs text-ath-text-secondary mb-1">
                   <span className="w-4 h-4 rounded-full bg-blue-100 dark:bg-blue-900 text-blue-600 dark:text-blue-300 text-[10px] font-bold flex items-center justify-center flex-shrink-0 mt-0.5">{i + 1}</span>
                   <span>{r}</span>
                 </div>
@@ -278,8 +278,8 @@ const AthleteMessages = () => {
     return (
       <div className="flex items-center justify-center min-h-[60vh]">
         <div className="text-center">
-          <FiLoader className="w-8 h-8 animate-spin text-green-600 mx-auto mb-4" />
-          <p className="text-gray-600 dark:text-gray-400">Cargando mensajes...</p>
+          <FiLoader className="w-8 h-8 animate-spin text-ath-accent mx-auto mb-4" />
+          <p className="text-ath-text-secondary">Cargando mensajes...</p>
         </div>
       </div>
     );
@@ -290,13 +290,13 @@ const AthleteMessages = () => {
     return (
       <div className="flex items-center justify-center min-h-[60vh]">
         <div className="text-center">
-          <div className="w-20 h-20 bg-gray-200 dark:bg-gray-700 rounded-full flex items-center justify-center mx-auto mb-4">
-            <FiMessageSquare className="w-10 h-10 text-gray-400 dark:text-gray-500" />
+          <div className="w-20 h-20 bg-ath-inset rounded-full flex items-center justify-center mx-auto mb-4">
+            <FiMessageSquare className="w-10 h-10 text-ath-text-muted" />
           </div>
-          <h3 className="text-lg font-medium text-gray-900 dark:text-white mb-2">
+          <h3 className="text-lg font-medium text-ath-text-primary mb-2">
             Sin entrenador asignado
           </h3>
-          <p className="text-gray-500 dark:text-gray-400 max-w-sm mx-auto">
+          <p className="text-ath-text-muted max-w-sm mx-auto">
             Los mensajes aparecerán aquí cuando tengas un entrenador asignado.
           </p>
         </div>
@@ -307,7 +307,7 @@ const AthleteMessages = () => {
   return (
     <div className="flex flex-col h-[calc(100dvh-62px-72px)] lg:h-[calc(100vh-52px)] overflow-hidden -mb-[72px] lg:mb-0">
       {/* Chat Header */}
-      <div className="px-4 py-3 border-b border-gray-200 dark:border-gray-700 bg-white dark:bg-gray-800 flex items-center space-x-3">
+      <div className="px-4 py-3 border-b border-ath-border bg-ath-surface flex items-center space-x-3">
         {coachInfo.profile_image ? (
           <img
             src={coachInfo.profile_image}
@@ -322,25 +322,25 @@ const AthleteMessages = () => {
           </div>
         )}
         <div>
-          <p className="font-semibold text-gray-900 dark:text-white text-sm">
+          <p className="font-semibold text-ath-text-primary text-sm">
             {getCoachName()}
           </p>
-          <p className="text-xs text-gray-500 dark:text-gray-400">Entrenador</p>
+          <p className="text-xs text-ath-text-muted">Entrenador</p>
         </div>
       </div>
 
       {/* Messages Area */}
       <div
         ref={messagesContainerRef}
-        className="flex-1 overflow-y-auto px-4 py-4 bg-gray-50 dark:bg-gray-900"
+        className="flex-1 overflow-y-auto px-4 py-4 bg-ath-base"
       >
         {messages.length === 0 ? (
           <div className="flex items-center justify-center h-full">
             <div className="text-center">
-              <div className="w-16 h-16 bg-gray-200 dark:bg-gray-700 rounded-full flex items-center justify-center mx-auto mb-4">
-                <FiMessageSquare className="w-8 h-8 text-gray-400 dark:text-gray-500" />
+              <div className="w-16 h-16 bg-ath-inset rounded-full flex items-center justify-center mx-auto mb-4">
+                <FiMessageSquare className="w-8 h-8 text-ath-text-muted" />
               </div>
-              <p className="text-gray-500 dark:text-gray-400">
+              <p className="text-ath-text-muted">
                 Envía tu primer mensaje a {getCoachName()}
               </p>
             </div>
@@ -356,7 +356,7 @@ const AthleteMessages = () => {
                 <div key={msg.id}>
                   {showDateSep && (
                     <div className="flex items-center justify-center my-4">
-                      <span className="bg-gray-200 dark:bg-gray-700 text-gray-600 dark:text-gray-300 text-xs px-3 py-1 rounded-full">
+                      <span className="bg-ath-inset text-ath-text-secondary text-xs px-3 py-1 rounded-full">
                         {getDateSeparator(msg.created_at)}
                       </span>
                     </div>
@@ -368,7 +368,7 @@ const AthleteMessages = () => {
                         return (
                           <div className="max-w-[85%] sm:max-w-[75%]">
                             <ReportMessageCard data={reportData} />
-                            <div className="flex items-center justify-end gap-1 mt-1 text-gray-400 dark:text-gray-500">
+                            <div className="flex items-center justify-end gap-1 mt-1 text-ath-text-muted">
                               <span className="text-[11px]">{formatTime(msg.created_at)}</span>
                             </div>
                           </div>
@@ -379,13 +379,13 @@ const AthleteMessages = () => {
                           className={`
                             max-w-[75%] sm:max-w-[65%] px-3 py-2 rounded-2xl
                             ${isMine
-                              ? 'bg-green-600 text-white rounded-br-md'
-                              : 'bg-white dark:bg-gray-800 text-gray-900 dark:text-white rounded-bl-md shadow-sm'
+                              ? 'bg-ath-accent text-ath-on-accent rounded-br-md'
+                              : 'bg-ath-surface text-ath-text-primary rounded-bl-md shadow-sm'
                             }
                           `}
                         >
                           <p className="text-sm whitespace-pre-wrap break-words">{msg.content}</p>
-                          <div className={`flex items-center justify-end space-x-1 mt-1 ${isMine ? 'text-green-200' : 'text-gray-400 dark:text-gray-500'}`}>
+                          <div className={`flex items-center justify-end space-x-1 mt-1 ${isMine ? 'text-green-200' : 'text-ath-text-muted'}`}>
                             <span className="text-[11px]">{formatTime(msg.created_at)}</span>
                             {isMine && (
                               msg.read
@@ -406,7 +406,7 @@ const AthleteMessages = () => {
       </div>
 
       {/* Input Area */}
-      <div className="px-4 py-3 border-t border-gray-200 dark:border-gray-700 bg-white dark:bg-gray-800">
+      <div className="px-4 py-3 border-t border-ath-border bg-ath-surface">
         <div className="flex items-end space-x-3">
           <textarea
             ref={textareaRef}
@@ -419,13 +419,13 @@ const AthleteMessages = () => {
             onKeyDown={handleKeyDown}
             placeholder="Escribe un mensaje..."
             rows={1}
-            className="flex-1 px-4 py-2.5 border border-gray-200 dark:border-gray-600 rounded-2xl bg-gray-50 dark:bg-gray-700 text-gray-900 dark:text-white text-sm focus:ring-2 focus:ring-green-500 focus:border-transparent resize-none overflow-hidden"
+            className="flex-1 px-4 py-2.5 border border-ath-border rounded-2xl bg-ath-inset text-ath-text-primary text-sm focus:ring-2 focus:ring-ath-accent focus:border-transparent resize-none overflow-hidden"
             style={{ minHeight: '40px', maxHeight: '120px' }}
           />
           <button
             onClick={handleSend}
             disabled={!newMessageText.trim() || sending}
-            className="p-2.5 bg-green-600 hover:bg-green-700 disabled:bg-gray-300 dark:disabled:bg-gray-600 text-white rounded-full transition-colors flex-shrink-0"
+            className="p-2.5 bg-ath-accent hover:bg-ath-accent-hover disabled:opacity-50 text-ath-on-accent rounded-full transition-colors flex-shrink-0"
           >
             {sending ? (
               <FiLoader className="w-5 h-5 animate-spin" />

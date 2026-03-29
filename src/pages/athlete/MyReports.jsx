@@ -11,13 +11,13 @@ import { generateAIReportPDF } from '../../lib/pdfExport';
 // ─── Helpers ──────────────────────────────────────────────────────────────────
 
 const ALERT_CONFIG = {
-  critical: { label: 'Crítico', dot: 'bg-red-500', badge: 'bg-red-50 text-red-700 border border-red-200', border: 'border-l-red-500', icon: '🔴' },
-  attention: { label: 'Atención', dot: 'bg-amber-400', badge: 'bg-amber-50 text-amber-700 border border-amber-200', border: 'border-l-amber-400', icon: '🟡' },
-  ok: { label: 'En forma', dot: 'bg-green-500', badge: 'bg-green-50 text-green-700 border border-green-200', border: 'border-l-green-500', icon: '🟢' },
+  critical: { label: 'Crítico', dot: 'bg-red-500', badge: 'bg-red-500/10 text-red-600 dark:text-red-400 border border-red-500/20', border: 'border-l-red-500', icon: '🔴' },
+  attention: { label: 'Atención', dot: 'bg-amber-400', badge: 'bg-amber-500/10 text-amber-600 dark:text-amber-400 border border-amber-500/20', border: 'border-l-amber-400', icon: '🟡' },
+  ok: { label: 'En forma', dot: 'bg-green-500', badge: 'bg-ath-accent-surface text-ath-accent-text border border-ath-border-accent/20', border: 'border-l-ath-border-accent', icon: '🟢' },
 };
-const ALERT_COLORS = { critical: 'bg-red-50 border-red-200', attention: 'bg-amber-50 border-amber-200', ok: 'bg-green-50 border-green-200' };
-const ALERT_TEXT = { critical: 'text-red-700', attention: 'text-amber-700', ok: 'text-green-700' };
-const ALERT_TITLE_COLOR = { critical: 'text-red-800', attention: 'text-amber-800', ok: 'text-green-800' };
+const ALERT_COLORS = { critical: 'bg-red-500/10 border-red-500/20', attention: 'bg-amber-500/10 border-amber-500/20', ok: 'bg-ath-accent-surface border-ath-border-accent/20' };
+const ALERT_TEXT = { critical: 'text-red-600 dark:text-red-400', attention: 'text-amber-600 dark:text-amber-400', ok: 'text-ath-accent-text' };
+const ALERT_TITLE_COLOR = { critical: 'text-red-600 dark:text-red-400', attention: 'text-amber-600 dark:text-amber-400', ok: 'text-ath-accent-text' };
 
 const formatDate = (d) => {
   if (!d) return '';
@@ -36,7 +36,7 @@ function ReportCard({ report, onClick }) {
       initial={{ opacity: 0, y: 8 }}
       animate={{ opacity: 1, y: 0 }}
       onClick={onClick}
-      className={`w-full text-left bg-white dark:bg-gray-800 rounded-2xl border-l-4 ${cfg.border} border border-gray-200 dark:border-gray-700 p-4 hover:shadow-md transition-shadow`}
+      className={`w-full text-left bg-ath-surface rounded-2xl border-l-4 ${cfg.border} border border-ath-border p-4 hover:shadow-md transition-shadow`}
     >
       <div className="flex items-start justify-between gap-3">
         <div className="flex-1 min-w-0">
@@ -46,12 +46,12 @@ function ReportCard({ report, onClick }) {
             </span>
             <span className="text-xs text-slate-400">{formatDate(report.week_start)} – {formatDate(report.week_end)}</span>
           </div>
-          <p className="text-sm text-slate-700 dark:text-slate-300 line-clamp-2 leading-relaxed">
+          <p className="text-sm text-ath-text-secondary line-clamp-2 leading-relaxed">
             {ai.resumen || `${report.sessions_done}/${report.sessions_planned} sesiones · ${report.actual_km} km`}
           </p>
         </div>
         <div className="flex flex-col items-end gap-1 flex-shrink-0">
-          <span className="text-lg font-bold text-slate-900 dark:text-white">{report.actual_km ?? '—'}<span className="text-xs font-normal text-slate-400 ml-0.5">km</span></span>
+          <span className="text-lg font-bold text-ath-text-primary">{report.actual_km ?? '—'}<span className="text-xs font-normal text-slate-400 ml-0.5">km</span></span>
           <span className="text-xs text-slate-400">{report.sessions_done}/{report.sessions_planned} sesiones</span>
         </div>
       </div>
@@ -85,14 +85,14 @@ function ReportDetail({ report, onBack, athleteName }) {
         </button>
         <button
           onClick={() => generateAIReportPDF({ report, athleteName })}
-          className="flex items-center gap-1.5 text-sm font-medium text-white bg-slate-800 hover:bg-slate-700 dark:bg-gray-700 dark:hover:bg-gray-600 px-3 py-1.5 rounded-lg transition-colors"
+          className="flex items-center gap-1.5 text-sm font-medium text-ath-on-accent bg-ath-accent hover:bg-ath-accent-hover px-3 py-1.5 rounded-lg transition-colors"
         >
           <FiDownload className="w-3.5 h-3.5" /> Descargar PDF
         </button>
       </div>
 
       {/* Header */}
-      <div className="bg-white dark:bg-gray-800 rounded-2xl border border-gray-200 dark:border-gray-700 p-4">
+      <div className="bg-ath-surface rounded-2xl border border-ath-border p-4">
         <div className="flex items-center justify-between mb-2">
           <span className={`text-xs font-semibold px-2.5 py-1 rounded-full ${cfg.badge}`}>{cfg.icon} {cfg.label}</span>
           <span className="text-xs text-slate-400">{formatDate(report.week_start)} – {formatDate(report.week_end)}</span>
@@ -104,7 +104,7 @@ function ReportDetail({ report, onBack, athleteName }) {
             { label: 'RPE medio', value: report.avg_rpe ? `${report.avg_rpe}/10` : '—' },
           ].map(({ label, value }) => (
             <div key={label} className="text-center">
-              <p className="text-lg font-bold text-slate-900 dark:text-white">{value}</p>
+              <p className="text-lg font-bold text-ath-text-primary">{value}</p>
               <p className="text-[11px] text-slate-400 mt-0.5">{label}</p>
             </div>
           ))}
@@ -113,13 +113,13 @@ function ReportDetail({ report, onBack, athleteName }) {
 
       {/* AI summary */}
       {ai.resumen && (
-        <div className="flex gap-3 p-4 bg-slate-900 dark:bg-gray-950 rounded-2xl">
-          <div className="w-8 h-8 rounded-lg flex items-center justify-center flex-shrink-0" style={{ background: 'rgba(22,163,74,0.2)' }}>
-            <FiZap className="w-4 h-4 text-green-400" />
+        <div className="flex gap-3 p-4 bg-ath-accent-surface rounded-2xl border border-ath-border-accent/20">
+          <div className="w-8 h-8 rounded-lg bg-ath-accent/20 flex items-center justify-center flex-shrink-0">
+            <FiZap className="w-4 h-4 text-ath-accent-text" />
           </div>
           <div className="min-w-0">
-            <p className="text-[10px] font-bold uppercase tracking-widest mb-1 text-green-400">Hermes · IA</p>
-            <p className="text-sm leading-relaxed text-slate-200">{ai.resumen}</p>
+            <p className="text-[10px] font-bold uppercase tracking-widest mb-1 text-ath-accent-text">Hermes · IA</p>
+            <p className="text-sm leading-relaxed text-ath-text-secondary">{ai.resumen}</p>
           </div>
         </div>
       )}
@@ -127,7 +127,7 @@ function ReportDetail({ report, onBack, athleteName }) {
       {/* Alerts */}
       {alertas.length > 0 && (
         <div>
-          <p className="text-xs font-semibold text-slate-500 dark:text-slate-400 uppercase tracking-widest mb-2.5 flex items-center gap-1">
+          <p className="text-xs font-semibold text-ath-text-muted uppercase tracking-widest mb-2.5 flex items-center gap-1">
             <FiAlertTriangle className="w-3.5 h-3.5" /> Alertas
           </p>
           <div className="space-y-2">
@@ -149,10 +149,10 @@ function ReportDetail({ report, onBack, athleteName }) {
 
       {/* Comparativa */}
       <div>
-        <p className="text-xs font-semibold text-slate-500 dark:text-slate-400 uppercase tracking-widest mb-2.5 flex items-center gap-1">
+        <p className="text-xs font-semibold text-ath-text-muted uppercase tracking-widest mb-2.5 flex items-center gap-1">
           <FiBarChart2 className="w-3.5 h-3.5" /> Ejecutado vs Planificado
         </p>
-        <div className="bg-white dark:bg-gray-800 rounded-2xl border border-gray-200 dark:border-gray-700 p-4 space-y-3">
+        <div className="bg-ath-surface rounded-2xl border border-ath-border p-4 space-y-3">
           {[
             { label: 'Kilómetros', exec: kmExec, plan: kmPlan, unit: 'km' },
             { label: 'Sesiones', exec: sessExec, plan: sessPlan, unit: '' },
@@ -162,7 +162,7 @@ function ReportDetail({ report, onBack, athleteName }) {
                 <span>{label}</span>
                 <span>{exec}{unit} / {plan}{unit}</span>
               </div>
-              <div className="h-2 bg-gray-100 dark:bg-gray-700 rounded-full overflow-hidden">
+              <div className="h-2 bg-ath-inset rounded-full overflow-hidden">
                 <div
                   className={`h-full rounded-full transition-all ${bar(exec, plan) > 100 ? 'bg-amber-400' : 'bg-green-500'}`}
                   style={{ width: `${Math.min(bar(exec, plan), 100)}%` }}
@@ -176,14 +176,14 @@ function ReportDetail({ report, onBack, athleteName }) {
       {/* Recommendations */}
       {recomendaciones.length > 0 && (
         <div>
-          <p className="text-xs font-semibold text-slate-500 dark:text-slate-400 uppercase tracking-widest mb-2.5 flex items-center gap-1">
+          <p className="text-xs font-semibold text-ath-text-muted uppercase tracking-widest mb-2.5 flex items-center gap-1">
             <FiCheckCircle className="w-3.5 h-3.5" /> Recomendaciones
           </p>
           <div className="space-y-2">
             {recomendaciones.map((r, i) => (
-              <div key={i} className="flex gap-3 bg-white dark:bg-gray-800 rounded-xl border border-gray-200 dark:border-gray-700 p-3">
-                <span className="w-5 h-5 rounded-full bg-green-100 dark:bg-green-900/30 text-green-700 dark:text-green-400 text-xs font-bold flex items-center justify-center flex-shrink-0 mt-0.5">{i + 1}</span>
-                <p className="text-sm text-slate-700 dark:text-slate-300 leading-relaxed">{r}</p>
+              <div key={i} className="flex gap-3 bg-ath-surface rounded-xl border border-ath-border p-3">
+                <span className="w-5 h-5 rounded-full bg-ath-accent-surface text-ath-accent-text text-xs font-bold flex items-center justify-center flex-shrink-0 mt-0.5">{i + 1}</span>
+                <p className="text-sm text-ath-text-secondary leading-relaxed">{r}</p>
               </div>
             ))}
           </div>
@@ -226,7 +226,7 @@ export default function MyReports() {
   if (loading) {
     return (
       <div className="flex items-center justify-center min-h-[60vh]">
-        <FiLoader className="w-7 h-7 animate-spin text-green-600" />
+        <FiLoader className="w-7 h-7 animate-spin text-ath-accent" />
       </div>
     );
   }
@@ -235,18 +235,18 @@ export default function MyReports() {
     return (
       <div className="px-4 lg:px-8 py-5 lg:py-8 flex flex-col min-h-[calc(100vh-120px)]">
         <div className="mb-5">
-          <h1 className="text-2xl font-bold text-slate-900 dark:text-white tracking-tight flex items-center gap-2">
+          <h1 className="text-2xl font-bold text-ath-text-primary tracking-tight flex items-center gap-2">
             <FiZap className="w-5 h-5 text-green-500" /> Mis Informes IA
           </h1>
-          <p className="text-sm text-slate-500 dark:text-slate-400 mt-1">Análisis semanal generado por tu entrenador</p>
+          <p className="text-sm text-ath-text-muted mt-1">Análisis semanal generado por tu entrenador</p>
         </div>
-        <div className="flex-1 flex flex-col items-center justify-center gap-4 text-slate-400 dark:text-slate-500">
-          <div className="w-16 h-16 rounded-2xl bg-slate-100 dark:bg-gray-800 flex items-center justify-center">
-            <FiZap className="w-8 h-8 text-slate-300 dark:text-slate-600" />
+        <div className="flex-1 flex flex-col items-center justify-center gap-4 text-ath-text-muted">
+          <div className="w-16 h-16 rounded-2xl bg-ath-inset flex items-center justify-center">
+            <FiZap className="w-8 h-8 text-ath-text-muted" />
           </div>
           <div className="text-center">
-            <p className="text-base font-semibold text-slate-500 dark:text-slate-400">Aún no tienes informes disponibles</p>
-            <p className="text-sm text-slate-400 dark:text-slate-500 mt-1">Los informes se generan automáticamente cada lunes</p>
+            <p className="text-base font-semibold text-ath-text-muted">Aún no tienes informes disponibles</p>
+            <p className="text-sm text-ath-text-muted mt-1">Los informes se generan automáticamente cada lunes</p>
           </div>
         </div>
       </div>
@@ -263,10 +263,10 @@ export default function MyReports() {
         ) : (
           <motion.div key="list" initial={{ opacity: 0 }} animate={{ opacity: 1 }} exit={{ opacity: 0 }}>
             <div className="mb-5">
-              <h1 className="text-2xl font-bold text-slate-900 dark:text-white tracking-tight flex items-center gap-2">
+              <h1 className="text-2xl font-bold text-ath-text-primary tracking-tight flex items-center gap-2">
                 <FiZap className="w-5 h-5 text-green-500" /> Mis Informes IA
               </h1>
-              <p className="text-sm text-slate-500 dark:text-slate-400 mt-1">Análisis semanal generado por tu entrenador</p>
+              <p className="text-sm text-ath-text-muted mt-1">Análisis semanal generado por tu entrenador</p>
             </div>
 
             <div className="space-y-3">
@@ -280,7 +280,7 @@ export default function MyReports() {
                 <button
                   onClick={() => setPage(p => p - 1)}
                   disabled={page === 0}
-                  className="p-2 rounded-lg border border-gray-200 dark:border-gray-700 disabled:opacity-30 hover:bg-gray-50 dark:hover:bg-gray-700 transition-colors"
+                  className="p-2 rounded-lg border border-ath-border disabled:opacity-30 hover:bg-ath-inset transition-colors"
                 >
                   <FiChevronLeft className="w-4 h-4" />
                 </button>
@@ -288,7 +288,7 @@ export default function MyReports() {
                 <button
                   onClick={() => setPage(p => p + 1)}
                   disabled={page >= totalPages - 1}
-                  className="p-2 rounded-lg border border-gray-200 dark:border-gray-700 disabled:opacity-30 hover:bg-gray-50 dark:hover:bg-gray-700 transition-colors"
+                  className="p-2 rounded-lg border border-ath-border disabled:opacity-30 hover:bg-ath-inset transition-colors"
                 >
                   <FiChevronRight className="w-4 h-4" />
                 </button>

@@ -97,7 +97,7 @@ export default function SessionCompletionModal({ session, onClose, onComplete })
           animate={{ opacity: 1, y: 0, scale: 1 }}
           exit={{ opacity: 0, y: 20, scale: 0.97 }}
           transition={{ type: 'spring', stiffness: 380, damping: 32 }}
-          className="w-full max-w-md max-h-[85vh] overflow-y-auto bg-white dark:bg-gray-900 shadow-2xl rounded-2xl"
+          className="w-full max-w-md max-h-[85vh] overflow-y-auto bg-ath-base shadow-2xl rounded-2xl"
           role="dialog"
           aria-modal="true"
           aria-labelledby="completion-modal-title"
@@ -105,17 +105,17 @@ export default function SessionCompletionModal({ session, onClose, onComplete })
         >
         {/* Handle (mobile) */}
         <div className="flex justify-center pt-3 pb-1 sm:hidden">
-          <div className="w-10 h-1 rounded-full bg-gray-300 dark:bg-gray-600" />
+          <div className="w-10 h-1 rounded-full bg-ath-border" />
         </div>
 
         {/* Header */}
-        <div className="flex items-center justify-between px-5 py-4 border-b border-gray-200 dark:border-gray-700">
+        <div className="flex items-center justify-between px-5 py-4 border-b border-ath-border">
           <div>
-            <h2 id="completion-modal-title" className="text-base font-bold text-gray-900 dark:text-white">
+            <h2 id="completion-modal-title" className="text-base font-bold text-ath-text-primary">
               Completar sesión
             </h2>
             {session?.title && (
-              <p className="text-xs text-gray-500 dark:text-gray-400 mt-0.5 truncate max-w-[220px]">
+              <p className="text-xs text-ath-text-muted mt-0.5 truncate max-w-[220px]">
                 {session.title}
               </p>
             )}
@@ -124,7 +124,7 @@ export default function SessionCompletionModal({ session, onClose, onComplete })
             type="button"
             onClick={onClose}
             aria-label="Cerrar modal"
-            className="p-2 rounded-lg text-gray-400 hover:text-gray-600 dark:hover:text-gray-300 hover:bg-gray-100 dark:hover:bg-gray-800 transition-colors"
+            className="p-2 rounded-lg text-gray-400 hover:text-gray-600 dark:hover:text-gray-300 hover:bg-ath-inset transition-colors"
           >
             <FiX className="w-5 h-5" />
           </button>
@@ -135,7 +135,7 @@ export default function SessionCompletionModal({ session, onClose, onComplete })
 
           {/* Distancia */}
           <div>
-            <label htmlFor="distance" className="flex items-center gap-1.5 text-sm font-semibold text-gray-700 dark:text-gray-300 mb-1.5">
+            <label htmlFor="distance" className="flex items-center gap-1.5 text-sm font-semibold text-ath-text-secondary mb-1.5">
               <FiMapPin className="w-4 h-4 text-blue-500" />
               Distancia real (km)
               {!(session.type === 'gym' || session.training_type === 'gym') && (
@@ -155,13 +155,13 @@ export default function SessionCompletionModal({ session, onClose, onComplete })
               onChange={(e) => setDistance(e.target.value)}
               placeholder="Ej: 10.5"
               required
-              className="w-full px-3 py-2.5 text-sm border border-gray-300 dark:border-gray-600 rounded-xl bg-white dark:bg-gray-800 text-gray-900 dark:text-white placeholder-gray-400 focus:ring-2 focus:ring-green-500 focus:border-transparent transition"
+              className="w-full px-3 py-2.5 text-sm border border-ath-border rounded-xl bg-ath-surface text-ath-text-primary placeholder-gray-400 focus:ring-2 focus:ring-ath-accent focus:border-transparent transition"
             />
           </div>
 
           {/* Tiempo */}
           <div>
-            <label className="flex items-center gap-1.5 text-sm font-semibold text-gray-700 dark:text-gray-300 mb-1.5">
+            <label className="flex items-center gap-1.5 text-sm font-semibold text-ath-text-secondary mb-1.5">
               <FiClock className="w-4 h-4 text-purple-500" />
               Tiempo real
               <span className="text-xs font-normal text-gray-400 ml-1">(opcional)</span>
@@ -177,7 +177,7 @@ export default function SessionCompletionModal({ session, onClose, onComplete })
                   onChange={(e) => setTimeMinutes(e.target.value)}
                   placeholder="00"
                   aria-label="Minutos"
-                  className="w-full px-3 py-2.5 text-sm border border-gray-300 dark:border-gray-600 rounded-xl bg-white dark:bg-gray-800 text-gray-900 dark:text-white placeholder-gray-400 focus:ring-2 focus:ring-green-500 focus:border-transparent transition text-center"
+                  className="w-full px-3 py-2.5 text-sm border border-ath-border rounded-xl bg-ath-surface text-ath-text-primary placeholder-gray-400 focus:ring-2 focus:ring-ath-accent focus:border-transparent transition text-center"
                 />
                 <p className="text-center text-[10px] text-gray-400 mt-0.5">min</p>
               </div>
@@ -192,7 +192,7 @@ export default function SessionCompletionModal({ session, onClose, onComplete })
                   onChange={(e) => setTimeSeconds(e.target.value)}
                   placeholder="00"
                   aria-label="Segundos"
-                  className="w-full px-3 py-2.5 text-sm border border-gray-300 dark:border-gray-600 rounded-xl bg-white dark:bg-gray-800 text-gray-900 dark:text-white placeholder-gray-400 focus:ring-2 focus:ring-green-500 focus:border-transparent transition text-center"
+                  className="w-full px-3 py-2.5 text-sm border border-ath-border rounded-xl bg-ath-surface text-ath-text-primary placeholder-gray-400 focus:ring-2 focus:ring-ath-accent focus:border-transparent transition text-center"
                 />
                 <p className="text-center text-[10px] text-gray-400 mt-0.5">seg</p>
               </div>
@@ -202,7 +202,7 @@ export default function SessionCompletionModal({ session, onClose, onComplete })
           {/* Sensación / RPE */}
           <div>
             <div className="flex items-center justify-between mb-2">
-              <label className="text-sm font-semibold text-gray-700 dark:text-gray-300">
+              <label className="text-sm font-semibold text-ath-text-secondary">
                 ¿Cómo te sentiste?
                 <span className="text-red-500 ml-0.5">*</span>
               </label>
@@ -226,7 +226,7 @@ export default function SessionCompletionModal({ session, onClose, onComplete })
                     className={`py-2.5 px-3 rounded-xl text-sm font-semibold border-2 transition-all ${
                       selectedSensation === s.key
                         ? (SENSATION_COLORS[s.key] || '') + ' ring-2 ring-offset-1 ring-current'
-                        : 'bg-gray-50 dark:bg-gray-800 text-gray-600 dark:text-gray-400 border-gray-200 dark:border-gray-700 hover:border-gray-300 dark:hover:border-gray-600'
+                        : 'bg-ath-surface text-ath-text-secondary border-ath-border hover:border-gray-300 dark:hover:border-gray-600'
                     }`}
                   >
                     {s.label}
@@ -239,12 +239,12 @@ export default function SessionCompletionModal({ session, onClose, onComplete })
                 {Array.from({ length: 10 }, (_, i) => i + 1).map((val) => {
                   const isSelected = rpe === val;
                   const color = val <= 3
-                    ? isSelected ? 'bg-green-500 text-white' : 'bg-gray-100 dark:bg-gray-700 text-gray-600 dark:text-gray-400 hover:bg-green-100 dark:hover:bg-green-900/30'
+                    ? isSelected ? 'bg-green-500 text-white' : 'bg-ath-inset text-ath-text-secondary hover:bg-green-100 dark:hover:bg-green-900/30'
                     : val <= 5
-                    ? isSelected ? 'bg-blue-500 text-white' : 'bg-gray-100 dark:bg-gray-700 text-gray-600 dark:text-gray-400 hover:bg-blue-100 dark:hover:bg-blue-900/30'
+                    ? isSelected ? 'bg-blue-500 text-white' : 'bg-ath-inset text-ath-text-secondary hover:bg-blue-100 dark:hover:bg-blue-900/30'
                     : val <= 7
-                    ? isSelected ? 'bg-orange-500 text-white' : 'bg-gray-100 dark:bg-gray-700 text-gray-600 dark:text-gray-400 hover:bg-orange-100 dark:hover:bg-orange-900/30'
-                    : isSelected ? 'bg-red-500 text-white' : 'bg-gray-100 dark:bg-gray-700 text-gray-600 dark:text-gray-400 hover:bg-red-100 dark:hover:bg-red-900/30';
+                    ? isSelected ? 'bg-orange-500 text-white' : 'bg-ath-inset text-ath-text-secondary hover:bg-orange-100 dark:hover:bg-orange-900/30'
+                    : isSelected ? 'bg-red-500 text-white' : 'bg-ath-inset text-ath-text-secondary hover:bg-red-100 dark:hover:bg-red-900/30';
                   return (
                     <button
                       key={val}
@@ -260,15 +260,15 @@ export default function SessionCompletionModal({ session, onClose, onComplete })
             )}
 
             {rpe && (
-              <p className="text-xs text-gray-400 dark:text-gray-500 mt-1.5 text-center">
-                RPE seleccionado: <span className="font-semibold text-gray-600 dark:text-gray-300">{rpe}/10</span>
+              <p className="text-xs text-ath-text-muted mt-1.5 text-center">
+                RPE seleccionado: <span className="font-semibold text-ath-text-secondary">{rpe}/10</span>
               </p>
             )}
           </div>
 
           {/* Notas */}
           <div>
-            <label htmlFor="completion-notes" className="text-sm font-semibold text-gray-700 dark:text-gray-300 mb-1.5 block">
+            <label htmlFor="completion-notes" className="text-sm font-semibold text-ath-text-secondary mb-1.5 block">
               Notas
               <span className="text-xs font-normal text-gray-400 ml-1">(opcional)</span>
             </label>
@@ -278,7 +278,7 @@ export default function SessionCompletionModal({ session, onClose, onComplete })
               onChange={(e) => setNotes(e.target.value)}
               placeholder="¿Algo que quieras recordar de esta sesión?"
               rows={2}
-              className="w-full px-3 py-2 text-sm border border-gray-300 dark:border-gray-600 rounded-xl bg-white dark:bg-gray-800 text-gray-900 dark:text-white placeholder-gray-400 focus:ring-2 focus:ring-green-500 focus:border-transparent resize-none transition"
+              className="w-full px-3 py-2 text-sm border border-ath-border rounded-xl bg-ath-surface text-ath-text-primary placeholder-gray-400 focus:ring-2 focus:ring-ath-accent focus:border-transparent resize-none transition"
             />
           </div>
 
@@ -286,7 +286,7 @@ export default function SessionCompletionModal({ session, onClose, onComplete })
           <button
             type="submit"
             disabled={saving}
-            className="w-full flex items-center justify-center gap-2 py-3 px-5 rounded-xl text-sm font-bold text-white bg-green-600 hover:bg-green-700 disabled:opacity-50 disabled:cursor-not-allowed transition-colors"
+            className="w-full flex items-center justify-center gap-2 py-3 px-5 rounded-xl text-sm font-bold text-white bg-ath-accent hover:bg-ath-accent-hover disabled:opacity-50 disabled:cursor-not-allowed transition-colors"
           >
             {saving ? (
               <>

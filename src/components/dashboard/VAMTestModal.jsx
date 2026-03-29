@@ -105,16 +105,16 @@ const VAMTestModal = ({ isOpen, onClose, athlete, coachId, onSuccess }) => {
           initial={{ opacity: 0, scale: 0.95 }}
           animate={{ opacity: 1, scale: 1 }}
           exit={{ opacity: 0, scale: 0.95 }}
-          className="bg-white dark:bg-gray-800 rounded-2xl shadow-2xl w-full max-w-md overflow-hidden flex flex-col"
+          className="bg-ath-surface rounded-2xl shadow-2xl w-full max-w-md overflow-hidden flex flex-col"
         >
           {/* Header */}
-          <div className="flex items-center justify-between p-4 sm:p-5 border-b border-gray-200 dark:border-gray-700 bg-gradient-to-r from-purple-500 to-indigo-500">
+          <div className="flex items-center justify-between p-4 sm:p-5 border-b border-ath-border bg-gradient-to-r from-ath-accent to-ath-accent-hover">
             <div>
               <h2 className="text-lg sm:text-xl font-bold text-white flex items-center gap-2">
                 <FiZap className="w-5 h-5" />
                 Test VAM
               </h2>
-              <p className="text-purple-100 text-sm">{athleteName}</p>
+              <p className="text-white/80 text-sm">{athleteName}</p>
             </div>
             <button
               onClick={handleClose}
@@ -136,13 +136,13 @@ const VAMTestModal = ({ isOpen, onClose, athlete, coachId, onSuccess }) => {
             {/* Step: Form */}
             {step === 'form' && (
               <div className="space-y-4">
-                <p className="text-sm text-gray-600 dark:text-gray-400">
+                <p className="text-sm text-ath-text-secondary">
                   Introduce la distancia recorrida y la duración del test (5-6 min a máxima velocidad constante en terreno llano).
                 </p>
 
                 {/* Distance */}
                 <div>
-                  <label className="block text-sm font-medium text-gray-700 dark:text-gray-300 mb-1">
+                  <label className="block text-sm font-medium text-ath-text-secondary mb-1">
                     Distancia recorrida (metros) *
                   </label>
                   <input
@@ -151,13 +151,13 @@ const VAMTestModal = ({ isOpen, onClose, athlete, coachId, onSuccess }) => {
                     onChange={(e) => setFormData({ ...formData, distance_meters: e.target.value })}
                     placeholder="1200"
                     min="0"
-                    className="w-full px-3 py-2.5 text-sm rounded-lg border border-gray-300 dark:border-gray-600 bg-white dark:bg-gray-700 text-gray-900 dark:text-white placeholder-gray-400 focus:ring-2 focus:ring-purple-500 focus:border-transparent"
+                    className="w-full px-3 py-2.5 text-sm rounded-lg border border-ath-border bg-ath-elevated text-ath-text-primary placeholder-gray-400 focus:ring-2 focus:ring-ath-accent focus:border-transparent"
                   />
                 </div>
 
                 {/* Duration */}
                 <div>
-                  <label className="block text-sm font-medium text-gray-700 dark:text-gray-300 mb-1">
+                  <label className="block text-sm font-medium text-ath-text-secondary mb-1">
                     Duración *
                   </label>
                   <div className="flex items-center gap-2">
@@ -171,7 +171,7 @@ const VAMTestModal = ({ isOpen, onClose, athlete, coachId, onSuccess }) => {
                           }
                           min="0"
                           max="30"
-                          className="w-full px-3 py-2.5 pr-12 text-sm rounded-lg border border-gray-300 dark:border-gray-600 bg-white dark:bg-gray-700 text-gray-900 dark:text-white focus:ring-2 focus:ring-purple-500 focus:border-transparent"
+                          className="w-full px-3 py-2.5 pr-12 text-sm rounded-lg border border-ath-border bg-ath-elevated text-ath-text-primary focus:ring-2 focus:ring-ath-accent focus:border-transparent"
                         />
                         <span className="absolute right-3 top-1/2 -translate-y-1/2 text-xs text-gray-400">
                           min
@@ -189,7 +189,7 @@ const VAMTestModal = ({ isOpen, onClose, athlete, coachId, onSuccess }) => {
                           }
                           min="0"
                           max="59"
-                          className="w-full px-3 py-2.5 pr-12 text-sm rounded-lg border border-gray-300 dark:border-gray-600 bg-white dark:bg-gray-700 text-gray-900 dark:text-white focus:ring-2 focus:ring-purple-500 focus:border-transparent"
+                          className="w-full px-3 py-2.5 pr-12 text-sm rounded-lg border border-ath-border bg-ath-elevated text-ath-text-primary focus:ring-2 focus:ring-ath-accent focus:border-transparent"
                         />
                         <span className="absolute right-3 top-1/2 -translate-y-1/2 text-xs text-gray-400">
                           seg
@@ -201,21 +201,21 @@ const VAMTestModal = ({ isOpen, onClose, athlete, coachId, onSuccess }) => {
 
                 {/* Live preview */}
                 {preview && (
-                  <div className="p-4 bg-purple-50 dark:bg-purple-900/20 border border-purple-200 dark:border-purple-800 rounded-xl">
+                  <div className="p-4 bg-ath-accent-surface border border-ath-border-accent rounded-xl">
                     <div className="grid grid-cols-2 gap-4 text-center">
                       <div>
-                        <p className="text-2xl font-bold text-purple-700 dark:text-purple-300">
+                        <p className="text-2xl font-bold text-ath-accent-text">
                           {preview.vam}
                         </p>
-                        <p className="text-xs text-purple-600 dark:text-purple-400 mt-0.5">
+                        <p className="text-xs text-ath-text-muted mt-0.5">
                           VAM (km/h)
                         </p>
                       </div>
                       <div>
-                        <p className="text-2xl font-bold text-purple-700 dark:text-purple-300">
+                        <p className="text-2xl font-bold text-ath-accent-text">
                           {preview.pace}
                         </p>
-                        <p className="text-xs text-purple-600 dark:text-purple-400 mt-0.5">
+                        <p className="text-xs text-ath-text-muted mt-0.5">
                           Ritmo medio
                         </p>
                       </div>
@@ -224,20 +224,20 @@ const VAMTestModal = ({ isOpen, onClose, athlete, coachId, onSuccess }) => {
                 )}
 
                 {/* Optional fields */}
-                <div className="grid grid-cols-1 sm:grid-cols-2 gap-3 pt-2 border-t border-gray-200 dark:border-gray-700">
+                <div className="grid grid-cols-1 sm:grid-cols-2 gap-3 pt-2 border-t border-ath-border">
                   <div>
-                    <label className="block text-xs font-medium text-gray-600 dark:text-gray-400 mb-1">
+                    <label className="block text-xs font-medium text-ath-text-secondary mb-1">
                       Fecha del test
                     </label>
                     <input
                       type="date"
                       value={formData.test_date}
                       onChange={(e) => setFormData({ ...formData, test_date: e.target.value })}
-                      className="w-full px-3 py-2 text-sm rounded-lg border border-gray-300 dark:border-gray-600 bg-white dark:bg-gray-700 text-gray-900 dark:text-white focus:ring-2 focus:ring-purple-500 focus:border-transparent"
+                      className="w-full px-3 py-2 text-sm rounded-lg border border-ath-border bg-ath-elevated text-ath-text-primary focus:ring-2 focus:ring-ath-accent focus:border-transparent"
                     />
                   </div>
                   <div>
-                    <label className="block text-xs font-medium text-gray-600 dark:text-gray-400 mb-1">
+                    <label className="block text-xs font-medium text-ath-text-secondary mb-1">
                       Ubicación
                     </label>
                     <input
@@ -245,11 +245,11 @@ const VAMTestModal = ({ isOpen, onClose, athlete, coachId, onSuccess }) => {
                       value={formData.location}
                       onChange={(e) => setFormData({ ...formData, location: e.target.value })}
                       placeholder="Pista de atletismo..."
-                      className="w-full px-3 py-2 text-sm rounded-lg border border-gray-300 dark:border-gray-600 bg-white dark:bg-gray-700 text-gray-900 dark:text-white placeholder-gray-400 focus:ring-2 focus:ring-purple-500 focus:border-transparent"
+                      className="w-full px-3 py-2 text-sm rounded-lg border border-ath-border bg-ath-elevated text-ath-text-primary placeholder-gray-400 focus:ring-2 focus:ring-ath-accent focus:border-transparent"
                     />
                   </div>
                   <div className="sm:col-span-2">
-                    <label className="block text-xs font-medium text-gray-600 dark:text-gray-400 mb-1">
+                    <label className="block text-xs font-medium text-ath-text-secondary mb-1">
                       Notas
                     </label>
                     <input
@@ -257,7 +257,7 @@ const VAMTestModal = ({ isOpen, onClose, athlete, coachId, onSuccess }) => {
                       value={formData.notes}
                       onChange={(e) => setFormData({ ...formData, notes: e.target.value })}
                       placeholder="Observaciones..."
-                      className="w-full px-3 py-2 text-sm rounded-lg border border-gray-300 dark:border-gray-600 bg-white dark:bg-gray-700 text-gray-900 dark:text-white placeholder-gray-400 focus:ring-2 focus:ring-purple-500 focus:border-transparent"
+                      className="w-full px-3 py-2 text-sm rounded-lg border border-ath-border bg-ath-elevated text-ath-text-primary placeholder-gray-400 focus:ring-2 focus:ring-ath-accent focus:border-transparent"
                     />
                   </div>
                 </div>
@@ -283,50 +283,50 @@ const VAMTestModal = ({ isOpen, onClose, athlete, coachId, onSuccess }) => {
 
                 {/* Results cards */}
                 <div className="grid grid-cols-2 gap-4 mb-4">
-                  <div className="p-4 bg-purple-50 dark:bg-purple-900/20 rounded-xl text-center">
-                    <p className="text-3xl font-bold text-purple-700 dark:text-purple-300">
+                  <div className="p-4 bg-ath-accent-surface rounded-xl text-center">
+                    <p className="text-3xl font-bold text-ath-accent-text">
                       {parseFloat(result.vam_kmh).toFixed(2)}
                     </p>
-                    <p className="text-xs text-purple-600 dark:text-purple-400 mt-1 font-medium">
+                    <p className="text-xs text-ath-text-muted mt-1 font-medium">
                       VAM (km/h)
                     </p>
                   </div>
-                  <div className="p-4 bg-indigo-50 dark:bg-indigo-900/20 rounded-xl text-center">
-                    <p className="text-3xl font-bold text-indigo-700 dark:text-indigo-300">
+                  <div className="p-4 bg-ath-accent-surface rounded-xl text-center">
+                    <p className="text-3xl font-bold text-ath-accent-text">
                       {formatPace(result.pace_seconds_per_km)}
                     </p>
-                    <p className="text-xs text-indigo-600 dark:text-indigo-400 mt-1 font-medium">
+                    <p className="text-xs text-ath-text-muted mt-1 font-medium">
                       Ritmo medio
                     </p>
                   </div>
                 </div>
 
                 {/* Details */}
-                <div className="p-3 bg-gray-50 dark:bg-gray-700/50 rounded-lg space-y-1.5">
+                <div className="p-3 bg-ath-inset rounded-lg space-y-1.5">
                   <div className="flex justify-between text-sm">
-                    <span className="text-gray-500 dark:text-gray-400">Distancia</span>
-                    <span className="text-gray-900 dark:text-white font-medium">
+                    <span className="text-ath-text-muted">Distancia</span>
+                    <span className="text-ath-text-primary font-medium">
                       {result.distance_meters}m
                     </span>
                   </div>
                   <div className="flex justify-between text-sm">
-                    <span className="text-gray-500 dark:text-gray-400">Duración</span>
-                    <span className="text-gray-900 dark:text-white font-medium">
+                    <span className="text-ath-text-muted">Duración</span>
+                    <span className="text-ath-text-primary font-medium">
                       {Math.floor(result.duration_seconds / 60)}:{String(result.duration_seconds % 60).padStart(2, '0')}
                     </span>
                   </div>
                   {result.test_date && (
                     <div className="flex justify-between text-sm">
-                      <span className="text-gray-500 dark:text-gray-400">Fecha</span>
-                      <span className="text-gray-900 dark:text-white font-medium">
+                      <span className="text-ath-text-muted">Fecha</span>
+                      <span className="text-ath-text-primary font-medium">
                         {new Date(result.test_date + 'T12:00:00').toLocaleDateString('es-ES')}
                       </span>
                     </div>
                   )}
                   {result.location && (
                     <div className="flex justify-between text-sm">
-                      <span className="text-gray-500 dark:text-gray-400">Ubicación</span>
-                      <span className="text-gray-900 dark:text-white font-medium">
+                      <span className="text-ath-text-muted">Ubicación</span>
+                      <span className="text-ath-text-primary font-medium">
                         {result.location}
                       </span>
                     </div>
@@ -337,19 +337,19 @@ const VAMTestModal = ({ isOpen, onClose, athlete, coachId, onSuccess }) => {
           </div>
 
           {/* Footer */}
-          <div className="flex items-center justify-between p-4 sm:p-5 border-t border-gray-200 dark:border-gray-700 bg-gray-50 dark:bg-gray-800/50">
+          <div className="flex items-center justify-between p-4 sm:p-5 border-t border-ath-border bg-ath-inset">
             {step === 'form' && (
               <>
                 <button
                   onClick={handleClose}
-                  className="px-4 py-2 text-sm text-gray-600 dark:text-gray-400 hover:text-gray-800 dark:hover:text-gray-200 transition-colors"
+                  className="px-4 py-2 text-sm text-ath-text-secondary hover:text-ath-text-primary transition-colors"
                 >
                   Cancelar
                 </button>
                 <button
                   onClick={handleSave}
                   disabled={saving || !formData.distance_meters}
-                  className="flex items-center gap-2 px-5 py-2.5 bg-purple-500 hover:bg-purple-600 disabled:bg-purple-400 disabled:cursor-not-allowed text-white text-sm font-medium rounded-lg transition-colors"
+                  className="flex items-center gap-2 px-5 py-2.5 bg-ath-accent hover:bg-ath-accent-hover disabled:opacity-50 disabled:cursor-not-allowed text-white text-sm font-medium rounded-lg transition-colors"
                 >
                   {saving ? (
                     <>

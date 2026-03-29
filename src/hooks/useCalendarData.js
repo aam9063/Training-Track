@@ -3,20 +3,24 @@ import { toLocalDateStr } from '../lib/dateUtils';
 
 /**
  * Shared calendar data hook for both coach and athlete calendars.
- * Loads data for the full month + 7-day padding on each side (for weekly views
- * that straddle month boundaries).
+ * Uses numeric month/year state to guarantee React re-renders on change.
+ * (Date objects can cause React 19 bailouts due to Object.is comparison.)
  * @param {string} entityId - coachId or athleteId
  * @param {Function} fetchFn - (entityId, year, month, startDate, endDate) => Promise<{ sessions, competitions }>
  */
 export default function useCalendarData(entityId, fetchFn) {
-  const [currentDate, setCurrentDate] = useState(new Date());
+  const [monthYear, setMonthYear] = useState(() => {
+    const now = new Date();
+    return { m: now.getMonth(), y: now.getFullYear() };
+  });
   const [sessions, setSessions] = useState([]);
   const [competitions, setCompetitions] = useState([]);
   const [loading, setLoading] = useState(true);
   const [initialLoad, setInitialLoad] = useState(true);
 
-  const currentMonth = currentDate.getMonth();
-  const currentYear = currentDate.getFullYear();
+  const currentMonth = monthYear.m;
+  const currentYear = monthYear.y;
+  const currentDate = new Date(currentYear, currentMonth, 1);
 
   const loadData = useCallback(async () => {
     if (!entityId) {
@@ -26,25 +30,21 @@ export default function useCalendarData(entityId, fetchFn) {
       return;
     }
 
-    // Only show full-page spinner on initial load, not on refreshes (e.g. after DnD)
     if (initialLoad) setLoading(true);
     try {
-      const year = currentYear;
       const month = currentMonth + 1;
-      // Pad ±7 days for weekly views that cross month boundaries
-      const padStart = new Date(year, month - 1, 1);
+      const padStart = new Date(currentYear, currentMonth, 1);
       padStart.setDate(padStart.getDate() - 7);
-      const padEnd = new Date(year, month, 0);
+      const padEnd = new Date(currentYear, currentMonth + 1, 0);
       padEnd.setDate(padEnd.getDate() + 7);
 
       const startDate = toLocalDateStr(padStart);
       const endDate = toLocalDateStr(padEnd);
 
-      const result = await fetchFn(entityId, year, month, startDate, endDate);
+      const result = await fetchFn(entityId, currentYear, month, startDate, endDate);
       setSessions(result.sessions || []);
       setCompetitions(result.competitions || []);
-    } catch (error) {
-      console.error('Error loading calendar data:', error);
+    } catch {
       setSessions([]);
       setCompetitions([]);
     } finally {
@@ -58,23 +58,35 @@ export default function useCalendarData(entityId, fetchFn) {
   }, [loadData]);
 
   const goToPreviousMonth = useCallback(() => {
-    setCurrentDate(prev => {
-      const d = new Date(prev);
-      d.setMonth(d.getMonth() - 1);
-      return d;
+    setMonthYear(prev => {
+      if (prev.m === 0) return { m: 11, y: prev.y - 1 };
+      return { m: prev.m - 1, y: prev.y };
     });
   }, []);
 
   const goToNextMonth = useCallback(() => {
-    setCurrentDate(prev => {
-      const d = new Date(prev);
-      d.setMonth(d.getMonth() + 1);
-      return d;
+    setMonthYear(prev => {
+      if (prev.m === 11) return { m: 0, y: prev.y + 1 };
+      return { m: prev.m + 1, y: prev.y };
     });
   }, []);
 
   const goToToday = useCallback(() => {
-    setCurrentDate(new Date());
+    const now = new Date();
+    setMonthYear({ m: now.getMonth(), y: now.getFullYear() });
+  }, []);
+
+  const setCurrentDate = useCallback((dateOrFn) => {
+    const resolve = (d) => setMonthYear({ m: d.getMonth(), y: d.getFullYear() });
+    if (typeof dateOrFn === 'function') {
+      setMonthYear(prev => {
+        const prevDate = new Date(prev.y, prev.m, 1);
+        const next = dateOrFn(prevDate);
+        return { m: next.getMonth(), y: next.getFullYear() };
+      });
+    } else {
+      resolve(dateOrFn);
+    }
   }, []);
 
   return {

@@ -111,10 +111,11 @@ const AthleteMetricsView = () => {
       const startIdx = w * 7;
       const weekSlice = daily56.slice(startIdx, startIdx + 7);
       const weekKm = weekSlice.reduce((s, v) => s + v, 0);
+      const wStart = new Date(); wStart.setDate(wStart.getDate() - w * 7 - wStart.getDay() + 1);
       weeklyLoads.push({
         weekIndex: 7 - w,
         km: +weekKm.toFixed(1),
-        label: w === 0 ? 'Esta sem.' : w === 1 ? 'Sem. -1' : `Sem. -${w}`,
+        label: w === 0 ? 'Esta sem.' : wStart.toLocaleDateString('es-ES', { day: 'numeric', month: 'short' }),
       });
     }
 
@@ -217,8 +218,9 @@ const AthleteMetricsView = () => {
           return d >= weekStart && d <= weekEnd;
         });
 
+        const wLabel = w === 0 ? 'Esta sem.' : weekStart.toLocaleDateString('es-ES', { day: 'numeric', month: 'short' });
         weeks.push({
-          label: w === 0 ? 'Esta sem.' : w === 1 ? 'Sem. -1' : `Sem. -${w}`,
+          label: wLabel,
           ...metricFn(weekActs),
         });
       }

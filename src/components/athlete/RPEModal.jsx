@@ -23,7 +23,7 @@ const RPEModal = ({ activity, athleteName, onSubmit, onClose, initialScore = nul
           animate={{ opacity: 1, scale: 1 }}
           exit={{ opacity: 0, scale: 0.9 }}
           transition={{ type: 'spring', damping: 25, stiffness: 300 }}
-          className="bg-white dark:bg-gray-800 rounded-2xl shadow-2xl w-full max-w-md overflow-hidden"
+          className="bg-ath-surface rounded-2xl shadow-2xl w-full max-w-md overflow-hidden"
         >
           {/* Header */}
           <div className="bg-gradient-to-r from-[#FC4C02] to-[#E34402] p-5 text-white relative">
@@ -49,7 +49,7 @@ const RPEModal = ({ activity, athleteName, onSubmit, onClose, initialScore = nul
 
           {/* Content */}
           <div className="p-6">
-            <p className="text-center text-gray-700 dark:text-gray-300 mb-6 font-medium">
+            <p className="text-center text-ath-text-secondary mb-6 font-medium">
               ¿Puedes indicar tu percepción relativa de esfuerzo?
             </p>
 
@@ -64,7 +64,7 @@ const RPEModal = ({ activity, athleteName, onSubmit, onClose, initialScore = nul
                     ${
                       selected === option.score
                         ? 'bg-orange-100 dark:bg-orange-900/30 ring-2 ring-orange-500 scale-110'
-                        : 'hover:bg-gray-100 dark:hover:bg-gray-700 hover:scale-105'
+                        : 'hover:bg-ath-inset hover:scale-105'
                     }
                   `}
                 >
@@ -72,7 +72,7 @@ const RPEModal = ({ activity, athleteName, onSubmit, onClose, initialScore = nul
                   <span className={`text-xs font-medium ${
                     selected === option.score
                       ? 'text-orange-600 dark:text-orange-400'
-                      : 'text-gray-500 dark:text-gray-400'
+                      : 'text-ath-text-muted'
                   }`}>
                     {option.label}
                   </span>
@@ -82,7 +82,7 @@ const RPEModal = ({ activity, athleteName, onSubmit, onClose, initialScore = nul
 
             {/* Notes textarea */}
             <div className="mt-5">
-              <label className="block text-sm font-medium text-gray-700 dark:text-gray-300 mb-2">
+              <label className="block text-sm font-medium text-ath-text-secondary mb-2">
                 Sensaciones / Comentarios (opcional)
               </label>
               <textarea
@@ -90,7 +90,7 @@ const RPEModal = ({ activity, athleteName, onSubmit, onClose, initialScore = nul
                 onChange={(e) => setNotes(e.target.value)}
                 placeholder="¿Cómo te has sentido? Describe tus sensaciones..."
                 rows={3}
-                className="w-full px-3 py-2 rounded-xl border border-gray-300 dark:border-gray-600 bg-white dark:bg-gray-700 text-gray-900 dark:text-white placeholder-gray-400 dark:placeholder-gray-500 focus:ring-2 focus:ring-orange-500 focus:border-transparent resize-none text-sm"
+                className="w-full px-3 py-2 rounded-xl border border-ath-border bg-ath-surface text-ath-text-primary placeholder-gray-400 dark:placeholder-gray-500 focus:ring-2 focus:ring-orange-500 focus:border-transparent resize-none text-sm"
               />
             </div>
 
@@ -104,7 +104,7 @@ const RPEModal = ({ activity, athleteName, onSubmit, onClose, initialScore = nul
                   ${
                     selected && !saving
                       ? 'bg-[#FC4C02] hover:bg-[#E34402] cursor-pointer'
-                      : 'bg-gray-300 dark:bg-gray-600 cursor-not-allowed'
+                      : 'bg-ath-border cursor-not-allowed'
                   }
                 `}
               >
@@ -112,7 +112,7 @@ const RPEModal = ({ activity, athleteName, onSubmit, onClose, initialScore = nul
               </button>
               <button
                 onClick={onClose}
-                className="text-sm text-gray-500 dark:text-gray-400 hover:text-gray-700 dark:hover:text-gray-200 transition-colors"
+                className="text-sm text-ath-text-muted hover:text-gray-700 dark:hover:text-gray-200 transition-colors"
               >
                 {editMode ? 'Cancelar' : 'Ahora no'}
               </button>

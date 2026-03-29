@@ -174,7 +174,7 @@ const WeeklyPlanEditor = ({ microcycle, onSave, onClose, saving, coachId, allMic
   };
 
   return (
-    <div className="bg-gray-50 dark:bg-gray-900/50 border-t border-gray-200 dark:border-gray-700">
+    <div className="bg-coach-base/50 border-t border-gray-200 dark:border-coach-border">
       {/* ===== MOBILE: Vertical list (< md) ===== */}
       <div className="md:hidden ml-4 border-l-2 border-blue-200 dark:border-blue-800">
         {days.map((day, i) => (
@@ -184,7 +184,7 @@ const WeeklyPlanEditor = ({ microcycle, onSave, onClose, saving, coachId, allMic
             onClick={() => setEditingDay(i)}
             className="w-full flex items-center gap-2.5 pl-3 pr-4 py-2.5 text-left hover:bg-blue-50/50 dark:hover:bg-blue-900/10 transition-colors"
           >
-            <span className="w-6 h-6 rounded-md bg-gray-100 dark:bg-gray-700 text-gray-500 dark:text-gray-400 flex items-center justify-center text-[11px] font-semibold flex-shrink-0">
+            <span className="w-6 h-6 rounded-md bg-coach-elevated text-gray-500 dark:text-gray-400 flex items-center justify-center text-[11px] font-semibold flex-shrink-0">
               {DAY_SHORTS[i]}
             </span>
             <div className="flex-1 min-w-0">
@@ -208,12 +208,12 @@ const WeeklyPlanEditor = ({ microcycle, onSave, onClose, saving, coachId, allMic
       {/* ===== DESKTOP: 7-column grid (md+) ===== */}
       <div className="hidden md:block px-4">
         {/* Grid header */}
-        <div className="grid grid-cols-[auto_1fr_1fr_1fr_1fr_1fr_1fr_1fr] gap-0 border-b border-gray-200 dark:border-gray-700">
+        <div className="grid grid-cols-[auto_1fr_1fr_1fr_1fr_1fr_1fr_1fr] gap-0 border-b border-gray-200 dark:border-coach-border">
           <div className="w-10" />
           {DAYS.map((day) => (
             <div
               key={day}
-              className="px-2 py-2.5 text-center border-l border-gray-200 dark:border-gray-700"
+              className="px-2 py-2.5 text-center border-l border-gray-200 dark:border-coach-border"
             >
               <span className="text-xs font-semibold text-gray-500 dark:text-gray-400">{day}</span>
             </div>
@@ -228,10 +228,13 @@ const WeeklyPlanEditor = ({ microcycle, onSave, onClose, saving, coachId, allMic
           {days.map((day, i) => (
             <div
               key={i}
-              className="border-l border-gray-200 dark:border-gray-700 p-1 cursor-pointer"
+              className="border-l border-gray-200 dark:border-coach-border p-1 cursor-pointer"
+              role="button"
+              tabIndex={0}
               onClick={() => setEditingDay(i)}
+              onKeyDown={(e) => e.key === 'Enter' && setEditingDay(i)}
             >
-              <div className="w-full min-h-[100px] px-2 py-1.5 bg-white dark:bg-gray-800 border border-gray-200 dark:border-gray-700 rounded-lg text-xs text-gray-900 dark:text-white leading-relaxed hover:border-blue-400 dark:hover:border-blue-500 transition-colors overflow-hidden">
+              <div className="w-full min-h-[100px] px-2 py-1.5 bg-coach-surface border border-gray-200 dark:border-coach-border rounded-lg text-xs text-gray-900 dark:text-white leading-relaxed hover:border-blue-400 dark:hover:border-blue-500 transition-colors overflow-hidden">
                 {day.description ? (
                   <span className="whitespace-pre-wrap break-words">{day.description}</span>
                 ) : (
@@ -243,17 +246,20 @@ const WeeklyPlanEditor = ({ microcycle, onSave, onClose, saving, coachId, allMic
         </div>
 
         {/* Km row */}
-        <div className="grid grid-cols-[auto_1fr_1fr_1fr_1fr_1fr_1fr_1fr] gap-0 border-t border-gray-200 dark:border-gray-700">
+        <div className="grid grid-cols-[auto_1fr_1fr_1fr_1fr_1fr_1fr_1fr] gap-0 border-t border-gray-200 dark:border-coach-border">
           <div className="w-10 flex items-center justify-center">
             <span className="text-[10px] font-medium text-gray-400 dark:text-gray-500">km</span>
           </div>
           {days.map((day, i) => (
             <div
               key={i}
-              className="border-l border-gray-200 dark:border-gray-700 p-1 cursor-pointer"
+              className="border-l border-gray-200 dark:border-coach-border p-1 cursor-pointer"
+              role="button"
+              tabIndex={0}
               onClick={() => setEditingDay(i)}
+              onKeyDown={(e) => e.key === 'Enter' && setEditingDay(i)}
             >
-              <div className="w-full px-2 py-1.5 bg-white dark:bg-gray-800 border border-gray-200 dark:border-gray-700 rounded-lg text-xs text-center text-gray-900 dark:text-white hover:border-blue-400 dark:hover:border-blue-500 transition-colors">
+              <div className="w-full px-2 py-1.5 bg-coach-surface border border-gray-200 dark:border-coach-border rounded-lg text-xs text-center text-gray-900 dark:text-white hover:border-blue-400 dark:hover:border-blue-500 transition-colors">
                 {day.km || 0}
               </div>
             </div>
@@ -262,9 +268,9 @@ const WeeklyPlanEditor = ({ microcycle, onSave, onClose, saving, coachId, allMic
       </div>
 
       {/* Footer */}
-      <div className="border-t border-gray-200 dark:border-gray-700 bg-white dark:bg-gray-800">
+      <div className="border-t border-gray-200 dark:border-coach-border bg-coach-surface">
         {/* Template actions row */}
-        <div className="flex items-center gap-2 px-4 py-2 border-b border-gray-100 dark:border-gray-700/50">
+        <div className="flex items-center gap-2 px-4 py-2 border-b border-gray-100 dark:border-coach-border/50">
           <button
             onClick={() => setShowCopyModal(true)}
             className="flex items-center gap-1.5 px-2.5 py-1 text-[11px] font-medium text-blue-600 dark:text-blue-400 bg-blue-50 dark:bg-blue-900/20 hover:bg-blue-100 dark:hover:bg-blue-900/40 rounded-lg transition-colors"
@@ -331,7 +337,7 @@ const WeeklyPlanEditor = ({ microcycle, onSave, onClose, saving, coachId, allMic
               animate={{ opacity: 1, scale: 1 }}
               exit={{ opacity: 0, scale: 0.95 }}
               transition={{ duration: 0.15 }}
-              className="bg-white dark:bg-gray-800 rounded-2xl shadow-xl w-full max-w-sm p-5"
+              className="bg-coach-surface rounded-2xl shadow-xl w-full max-w-sm p-5"
               onClick={e => e.stopPropagation()}
             >
               <h3 className="text-base font-bold text-gray-900 dark:text-white mb-1">Copiar semana</h3>
@@ -342,7 +348,7 @@ const WeeklyPlanEditor = ({ microcycle, onSave, onClose, saving, coachId, allMic
                 <select
                   value={copyTargetId}
                   onChange={e => setCopyTargetId(e.target.value)}
-                  className="w-full px-3 py-2 bg-gray-50 dark:bg-gray-700 border border-gray-200 dark:border-gray-600 rounded-xl text-sm text-gray-900 dark:text-white focus:ring-2 focus:ring-blue-500 outline-none mb-4"
+                  className="w-full px-3 py-2 bg-coach-inset border border-gray-200 dark:border-coach-border rounded-xl text-sm text-gray-900 dark:text-white focus:ring-2 focus:ring-blue-500 outline-none mb-4"
                 >
                   <option value="">— Selecciona semana destino —</option>
                   {allMicrocycles
@@ -378,7 +384,7 @@ const WeeklyPlanEditor = ({ microcycle, onSave, onClose, saving, coachId, allMic
               animate={{ opacity: 1, scale: 1 }}
               exit={{ opacity: 0, scale: 0.95 }}
               transition={{ duration: 0.15 }}
-              className="bg-white dark:bg-gray-800 rounded-2xl shadow-xl w-full max-w-sm p-5"
+              className="bg-coach-surface rounded-2xl shadow-xl w-full max-w-sm p-5"
               onClick={e => e.stopPropagation()}
             >
               <h3 className="text-base font-bold text-gray-900 dark:text-white mb-1">Guardar como plantilla</h3>
@@ -390,8 +396,7 @@ const WeeklyPlanEditor = ({ microcycle, onSave, onClose, saving, coachId, allMic
                 onChange={e => setTemplateName(e.target.value)}
                 onKeyDown={e => e.key === 'Enter' && handleSaveTemplate()}
                 placeholder="Ej: Semana base rodaje"
-                className="w-full px-3 py-2.5 bg-gray-50 dark:bg-gray-700 border border-gray-200 dark:border-gray-600 rounded-xl text-sm text-gray-900 dark:text-white placeholder-gray-400 focus:ring-2 focus:ring-blue-500 outline-none mb-4"
-                style={{ fontSize: '16px' }}
+                className="w-full px-3 py-2.5 bg-coach-inset border border-gray-200 dark:border-coach-border rounded-xl text-base text-gray-900 dark:text-white placeholder-gray-400 focus:ring-2 focus:ring-blue-500 outline-none mb-4"
               />
               <div className="flex justify-end gap-2">
                 <button onClick={() => setShowSaveTemplateModal(false)} className="px-3 py-1.5 text-sm text-gray-600 dark:text-gray-400 hover:bg-gray-100 dark:hover:bg-gray-700 rounded-xl transition-colors">Cancelar</button>
@@ -417,10 +422,10 @@ const WeeklyPlanEditor = ({ microcycle, onSave, onClose, saving, coachId, allMic
               animate={{ opacity: 1, scale: 1 }}
               exit={{ opacity: 0, scale: 0.95 }}
               transition={{ duration: 0.15 }}
-              className="bg-white dark:bg-gray-800 rounded-2xl shadow-xl w-full max-w-sm overflow-hidden"
+              className="bg-coach-surface rounded-2xl shadow-xl w-full max-w-sm overflow-hidden"
               onClick={e => e.stopPropagation()}
             >
-              <div className="flex items-center justify-between px-5 py-4 border-b border-gray-200 dark:border-gray-700">
+              <div className="flex items-center justify-between px-5 py-4 border-b border-gray-200 dark:border-coach-border">
                 <h3 className="text-base font-bold text-gray-900 dark:text-white">Plantillas guardadas</h3>
                 <button onClick={() => setShowTemplatesModal(false)} className="p-1.5 hover:bg-gray-100 dark:hover:bg-gray-700 rounded-lg">
                   <FiX className="w-4 h-4 text-gray-500" />
@@ -437,7 +442,7 @@ const WeeklyPlanEditor = ({ microcycle, onSave, onClose, saving, coachId, allMic
                     <p className="text-sm text-gray-400 dark:text-gray-500">No tienes plantillas guardadas todavía.</p>
                   </div>
                 ) : (
-                  <div className="divide-y divide-gray-100 dark:divide-gray-700">
+                  <div className="divide-y divide-gray-100 dark:divide-coach-border">
                     {templates.map(t => (
                       <div key={t.id} className="flex items-center justify-between px-5 py-3 hover:bg-gray-50 dark:hover:bg-gray-700/50">
                         <div className="flex-1 min-w-0">
@@ -472,7 +477,7 @@ const WeeklyPlanEditor = ({ microcycle, onSave, onClose, saving, coachId, allMic
                 )}
               </div>
               {applyTemplateId && (
-                <div className="px-5 py-3 border-t border-gray-200 dark:border-gray-700 bg-gray-50 dark:bg-gray-800/50 flex items-center justify-between gap-3">
+                <div className="px-5 py-3 border-t border-gray-200 dark:border-coach-border bg-gray-50 dark:bg-coach-surface/50 flex items-center justify-between gap-3">
                   <p className="text-xs text-amber-600 dark:text-amber-400">El contenido actual se reemplazará.</p>
                   <button
                     onClick={handleApplyTemplate}
@@ -499,10 +504,10 @@ const WeeklyPlanEditor = ({ microcycle, onSave, onClose, saving, coachId, allMic
               animate={{ opacity: 1, scale: 1 }}
               exit={{ opacity: 0, scale: 0.95 }}
               transition={{ duration: 0.15 }}
-              className="bg-white dark:bg-gray-800 rounded-2xl shadow-xl w-full max-w-md overflow-hidden"
+              className="bg-coach-surface rounded-2xl shadow-xl w-full max-w-md overflow-hidden"
               onClick={(e) => e.stopPropagation()}
             >
-              <div className="flex items-center justify-between px-5 py-4 border-b border-gray-200 dark:border-gray-700">
+              <div className="flex items-center justify-between px-5 py-4 border-b border-gray-200 dark:border-coach-border">
                 <h3 className="text-base font-bold text-gray-900 dark:text-white">
                   {DAYS[editingDay]}
                 </h3>
@@ -525,7 +530,7 @@ const WeeklyPlanEditor = ({ microcycle, onSave, onClose, saving, coachId, allMic
                     onChange={(e) => updateDescription(editingDay, e.target.value)}
                     placeholder="Ej: 8km rodaje suave + 4x100m progresivos"
                     rows={6}
-                    className="w-full px-3 py-2.5 bg-gray-50 dark:bg-gray-700 border border-gray-200 dark:border-gray-600 rounded-xl text-sm text-gray-900 dark:text-white placeholder-gray-400 dark:placeholder-gray-500 focus:ring-2 focus:ring-blue-500 focus:border-transparent outline-none resize-none leading-relaxed"
+                    className="w-full px-3 py-2.5 bg-coach-inset border border-gray-200 dark:border-coach-border rounded-xl text-sm text-gray-900 dark:text-white placeholder-gray-400 dark:placeholder-gray-500 focus:ring-2 focus:ring-blue-500 focus:border-transparent outline-none resize-none leading-relaxed"
                   />
                 </div>
                 <div>
@@ -541,7 +546,7 @@ const WeeklyPlanEditor = ({ microcycle, onSave, onClose, saving, coachId, allMic
                       value={days[editingDay].km || ''}
                       onChange={(e) => updateDay(editingDay, 'km', e.target.value)}
                       placeholder="0"
-                      className="w-32 px-3 py-2.5 bg-gray-50 dark:bg-gray-700 border border-gray-200 dark:border-gray-600 rounded-xl text-sm text-gray-900 dark:text-white focus:ring-2 focus:ring-blue-500 focus:border-transparent outline-none"
+                      className="w-32 px-3 py-2.5 bg-coach-inset border border-gray-200 dark:border-coach-border rounded-xl text-sm text-gray-900 dark:text-white focus:ring-2 focus:ring-blue-500 focus:border-transparent outline-none"
                     />
                     <span className="text-xs text-gray-400 dark:text-gray-500">
                       Puedes corregirlo manualmente
@@ -550,7 +555,7 @@ const WeeklyPlanEditor = ({ microcycle, onSave, onClose, saving, coachId, allMic
                 </div>
               </div>
 
-              <div className="px-5 py-3 border-t border-gray-200 dark:border-gray-700 bg-gray-50 dark:bg-gray-800/50 flex justify-end">
+              <div className="px-5 py-3 border-t border-gray-200 dark:border-coach-border bg-gray-50 dark:bg-coach-surface/50 flex justify-end">
                 <button
                   onClick={() => setEditingDay(null)}
                   className="flex items-center gap-1.5 px-4 py-2 text-sm bg-blue-600 text-white rounded-xl hover:bg-blue-700 transition-colors font-medium"

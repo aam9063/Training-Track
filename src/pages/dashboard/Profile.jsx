@@ -116,7 +116,6 @@ const Profile = () => {
       setEditing(false);
       showSuccess('Perfil actualizado correctamente');
     } catch (error) {
-      console.error('Error updating profile:', error);
       showError('Error al actualizar el perfil');
     } finally {
       setLoading(false);
@@ -180,7 +179,6 @@ const Profile = () => {
       await refreshProfile();
       showSuccess('Imagen de perfil actualizada');
     } catch (error) {
-      console.error('Error uploading image:', error);
       showError('Error al subir la imagen');
     } finally {
       setUploadingImage(false);
@@ -196,7 +194,6 @@ const Profile = () => {
       await refreshProfile();
       showSuccess('Imagen de perfil eliminada');
     } catch (error) {
-      console.error('Error deleting image:', error);
       showError('Error al eliminar la imagen');
     } finally {
       setDeletingImage(false);
@@ -225,7 +222,7 @@ const Profile = () => {
           <div className="flex space-x-2">
             <button
               onClick={handleCancel}
-              className="flex items-center space-x-2 px-4 py-2 border border-gray-300 dark:border-gray-600 text-gray-700 dark:text-gray-300 hover:bg-gray-100 dark:hover:bg-gray-700 rounded-lg transition-colors"
+              className="flex items-center space-x-2 px-4 py-2 border border-gray-300 dark:border-coach-border text-gray-700 dark:text-gray-300 hover:bg-gray-100 dark:hover:bg-coach-elevated rounded-lg transition-colors"
             >
               <FiX className="w-5 h-5" />
               <span>Cancelar</span>
@@ -246,11 +243,11 @@ const Profile = () => {
       <motion.div
         initial={{ opacity: 0, y: 20 }}
         animate={{ opacity: 1, y: 0 }}
-        className="bg-white dark:bg-gray-800 rounded-xl shadow-sm border border-gray-200 dark:border-gray-700"
+        className="bg-coach-surface rounded-xl shadow-sm border border-gray-200 dark:border-coach-border"
       >
         <div className="p-6">
           {/* Avatar Section */}
-          <div className="flex items-center space-x-6 mb-8 pb-8 border-b border-gray-200 dark:border-gray-700">
+          <div className="flex items-center space-x-6 mb-8 pb-8 border-b border-gray-200 dark:border-coach-border">
             <div className="relative flex-shrink-0">
               {displayProfile.profile_image ? (
                 <img
@@ -328,7 +325,7 @@ const Profile = () => {
                       setFormData({ ...formData, first_name: e.target.value })
                     }
                     disabled={!editing}
-                    className="w-full px-4 py-2 border border-gray-300 dark:border-gray-600 rounded-lg bg-white dark:bg-gray-700 text-gray-900 dark:text-white focus:ring-2 focus:ring-blue-500 focus:border-transparent disabled:bg-gray-100 dark:disabled:bg-gray-800 disabled:cursor-not-allowed"
+                    className="w-full px-4 py-2 border border-gray-300 dark:border-coach-border rounded-lg bg-white dark:bg-coach-elevated text-gray-900 dark:text-white focus:ring-2 focus:ring-blue-500 focus:border-transparent disabled:bg-gray-100 dark:disabled:bg-coach-surface disabled:cursor-not-allowed"
                   />
                 </div>
                 <div>
@@ -342,7 +339,7 @@ const Profile = () => {
                       setFormData({ ...formData, last_name: e.target.value })
                     }
                     disabled={!editing}
-                    className="w-full px-4 py-2 border border-gray-300 dark:border-gray-600 rounded-lg bg-white dark:bg-gray-700 text-gray-900 dark:text-white focus:ring-2 focus:ring-blue-500 focus:border-transparent disabled:bg-gray-100 dark:disabled:bg-gray-800 disabled:cursor-not-allowed"
+                    className="w-full px-4 py-2 border border-gray-300 dark:border-coach-border rounded-lg bg-white dark:bg-coach-elevated text-gray-900 dark:text-white focus:ring-2 focus:ring-blue-500 focus:border-transparent disabled:bg-gray-100 dark:disabled:bg-coach-surface disabled:cursor-not-allowed"
                   />
                 </div>
               </div>
@@ -359,12 +356,12 @@ const Profile = () => {
                     Email
                   </label>
                   <div className="relative">
-                    <FiMail className="absolute left-3 top-1/2 transform -translate-y-1/2 text-gray-400 w-5 h-5" />
+                    <FiMail className="absolute left-3 top-1/2 transform -translate-y-1/2 text-coach-text-muted w-5 h-5" />
                     <input
                       type="email"
                       value={displayProfile.email}
                       disabled
-                      className="w-full pl-10 pr-4 py-2 border border-gray-300 dark:border-gray-600 rounded-lg bg-gray-100 dark:bg-gray-800 text-gray-500 dark:text-gray-400 cursor-not-allowed"
+                      className="w-full pl-10 pr-4 py-2 border border-gray-300 dark:border-coach-border rounded-lg bg-gray-100 dark:bg-coach-surface text-gray-500 dark:text-gray-400 cursor-not-allowed"
                     />
                   </div>
                 </div>
@@ -373,7 +370,7 @@ const Profile = () => {
                     Teléfono
                   </label>
                   <div className="relative">
-                    <FiPhone className="absolute left-3 top-1/2 transform -translate-y-1/2 text-gray-400 w-5 h-5" />
+                    <FiPhone className="absolute left-3 top-1/2 transform -translate-y-1/2 text-coach-text-muted w-5 h-5" />
                     <input
                       type="tel"
                       value={formData.phone}
@@ -382,7 +379,7 @@ const Profile = () => {
                       }
                       disabled={!editing}
                       placeholder="Ej: +34 600 000 000"
-                      className="w-full pl-10 pr-4 py-2 border border-gray-300 dark:border-gray-600 rounded-lg bg-white dark:bg-gray-700 text-gray-900 dark:text-white focus:ring-2 focus:ring-blue-500 focus:border-transparent disabled:bg-gray-100 dark:disabled:bg-gray-800 disabled:cursor-not-allowed"
+                      className="w-full pl-10 pr-4 py-2 border border-gray-300 dark:border-coach-border rounded-lg bg-white dark:bg-coach-elevated text-gray-900 dark:text-white focus:ring-2 focus:ring-blue-500 focus:border-transparent disabled:bg-gray-100 dark:disabled:bg-coach-surface disabled:cursor-not-allowed"
                     />
                   </div>
                 </div>
@@ -401,7 +398,7 @@ const Profile = () => {
                   Comparte este enlace con tus atletas para que se registren directamente como parte de tu equipo.
                 </p>
                 <div className="flex items-center gap-3">
-                  <div className="hidden sm:block flex-1 px-4 py-2.5 bg-gray-50 dark:bg-gray-700/50 border border-gray-200 dark:border-gray-600 rounded-lg">
+                  <div className="hidden sm:block flex-1 px-4 py-2.5 bg-coach-inset/50 border border-gray-200 dark:border-coach-border rounded-lg">
                     <p className="text-sm font-mono text-gray-700 dark:text-gray-300 break-all">
                       https://www.trainingtrack.es/register?invite={profile?.id || user?.id}
                     </p>
@@ -477,7 +474,7 @@ const Profile = () => {
                             <button
                               key={dist}
                               onClick={() => addDistance(dist)}
-                              className="px-3 py-1 text-xs border border-gray-300 dark:border-gray-600 text-gray-600 dark:text-gray-400 rounded-full hover:bg-blue-50 dark:hover:bg-blue-900/20 hover:border-blue-300 dark:hover:border-blue-600 hover:text-blue-600 dark:hover:text-blue-400 transition-colors"
+                              className="px-3 py-1 text-xs border border-gray-300 dark:border-coach-border text-gray-600 dark:text-gray-400 rounded-full hover:bg-blue-50 dark:hover:bg-blue-900/20 hover:border-blue-300 dark:hover:border-blue-600 hover:text-blue-600 dark:hover:text-blue-400 transition-colors"
                             >
                               + {dist}
                             </button>
@@ -492,7 +489,7 @@ const Profile = () => {
                               if (e.key === 'Enter') { e.preventDefault(); addDistance(newDistance); }
                             }}
                             placeholder="Otra distancia..."
-                            className="flex-1 px-3 py-1.5 text-sm border border-gray-300 dark:border-gray-600 rounded-lg bg-white dark:bg-gray-700 text-gray-900 dark:text-white focus:ring-2 focus:ring-blue-500 focus:border-transparent"
+                            className="flex-1 px-3 py-1.5 text-sm border border-gray-300 dark:border-coach-border rounded-lg bg-white dark:bg-coach-elevated text-gray-900 dark:text-white focus:ring-2 focus:ring-blue-500 focus:border-transparent"
                           />
                           <button
                             onClick={() => addDistance(newDistance)}
@@ -525,7 +522,7 @@ const Profile = () => {
                           setFormData({ ...formData, date_of_birth: e.target.value })
                         }
                         disabled={!editing}
-                        className="w-full px-4 py-2 border border-gray-300 dark:border-gray-600 rounded-lg bg-white dark:bg-gray-700 text-gray-900 dark:text-white focus:ring-2 focus:ring-blue-500 focus:border-transparent disabled:bg-gray-100 dark:disabled:bg-gray-800 disabled:cursor-not-allowed"
+                        className="w-full px-4 py-2 border border-gray-300 dark:border-coach-border rounded-lg bg-white dark:bg-coach-elevated text-gray-900 dark:text-white focus:ring-2 focus:ring-blue-500 focus:border-transparent disabled:bg-gray-100 dark:disabled:bg-coach-surface disabled:cursor-not-allowed"
                       />
                     </div>
                     <div>
@@ -542,7 +539,7 @@ const Profile = () => {
                         step="0.1"
                         min="0"
                         placeholder="Ej: 70.5"
-                        className="w-full px-4 py-2 border border-gray-300 dark:border-gray-600 rounded-lg bg-white dark:bg-gray-700 text-gray-900 dark:text-white focus:ring-2 focus:ring-blue-500 focus:border-transparent disabled:bg-gray-100 dark:disabled:bg-gray-800 disabled:cursor-not-allowed"
+                        className="w-full px-4 py-2 border border-gray-300 dark:border-coach-border rounded-lg bg-white dark:bg-coach-elevated text-gray-900 dark:text-white focus:ring-2 focus:ring-blue-500 focus:border-transparent disabled:bg-gray-100 dark:disabled:bg-coach-surface disabled:cursor-not-allowed"
                       />
                     </div>
                     <div>
@@ -559,7 +556,7 @@ const Profile = () => {
                         step="0.1"
                         min="0"
                         placeholder="Ej: 175"
-                        className="w-full px-4 py-2 border border-gray-300 dark:border-gray-600 rounded-lg bg-white dark:bg-gray-700 text-gray-900 dark:text-white focus:ring-2 focus:ring-blue-500 focus:border-transparent disabled:bg-gray-100 dark:disabled:bg-gray-800 disabled:cursor-not-allowed"
+                        className="w-full px-4 py-2 border border-gray-300 dark:border-coach-border rounded-lg bg-white dark:bg-coach-elevated text-gray-900 dark:text-white focus:ring-2 focus:ring-blue-500 focus:border-transparent disabled:bg-gray-100 dark:disabled:bg-coach-surface disabled:cursor-not-allowed"
                       />
                     </div>
                   </div>

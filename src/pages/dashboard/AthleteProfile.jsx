@@ -198,7 +198,7 @@ const AthleteProfile = () => {
   const { vamKmhVal, vamVo2maxVal, vamMlssKmhVal, vamMlssPaceVal, vamVt2KmhVal, vamVt2PaceVal } = computeVamValues(vamData);
 
   return (
-    <div className="p-4 sm:p-6 lg:p-8 min-h-screen bg-gray-50 dark:bg-gray-900">
+    <div className="p-4 sm:p-6 lg:p-8 min-h-screen bg-coach-base">
       {/* Header */}
       <div className="flex items-center gap-3 mb-6">
         {/* Back */}
@@ -250,7 +250,7 @@ const AthleteProfile = () => {
             </button>
             <button
               onClick={() => navigate('/dashboard/planning')}
-              className="p-2 bg-white dark:bg-gray-800 rounded-xl shadow-sm hover:shadow-md transition-all border border-gray-200 dark:border-gray-700 group"
+              className="p-2 bg-coach-surface rounded-xl shadow-sm hover:shadow-md transition-all border border-gray-200 dark:border-coach-border group"
               title="Planificación"
             >
               <FiPlus className="w-4 h-4 text-gray-600 dark:text-gray-400 group-hover:text-green-600" />
@@ -258,7 +258,7 @@ const AthleteProfile = () => {
             <div className="relative">
               <button
                 onClick={() => setShowTestMenu(!showTestMenu)}
-                className="p-2 bg-white dark:bg-gray-800 rounded-xl shadow-sm hover:shadow-md transition-all border border-gray-200 dark:border-gray-700 group"
+                className="p-2 bg-coach-surface rounded-xl shadow-sm hover:shadow-md transition-all border border-gray-200 dark:border-coach-border group"
                 title="Tests"
               >
                 <FiFileText className="w-4 h-4 text-gray-600 dark:text-gray-400 group-hover:text-orange-600" />
@@ -266,7 +266,7 @@ const AthleteProfile = () => {
               {showTestMenu && (
                 <>
                   <div className="fixed inset-0 z-40" onClick={() => setShowTestMenu(false)} />
-                  <div className="absolute left-0 top-full mt-1 z-50 bg-white dark:bg-gray-800 rounded-xl shadow-lg border border-gray-200 dark:border-gray-700 overflow-hidden min-w-[180px]">
+                  <div className="absolute left-0 top-full mt-1 z-50 bg-coach-surface rounded-xl shadow-lg border border-gray-200 dark:border-coach-border overflow-hidden min-w-[180px]">
                     <button
                       onClick={() => { setShowTestMenu(false); setShowConconiModal(true); }}
                       className="w-full px-4 py-2.5 text-left text-sm text-gray-700 dark:text-gray-300 hover:bg-amber-50 dark:hover:bg-amber-900/20 flex items-center gap-2 transition-colors"
@@ -287,7 +287,7 @@ const AthleteProfile = () => {
             </div>
             <button
               onClick={() => navigate('/dashboard/messages', { state: { openConversationWith: athleteId } })}
-              className="p-2 bg-white dark:bg-gray-800 rounded-xl shadow-sm hover:shadow-md transition-all border border-gray-200 dark:border-gray-700 group"
+              className="p-2 bg-coach-surface rounded-xl shadow-sm hover:shadow-md transition-all border border-gray-200 dark:border-coach-border group"
               title="Enviar mensaje"
             >
               <FiMessageCircle className="w-4 h-4 text-gray-600 dark:text-gray-400 group-hover:text-blue-600" />
@@ -307,7 +307,7 @@ const AthleteProfile = () => {
           </button>
           <button
             onClick={() => navigate('/dashboard/planning')}
-            className="p-2.5 bg-white dark:bg-gray-800 rounded-xl shadow-sm hover:shadow-md transition-all border border-gray-200 dark:border-gray-700 group"
+            className="p-2.5 bg-coach-surface rounded-xl shadow-sm hover:shadow-md transition-all border border-gray-200 dark:border-coach-border group"
             title="Planificación"
           >
             <FiPlus className="w-5 h-5 text-gray-600 dark:text-gray-400 group-hover:text-green-600" />
@@ -315,7 +315,7 @@ const AthleteProfile = () => {
           <div className="relative">
             <button
               onClick={() => setShowTestMenu(!showTestMenu)}
-              className="p-2.5 bg-white dark:bg-gray-800 rounded-xl shadow-sm hover:shadow-md transition-all border border-gray-200 dark:border-gray-700 group"
+              className="p-2.5 bg-coach-surface rounded-xl shadow-sm hover:shadow-md transition-all border border-gray-200 dark:border-coach-border group"
               title="Tests"
             >
               <FiFileText className="w-5 h-5 text-gray-600 dark:text-gray-400 group-hover:text-orange-600" />
@@ -323,7 +323,7 @@ const AthleteProfile = () => {
             {showTestMenu && (
               <>
                 <div className="fixed inset-0 z-40" onClick={() => setShowTestMenu(false)} />
-                <div className="absolute right-0 top-full mt-1 z-50 bg-white dark:bg-gray-800 rounded-xl shadow-lg border border-gray-200 dark:border-gray-700 overflow-hidden min-w-[180px]">
+                <div className="absolute right-0 top-full mt-1 z-50 bg-coach-surface rounded-xl shadow-lg border border-gray-200 dark:border-coach-border overflow-hidden min-w-[180px]">
                   <button
                     onClick={() => { setShowTestMenu(false); setShowConconiModal(true); }}
                     className="w-full px-4 py-2.5 text-left text-sm text-gray-700 dark:text-gray-300 hover:bg-amber-50 dark:hover:bg-amber-900/20 flex items-center gap-2 transition-colors"
@@ -344,7 +344,7 @@ const AthleteProfile = () => {
           </div>
           <button
             onClick={() => navigate('/dashboard/messages', { state: { openConversationWith: athleteId } })}
-            className="p-2.5 bg-white dark:bg-gray-800 rounded-xl shadow-sm hover:shadow-md transition-all border border-gray-200 dark:border-gray-700 group"
+            className="p-2.5 bg-coach-surface rounded-xl shadow-sm hover:shadow-md transition-all border border-gray-200 dark:border-coach-border group"
             title="Enviar mensaje"
           >
             <FiMessageCircle className="w-5 h-5 text-gray-600 dark:text-gray-400 group-hover:text-blue-600" />
@@ -360,15 +360,15 @@ const AthleteProfile = () => {
           initial={{ opacity: 0, y: 20 }}
           animate={{ opacity: 1, y: 0 }}
           transition={{ delay: 0.1 }}
-          className="bg-white dark:bg-gray-800 rounded-2xl border border-gray-200 dark:border-gray-700 overflow-hidden"
+          className="bg-coach-surface rounded-2xl border border-gray-200 dark:border-coach-border overflow-hidden"
         >
           {!athlete.athlete_paces?.length ? (
-            <div className="px-4 py-3 flex items-center gap-2 border-b border-gray-200 dark:border-gray-700">
+            <div className="px-4 py-3 flex items-center gap-2 border-b border-gray-200 dark:border-coach-border">
               <FiZap className="w-4 h-4 text-amber-500" />
               <span className="text-sm font-bold text-slate-900 dark:text-white">Test de Conconi</span>
             </div>
           ) : (
-            <div className="px-4 py-3 flex items-center justify-between border-b border-gray-200 dark:border-gray-700">
+            <div className="px-4 py-3 flex items-center justify-between border-b border-gray-200 dark:border-coach-border">
               <div className="flex items-center gap-2">
                 <FiZap className="w-4 h-4 text-amber-500" />
                 <span className="text-sm font-bold text-slate-900 dark:text-white">Test de Conconi</span>
@@ -419,11 +419,11 @@ const AthleteProfile = () => {
               </div>
 
               {/* Expandable full table — always visible on desktop, toggle on mobile */}
-              <div className={`${showConconiTable ? 'block' : 'hidden lg:block'} border-t border-gray-100 dark:border-gray-700 overflow-x-auto`}>
+              <div className={`${showConconiTable ? 'block' : 'hidden lg:block'} border-t border-gray-100 dark:border-coach-border overflow-x-auto`}>
                   <table className="w-full text-[11px] min-w-[500px]">
                     <thead>
                       <tr>
-                        <th className="text-left py-1.5 px-3 text-slate-400 font-medium whitespace-nowrap sticky left-0 bg-white dark:bg-gray-800 z-10 w-20">Zona</th>
+                        <th className="text-left py-1.5 px-3 text-slate-400 font-medium whitespace-nowrap sticky left-0 bg-coach-surface z-10 w-20">Zona</th>
                         {conconiSorted.map(pace => (
                           <th key={pace.pace_code} className={`px-1.5 py-1.5 text-center text-white font-bold whitespace-nowrap ${PACE_BG_COLORS[pace.pace_code] || 'bg-gray-500'}`}>
                             {pace.pace_code}
@@ -432,20 +432,20 @@ const AthleteProfile = () => {
                       </tr>
                     </thead>
                     <tbody>
-                      <tr className="bg-gray-50 dark:bg-gray-700/30">
-                        <td className="py-1 px-3 text-slate-400 text-[10px] sticky left-0 bg-gray-50 dark:bg-gray-700/30 z-10">% FC</td>
+                      <tr className="bg-coach-inset/30">
+                        <td className="py-1 px-3 text-slate-400 text-[10px] sticky left-0 bg-coach-inset/30 z-10">% FC</td>
                         {conconiSorted.map(pace => (
                           <td key={pace.pace_code} className="px-1 py-1 text-center text-slate-500 dark:text-slate-400 whitespace-nowrap">{PACE_PCT_LABELS[pace.pace_code] || ''}</td>
                         ))}
                       </tr>
-                      <tr className="border-t border-gray-100 dark:border-gray-700">
-                        <td className="py-1.5 px-3 text-slate-600 dark:text-slate-300 font-semibold sticky left-0 bg-white dark:bg-gray-800 z-10">Ritmo</td>
+                      <tr className="border-t border-gray-100 dark:border-coach-border">
+                        <td className="py-1.5 px-3 text-slate-600 dark:text-slate-300 font-semibold sticky left-0 bg-coach-surface z-10">Ritmo</td>
                         {conconiSorted.map(pace => (
                           <td key={pace.pace_code} className="px-1 py-1.5 text-center font-mono font-semibold text-slate-900 dark:text-white whitespace-nowrap">{fmtPaceProfile(pace.pace_seconds_per_km)}</td>
                         ))}
                       </tr>
-                      <tr className="border-t border-gray-100 dark:border-gray-700 bg-gray-50 dark:bg-gray-700/30">
-                        <td className="py-1.5 px-3 text-slate-600 dark:text-slate-300 font-semibold sticky left-0 bg-gray-50 dark:bg-gray-700/30 z-10">Pulso</td>
+                      <tr className="border-t border-gray-100 dark:border-coach-border bg-coach-inset/30">
+                        <td className="py-1.5 px-3 text-slate-600 dark:text-slate-300 font-semibold sticky left-0 bg-coach-inset/30 z-10">Pulso</td>
                         {conconiSorted.map(pace => (
                           <td key={pace.pace_code} className="px-1 py-1.5 text-center font-mono text-slate-700 dark:text-slate-300 whitespace-nowrap">
                             {pace.heart_rate_max || ''}
@@ -453,8 +453,8 @@ const AthleteProfile = () => {
                         ))}
                       </tr>
                       {Object.keys(conconiSeriesRecovery).length > 0 && (
-                        <tr className="border-t border-gray-100 dark:border-gray-700">
-                          <td className="py-1.5 px-3 text-slate-600 dark:text-slate-300 font-semibold whitespace-nowrap sticky left-0 bg-white dark:bg-gray-800 z-10">Recu. 120p</td>
+                        <tr className="border-t border-gray-100 dark:border-coach-border">
+                          <td className="py-1.5 px-3 text-slate-600 dark:text-slate-300 font-semibold whitespace-nowrap sticky left-0 bg-coach-surface z-10">Recu. 120p</td>
                           {conconiSorted.map(pace => (
                             <td key={pace.pace_code} className="px-1 py-1.5 text-center font-mono text-slate-700 dark:text-slate-300 whitespace-nowrap">
                               {conconiSeriesRecovery[pace.pace_code] ? fmtRecProfile(conconiSeriesRecovery[pace.pace_code]) : ''}
@@ -474,15 +474,15 @@ const AthleteProfile = () => {
           initial={{ opacity: 0, y: 20 }}
           animate={{ opacity: 1, y: 0 }}
           transition={{ delay: 0.2 }}
-          className="bg-white dark:bg-gray-800 rounded-2xl border border-gray-200 dark:border-gray-700 overflow-hidden"
+          className="bg-coach-surface rounded-2xl border border-gray-200 dark:border-coach-border overflow-hidden"
         >
           {!vamData ? (
-            <div className="px-4 py-3 flex items-center gap-2 border-b border-gray-200 dark:border-gray-700">
+            <div className="px-4 py-3 flex items-center gap-2 border-b border-gray-200 dark:border-coach-border">
               <FiTrendingUp className="w-4 h-4 text-purple-500" />
               <span className="text-sm font-bold text-slate-900 dark:text-white">Test VAM</span>
             </div>
           ) : (
-            <div className="px-4 py-3 flex items-center justify-between border-b border-gray-200 dark:border-gray-700">
+            <div className="px-4 py-3 flex items-center justify-between border-b border-gray-200 dark:border-coach-border">
               <div className="flex items-center gap-2">
                 <FiTrendingUp className="w-4 h-4 text-purple-500" />
                 <span className="text-sm font-bold text-slate-900 dark:text-white">Test VAM</span>
@@ -534,14 +534,14 @@ const AthleteProfile = () => {
 
               {/* VT2 footer */}
               {vamVt2KmhVal && (
-                <div className="px-4 py-2 border-t border-gray-100 dark:border-gray-700 flex items-center gap-1.5 text-xs text-slate-500 dark:text-slate-400">
+                <div className="px-4 py-2 border-t border-gray-100 dark:border-coach-border flex items-center gap-1.5 text-xs text-slate-500 dark:text-slate-400">
                   <FiActivity className="w-3.5 h-3.5 text-blue-400" />
                   VT2: {vamVt2KmhVal} km/h · <span className="font-mono">{fmtVamProfile(vamVt2PaceVal)}</span> min/km
                 </div>
               )}
 
               {/* Expandable full table — always visible on desktop, toggle on mobile */}
-              <div className={`${showVamTable ? 'block' : 'hidden lg:block'} border-t border-gray-100 dark:border-gray-700 overflow-x-auto`}>
+              <div className={`${showVamTable ? 'block' : 'hidden lg:block'} border-t border-gray-100 dark:border-coach-border overflow-x-auto`}>
                   <table className="w-full text-[11px] min-w-[440px]">
                     <thead>
                       <tr>
@@ -558,22 +558,22 @@ const AthleteProfile = () => {
                       </tr>
                     </thead>
                     <tbody>
-                      <tr className="border-t border-gray-100 dark:border-gray-700">
+                      <tr className="border-t border-gray-100 dark:border-coach-border">
                         {[conconiMaxHr ?? '–', vamKmhVal?.toFixed(1), vamVo2maxVal, vamMlssKmhVal, vamVt2KmhVal, vamKmhVal ? (vamKmhVal * 0.775).toFixed(1) : '–'].map((val, i) => (
                           <td key={i} className="px-2 py-1.5 text-center font-mono font-semibold text-slate-900 dark:text-white whitespace-nowrap">{val}</td>
                         ))}
                       </tr>
-                      <tr className="bg-gray-50 dark:bg-gray-700/30">
+                      <tr className="bg-coach-inset/30">
                         {[conconiMaxHr ? 'ppm' : '', 'km/h', 'ml/kg/min', 'km/h', 'km/h', 'km/h'].map((u, i) => (
                           <td key={i} className="px-2 py-1 text-center text-[10px] text-slate-400 whitespace-nowrap">{u}</td>
                         ))}
                       </tr>
-                      <tr className="border-t border-gray-100 dark:border-gray-700">
+                      <tr className="border-t border-gray-100 dark:border-coach-border">
                         {['', fmtVamProfile(vamData.pace_seconds_per_km), '', fmtVamProfile(vamMlssPaceVal), fmtVamProfile(vamVt2PaceVal), vamKmhVal ? fmtVamProfile(Math.round(3600 / (vamKmhVal * 0.775))) : '–'].map((val, i) => (
                           <td key={i} className="px-2 py-1.5 text-center font-mono text-slate-600 dark:text-slate-300 whitespace-nowrap">{val}</td>
                         ))}
                       </tr>
-                      <tr className="bg-gray-50 dark:bg-gray-700/30">
+                      <tr className="bg-coach-inset/30">
                         {['', 'min/km', '', 'min/km', 'min/km', 'min/km'].map((u, i) => (
                           <td key={i} className="px-2 py-1 text-center text-[10px] text-slate-400 whitespace-nowrap">{u}</td>
                         ))}
@@ -593,10 +593,10 @@ const AthleteProfile = () => {
         <motion.div
           initial={{ opacity: 0, y: 20 }}
           animate={{ opacity: 1, y: 0 }}
-          className="col-span-12 bg-white dark:bg-gray-800 rounded-2xl shadow-sm border border-gray-200 dark:border-gray-700 overflow-hidden"
+          className="col-span-12 bg-coach-surface rounded-2xl shadow-sm border border-gray-200 dark:border-coach-border overflow-hidden"
         >
           {/* Week Navigator */}
-          <div className="flex flex-col sm:flex-row sm:items-center sm:justify-between gap-2 p-3 sm:p-4 border-b border-gray-200 dark:border-gray-700 bg-gray-50 dark:bg-gray-800/50">
+          <div className="flex flex-col sm:flex-row sm:items-center sm:justify-between gap-2 p-3 sm:p-4 border-b border-gray-200 dark:border-coach-border bg-gray-50 dark:bg-coach-surface/50">
             <h2 className="text-base sm:text-lg font-bold text-gray-900 dark:text-white flex items-center">
               <FiCalendar className="w-4 h-4 sm:w-5 sm:h-5 mr-2 text-blue-600" />
               Planificación Semanal
@@ -628,7 +628,7 @@ const AthleteProfile = () => {
           ) : (
             <>
               {/* Desktop: 7-column grid */}
-              <div className="hidden sm:grid grid-cols-7 divide-x divide-gray-200 dark:divide-gray-700">
+              <div className="hidden sm:grid grid-cols-7 divide-x divide-gray-200 dark:divide-coach-border">
                 {weekDays.map((day, index) => {
                   const training = trainings[index];
                   const isToday = day.toDateString() === new Date().toDateString();
@@ -639,7 +639,7 @@ const AthleteProfile = () => {
                       onClick={() => training && setSelectedTraining({ ...training, dayLabel: DAYS_OF_WEEK[index], dayDate: day })}
                       className={`min-h-[180px] p-3 ${isToday ? 'bg-blue-50 dark:bg-blue-900/20' : ''} ${training ? 'cursor-pointer hover:bg-blue-50/60 dark:hover:bg-blue-900/10 transition-colors' : ''}`}
                     >
-                      <div className="text-center mb-3 pb-2 border-b border-gray-200 dark:border-gray-700">
+                      <div className="text-center mb-3 pb-2 border-b border-gray-200 dark:border-coach-border">
                         <p className="text-xs font-semibold text-gray-500 dark:text-gray-400 uppercase">
                           {DAYS_OF_WEEK[index].slice(0, 3)}
                         </p>
@@ -689,7 +689,7 @@ const AthleteProfile = () => {
               </div>
 
               {/* Mobile: Stacked list */}
-              <div className="sm:hidden divide-y divide-gray-200 dark:divide-gray-700">
+              <div className="sm:hidden divide-y divide-gray-200 dark:divide-coach-border">
                 {weekDays.map((day, index) => {
                   const training = trainings[index];
                   const isToday = day.toDateString() === new Date().toDateString();
@@ -762,12 +762,12 @@ const AthleteProfile = () => {
               <FiLoader className="w-6 h-6 animate-spin text-[#FC4C02]" />
             </div>
           ) : !stravaConnected ? (
-            <div className="bg-white dark:bg-gray-800 rounded-2xl p-8 text-center border border-gray-200 dark:border-gray-700">
+            <div className="bg-coach-surface rounded-2xl p-8 text-center border border-gray-200 dark:border-coach-border">
               <FiActivity className="w-10 h-10 text-gray-300 dark:text-gray-600 mx-auto mb-2" />
               <p className="text-sm text-slate-500 dark:text-slate-400">Este atleta no ha conectado Strava</p>
             </div>
           ) : stravaActivities.length === 0 ? (
-            <div className="bg-white dark:bg-gray-800 rounded-2xl p-8 text-center border border-gray-200 dark:border-gray-700">
+            <div className="bg-coach-surface rounded-2xl p-8 text-center border border-gray-200 dark:border-coach-border">
               <FiActivity className="w-10 h-10 text-gray-300 dark:text-gray-600 mx-auto mb-2" />
               <p className="text-sm text-slate-500 dark:text-slate-400">No hay actividades en los últimos 30 días</p>
             </div>
@@ -787,7 +787,7 @@ const AthleteProfile = () => {
                     initial={{ opacity: 0, y: 10 }}
                     animate={{ opacity: 1, y: 0 }}
                     onClick={() => loadActivityDetail(activity)}
-                    className="bg-white dark:bg-gray-800 rounded-2xl border border-gray-200 dark:border-gray-700 overflow-hidden cursor-pointer hover:shadow-md transition-all"
+                    className="bg-coach-surface rounded-2xl border border-gray-200 dark:border-coach-border overflow-hidden cursor-pointer hover:shadow-md transition-all"
                   >
                     {/* Card header */}
                     <div className="px-4 pt-4 pb-3">
@@ -813,7 +813,7 @@ const AthleteProfile = () => {
                     </div>
 
                     {/* Stats row */}
-                    <div className="grid grid-cols-4 divide-x divide-gray-100 dark:divide-gray-700 border-t border-gray-100 dark:border-gray-700">
+                    <div className="grid grid-cols-4 divide-x divide-gray-100 dark:divide-coach-border border-t border-gray-100 dark:border-coach-border">
                       {[
                         { val: activity.distanceKm, unit: 'km', color: 'text-slate-900 dark:text-white' },
                         { val: activity.formattedTime, unit: 'tiempo', color: 'text-slate-900 dark:text-white' },
@@ -828,7 +828,7 @@ const AthleteProfile = () => {
                     </div>
 
                     {/* Footer */}
-                    <div className="px-4 py-2.5 flex items-center justify-between border-t border-gray-100 dark:border-gray-700">
+                    <div className="px-4 py-2.5 flex items-center justify-between border-t border-gray-100 dark:border-coach-border">
                       <div className="flex items-center gap-3 text-xs text-slate-400 dark:text-slate-500">
                         {activity.calories > 0 && <span>{activity.calories} kcal</span>}
                         {activity.kudos_count > 0 && <span>· {activity.kudos_count} kudos</span>}
@@ -863,18 +863,18 @@ const AthleteProfile = () => {
           initial={{ opacity: 0, y: 20 }}
           animate={{ opacity: 1, y: 0 }}
           transition={{ delay: 0.2 }}
-          className="col-span-12 lg:col-span-5 bg-white dark:bg-gray-800 rounded-2xl shadow-sm border border-gray-200 dark:border-gray-700 overflow-hidden flex flex-col"
+          className="col-span-12 lg:col-span-5 bg-coach-surface rounded-2xl shadow-sm border border-gray-200 dark:border-coach-border overflow-hidden flex flex-col"
         >
           {/* Personal Data */}
           {(athlete.date_of_birth || athlete.weight || athlete.height) && (
-            <div className="p-4 border-b border-gray-200 dark:border-gray-700">
+            <div className="p-4 border-b border-gray-200 dark:border-coach-border">
               <h2 className="text-sm font-semibold text-gray-500 dark:text-gray-400 uppercase tracking-wider mb-3 flex items-center">
                 <FiUser className="w-4 h-4 mr-1.5" />
                 Datos Personales
               </h2>
               <div className="grid grid-cols-3 gap-3">
                 {athlete.date_of_birth && (
-                  <div className="text-center p-2 bg-gray-50 dark:bg-gray-700/50 rounded-lg">
+                  <div className="text-center p-2 bg-coach-inset/50 rounded-lg">
                     <p className="text-xs text-gray-500 dark:text-gray-400 mb-0.5">Edad</p>
                     <p className="text-lg font-bold text-gray-900 dark:text-white">
                       {Math.floor((new Date() - new Date(athlete.date_of_birth)) / (365.25 * 24 * 60 * 60 * 1000))}
@@ -883,7 +883,7 @@ const AthleteProfile = () => {
                   </div>
                 )}
                 {athlete.weight && (
-                  <div className="text-center p-2 bg-gray-50 dark:bg-gray-700/50 rounded-lg">
+                  <div className="text-center p-2 bg-coach-inset/50 rounded-lg">
                     <p className="text-xs text-gray-500 dark:text-gray-400 mb-0.5">Peso</p>
                     <p className="text-lg font-bold text-gray-900 dark:text-white">
                       {athlete.weight} <span className="text-xs font-normal">kg</span>
@@ -891,7 +891,7 @@ const AthleteProfile = () => {
                   </div>
                 )}
                 {athlete.height && (
-                  <div className="text-center p-2 bg-gray-50 dark:bg-gray-700/50 rounded-lg">
+                  <div className="text-center p-2 bg-coach-inset/50 rounded-lg">
                     <p className="text-xs text-gray-500 dark:text-gray-400 mb-0.5">Estatura</p>
                     <p className="text-lg font-bold text-gray-900 dark:text-white">
                       {athlete.height} <span className="text-xs font-normal">cm</span>
@@ -902,7 +902,7 @@ const AthleteProfile = () => {
             </div>
           )}
 
-          <div className="p-4 border-b border-gray-200 dark:border-gray-700 flex items-center justify-between">
+          <div className="p-4 border-b border-gray-200 dark:border-coach-border flex items-center justify-between">
             <h2 className="text-lg font-bold text-gray-900 dark:text-white flex items-center">
               <FiTrendingUp className="w-5 h-5 mr-2 text-green-600" />
               Métricas
@@ -995,7 +995,7 @@ const AthleteProfile = () => {
                   <div className="space-y-2">
                     <p className="text-xs font-medium text-gray-500 dark:text-gray-400">Mejores resultados</p>
                     {stravaMetrics.longestRun && (
-                      <div className="flex items-center justify-between p-2.5 bg-slate-50 dark:bg-gray-700/50 rounded-xl">
+                      <div className="flex items-center justify-between p-2.5 bg-slate-50 dark:bg-coach-elevated/50 rounded-xl">
                         <div className="flex items-center gap-2">
                           <FiTarget className="w-4 h-4 text-slate-400" />
                           <span className="text-xs text-gray-600 dark:text-gray-400">Más larga</span>
@@ -1006,7 +1006,7 @@ const AthleteProfile = () => {
                       </div>
                     )}
                     {stravaMetrics.fastestPace && (
-                      <div className="flex items-center justify-between p-2.5 bg-slate-50 dark:bg-gray-700/50 rounded-xl">
+                      <div className="flex items-center justify-between p-2.5 bg-slate-50 dark:bg-coach-elevated/50 rounded-xl">
                         <div className="flex items-center gap-2">
                           <FiZap className="w-4 h-4 text-slate-400" />
                           <span className="text-xs text-gray-600 dark:text-gray-400">Más rápida</span>
@@ -1087,16 +1087,16 @@ const AthleteProfile = () => {
           initial={{ opacity: 0, y: 20 }}
           animate={{ opacity: 1, y: 0 }}
           transition={{ delay: 0.3 }}
-          className="col-span-12 lg:col-span-6 bg-white dark:bg-gray-800 rounded-2xl shadow-sm border border-gray-200 dark:border-gray-700 overflow-hidden"
+          className="col-span-12 lg:col-span-6 bg-coach-surface rounded-2xl shadow-sm border border-gray-200 dark:border-coach-border overflow-hidden"
         >
-          <div className="px-4 py-3 border-b border-gray-200 dark:border-gray-700 flex items-center justify-between">
+          <div className="px-4 py-3 border-b border-gray-200 dark:border-coach-border flex items-center justify-between">
             <h2 className="text-sm font-bold text-slate-900 dark:text-white flex items-center gap-2">
               <FiFlag className="w-4 h-4 text-rose-500" />
               Próximos Eventos
             </h2>
             <button
               onClick={() => setShowEventModal(true)}
-              className="w-7 h-7 flex items-center justify-center rounded-lg bg-slate-100 dark:bg-gray-700 hover:bg-slate-200 dark:hover:bg-gray-600 transition-colors"
+              className="w-7 h-7 flex items-center justify-center rounded-lg bg-slate-100 dark:bg-coach-elevated hover:bg-slate-200 dark:hover:bg-gray-600 transition-colors"
               title="Añadir evento"
             >
               <FiPlus className="w-3.5 h-3.5 text-slate-600 dark:text-slate-300" />
@@ -1120,7 +1120,7 @@ const AthleteProfile = () => {
                 {events.map((competition) => (
                   <div
                     key={competition.id}
-                    className="p-3 bg-gray-50 dark:bg-gray-700/40 rounded-xl border-l-[3px] border-rose-400 dark:border-rose-500 group relative"
+                    className="p-3 bg-coach-inset/40 rounded-xl border-l-[3px] border-rose-400 dark:border-rose-500 group relative"
                   >
                     <button
                       onClick={() => handleDeleteEvent(competition.id)}
@@ -1163,9 +1163,9 @@ const AthleteProfile = () => {
           initial={{ opacity: 0, y: 20 }}
           animate={{ opacity: 1, y: 0 }}
           transition={{ delay: 0.4 }}
-          className="col-span-12 lg:col-span-6 bg-white dark:bg-gray-800 rounded-2xl shadow-sm border border-gray-200 dark:border-gray-700 overflow-hidden"
+          className="col-span-12 lg:col-span-6 bg-coach-surface rounded-2xl shadow-sm border border-gray-200 dark:border-coach-border overflow-hidden"
         >
-          <div className="px-4 py-3 border-b border-gray-200 dark:border-gray-700 flex items-center gap-2">
+          <div className="px-4 py-3 border-b border-gray-200 dark:border-coach-border flex items-center gap-2">
             <FiAward className="w-4 h-4 text-violet-500" />
             <h2 className="text-sm font-bold text-slate-900 dark:text-white">Mejores Marcas</h2>
           </div>
@@ -1245,9 +1245,9 @@ const AthleteProfile = () => {
           initial={{ opacity: 0, y: 20 }}
           animate={{ opacity: 1, y: 0 }}
           transition={{ delay: 0.5 }}
-          className="col-span-12 bg-white dark:bg-gray-800 rounded-2xl shadow-sm border border-gray-200 dark:border-gray-700 overflow-hidden"
+          className="col-span-12 bg-coach-surface rounded-2xl shadow-sm border border-gray-200 dark:border-coach-border overflow-hidden"
         >
-          <div className="px-4 py-3 border-b border-gray-200 dark:border-gray-700 flex items-center justify-between">
+          <div className="px-4 py-3 border-b border-gray-200 dark:border-coach-border flex items-center justify-between">
             <h2 className="text-sm font-bold text-slate-900 dark:text-white flex items-center gap-2">
               <FiUser className="w-4 h-4 text-indigo-500" />
               Perfil Deportivo
@@ -1260,7 +1260,7 @@ const AthleteProfile = () => {
               className={`flex items-center gap-2 px-3 py-1.5 rounded-xl text-sm font-medium transition-all ${
                 athleteProfile && !generatingPlan
                   ? 'bg-gradient-to-r from-violet-600 to-indigo-600 hover:from-violet-500 hover:to-indigo-500 text-white shadow-sm hover:shadow-md'
-                  : 'bg-gray-100 dark:bg-gray-700 text-gray-400 dark:text-gray-500 cursor-not-allowed'
+                  : 'bg-coach-elevated text-gray-400 dark:text-gray-500 cursor-not-allowed'
               }`}
             >
               {generatingPlan ? (
@@ -1342,7 +1342,7 @@ const AthleteProfile = () => {
                         <p className="text-xs text-gray-500 dark:text-gray-400 mb-1.5 flex items-center gap-1">
                           <FiFileText className="w-3 h-3" /> Lesiones / Notas
                         </p>
-                        <p className="text-sm font-medium text-gray-900 dark:text-white bg-white/60 dark:bg-gray-700/40 rounded-lg px-3 py-2">
+                        <p className="text-sm font-medium text-gray-900 dark:text-white bg-white/60 dark:bg-coach-elevated/40 rounded-lg px-3 py-2">
                           {athleteProfile.lesiones}
                         </p>
                       </div>
@@ -1358,37 +1358,37 @@ const AthleteProfile = () => {
                   </h3>
                   <div className="grid grid-cols-2 gap-3">
                     {athleteProfile.peso_kg && (
-                      <div className="bg-white/60 dark:bg-gray-700/30 rounded-xl p-3 text-center">
+                      <div className="bg-white/60 dark:bg-coach-elevated/30 rounded-xl p-3 text-center">
                         <p className="text-xs text-gray-500 dark:text-gray-400 mb-1">Peso</p>
                         <p className="text-lg font-bold text-gray-900 dark:text-white">{athleteProfile.peso_kg}<span className="text-xs font-normal text-gray-400 ml-0.5">kg</span></p>
                       </div>
                     )}
                     {athleteProfile.altura_cm && (
-                      <div className="bg-white/60 dark:bg-gray-700/30 rounded-xl p-3 text-center">
+                      <div className="bg-white/60 dark:bg-coach-elevated/30 rounded-xl p-3 text-center">
                         <p className="text-xs text-gray-500 dark:text-gray-400 mb-1">Altura</p>
                         <p className="text-lg font-bold text-gray-900 dark:text-white">{athleteProfile.altura_cm}<span className="text-xs font-normal text-gray-400 ml-0.5">cm</span></p>
                       </div>
                     )}
                     {computeBMI(athleteProfile.peso_kg, athleteProfile.altura_cm) && (
-                      <div className="bg-white/60 dark:bg-gray-700/30 rounded-xl p-3 text-center">
+                      <div className="bg-white/60 dark:bg-coach-elevated/30 rounded-xl p-3 text-center">
                         <p className="text-xs text-gray-500 dark:text-gray-400 mb-1">IMC</p>
                         <p className="text-lg font-bold text-gray-900 dark:text-white">{computeBMI(athleteProfile.peso_kg, athleteProfile.altura_cm)}</p>
                       </div>
                     )}
                     {athleteProfile.km_semanales != null && (
-                      <div className="bg-white/60 dark:bg-gray-700/30 rounded-xl p-3 text-center">
+                      <div className="bg-white/60 dark:bg-coach-elevated/30 rounded-xl p-3 text-center">
                         <p className="text-xs text-gray-500 dark:text-gray-400 mb-1">Km/semana</p>
                         <p className="text-lg font-bold text-gray-900 dark:text-white">{athleteProfile.km_semanales}<span className="text-xs font-normal text-gray-400 ml-0.5">km</span></p>
                       </div>
                     )}
                     {athleteProfile.ritmo_comodo && (
-                      <div className="bg-white/60 dark:bg-gray-700/30 rounded-xl p-3 text-center">
+                      <div className="bg-white/60 dark:bg-coach-elevated/30 rounded-xl p-3 text-center">
                         <p className="text-xs text-gray-500 dark:text-gray-400 mb-1">Ritmo comodo</p>
                         <p className="text-lg font-bold text-gray-900 dark:text-white">{athleteProfile.ritmo_comodo}</p>
                       </div>
                     )}
                     {athleteProfile.fc_max && (
-                      <div className="bg-white/60 dark:bg-gray-700/30 rounded-xl p-3 text-center">
+                      <div className="bg-white/60 dark:bg-coach-elevated/30 rounded-xl p-3 text-center">
                         <p className="text-xs text-gray-500 dark:text-gray-400 mb-1 flex items-center justify-center gap-1"><FiHeart className="w-3 h-3 text-red-400" />FC max</p>
                         <p className="text-lg font-bold text-gray-900 dark:text-white">{athleteProfile.fc_max}<span className="text-xs font-normal text-gray-400 ml-0.5">bpm</span></p>
                       </div>
@@ -1399,17 +1399,17 @@ const AthleteProfile = () => {
                     <span className={`inline-flex items-center gap-1 px-2.5 py-1 rounded-full text-xs font-medium ${
                       athleteProfile.acceso_gimnasio
                         ? 'bg-emerald-100 dark:bg-emerald-900/30 text-emerald-700 dark:text-emerald-300'
-                        : 'bg-gray-100 dark:bg-gray-700 text-gray-400 dark:text-gray-500'
+                        : 'bg-coach-elevated text-gray-400 dark:text-gray-500'
                     }`}>
-                      <span className={`w-1.5 h-1.5 rounded-full ${athleteProfile.acceso_gimnasio ? 'bg-emerald-500' : 'bg-gray-300 dark:bg-gray-600'}`} />
+                      <span className={`w-1.5 h-1.5 rounded-full ${athleteProfile.acceso_gimnasio ? 'bg-emerald-500' : 'bg-gray-300 dark:bg-coach-inset'}`} />
                       Gimnasio
                     </span>
                     <span className={`inline-flex items-center gap-1 px-2.5 py-1 rounded-full text-xs font-medium ${
                       athleteProfile.acceso_pista
                         ? 'bg-emerald-100 dark:bg-emerald-900/30 text-emerald-700 dark:text-emerald-300'
-                        : 'bg-gray-100 dark:bg-gray-700 text-gray-400 dark:text-gray-500'
+                        : 'bg-coach-elevated text-gray-400 dark:text-gray-500'
                     }`}>
-                      <span className={`w-1.5 h-1.5 rounded-full ${athleteProfile.acceso_pista ? 'bg-emerald-500' : 'bg-gray-300 dark:bg-gray-600'}`} />
+                      <span className={`w-1.5 h-1.5 rounded-full ${athleteProfile.acceso_pista ? 'bg-emerald-500' : 'bg-gray-300 dark:bg-coach-inset'}`} />
                       Pista
                     </span>
                   </div>
@@ -1436,7 +1436,7 @@ const AthleteProfile = () => {
                               <div className={`w-10 h-10 rounded-full flex items-center justify-center text-sm font-bold transition-colors ${
                                 active
                                   ? 'bg-sky-500 text-white shadow-md shadow-sky-200 dark:shadow-sky-900/30'
-                                  : 'bg-gray-100 dark:bg-gray-700 text-gray-300 dark:text-gray-600'
+                                  : 'bg-coach-elevated text-gray-300 dark:text-gray-600'
                               }`}>
                                 {d}
                               </div>
@@ -1544,10 +1544,10 @@ const AthleteProfile = () => {
               initial={{ opacity: 0, scale: 0.95 }}
               animate={{ opacity: 1, scale: 1 }}
               exit={{ opacity: 0, scale: 0.95 }}
-              className="bg-white dark:bg-gray-800 rounded-2xl shadow-2xl w-full max-w-5xl max-h-[90vh] overflow-hidden flex flex-col"
+              className="bg-coach-surface rounded-2xl shadow-2xl w-full max-w-5xl max-h-[90vh] overflow-hidden flex flex-col"
             >
               {/* Modal Header */}
-              <div className={`p-6 border-b border-gray-200 dark:border-gray-700 ${
+              <div className={`p-6 border-b border-gray-200 dark:border-coach-border ${
                 selectedActivity.type === 'Run' || selectedActivity.type === 'VirtualRun'
                   ? 'bg-blue-50 dark:bg-blue-900/20'
                   : selectedActivity.type === 'WeightTraining' || selectedActivity.type === 'Workout'
@@ -1556,7 +1556,7 @@ const AthleteProfile = () => {
                       ? 'bg-green-50 dark:bg-green-900/20'
                       : selectedActivity.type === 'Ride' || selectedActivity.type === 'VirtualRide'
                         ? 'bg-orange-50 dark:bg-orange-900/20'
-                        : 'bg-slate-50 dark:bg-gray-800'
+                        : 'bg-slate-50 dark:bg-coach-surface'
               }`}>
                 <div className="flex items-start justify-between">
                   <div>
@@ -1618,37 +1618,37 @@ const AthleteProfile = () => {
 
                     {/* Additional Stats */}
                     <div className="grid grid-cols-3 sm:grid-cols-6 gap-3">
-                      <div className="bg-gray-50 dark:bg-gray-700/50 rounded-lg p-3 text-center">
+                      <div className="bg-coach-inset/50 rounded-lg p-3 text-center">
                         <p className="font-semibold text-gray-900 dark:text-white">
                           {selectedActivity.total_elevation_gain || 0}m
                         </p>
                         <p className="text-xs text-gray-500">desnivel+</p>
                       </div>
-                      <div className="bg-gray-50 dark:bg-gray-700/50 rounded-lg p-3 text-center">
+                      <div className="bg-coach-inset/50 rounded-lg p-3 text-center">
                         <p className="font-semibold text-gray-900 dark:text-white">
                           {selectedActivity.max_heartrate || '-'}
                         </p>
                         <p className="text-xs text-gray-500">FC max</p>
                       </div>
-                      <div className="bg-gray-50 dark:bg-gray-700/50 rounded-lg p-3 text-center">
+                      <div className="bg-coach-inset/50 rounded-lg p-3 text-center">
                         <p className="font-semibold text-gray-900 dark:text-white">
                           {selectedActivity.calories || '-'}
                         </p>
                         <p className="text-xs text-gray-500">kcal</p>
                       </div>
-                      <div className="bg-gray-50 dark:bg-gray-700/50 rounded-lg p-3 text-center">
+                      <div className="bg-coach-inset/50 rounded-lg p-3 text-center">
                         <p className="font-semibold text-gray-900 dark:text-white">
                           {selectedActivity.suffer_score || '-'}
                         </p>
                         <p className="text-xs text-gray-500">esfuerzo</p>
                       </div>
-                      <div className="bg-gray-50 dark:bg-gray-700/50 rounded-lg p-3 text-center">
+                      <div className="bg-coach-inset/50 rounded-lg p-3 text-center">
                         <p className="font-semibold text-gray-900 dark:text-white">
                           {selectedActivity.kudos_count || 0}
                         </p>
                         <p className="text-xs text-gray-500">kudos</p>
                       </div>
-                      <div className="bg-gray-50 dark:bg-gray-700/50 rounded-lg p-3 text-center">
+                      <div className="bg-coach-inset/50 rounded-lg p-3 text-center">
                         <p className="font-semibold text-gray-900 dark:text-white">
                           {selectedActivity.achievement_count || 0}
                         </p>
@@ -1658,7 +1658,7 @@ const AthleteProfile = () => {
 
                     {/* Activity Map */}
                     {selectedActivity.polyline && (
-                      <div className="bg-gray-100 dark:bg-gray-700 rounded-xl p-4">
+                      <div className="bg-coach-elevated rounded-xl p-4">
                         <h3 className="font-semibold text-gray-900 dark:text-white mb-3 flex items-center">
                           <FiMapPin className="w-4 h-4 mr-2 text-orange-500" />
                           Recorrido
@@ -1680,7 +1680,7 @@ const AthleteProfile = () => {
                         <div className="overflow-x-auto">
                           <table className="w-full text-sm">
                             <thead>
-                              <tr className="bg-gray-50 dark:bg-gray-700">
+                              <tr className="bg-coach-inset">
                                 <th className="px-3 py-2 text-left text-gray-600 dark:text-gray-400">#</th>
                                 <th className="px-3 py-2 text-right text-gray-600 dark:text-gray-400">Distancia</th>
                                 <th className="px-3 py-2 text-right text-gray-600 dark:text-gray-400">Tiempo</th>
@@ -1689,7 +1689,7 @@ const AthleteProfile = () => {
                                 <th className="px-3 py-2 text-right text-gray-600 dark:text-gray-400">Cadencia</th>
                               </tr>
                             </thead>
-                            <tbody className="divide-y divide-gray-200 dark:divide-gray-700">
+                            <tbody className="divide-y divide-gray-200 dark:divide-coach-border">
                               {selectedActivity.laps.map((lap, index) => (
                                 <tr key={lap.id || index} className="hover:bg-gray-50 dark:hover:bg-gray-700/50">
                                   <td className="px-3 py-2 font-medium text-gray-900 dark:text-white">
@@ -1735,7 +1735,7 @@ const AthleteProfile = () => {
                                 className={`p-2 rounded-lg text-center ${
                                   isGoodPace
                                     ? 'bg-green-50 dark:bg-green-900/20'
-                                    : 'bg-gray-50 dark:bg-gray-700/50'
+                                    : 'bg-coach-inset/50'
                                 }`}
                               >
                                 <p className="text-xs text-gray-500 mb-1">km {index + 1}</p>
@@ -1765,7 +1765,7 @@ const AthleteProfile = () => {
                           {selectedActivity.segment_efforts.slice(0, 10).map((effort) => (
                             <div
                               key={effort.id}
-                              className="flex items-center justify-between p-3 bg-gray-50 dark:bg-gray-700/50 rounded-lg"
+                              className="flex items-center justify-between p-3 bg-coach-inset/50 rounded-lg"
                             >
                               <div className="flex-1">
                                 <p className="font-medium text-gray-900 dark:text-white text-sm">
@@ -1828,7 +1828,7 @@ const AthleteProfile = () => {
               </div>
 
               {/* Modal Footer */}
-              <div className="p-4 border-t border-gray-200 dark:border-gray-700">
+              <div className="p-4 border-t border-gray-200 dark:border-coach-border">
                 <button
                   onClick={() => setSelectedActivity(null)}
                   className="w-full px-4 py-2.5 bg-slate-900 hover:bg-slate-800 dark:bg-slate-700 dark:hover:bg-slate-600 text-white rounded-xl transition-colors text-sm font-medium"
@@ -1849,10 +1849,10 @@ const AthleteProfile = () => {
               initial={{ opacity: 0, scale: 0.95 }}
               animate={{ opacity: 1, scale: 1 }}
               exit={{ opacity: 0, scale: 0.95 }}
-              className="bg-white dark:bg-gray-800 rounded-2xl shadow-2xl w-full max-w-md overflow-hidden"
+              className="bg-coach-surface rounded-2xl shadow-2xl w-full max-w-md overflow-hidden"
             >
               {/* Modal Header */}
-              <div className="p-5 border-b border-gray-200 dark:border-gray-700 bg-gradient-to-r from-red-500 to-pink-500">
+              <div className="p-5 border-b border-gray-200 dark:border-coach-border bg-gradient-to-r from-red-500 to-pink-500">
                 <div className="flex items-center justify-between">
                   <h2 className="text-lg font-bold text-white flex items-center">
                     <FiFlag className="w-5 h-5 mr-2" />
@@ -1879,7 +1879,7 @@ const AthleteProfile = () => {
                     value={newEvent.name}
                     onChange={(e) => setNewEvent({ ...newEvent, name: e.target.value })}
                     placeholder="Ej: Media Maratón Valencia"
-                    className="w-full px-4 py-2.5 border border-gray-300 dark:border-gray-600 rounded-lg bg-white dark:bg-gray-700 text-gray-900 dark:text-white focus:ring-2 focus:ring-red-500 focus:border-transparent"
+                    className="w-full px-4 py-2.5 border border-gray-300 dark:border-coach-border rounded-lg bg-white dark:bg-coach-elevated text-gray-900 dark:text-white focus:ring-2 focus:ring-red-500 focus:border-transparent"
                   />
                 </div>
 
@@ -1892,7 +1892,7 @@ const AthleteProfile = () => {
                     type="date"
                     value={newEvent.date}
                     onChange={(e) => setNewEvent({ ...newEvent, date: e.target.value })}
-                    className="w-full px-4 py-2.5 border border-gray-300 dark:border-gray-600 rounded-lg bg-white dark:bg-gray-700 text-gray-900 dark:text-white focus:ring-2 focus:ring-red-500 focus:border-transparent"
+                    className="w-full px-4 py-2.5 border border-gray-300 dark:border-coach-border rounded-lg bg-white dark:bg-coach-elevated text-gray-900 dark:text-white focus:ring-2 focus:ring-red-500 focus:border-transparent"
                   />
                 </div>
 
@@ -1908,7 +1908,7 @@ const AthleteProfile = () => {
                       value={newEvent.distance}
                       onChange={(e) => setNewEvent({ ...newEvent, distance: e.target.value })}
                       placeholder="21.1"
-                      className="w-full px-4 py-2.5 border border-gray-300 dark:border-gray-600 rounded-lg bg-white dark:bg-gray-700 text-gray-900 dark:text-white focus:ring-2 focus:ring-red-500 focus:border-transparent"
+                      className="w-full px-4 py-2.5 border border-gray-300 dark:border-coach-border rounded-lg bg-white dark:bg-coach-elevated text-gray-900 dark:text-white focus:ring-2 focus:ring-red-500 focus:border-transparent"
                     />
                   </div>
                   <div>
@@ -1920,7 +1920,7 @@ const AthleteProfile = () => {
                       value={newEvent.location}
                       onChange={(e) => setNewEvent({ ...newEvent, location: e.target.value })}
                       placeholder="Valencia"
-                      className="w-full px-4 py-2.5 border border-gray-300 dark:border-gray-600 rounded-lg bg-white dark:bg-gray-700 text-gray-900 dark:text-white focus:ring-2 focus:ring-red-500 focus:border-transparent"
+                      className="w-full px-4 py-2.5 border border-gray-300 dark:border-coach-border rounded-lg bg-white dark:bg-coach-elevated text-gray-900 dark:text-white focus:ring-2 focus:ring-red-500 focus:border-transparent"
                     />
                   </div>
                 </div>
@@ -1935,16 +1935,16 @@ const AthleteProfile = () => {
                     onChange={(e) => setNewEvent({ ...newEvent, notes: e.target.value })}
                     placeholder="Objetivo, tiempo esperado, etc."
                     rows={2}
-                    className="w-full px-4 py-2.5 border border-gray-300 dark:border-gray-600 rounded-lg bg-white dark:bg-gray-700 text-gray-900 dark:text-white focus:ring-2 focus:ring-red-500 focus:border-transparent resize-none"
+                    className="w-full px-4 py-2.5 border border-gray-300 dark:border-coach-border rounded-lg bg-white dark:bg-coach-elevated text-gray-900 dark:text-white focus:ring-2 focus:ring-red-500 focus:border-transparent resize-none"
                   />
                 </div>
               </div>
 
               {/* Modal Footer */}
-              <div className="p-5 border-t border-gray-200 dark:border-gray-700 flex space-x-3">
+              <div className="p-5 border-t border-gray-200 dark:border-coach-border flex space-x-3">
                 <button
                   onClick={() => setShowEventModal(false)}
-                  className="flex-1 px-4 py-2.5 bg-gray-100 dark:bg-gray-700 text-gray-700 dark:text-gray-300 rounded-lg hover:bg-gray-200 dark:hover:bg-gray-600 transition-colors font-medium"
+                  className="flex-1 px-4 py-2.5 bg-coach-elevated text-gray-700 dark:text-gray-300 rounded-lg hover:bg-gray-200 dark:hover:bg-gray-600 transition-colors font-medium"
                 >
                   Cancelar
                 </button>
@@ -1976,7 +1976,7 @@ const AthleteProfile = () => {
               initial={{ opacity: 0, scale: 0.9 }}
               animate={{ opacity: 1, scale: 1 }}
               exit={{ opacity: 0, scale: 0.9 }}
-              className="bg-white dark:bg-gray-800 rounded-2xl shadow-2xl w-full max-w-sm overflow-hidden"
+              className="bg-coach-surface rounded-2xl shadow-2xl w-full max-w-sm overflow-hidden"
             >
               <div className="bg-gradient-to-r from-[#FC4C02] to-[#E34402] p-4 text-white relative">
                 <button
@@ -1999,7 +1999,7 @@ const AthleteProfile = () => {
                   {activitiesRPE[String(rpeDetailActivity.id)].score}/5
                 </p>
                 {activitiesRPE[String(rpeDetailActivity.id)].notes && (
-                  <div className="mt-4 p-3 bg-gray-50 dark:bg-gray-700/50 rounded-xl text-left">
+                  <div className="mt-4 p-3 bg-coach-inset/50 rounded-xl text-left">
                     <p className="text-xs font-medium text-gray-500 dark:text-gray-400 mb-1">Sensaciones del atleta:</p>
                     <p className="text-sm text-gray-800 dark:text-gray-200">
                       {activitiesRPE[String(rpeDetailActivity.id)].notes}
@@ -2008,7 +2008,7 @@ const AthleteProfile = () => {
                 )}
                 <button
                   onClick={() => setRpeDetailActivity(null)}
-                  className="mt-4 px-6 py-2 bg-gray-100 dark:bg-gray-700 text-gray-700 dark:text-gray-300 rounded-lg hover:bg-gray-200 dark:hover:bg-gray-600 transition-colors text-sm"
+                  className="mt-4 px-6 py-2 bg-coach-elevated text-gray-700 dark:text-gray-300 rounded-lg hover:bg-gray-200 dark:hover:bg-gray-600 transition-colors text-sm"
                 >
                   Cerrar
                 </button>
@@ -2098,12 +2098,12 @@ const AthleteProfile = () => {
               animate={{ opacity: 1, y: 0, scale: 1 }}
               exit={{ opacity: 0, y: 10, scale: 0.97 }}
               onClick={(e) => e.stopPropagation()}
-              className="bg-white dark:bg-gray-800 rounded-2xl shadow-2xl w-full max-w-lg overflow-hidden"
+              className="bg-coach-surface rounded-2xl shadow-2xl w-full max-w-lg overflow-hidden"
             >
               {/* Header */}
               <div className={`px-5 py-4 flex items-start justify-between gap-3 ${
                 selectedTraining.status === 'completed' ? 'bg-green-50 dark:bg-green-900/20' :
-                selectedTraining.status === 'skipped' ? 'bg-gray-50 dark:bg-gray-700/40' :
+                selectedTraining.status === 'skipped' ? 'bg-coach-inset/40' :
                 'bg-blue-50 dark:bg-blue-900/20'
               }`}>
                 <div className="flex items-center gap-3 min-w-0">
@@ -2139,7 +2139,7 @@ const AthleteProfile = () => {
                   {selectedTraining.status && (
                     <span className={`px-2.5 py-1 rounded-full text-xs font-medium ${
                       selectedTraining.status === 'completed' ? 'bg-green-100 text-green-700 dark:bg-green-900/30 dark:text-green-300' :
-                      selectedTraining.status === 'skipped' ? 'bg-gray-100 text-gray-600 dark:bg-gray-700 dark:text-gray-400' :
+                      selectedTraining.status === 'skipped' ? 'bg-gray-100 text-gray-600 dark:bg-coach-elevated dark:text-gray-400' :
                       'bg-yellow-100 text-yellow-700 dark:bg-yellow-900/30 dark:text-yellow-300'
                     }`}>
                       {selectedTraining.status === 'completed' ? 'Completado' :
@@ -2196,7 +2196,7 @@ const AthleteProfile = () => {
                     </p>
                     <div className="space-y-1.5">
                       {selectedTraining.exercises.map((ex, i) => (
-                        <div key={i} className="flex items-start gap-2 text-sm text-slate-700 dark:text-slate-300 px-3 py-2 bg-gray-50 dark:bg-gray-700/40 rounded-lg">
+                        <div key={i} className="flex items-start gap-2 text-sm text-slate-700 dark:text-slate-300 px-3 py-2 bg-coach-inset/40 rounded-lg">
                           <span className="w-5 h-5 rounded-full bg-slate-200 dark:bg-slate-600 text-slate-600 dark:text-slate-300 text-xs font-bold flex items-center justify-center flex-shrink-0 mt-0.5">{i + 1}</span>
                           <div className="min-w-0">
                             <p className="font-medium">{ex.exercise_name || ex.name}</p>
@@ -2215,7 +2215,7 @@ const AthleteProfile = () => {
               </div>
 
               {/* Footer */}
-              <div className="px-5 py-4 border-t border-gray-200 dark:border-gray-700 flex justify-end">
+              <div className="px-5 py-4 border-t border-gray-200 dark:border-coach-border flex justify-end">
                 <button
                   onClick={() => setSelectedTraining(null)}
                   className="px-5 py-2 bg-slate-900 hover:bg-slate-800 dark:bg-slate-700 dark:hover:bg-slate-600 text-white text-sm font-medium rounded-xl transition-colors"

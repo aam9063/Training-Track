@@ -28,12 +28,12 @@ const MobileHeader = () => {
   };
 
   return (
-    <header className="lg:hidden fixed top-0 left-0 right-0 z-30 bg-white dark:bg-gray-800 border-b border-[#E2E8F0] dark:border-gray-700 px-5 py-3 flex items-center justify-between">
+    <header className="lg:hidden fixed top-0 left-0 right-0 z-30 bg-coach-surface border-b border-[#E2E8F0] dark:border-coach-border px-5 py-3 flex items-center justify-between">
       {/* Logo */}
       <button onClick={() => navigate('/dashboard')} className="flex items-center gap-2">
         <img src="/img/logo.png" alt="TrainingTrack" className="h-8 w-auto" />
         <span className="text-xl font-bold tracking-tight text-slate-900 dark:text-white">
-          Training<span style={{ color: '#1A6BFF' }}>Track</span>
+          Training<span className="text-blue-500">Track</span>
         </span>
       </button>
 
@@ -45,11 +45,10 @@ const MobileHeader = () => {
         <div className="relative" ref={menuRef}>
           <button
             onClick={() => setShowUserMenu(v => !v)}
-            className="w-[38px] h-[38px] rounded-full flex items-center justify-center text-white text-sm font-semibold overflow-hidden flex-shrink-0"
-            style={{ background: 'linear-gradient(135deg, #1A6BFF, #5B9BFF)' }}
+            className="w-[38px] h-[38px] rounded-full flex items-center justify-center text-white text-sm font-semibold overflow-hidden flex-shrink-0 bg-gradient-to-br from-blue-500 to-blue-400"
           >
             {profile?.profile_image
-              ? <img src={profile.profile_image} alt="" className="w-full h-full object-cover" />
+              ? <img src={profile.profile_image} alt="Perfil" className="w-full h-full object-cover" />
               : initials
             }
           </button>
@@ -63,10 +62,10 @@ const MobileHeader = () => {
                   animate={{ opacity: 1, scale: 1, y: 0 }}
                   exit={{ opacity: 0, scale: 0.95, y: -4 }}
                   transition={{ duration: 0.15 }}
-                  className="absolute right-0 top-11 w-52 bg-white dark:bg-gray-800 rounded-xl shadow-lg border border-[#E2E8F0] dark:border-gray-700 py-1.5 z-50 overflow-hidden"
+                  className="absolute right-0 top-11 w-52 bg-coach-surface rounded-xl shadow-lg border border-[#E2E8F0] dark:border-coach-border py-1.5 z-50 overflow-hidden"
                 >
                   {/* User info */}
-                  <div className="px-4 py-2.5 border-b border-[#E2E8F0] dark:border-gray-700">
+                  <div className="px-4 py-2.5 border-b border-[#E2E8F0] dark:border-coach-border">
                     <p className="text-sm font-semibold text-slate-900 dark:text-white truncate">
                       {displayName} {displayLastName}
                     </p>
@@ -87,7 +86,7 @@ const MobileHeader = () => {
                   </button>
 
                   {/* Dark mode toggle */}
-                  <div className="border-t border-[#E2E8F0] dark:border-gray-700 my-1" />
+                  <div className="border-t border-[#E2E8F0] dark:border-coach-border my-1" />
                   <button
                     onClick={toggleTheme}
                     className="w-full flex items-center justify-between px-4 py-2.5 text-sm text-slate-700 dark:text-slate-300 hover:bg-slate-50 dark:hover:bg-gray-700 transition-colors"
@@ -105,7 +104,7 @@ const MobileHeader = () => {
                     </div>
                   </button>
 
-                  <div className="border-t border-[#E2E8F0] dark:border-gray-700 my-1" />
+                  <div className="border-t border-[#E2E8F0] dark:border-coach-border my-1" />
                   <button
                     onClick={handleSignOut}
                     className="w-full flex items-center gap-2.5 px-4 py-2.5 text-sm text-red-600 dark:text-red-400 hover:bg-red-50 dark:hover:bg-red-900/20 transition-colors"

@@ -123,7 +123,7 @@ const ConconiTestModal = ({ isOpen, onClose, athlete, coachId, onSuccess }) => {
 
   // Pace code badge color
   const getPaceColor = (code) => {
-    if (code === 'RR') return 'bg-gray-100 text-gray-700 dark:bg-gray-700 dark:text-gray-300';
+    if (code === 'RR') return 'bg-gray-100 text-gray-700 dark:bg-coach-elevated dark:text-gray-300';
     const num = parseInt(code.replace('R', ''));
     if (num <= 3) return 'bg-blue-100 text-blue-700 dark:bg-blue-900/30 dark:text-blue-400';
     if (num <= 6) return 'bg-yellow-100 text-yellow-700 dark:bg-yellow-900/30 dark:text-yellow-400';
@@ -140,10 +140,10 @@ const ConconiTestModal = ({ isOpen, onClose, athlete, coachId, onSuccess }) => {
           initial={{ opacity: 0, scale: 0.95 }}
           animate={{ opacity: 1, scale: 1 }}
           exit={{ opacity: 0, scale: 0.95 }}
-          className="bg-white dark:bg-gray-800 rounded-2xl shadow-2xl w-full max-w-2xl max-h-[90vh] overflow-hidden flex flex-col"
+          className="bg-coach-surface rounded-2xl shadow-2xl w-full max-w-2xl max-h-[90vh] overflow-hidden flex flex-col"
         >
           {/* Header */}
-          <div className="flex items-center justify-between p-4 sm:p-5 border-b border-gray-200 dark:border-gray-700 bg-gradient-to-r from-amber-500 to-orange-500">
+          <div className="flex items-center justify-between p-4 sm:p-5 border-b border-gray-200 dark:border-coach-border bg-gradient-to-r from-amber-500 to-orange-500">
             <div>
               <h2 className="text-lg sm:text-xl font-bold text-white">Test de Conconi</h2>
               <p className="text-amber-100 text-sm">{athleteName}</p>
@@ -188,7 +188,7 @@ const ConconiTestModal = ({ isOpen, onClose, athlete, coachId, onSuccess }) => {
                         className={`px-3 py-1.5 text-sm rounded-lg border transition-colors ${
                           seriesDistance === d
                             ? 'bg-amber-500 border-amber-500 text-white font-medium'
-                            : 'border-gray-300 dark:border-gray-600 text-gray-600 dark:text-gray-400 hover:border-amber-400'
+                            : 'border-gray-300 dark:border-coach-border text-gray-600 dark:text-gray-400 hover:border-amber-400'
                         }`}
                       >
                         {d}m
@@ -209,7 +209,7 @@ const ConconiTestModal = ({ isOpen, onClose, athlete, coachId, onSuccess }) => {
                   className={`border-2 border-dashed rounded-xl p-8 sm:p-12 text-center cursor-pointer transition-all ${
                     dragOver
                       ? 'border-amber-500 bg-amber-50 dark:bg-amber-900/10'
-                      : 'border-gray-300 dark:border-gray-600 hover:border-amber-400 hover:bg-gray-50 dark:hover:bg-gray-700/50'
+                      : 'border-gray-300 dark:border-coach-border hover:border-amber-400 hover:bg-gray-50 dark:hover:bg-gray-700/50'
                   }`}
                 >
                   <FiUpload
@@ -237,7 +237,7 @@ const ConconiTestModal = ({ isOpen, onClose, athlete, coachId, onSuccess }) => {
                 </div>
 
                 {/* Format hint */}
-                <div className="mt-4 p-3 bg-gray-50 dark:bg-gray-700/50 rounded-lg">
+                <div className="mt-4 p-3 bg-coach-inset/50 rounded-lg">
                   <p className="text-xs font-medium text-gray-600 dark:text-gray-400 mb-2">
                     Formato del Excel (series en columnas):
                   </p>
@@ -245,25 +245,25 @@ const ConconiTestModal = ({ isOpen, onClose, athlete, coachId, onSuccess }) => {
                     <table className="text-[10px] text-gray-500 dark:text-gray-400 border-collapse">
                       <tbody>
                         <tr>
-                          <td className="border border-gray-200 dark:border-gray-600 px-2 py-0.5 font-medium">1.000m</td>
-                          <td className="border border-gray-200 dark:border-gray-600 px-2 py-0.5">2:30</td>
-                          <td className="border border-gray-200 dark:border-gray-600 px-2 py-0.5">2:40</td>
-                          <td className="border border-gray-200 dark:border-gray-600 px-2 py-0.5">2:50</td>
-                          <td className="border border-gray-200 dark:border-gray-600 px-2 py-0.5 text-gray-400">...</td>
+                          <td className="border border-gray-200 dark:border-coach-border px-2 py-0.5 font-medium">1.000m</td>
+                          <td className="border border-gray-200 dark:border-coach-border px-2 py-0.5">2:30</td>
+                          <td className="border border-gray-200 dark:border-coach-border px-2 py-0.5">2:40</td>
+                          <td className="border border-gray-200 dark:border-coach-border px-2 py-0.5">2:50</td>
+                          <td className="border border-gray-200 dark:border-coach-border px-2 py-0.5 text-coach-text-muted">...</td>
                         </tr>
                         <tr>
-                          <td className="border border-gray-200 dark:border-gray-600 px-2 py-0.5 font-medium">Pulso</td>
-                          <td className="border border-gray-200 dark:border-gray-600 px-2 py-0.5">148</td>
-                          <td className="border border-gray-200 dark:border-gray-600 px-2 py-0.5">155</td>
-                          <td className="border border-gray-200 dark:border-gray-600 px-2 py-0.5">163</td>
-                          <td className="border border-gray-200 dark:border-gray-600 px-2 py-0.5 text-gray-400">...</td>
+                          <td className="border border-gray-200 dark:border-coach-border px-2 py-0.5 font-medium">Pulso</td>
+                          <td className="border border-gray-200 dark:border-coach-border px-2 py-0.5">148</td>
+                          <td className="border border-gray-200 dark:border-coach-border px-2 py-0.5">155</td>
+                          <td className="border border-gray-200 dark:border-coach-border px-2 py-0.5">163</td>
+                          <td className="border border-gray-200 dark:border-coach-border px-2 py-0.5 text-coach-text-muted">...</td>
                         </tr>
                         <tr>
-                          <td className="border border-gray-200 dark:border-gray-600 px-2 py-0.5 font-medium">r: 120p</td>
-                          <td className="border border-gray-200 dark:border-gray-600 px-2 py-0.5">1'20"</td>
-                          <td className="border border-gray-200 dark:border-gray-600 px-2 py-0.5">1'35"</td>
-                          <td className="border border-gray-200 dark:border-gray-600 px-2 py-0.5">1'50"</td>
-                          <td className="border border-gray-200 dark:border-gray-600 px-2 py-0.5 text-gray-400">...</td>
+                          <td className="border border-gray-200 dark:border-coach-border px-2 py-0.5 font-medium">r: 120p</td>
+                          <td className="border border-gray-200 dark:border-coach-border px-2 py-0.5">1'20"</td>
+                          <td className="border border-gray-200 dark:border-coach-border px-2 py-0.5">1'35"</td>
+                          <td className="border border-gray-200 dark:border-coach-border px-2 py-0.5">1'50"</td>
+                          <td className="border border-gray-200 dark:border-coach-border px-2 py-0.5 text-coach-text-muted">...</td>
                         </tr>
                       </tbody>
                     </table>
@@ -296,7 +296,7 @@ const ConconiTestModal = ({ isOpen, onClose, athlete, coachId, onSuccess }) => {
                       type="date"
                       value={testMeta.test_date}
                       onChange={(e) => setTestMeta({ ...testMeta, test_date: e.target.value })}
-                      className="w-full px-3 py-2 text-sm rounded-lg border border-gray-300 dark:border-gray-600 bg-white dark:bg-gray-700 text-gray-900 dark:text-white focus:ring-2 focus:ring-amber-500 focus:border-transparent"
+                      className="w-full px-3 py-2 text-sm rounded-lg border border-gray-300 dark:border-coach-border bg-white dark:bg-coach-elevated text-gray-900 dark:text-white focus:ring-2 focus:ring-amber-500 focus:border-transparent"
                     />
                   </div>
                   <div>
@@ -308,7 +308,7 @@ const ConconiTestModal = ({ isOpen, onClose, athlete, coachId, onSuccess }) => {
                       value={testMeta.location}
                       onChange={(e) => setTestMeta({ ...testMeta, location: e.target.value })}
                       placeholder="Pista de atletismo..."
-                      className="w-full px-3 py-2 text-sm rounded-lg border border-gray-300 dark:border-gray-600 bg-white dark:bg-gray-700 text-gray-900 dark:text-white placeholder-gray-400 focus:ring-2 focus:ring-amber-500 focus:border-transparent"
+                      className="w-full px-3 py-2 text-sm rounded-lg border border-gray-300 dark:border-coach-border bg-white dark:bg-coach-elevated text-gray-900 dark:text-white placeholder-gray-400 focus:ring-2 focus:ring-amber-500 focus:border-transparent"
                     />
                   </div>
                   <div>
@@ -322,7 +322,7 @@ const ConconiTestModal = ({ isOpen, onClose, athlete, coachId, onSuccess }) => {
                         setTestMeta({ ...testMeta, weather_conditions: e.target.value })
                       }
                       placeholder="18°C, sin viento..."
-                      className="w-full px-3 py-2 text-sm rounded-lg border border-gray-300 dark:border-gray-600 bg-white dark:bg-gray-700 text-gray-900 dark:text-white placeholder-gray-400 focus:ring-2 focus:ring-amber-500 focus:border-transparent"
+                      className="w-full px-3 py-2 text-sm rounded-lg border border-gray-300 dark:border-coach-border bg-white dark:bg-coach-elevated text-gray-900 dark:text-white placeholder-gray-400 focus:ring-2 focus:ring-amber-500 focus:border-transparent"
                     />
                   </div>
                   <div>
@@ -334,15 +334,15 @@ const ConconiTestModal = ({ isOpen, onClose, athlete, coachId, onSuccess }) => {
                       value={testMeta.notes}
                       onChange={(e) => setTestMeta({ ...testMeta, notes: e.target.value })}
                       placeholder="Observaciones..."
-                      className="w-full px-3 py-2 text-sm rounded-lg border border-gray-300 dark:border-gray-600 bg-white dark:bg-gray-700 text-gray-900 dark:text-white placeholder-gray-400 focus:ring-2 focus:ring-amber-500 focus:border-transparent"
+                      className="w-full px-3 py-2 text-sm rounded-lg border border-gray-300 dark:border-coach-border bg-white dark:bg-coach-elevated text-gray-900 dark:text-white placeholder-gray-400 focus:ring-2 focus:ring-amber-500 focus:border-transparent"
                     />
                   </div>
                 </div>
 
                 {/* Series table */}
-                <div className="overflow-x-auto rounded-lg border border-gray-200 dark:border-gray-700">
+                <div className="overflow-x-auto rounded-lg border border-gray-200 dark:border-coach-border">
                   <table className="w-full text-sm">
-                    <thead className="bg-gray-50 dark:bg-gray-700/50">
+                    <thead className="bg-coach-inset/50">
                       <tr>
                         <th className="px-3 py-2 text-left text-xs font-medium text-gray-500 dark:text-gray-400">
                           #
@@ -361,7 +361,7 @@ const ConconiTestModal = ({ isOpen, onClose, athlete, coachId, onSuccess }) => {
                         </th>
                       </tr>
                     </thead>
-                    <tbody className="divide-y divide-gray-200 dark:divide-gray-700">
+                    <tbody className="divide-y divide-gray-200 dark:divide-coach-border">
                       {parsedSeries.map((s) => (
                         <tr
                           key={s.series_number}
@@ -426,9 +426,9 @@ const ConconiTestModal = ({ isOpen, onClose, athlete, coachId, onSuccess }) => {
                 </div>
 
                 {/* Paces table */}
-                <div className="overflow-x-auto rounded-lg border border-gray-200 dark:border-gray-700">
+                <div className="overflow-x-auto rounded-lg border border-gray-200 dark:border-coach-border">
                   <table className="w-full text-sm">
-                    <thead className="bg-gray-50 dark:bg-gray-700/50">
+                    <thead className="bg-coach-inset/50">
                       <tr>
                         <th className="px-3 py-2 text-left text-xs font-medium text-gray-500 dark:text-gray-400">
                           Ritmo
@@ -444,7 +444,7 @@ const ConconiTestModal = ({ isOpen, onClose, athlete, coachId, onSuccess }) => {
                         </th>
                       </tr>
                     </thead>
-                    <tbody className="divide-y divide-gray-200 dark:divide-gray-700">
+                    <tbody className="divide-y divide-gray-200 dark:divide-coach-border">
                       {calculatedPaces.map((pace) => (
                         <tr
                           key={pace.pace_code}
@@ -478,7 +478,7 @@ const ConconiTestModal = ({ isOpen, onClose, athlete, coachId, onSuccess }) => {
           </div>
 
           {/* Footer */}
-          <div className="flex items-center justify-between p-4 sm:p-5 border-t border-gray-200 dark:border-gray-700 bg-gray-50 dark:bg-gray-800/50">
+          <div className="flex items-center justify-between p-4 sm:p-5 border-t border-gray-200 dark:border-coach-border bg-gray-50 dark:bg-coach-surface/50">
             {step === 'upload' && (
               <button
                 onClick={handleClose}

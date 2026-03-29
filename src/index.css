@@ -41,6 +41,39 @@
   --ath-on-accent: #FFFFFF;
 }
 
+/* ── Coach theme tokens ── */
+:root {
+  --coach-bg-base: #F4F6FA;
+  --coach-bg-surface: #FFFFFF;
+  --coach-bg-elevated: #FFFFFF;
+  --coach-bg-inset: #F3F4F6;
+  --coach-text-primary: #0F172A;
+  --coach-text-secondary: #475569;
+  --coach-text-muted: #94A3B8;
+  --coach-accent: #1A6BFF;
+  --coach-accent-hover: #1558D4;
+  --coach-accent-light: #5B9BFF;
+  --coach-accent-surface: #E8F0FF;
+  --coach-border: #E2E8F0;
+  --coach-on-accent: #FFFFFF;
+}
+
+.dark {
+  --coach-bg-base: #0A0A0A;
+  --coach-bg-surface: #141414;
+  --coach-bg-elevated: #242424;
+  --coach-bg-inset: #1A1A1A;
+  --coach-text-primary: #F1F5F9;
+  --coach-text-secondary: #94A3B8;
+  --coach-text-muted: #64748B;
+  --coach-accent: #5B9BFF;
+  --coach-accent-hover: #4A8AEE;
+  --coach-accent-light: #7CB3FF;
+  --coach-accent-surface: #1A2744;
+  --coach-border: #2A2A2A;
+  --coach-on-accent: #FFFFFF;
+}
+
 @layer base {
   * {
     @apply scroll-smooth;

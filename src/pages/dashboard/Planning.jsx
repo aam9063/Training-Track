@@ -62,7 +62,7 @@ const PHASE_COLORS = {
   taper: 'bg-green-100 text-green-700 dark:bg-green-900/30 dark:text-green-400',
   recovery: 'bg-emerald-100 text-emerald-700 dark:bg-emerald-900/30 dark:text-emerald-400',
   competition: 'bg-purple-100 text-purple-700 dark:bg-purple-900/30 dark:text-purple-400',
-  transition: 'bg-gray-100 text-gray-700 dark:bg-gray-900/30 dark:text-gray-400',
+  transition: 'bg-gray-100 text-gray-700 dark:bg-coach-base/30 dark:text-gray-400',
 };
 
 const WEEK_TYPES = {
@@ -122,7 +122,7 @@ const AvatarStack = ({ count }) => {
         </div>
       ))}
       {count > 3 && (
-        <div className="w-6 h-6 rounded-full border-2 border-white dark:border-gray-800 bg-gray-200 dark:bg-gray-600 flex items-center justify-center">
+        <div className="w-6 h-6 rounded-full border-2 border-white dark:border-gray-800 bg-gray-200 dark:bg-coach-inset flex items-center justify-center">
           <span className="text-gray-600 dark:text-gray-300 text-[9px] font-bold">+{count - 3}</span>
         </div>
       )}
@@ -458,7 +458,7 @@ const Planning = () => {
               className={`flex items-center gap-1.5 px-4 py-1.5 rounded-full text-sm font-medium transition-colors ${
                 planningTab === key
                   ? 'bg-gray-900 dark:bg-white text-white dark:text-gray-900'
-                  : 'bg-white dark:bg-gray-800 border border-gray-200 dark:border-gray-700 text-gray-600 dark:text-gray-400 hover:border-gray-300'
+                  : 'bg-coach-surface border border-gray-200 dark:border-coach-border text-gray-600 dark:text-gray-400 hover:border-gray-300'
               }`}
             >
               <Icon className="w-3.5 h-3.5" />
@@ -471,7 +471,7 @@ const Planning = () => {
         {planningTab === 'gym' && (
           <div className="space-y-4">
             {/* Upload form */}
-            <div className="bg-white dark:bg-gray-800 rounded-2xl border border-gray-200 dark:border-gray-700 p-4 sm:p-5">
+            <div className="bg-coach-surface rounded-2xl border border-gray-200 dark:border-coach-border p-4 sm:p-5">
               <div className="flex items-center gap-2 mb-4">
                 <FiUpload className="w-4 h-4 text-blue-500" />
                 <h3 className="text-sm font-bold text-slate-900 dark:text-white">Subir PDF de Gym</h3>
@@ -486,7 +486,7 @@ const Planning = () => {
                     value={gymForm.name}
                     onChange={e => setGymForm(f => ({ ...f, name: e.target.value }))}
                     placeholder="Ej: Plan Fuerza Semana 1"
-                    className="w-full px-3 py-2 text-sm rounded-xl border border-gray-200 dark:border-gray-600 bg-white dark:bg-gray-700 text-slate-900 dark:text-white placeholder-slate-400 focus:outline-none focus:ring-2 focus:ring-blue-500"
+                    className="w-full px-3 py-2 text-sm rounded-xl border border-gray-200 dark:border-coach-border bg-white dark:bg-coach-elevated text-slate-900 dark:text-white placeholder-slate-400 focus:outline-none focus:ring-2 focus:ring-blue-500"
                   />
                 </div>
                 <div>
@@ -532,7 +532,7 @@ const Planning = () => {
               </div>
             ) : gymFiles.length === 0 ? (
               <div className="flex flex-col items-center text-center py-10 px-4">
-                <div className="w-16 h-16 rounded-full bg-gray-100 dark:bg-gray-700/50 flex items-center justify-center mb-3">
+                <div className="w-16 h-16 rounded-full bg-coach-elevated/50 flex items-center justify-center mb-3">
                   <FiFileText className="w-7 h-7 text-gray-400" />
                 </div>
                 <p className="text-sm font-medium text-slate-700 dark:text-slate-300 mb-1">Sin archivos todavía</p>
@@ -549,7 +549,7 @@ const Planning = () => {
                     : 'bg-green-100 text-green-600 dark:bg-green-900/30 dark:text-green-400';
 
                   return (
-                    <div key={file.id} className="bg-white dark:bg-gray-800 rounded-xl border border-gray-200 dark:border-gray-700 p-3 flex items-center gap-3">
+                    <div key={file.id} className="bg-coach-surface rounded-xl border border-gray-200 dark:border-coach-border p-3 flex items-center gap-3">
                       <div className="w-9 h-9 rounded-lg bg-red-50 dark:bg-red-900/20 flex items-center justify-center flex-shrink-0">
                         <FiFileText className="w-4 h-4 text-red-500" />
                       </div>
@@ -587,7 +587,7 @@ const Planning = () => {
                             </button>
                             <button
                               onClick={() => setGymDeleteConfirm(null)}
-                              className="px-2 py-1 text-[10px] font-semibold bg-gray-200 dark:bg-gray-600 text-gray-700 dark:text-gray-300 rounded-lg hover:bg-gray-300 transition-colors"
+                              className="px-2 py-1 text-[10px] font-semibold bg-gray-200 dark:bg-coach-inset text-gray-700 dark:text-gray-300 rounded-lg hover:bg-gray-300 transition-colors"
                             >
                               No
                             </button>
@@ -623,7 +623,7 @@ const Planning = () => {
           >
             {/* Illustration */}
             <div className="w-32 h-32 rounded-full bg-blue-50 dark:bg-blue-900/20 flex items-center justify-center mb-6 relative">
-              <div className="w-20 h-20 rounded-2xl bg-white dark:bg-gray-700 shadow-md flex items-center justify-center">
+              <div className="w-20 h-20 rounded-2xl bg-white dark:bg-coach-elevated shadow-md flex items-center justify-center">
                 <FiClipboard className="w-9 h-9 text-blue-400" />
               </div>
               <div className="absolute bottom-1 right-1 w-8 h-8 rounded-full bg-blue-600 flex items-center justify-center shadow">
@@ -653,7 +653,7 @@ const Planning = () => {
                 { icon: FiStar, color: 'text-green-500', bg: 'bg-green-50 dark:bg-green-900/20', text: 'Asigna una competición objetivo y TrainingTrack calcula el progreso' },
                 { icon: FiZap, color: 'text-purple-500', bg: 'bg-purple-50 dark:bg-purple-900/20', text: 'Usa IA para generar sesiones automáticamente según el nivel del atleta (próximamente)' },
               ].map(({ icon: Icon, color, bg, text }) => (
-                <div key={text} className="flex items-start gap-3 p-3 bg-white dark:bg-gray-800 rounded-xl border border-gray-100 dark:border-gray-700 text-left">
+                <div key={text} className="flex items-start gap-3 p-3 bg-coach-surface rounded-xl border border-gray-100 dark:border-coach-border text-left">
                   <div className={`w-8 h-8 rounded-lg ${bg} flex items-center justify-center flex-shrink-0`}>
                     <Icon className={`w-4 h-4 ${color}`} />
                   </div>
@@ -677,7 +677,7 @@ const Planning = () => {
                   className={`px-4 py-1.5 rounded-full text-sm font-medium whitespace-nowrap transition-colors ${
                     activeFilter === f.key
                       ? 'bg-gray-900 dark:bg-white text-white dark:text-gray-900'
-                      : 'bg-white dark:bg-gray-800 border border-gray-200 dark:border-gray-700 text-gray-600 dark:text-gray-400 hover:border-gray-300'
+                      : 'bg-coach-surface border border-gray-200 dark:border-coach-border text-gray-600 dark:text-gray-400 hover:border-gray-300'
                   }`}
                 >
                   {f.label}
@@ -700,7 +700,7 @@ const Planning = () => {
                     initial={{ opacity: 0, y: 12 }}
                     animate={{ opacity: 1, y: 0 }}
                     transition={{ delay: i * 0.04 }}
-                    className="bg-white dark:bg-gray-800 rounded-2xl border border-gray-100 dark:border-gray-700 p-4 sm:p-5 cursor-pointer hover:shadow-md transition-shadow group"
+                    className="bg-coach-surface rounded-2xl border border-gray-100 dark:border-coach-border p-4 sm:p-5 cursor-pointer hover:shadow-md transition-shadow group"
                     onClick={() => selectPlan(plan.id)}
                   >
                     {/* Top row */}
@@ -753,7 +753,7 @@ const Planning = () => {
                           <span className="text-xs text-gray-500 dark:text-gray-400">Progreso del plan</span>
                           <span className="text-xs font-semibold text-blue-600 dark:text-blue-400">{progress}%</span>
                         </div>
-                        <div className="h-1.5 bg-gray-100 dark:bg-gray-700 rounded-full overflow-hidden">
+                        <div className="h-1.5 bg-coach-elevated rounded-full overflow-hidden">
                           <div
                             className="h-full bg-blue-500 rounded-full transition-all duration-500"
                             style={{ width: `${progress}%` }}
@@ -802,7 +802,7 @@ const Planning = () => {
                 initial={{ opacity: 0, scale: 0.95 }}
                 animate={{ opacity: 1, scale: 1 }}
                 exit={{ opacity: 0, scale: 0.95 }}
-                className="bg-white dark:bg-gray-800 rounded-2xl shadow-xl max-w-lg w-full p-6"
+                className="bg-coach-surface rounded-2xl shadow-xl max-w-lg w-full p-6"
                 onClick={e => e.stopPropagation()}
               >
                 <h2 className="text-xl font-bold text-gray-900 dark:text-white mb-6">
@@ -816,11 +816,11 @@ const Planning = () => {
                     <span className="text-sm font-semibold text-gray-900 dark:text-white">Personalizado</span>
                     <span className="text-xs text-gray-500 dark:text-gray-400 text-center">Crea tu propio plan</span>
                   </div>
-                  <div className="flex flex-col items-center gap-2 p-4 border-2 border-gray-200 dark:border-gray-700 rounded-xl opacity-50 cursor-not-allowed relative">
+                  <div className="flex flex-col items-center gap-2 p-4 border-2 border-gray-200 dark:border-coach-border rounded-xl opacity-50 cursor-not-allowed relative">
                     <FiLock className="w-6 h-6 text-gray-400" />
                     <span className="text-sm font-semibold text-gray-500 dark:text-gray-400">Predeterminado</span>
                     <span className="text-xs text-gray-400">Planes estándar</span>
-                    <span className="absolute top-2 right-2 px-1.5 py-0.5 bg-gray-200 dark:bg-gray-600 text-gray-500 dark:text-gray-400 rounded text-[10px] font-medium">
+                    <span className="absolute top-2 right-2 px-1.5 py-0.5 bg-gray-200 dark:bg-coach-inset text-gray-500 dark:text-gray-400 rounded text-[10px] font-medium">
                       Próximamente
                     </span>
                   </div>
@@ -837,7 +837,7 @@ const Planning = () => {
                       value={newPlanForm.name}
                       onChange={e => setNewPlanForm(prev => ({ ...prev, name: e.target.value }))}
                       placeholder="Ej: Preparación Media Maratón"
-                      className="w-full px-3 py-2.5 bg-gray-50 dark:bg-gray-700 border border-gray-200 dark:border-gray-600 rounded-xl text-gray-900 dark:text-white text-sm focus:ring-2 focus:ring-blue-500 focus:border-transparent outline-none"
+                      className="w-full px-3 py-2.5 bg-coach-inset border border-gray-200 dark:border-coach-border rounded-xl text-gray-900 dark:text-white text-sm focus:ring-2 focus:ring-blue-500 focus:border-transparent outline-none"
                       style={{ fontSize: '16px' }}
                       onKeyDown={e => e.key === 'Enter' && handleCreatePlan()}
                     />
@@ -851,7 +851,7 @@ const Planning = () => {
                       onChange={e => setNewPlanForm(prev => ({ ...prev, description: e.target.value }))}
                       placeholder="Descripción opcional del plan..."
                       rows={2}
-                      className="w-full px-3 py-2.5 bg-gray-50 dark:bg-gray-700 border border-gray-200 dark:border-gray-600 rounded-xl text-gray-900 dark:text-white text-sm focus:ring-2 focus:ring-blue-500 focus:border-transparent outline-none resize-none"
+                      className="w-full px-3 py-2.5 bg-coach-inset border border-gray-200 dark:border-coach-border rounded-xl text-gray-900 dark:text-white text-sm focus:ring-2 focus:ring-blue-500 focus:border-transparent outline-none resize-none"
                       style={{ fontSize: '16px' }}
                     />
                   </div>
@@ -873,7 +873,7 @@ const Planning = () => {
                               ? opt.value === 'pista'
                                 ? 'border-amber-400 bg-amber-50 dark:bg-amber-900/20 dark:border-amber-600'
                                 : 'border-blue-400 bg-blue-50 dark:bg-blue-900/20 dark:border-blue-600'
-                              : 'border-gray-200 dark:border-gray-600 hover:border-gray-300'
+                              : 'border-gray-200 dark:border-coach-border hover:border-gray-300'
                           }`}
                         >
                           <span className="text-sm font-medium text-gray-900 dark:text-white">{opt.label}</span>
@@ -915,7 +915,7 @@ const Planning = () => {
                 initial={{ opacity: 0, scale: 0.95 }}
                 animate={{ opacity: 1, scale: 1 }}
                 exit={{ opacity: 0, scale: 0.95 }}
-                className="bg-white dark:bg-gray-800 rounded-2xl shadow-xl max-w-sm w-full p-6"
+                className="bg-coach-surface rounded-2xl shadow-xl max-w-sm w-full p-6"
               >
                 <h3 className="text-lg font-bold text-gray-900 dark:text-white mb-2">
                   Eliminar {deleteConfirm.type === 'plan' ? 'plan' : 'mesociclo'}
@@ -982,7 +982,7 @@ const Planning = () => {
         <div className="flex items-center gap-2">
           <button
             onClick={() => setShowMesoForm(true)}
-            className="flex items-center gap-2 px-4 py-2 bg-white dark:bg-gray-800 border border-gray-200 dark:border-gray-700 text-gray-700 dark:text-gray-300 rounded-xl hover:bg-gray-50 dark:hover:bg-gray-700 transition-colors font-medium text-sm"
+            className="flex items-center gap-2 px-4 py-2 bg-coach-surface border border-gray-200 dark:border-coach-border text-gray-700 dark:text-gray-300 rounded-xl hover:bg-gray-50 dark:hover:bg-gray-700 transition-colors font-medium text-sm"
           >
             <FiPlus className="w-4 h-4" />
             Añadir Mesociclo
@@ -1000,7 +1000,7 @@ const Planning = () => {
       {/* Mesocycles */}
       <div className="space-y-3">
         {(selectedPlan.mesocycles || []).length === 0 && !showMesoForm && (
-          <div className="flex flex-col items-center py-12 text-center bg-white dark:bg-gray-800 rounded-2xl border border-dashed border-gray-200 dark:border-gray-700">
+          <div className="flex flex-col items-center py-12 text-center bg-coach-surface rounded-2xl border border-dashed border-gray-200 dark:border-coach-border">
             <FiCalendar className="w-8 h-8 text-gray-300 dark:text-gray-600 mb-3" />
             <p className="text-sm font-medium text-gray-500 dark:text-gray-400 mb-1">Sin mesociclos todavía</p>
             <p className="text-xs text-gray-400 dark:text-gray-500 mb-4">Añade fases de entrenamiento a este plan</p>
@@ -1020,7 +1020,7 @@ const Planning = () => {
             initial={{ opacity: 0, y: 8 }}
             animate={{ opacity: 1, y: 0 }}
             transition={{ delay: mesoIdx * 0.04 }}
-            className="bg-white dark:bg-gray-800 rounded-2xl border border-gray-100 dark:border-gray-700 overflow-hidden"
+            className="bg-coach-surface rounded-2xl border border-gray-100 dark:border-coach-border overflow-hidden"
           >
             {/* Mesocycle Header */}
             <div
@@ -1092,7 +1092,7 @@ const Planning = () => {
                   transition={{ duration: 0.2 }}
                   className="overflow-hidden"
                 >
-                  <div className="border-t border-gray-100 dark:border-gray-700 divide-y divide-gray-100 dark:divide-gray-700/50">
+                  <div className="border-t border-gray-100 dark:border-coach-border divide-y divide-gray-100 dark:divide-coach-border/50">
                     {(meso.microcycles || []).map((micro) => {
                       const daysCount = getWeekDaysPreview(micro.content);
                       const totalKm = getTotalKm(micro.content);
@@ -1112,7 +1112,7 @@ const Planning = () => {
                               <span className={`w-7 h-7 rounded-lg flex items-center justify-center text-xs font-semibold ${
                                 isEditing
                                   ? 'bg-blue-100 dark:bg-blue-900/30 text-blue-600 dark:text-blue-400'
-                                  : 'bg-gray-100 dark:bg-gray-700 text-gray-600 dark:text-gray-300'
+                                  : 'bg-coach-elevated text-gray-600 dark:text-gray-300'
                               }`}>
                                 {micro.week_number}
                               </span>
@@ -1122,7 +1122,7 @@ const Planning = () => {
                                     Semana {micro.week_number}
                                   </span>
                                   {micro.week_type && micro.week_type !== 'normal' && (
-                                    <span className="px-1.5 py-0.5 rounded text-[10px] font-medium bg-gray-100 dark:bg-gray-600 text-gray-500 dark:text-gray-400">
+                                    <span className="px-1.5 py-0.5 rounded text-[10px] font-medium bg-gray-100 dark:bg-coach-inset text-gray-500 dark:text-gray-400">
                                       {WEEK_TYPES[micro.week_type] || micro.week_type}
                                     </span>
                                   )}
@@ -1177,7 +1177,7 @@ const Planning = () => {
               initial={{ opacity: 0, y: 8 }}
               animate={{ opacity: 1, y: 0 }}
               exit={{ opacity: 0, y: -4 }}
-              className="bg-white dark:bg-gray-800 rounded-2xl border border-gray-200 dark:border-gray-700 p-4"
+              className="bg-coach-surface rounded-2xl border border-gray-200 dark:border-coach-border p-4"
             >
               <h4 className="text-sm font-semibold text-gray-900 dark:text-white mb-3">Nuevo Mesociclo</h4>
               <div className="grid grid-cols-1 sm:grid-cols-3 gap-3">
@@ -1186,13 +1186,13 @@ const Planning = () => {
                   value={newMesoForm.name}
                   onChange={e => setNewMesoForm(prev => ({ ...prev, name: e.target.value }))}
                   placeholder="Nombre del mesociclo"
-                  className="px-3 py-2 bg-gray-50 dark:bg-gray-700 border border-gray-200 dark:border-gray-600 rounded-xl text-sm text-gray-900 dark:text-white focus:ring-2 focus:ring-blue-500 focus:border-transparent outline-none"
+                  className="px-3 py-2 bg-coach-inset border border-gray-200 dark:border-coach-border rounded-xl text-sm text-gray-900 dark:text-white focus:ring-2 focus:ring-blue-500 focus:border-transparent outline-none"
                   style={{ fontSize: '16px' }}
                 />
                 <select
                   value={newMesoForm.phase}
                   onChange={e => setNewMesoForm(prev => ({ ...prev, phase: e.target.value }))}
-                  className="px-3 py-2 bg-gray-50 dark:bg-gray-700 border border-gray-200 dark:border-gray-600 rounded-xl text-sm text-gray-900 dark:text-white focus:ring-2 focus:ring-blue-500 focus:border-transparent outline-none"
+                  className="px-3 py-2 bg-coach-inset border border-gray-200 dark:border-coach-border rounded-xl text-sm text-gray-900 dark:text-white focus:ring-2 focus:ring-blue-500 focus:border-transparent outline-none"
                 >
                   {Object.entries(PHASES).map(([val, label]) => (
                     <option key={val} value={val}>{label}</option>
@@ -1205,7 +1205,7 @@ const Planning = () => {
                     max={12}
                     value={newMesoForm.weeks}
                     onChange={e => setNewMesoForm(prev => ({ ...prev, weeks: parseInt(e.target.value) || 4 }))}
-                    className="w-20 px-3 py-2 bg-gray-50 dark:bg-gray-700 border border-gray-200 dark:border-gray-600 rounded-xl text-sm text-gray-900 dark:text-white focus:ring-2 focus:ring-blue-500 focus:border-transparent outline-none"
+                    className="w-20 px-3 py-2 bg-coach-inset border border-gray-200 dark:border-coach-border rounded-xl text-sm text-gray-900 dark:text-white focus:ring-2 focus:ring-blue-500 focus:border-transparent outline-none"
                     style={{ fontSize: '16px' }}
                   />
                   <span className="text-sm text-gray-500 dark:text-gray-400">semanas</span>
@@ -1239,7 +1239,7 @@ const Planning = () => {
               initial={{ opacity: 0, scale: 0.95 }}
               animate={{ opacity: 1, scale: 1 }}
               exit={{ opacity: 0, scale: 0.95 }}
-              className="bg-white dark:bg-gray-800 rounded-2xl shadow-xl max-w-md w-full p-6"
+              className="bg-coach-surface rounded-2xl shadow-xl max-w-md w-full p-6"
               onClick={e => e.stopPropagation()}
             >
               {/* COPY modal */}
@@ -1262,7 +1262,7 @@ const Planning = () => {
                         className={`flex-1 px-3 py-2 rounded-xl text-sm font-medium border-2 transition-colors ${
                           mesoCopyMode === opt.key
                             ? 'border-blue-500 bg-blue-50 dark:bg-blue-900/20 text-blue-700 dark:text-blue-400'
-                            : 'border-gray-200 dark:border-gray-600 text-gray-600 dark:text-gray-400 hover:border-gray-300'
+                            : 'border-gray-200 dark:border-coach-border text-gray-600 dark:text-gray-400 hover:border-gray-300'
                         }`}
                       >
                         {opt.label}
@@ -1278,7 +1278,7 @@ const Planning = () => {
                       <select
                         value={mesoCopyTargetId}
                         onChange={e => setMesoCopyTargetId(e.target.value)}
-                        className="w-full px-3 py-2.5 bg-gray-50 dark:bg-gray-700 border border-gray-200 dark:border-gray-600 rounded-xl text-sm text-gray-900 dark:text-white focus:ring-2 focus:ring-blue-500 outline-none mb-4"
+                        className="w-full px-3 py-2.5 bg-coach-inset border border-gray-200 dark:border-coach-border rounded-xl text-sm text-gray-900 dark:text-white focus:ring-2 focus:ring-blue-500 outline-none mb-4"
                       >
                         <option value="">— Selecciona mesociclo destino —</option>
                         {(selectedPlan?.mesocycles || [])
@@ -1299,7 +1299,7 @@ const Planning = () => {
                         type="text"
                         value={mesoDuplicateName}
                         onChange={e => setMesoDuplicateName(e.target.value)}
-                        className="w-full px-3 py-2.5 bg-gray-50 dark:bg-gray-700 border border-gray-200 dark:border-gray-600 rounded-xl text-sm text-gray-900 dark:text-white focus:ring-2 focus:ring-blue-500 outline-none mb-4"
+                        className="w-full px-3 py-2.5 bg-coach-inset border border-gray-200 dark:border-coach-border rounded-xl text-sm text-gray-900 dark:text-white focus:ring-2 focus:ring-blue-500 outline-none mb-4"
                         style={{ fontSize: '16px' }}
                         onKeyDown={e => e.key === 'Enter' && handleDuplicateMeso()}
                       />
@@ -1347,7 +1347,7 @@ const Planning = () => {
                     value={mesoTemplateName}
                     onChange={e => setMesoTemplateName(e.target.value)}
                     placeholder="Ej: Mesociclo Base 4 semanas"
-                    className="w-full px-3 py-2.5 bg-gray-50 dark:bg-gray-700 border border-gray-200 dark:border-gray-600 rounded-xl text-sm text-gray-900 dark:text-white focus:ring-2 focus:ring-purple-500 outline-none mb-4"
+                    className="w-full px-3 py-2.5 bg-coach-inset border border-gray-200 dark:border-coach-border rounded-xl text-sm text-gray-900 dark:text-white focus:ring-2 focus:ring-purple-500 outline-none mb-4"
                     style={{ fontSize: '16px' }}
                     onKeyDown={e => e.key === 'Enter' && handleSaveMesoTemplate()}
                   />
@@ -1392,7 +1392,7 @@ const Planning = () => {
                           className={`flex items-center justify-between p-3 rounded-xl border-2 cursor-pointer transition-colors ${
                             applyMesoTemplateId === t.id
                               ? 'border-green-400 bg-green-50 dark:bg-green-900/20'
-                              : 'border-gray-200 dark:border-gray-600 hover:border-gray-300 dark:hover:border-gray-500'
+                              : 'border-gray-200 dark:border-coach-border hover:border-gray-300 dark:hover:border-gray-500'
                           }`}
                           onClick={() => setApplyMesoTemplateId(t.id)}
                         >
@@ -1412,7 +1412,7 @@ const Planning = () => {
                               </button>
                               <button
                                 onClick={() => setDeleteConfirmMesoTemplate(null)}
-                                className="px-2 py-0.5 text-[10px] font-semibold bg-gray-200 dark:bg-gray-600 text-gray-700 dark:text-gray-300 rounded-lg"
+                                className="px-2 py-0.5 text-[10px] font-semibold bg-gray-200 dark:bg-coach-inset text-gray-700 dark:text-gray-300 rounded-lg"
                               >
                                 No
                               </button>
@@ -1472,7 +1472,7 @@ const Planning = () => {
               initial={{ opacity: 0, scale: 0.95 }}
               animate={{ opacity: 1, scale: 1 }}
               exit={{ opacity: 0, scale: 0.95 }}
-              className="bg-white dark:bg-gray-800 rounded-2xl shadow-xl max-w-sm w-full p-6"
+              className="bg-coach-surface rounded-2xl shadow-xl max-w-sm w-full p-6"
             >
               <h3 className="text-lg font-bold text-gray-900 dark:text-white mb-2">
                 Eliminar {deleteConfirm.type === 'plan' ? 'plan' : 'mesociclo'}

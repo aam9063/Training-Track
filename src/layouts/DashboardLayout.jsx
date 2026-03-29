@@ -13,7 +13,7 @@ const DashboardLayout = () => {
 
   if (loading && !user) {
     return (
-      <div className="min-h-screen flex items-center justify-center bg-gray-50 dark:bg-gray-900">
+      <div className="min-h-screen flex items-center justify-center bg-coach-base">
         <div className="text-center">
           <div className="animate-spin rounded-full h-12 w-12 border-b-2 border-blue-600 mx-auto"></div>
           <p className="mt-4 text-gray-600 dark:text-gray-400">Cargando...</p>
@@ -35,7 +35,7 @@ const DashboardLayout = () => {
 
   // Coach dashboard
   return (
-    <div className="min-h-screen bg-brand-bg dark:bg-gray-900">
+    <div className="min-h-screen bg-brand-bg dark:bg-coach-base">
       <Sidebar onCollapse={setSidebarCollapsed} />
       <BottomNav />
       <MobileHeader />
@@ -44,7 +44,7 @@ const DashboardLayout = () => {
       <div
         className={`
           hidden lg:flex items-center justify-end px-8
-          bg-white dark:bg-gray-800 border-b border-gray-200 dark:border-gray-700
+          bg-coach-surface border-b border-gray-200 dark:border-coach-border
           h-[52px] fixed top-0 right-0 z-20
           transition-all duration-300
           ${sidebarCollapsed ? 'lg:left-20' : 'lg:left-64'}

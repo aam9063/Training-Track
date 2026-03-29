@@ -129,7 +129,26 @@ const DroppableDayColumn = ({ dateStr, children }) => {
 };
 
 // ── Mini Month Calendar ────────────────────────────────────────────────────
-const MiniMonthCalendar = ({ currentDate, onDateChange, selectedWeekStart, getEventsForDate }) => {
+const ACCENT = {
+  green: {
+    weekBg: 'bg-ath-accent-surface text-ath-accent-text',
+    todayBg: 'bg-ath-accent text-ath-on-accent',
+    dot: 'bg-ath-accent',
+    headerBg: 'bg-ath-accent-surface',
+    headerText: 'text-ath-accent-text',
+    hoyBtn: 'bg-ath-accent-surface text-ath-accent-text hover:bg-ath-accent/20',
+  },
+  blue: {
+    weekBg: 'bg-blue-100 dark:bg-blue-900/40 text-blue-700 dark:text-blue-300',
+    todayBg: 'bg-blue-600 text-white',
+    dot: 'bg-blue-500',
+    headerBg: 'bg-blue-50 dark:bg-blue-900/20',
+    headerText: 'text-blue-600 dark:text-blue-400',
+    hoyBtn: 'bg-blue-100 dark:bg-blue-900/30 text-blue-600 dark:text-blue-400 hover:bg-blue-200 dark:hover:bg-blue-900/50',
+  },
+};
+
+const MiniMonthCalendar = ({ currentDate, onDateChange, selectedWeekStart, getEventsForDate, accent = 'blue' }) => {
   const [viewDate, setViewDate] = useState(currentDate);
   const year = viewDate.getFullYear();
   const month = viewDate.getMonth();
@@ -200,14 +219,14 @@ const MiniMonthCalendar = ({ currentDate, onDateChange, selectedWeekStart, getEv
               >
                 <span className={`w-7 h-7 flex items-center justify-center rounded-md text-xs transition-colors
                   ${inWeek
-                    ? 'bg-ath-accent-surface text-ath-accent-text font-semibold'
+                    ? `${ACCENT[accent].weekBg} font-semibold`
                     : today
-                      ? 'bg-ath-accent text-ath-on-accent font-bold'
+                      ? `${ACCENT[accent].todayBg} font-bold`
                       : 'text-ath-text-secondary hover:bg-ath-inset'}
                 `}>
                   {d.getDate()}
                 </span>
-                <span className={`w-1 h-1 rounded-full mt-0.5 ${hasEvents && !inWeek && !today ? 'bg-ath-accent' : 'bg-transparent'}`} />
+                <span className={`w-1 h-1 rounded-full mt-0.5 ${hasEvents && !inWeek && !today ? ACCENT[accent].dot : 'bg-transparent'}`} />
               </button>
             );
           })}
@@ -336,6 +355,7 @@ export default function WeeklyDesktopView({
         onDateChange={handleMiniCalClick}
         selectedWeekStart={weekStart}
         getEventsForDate={getEventsForDate}
+        accent={accentColor}
       />
 
       {/* Right: Weekly grid */}
@@ -344,7 +364,7 @@ export default function WeeklyDesktopView({
           {/* Week header with navigation */}
           <div className="flex items-center justify-between px-5 py-3 border-b border-ath-border">
             <div className="flex items-center gap-2">
-              <button onClick={goToToday} className={`px-3 py-1.5 text-xs font-medium rounded-lg transition-colors bg-ath-accent-surface text-ath-accent-text hover:bg-ath-accent/20`}>
+              <button onClick={goToToday} className={`px-3 py-1.5 text-xs font-medium rounded-lg transition-colors ${ACCENT[accentColor].hoyBtn}`}>
                 Hoy
               </button>
               <button onClick={goToPrevWeek} className="p-1.5 hover:bg-ath-inset rounded-lg transition-colors">
@@ -370,11 +390,11 @@ export default function WeeklyDesktopView({
                   <DroppableDayColumn key={i} dateStr={dateStr}>
                     <div className="min-h-[420px] flex flex-col">
                       {/* Day header */}
-                      <div className={`px-2 py-2.5 text-center border-b border-ath-border ${today ? 'bg-ath-accent-surface' : ''}`}>
-                        <p className={`text-[10px] uppercase tracking-wider font-semibold ${today ? 'text-ath-accent-text' : 'text-ath-text-muted'}`}>
+                      <div className={`px-2 py-2.5 text-center border-b border-ath-border ${today ? ACCENT[accentColor].headerBg : ''}`}>
+                        <p className={`text-[10px] uppercase tracking-wider font-semibold ${today ? ACCENT[accentColor].headerText : 'text-ath-text-muted'}`}>
                           {DAYS_FULL[i]}
                         </p>
-                        <p className={`text-lg font-bold mt-0.5 ${today ? 'text-ath-accent-text' : 'text-ath-text-primary'}`}>
+                        <p className={`text-lg font-bold mt-0.5 ${today ? ACCENT[accentColor].headerText : 'text-ath-text-primary'}`}>
                           {day.getDate()}
                         </p>
                       </div>

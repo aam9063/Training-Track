@@ -179,7 +179,7 @@ const AthleteProfile = () => {
   if (!athlete) {
     return (
       <div className="p-8 text-center">
-        <p className="text-gray-500">Atleta no encontrado</p>
+        <p className="text-gray-500 dark:text-gray-400">Atleta no encontrado</p>
         <button
           onClick={() => navigate('/dashboard/athletes')}
           className="mt-4 text-blue-600 hover:underline"
@@ -204,7 +204,7 @@ const AthleteProfile = () => {
         {/* Back */}
         <button
           onClick={() => navigate('/dashboard/athletes')}
-          className="p-2 hover:bg-gray-200 dark:hover:bg-gray-700 rounded-lg transition-colors flex-shrink-0"
+          className="p-2 hover:bg-gray-200 dark:hover:bg-coach-elevated rounded-lg transition-colors flex-shrink-0"
         >
           <FiArrowLeft className="w-5 h-5 text-gray-600 dark:text-gray-400" />
         </button>
@@ -596,7 +596,7 @@ const AthleteProfile = () => {
           className="col-span-12 bg-coach-surface rounded-2xl shadow-sm border border-gray-200 dark:border-coach-border overflow-hidden"
         >
           {/* Week Navigator */}
-          <div className="flex flex-col sm:flex-row sm:items-center sm:justify-between gap-2 p-3 sm:p-4 border-b border-gray-200 dark:border-coach-border bg-gray-50 dark:bg-coach-surface/50">
+          <div className="flex flex-col sm:flex-row sm:items-center sm:justify-between gap-2 p-3 sm:p-4 border-b border-gray-200 dark:border-coach-border bg-gray-50 dark:bg-coach-elevated">
             <h2 className="text-base sm:text-lg font-bold text-gray-900 dark:text-white flex items-center">
               <FiCalendar className="w-4 h-4 sm:w-5 sm:h-5 mr-2 text-blue-600" />
               Planificación Semanal
@@ -604,7 +604,7 @@ const AthleteProfile = () => {
             <div className="flex items-center space-x-2 sm:space-x-4">
               <button
                 onClick={goToPreviousWeek}
-                className="p-1.5 sm:p-2 hover:bg-gray-200 dark:hover:bg-gray-700 rounded-lg transition-colors"
+                className="p-1.5 sm:p-2 hover:bg-gray-200 dark:hover:bg-coach-elevated rounded-lg transition-colors"
               >
                 <FiChevronLeft className="w-4 h-4 sm:w-5 sm:h-5 text-gray-600 dark:text-gray-400" />
               </button>
@@ -613,7 +613,7 @@ const AthleteProfile = () => {
               </span>
               <button
                 onClick={goToNextWeek}
-                className="p-1.5 sm:p-2 hover:bg-gray-200 dark:hover:bg-gray-700 rounded-lg transition-colors"
+                className="p-1.5 sm:p-2 hover:bg-gray-200 dark:hover:bg-coach-elevated rounded-lg transition-colors"
               >
                 <FiChevronRight className="w-4 h-4 sm:w-5 sm:h-5 text-gray-600 dark:text-gray-400" />
               </button>
@@ -657,7 +657,7 @@ const AthleteProfile = () => {
                               </span>
                             )}
                             {training.status === 'skipped' && (
-                              <span className="ml-1 text-[10px] text-gray-400">Omitido</span>
+                              <span className="ml-1 text-[10px] text-gray-400 dark:text-gray-500">Omitido</span>
                             )}
                           </div>
                           <p className="text-xs font-medium text-gray-500 dark:text-gray-400">
@@ -721,7 +721,7 @@ const AthleteProfile = () => {
                                 <span className="text-sm flex-shrink-0">{RPE_OPTIONS.find(r => r.score === training.rpe_score)?.emoji}</span>
                               )}
                               {training.status === 'skipped' && (
-                                <span className="text-[10px] text-gray-400 flex-shrink-0">Omitido</span>
+                                <span className="text-[10px] text-gray-400 dark:text-gray-500 flex-shrink-0">Omitido</span>
                               )}
                             </div>
                             <p className="text-xs text-gray-500 dark:text-gray-400 mt-0.5">
@@ -879,7 +879,7 @@ const AthleteProfile = () => {
                     <p className="text-lg font-bold text-gray-900 dark:text-white">
                       {Math.floor((new Date() - new Date(athlete.date_of_birth)) / (365.25 * 24 * 60 * 60 * 1000))}
                     </p>
-                    <p className="text-[10px] text-gray-400">{new Date(athlete.date_of_birth).toLocaleDateString('es-ES')}</p>
+                    <p className="text-[10px] text-gray-400 dark:text-gray-500">{new Date(athlete.date_of_birth).toLocaleDateString('es-ES')}</p>
                   </div>
                 )}
                 {athlete.weight && (
@@ -1073,7 +1073,7 @@ const AthleteProfile = () => {
 
                 {!stravaConnected && (
                   <div className="text-center py-4 text-gray-500 dark:text-gray-400 text-sm">
-                    <FiActivity className="w-8 h-8 mx-auto mb-2 text-gray-300" />
+                    <FiActivity className="w-8 h-8 mx-auto mb-2 text-gray-300 dark:text-gray-600" />
                     <p>Sin conexión a Strava</p>
                   </div>
                 )}
@@ -1358,37 +1358,37 @@ const AthleteProfile = () => {
                   </h3>
                   <div className="grid grid-cols-2 gap-3">
                     {athleteProfile.peso_kg && (
-                      <div className="bg-white/60 dark:bg-coach-elevated/30 rounded-xl p-3 text-center">
+                      <div className="bg-white/60 dark:bg-coach-elevated rounded-xl p-3 text-center">
                         <p className="text-xs text-gray-500 dark:text-gray-400 mb-1">Peso</p>
                         <p className="text-lg font-bold text-gray-900 dark:text-white">{athleteProfile.peso_kg}<span className="text-xs font-normal text-gray-400 ml-0.5">kg</span></p>
                       </div>
                     )}
                     {athleteProfile.altura_cm && (
-                      <div className="bg-white/60 dark:bg-coach-elevated/30 rounded-xl p-3 text-center">
+                      <div className="bg-white/60 dark:bg-coach-elevated rounded-xl p-3 text-center">
                         <p className="text-xs text-gray-500 dark:text-gray-400 mb-1">Altura</p>
                         <p className="text-lg font-bold text-gray-900 dark:text-white">{athleteProfile.altura_cm}<span className="text-xs font-normal text-gray-400 ml-0.5">cm</span></p>
                       </div>
                     )}
                     {computeBMI(athleteProfile.peso_kg, athleteProfile.altura_cm) && (
-                      <div className="bg-white/60 dark:bg-coach-elevated/30 rounded-xl p-3 text-center">
+                      <div className="bg-white/60 dark:bg-coach-elevated rounded-xl p-3 text-center">
                         <p className="text-xs text-gray-500 dark:text-gray-400 mb-1">IMC</p>
                         <p className="text-lg font-bold text-gray-900 dark:text-white">{computeBMI(athleteProfile.peso_kg, athleteProfile.altura_cm)}</p>
                       </div>
                     )}
                     {athleteProfile.km_semanales != null && (
-                      <div className="bg-white/60 dark:bg-coach-elevated/30 rounded-xl p-3 text-center">
+                      <div className="bg-white/60 dark:bg-coach-elevated rounded-xl p-3 text-center">
                         <p className="text-xs text-gray-500 dark:text-gray-400 mb-1">Km/semana</p>
                         <p className="text-lg font-bold text-gray-900 dark:text-white">{athleteProfile.km_semanales}<span className="text-xs font-normal text-gray-400 ml-0.5">km</span></p>
                       </div>
                     )}
                     {athleteProfile.ritmo_comodo && (
-                      <div className="bg-white/60 dark:bg-coach-elevated/30 rounded-xl p-3 text-center">
+                      <div className="bg-white/60 dark:bg-coach-elevated rounded-xl p-3 text-center">
                         <p className="text-xs text-gray-500 dark:text-gray-400 mb-1">Ritmo comodo</p>
                         <p className="text-lg font-bold text-gray-900 dark:text-white">{athleteProfile.ritmo_comodo}</p>
                       </div>
                     )}
                     {athleteProfile.fc_max && (
-                      <div className="bg-white/60 dark:bg-coach-elevated/30 rounded-xl p-3 text-center">
+                      <div className="bg-white/60 dark:bg-coach-elevated rounded-xl p-3 text-center">
                         <p className="text-xs text-gray-500 dark:text-gray-400 mb-1 flex items-center justify-center gap-1"><FiHeart className="w-3 h-3 text-red-400" />FC max</p>
                         <p className="text-lg font-bold text-gray-900 dark:text-white">{athleteProfile.fc_max}<span className="text-xs font-normal text-gray-400 ml-0.5">bpm</span></p>
                       </div>
@@ -1584,7 +1584,7 @@ const AthleteProfile = () => {
                 {selectedActivity.loading ? (
                   <div className="flex items-center justify-center py-12">
                     <FiLoader className="w-8 h-8 animate-spin text-orange-500" />
-                    <span className="ml-3 text-gray-500">Cargando detalles...</span>
+                    <span className="ml-3 text-gray-500 dark:text-gray-400">Cargando detalles...</span>
                   </div>
                 ) : (
                   <div className="space-y-6">
@@ -1622,37 +1622,37 @@ const AthleteProfile = () => {
                         <p className="font-semibold text-gray-900 dark:text-white">
                           {selectedActivity.total_elevation_gain || 0}m
                         </p>
-                        <p className="text-xs text-gray-500">desnivel+</p>
+                        <p className="text-xs text-gray-500 dark:text-gray-400">desnivel+</p>
                       </div>
                       <div className="bg-coach-inset/50 rounded-lg p-3 text-center">
                         <p className="font-semibold text-gray-900 dark:text-white">
                           {selectedActivity.max_heartrate || '-'}
                         </p>
-                        <p className="text-xs text-gray-500">FC max</p>
+                        <p className="text-xs text-gray-500 dark:text-gray-400">FC max</p>
                       </div>
                       <div className="bg-coach-inset/50 rounded-lg p-3 text-center">
                         <p className="font-semibold text-gray-900 dark:text-white">
                           {selectedActivity.calories || '-'}
                         </p>
-                        <p className="text-xs text-gray-500">kcal</p>
+                        <p className="text-xs text-gray-500 dark:text-gray-400">kcal</p>
                       </div>
                       <div className="bg-coach-inset/50 rounded-lg p-3 text-center">
                         <p className="font-semibold text-gray-900 dark:text-white">
                           {selectedActivity.suffer_score || '-'}
                         </p>
-                        <p className="text-xs text-gray-500">esfuerzo</p>
+                        <p className="text-xs text-gray-500 dark:text-gray-400">esfuerzo</p>
                       </div>
                       <div className="bg-coach-inset/50 rounded-lg p-3 text-center">
                         <p className="font-semibold text-gray-900 dark:text-white">
                           {selectedActivity.kudos_count || 0}
                         </p>
-                        <p className="text-xs text-gray-500">kudos</p>
+                        <p className="text-xs text-gray-500 dark:text-gray-400">kudos</p>
                       </div>
                       <div className="bg-coach-inset/50 rounded-lg p-3 text-center">
                         <p className="font-semibold text-gray-900 dark:text-white">
                           {selectedActivity.achievement_count || 0}
                         </p>
-                        <p className="text-xs text-gray-500">logros</p>
+                        <p className="text-xs text-gray-500 dark:text-gray-400">logros</p>
                       </div>
                     </div>
 
@@ -1738,7 +1738,7 @@ const AthleteProfile = () => {
                                     : 'bg-coach-inset/50'
                                 }`}
                               >
-                                <p className="text-xs text-gray-500 mb-1">km {index + 1}</p>
+                                <p className="text-xs text-gray-500 dark:text-gray-400 mb-1">km {index + 1}</p>
                                 <p className="font-mono text-sm font-bold text-gray-900 dark:text-white">
                                   {pace}
                                 </p>
@@ -1771,7 +1771,7 @@ const AthleteProfile = () => {
                                 <p className="font-medium text-gray-900 dark:text-white text-sm">
                                   {effort.name}
                                 </p>
-                                <p className="text-xs text-gray-500">
+                                <p className="text-xs text-gray-500 dark:text-gray-400">
                                   {(effort.segment?.distance / 1000).toFixed(2)} km
                                   {effort.segment?.average_grade && ` • ${effort.segment.average_grade.toFixed(1)}%`}
                                 </p>
@@ -1783,12 +1783,12 @@ const AthleteProfile = () => {
                                 {effort.pr_rank && (
                                   <span className={`text-xs px-2 py-0.5 rounded-full ${
                                     effort.pr_rank === 1
-                                      ? 'bg-yellow-100 text-yellow-700'
+                                      ? 'bg-yellow-100 dark:bg-yellow-900/30 text-yellow-700 dark:text-yellow-400'
                                       : effort.pr_rank === 2
-                                      ? 'bg-gray-100 text-gray-700'
+                                      ? 'bg-gray-100 dark:bg-gray-700/50 text-gray-700 dark:text-gray-300'
                                       : effort.pr_rank === 3
-                                      ? 'bg-orange-100 text-orange-700'
-                                      : 'bg-blue-100 text-blue-700'
+                                      ? 'bg-orange-100 dark:bg-orange-900/30 text-orange-700 dark:text-orange-400'
+                                      : 'bg-blue-100 dark:bg-blue-900/30 text-blue-700 dark:text-blue-400'
                                   }`}>
                                     PR #{effort.pr_rank}
                                   </span>
@@ -1797,7 +1797,7 @@ const AthleteProfile = () => {
                             </div>
                           ))}
                           {selectedActivity.segment_efforts.length > 10 && (
-                            <p className="text-center text-sm text-gray-500">
+                            <p className="text-center text-sm text-gray-500 dark:text-gray-400">
                               +{selectedActivity.segment_efforts.length - 10} segmentos más
                             </p>
                           )}
@@ -1819,7 +1819,7 @@ const AthleteProfile = () => {
 
                     {/* Device */}
                     {selectedActivity.device_name && (
-                      <p className="text-xs text-gray-400 text-center">
+                      <p className="text-xs text-gray-400 dark:text-gray-500 text-center">
                         Registrado con {selectedActivity.device_name}
                       </p>
                     )}

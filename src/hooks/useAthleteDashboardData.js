@@ -23,6 +23,8 @@ export default function useAthleteDashboardData(profileId, isIndependent = false
   const [weekStats, setWeekStats] = useState({
     totalKm: 0,
     totalTime: '0h 0m',
+    completedKm: 0,
+    completedTime: '0h 0m',
     sessions: 0,
     completed: 0,
   });
@@ -125,31 +127,33 @@ export default function useAthleteDashboardData(profileId, isIndependent = false
       const nonRestSessions = weekSessionsWithExercises.filter(s => s.training_type !== 'rest');
       const completedSessions = nonRestSessions.filter(s => s.status === 'completed');
 
-      // For independent athletes, prefer actual_distance_km from completed sessions
-      let totalDistanceMeters;
-      let totalDurationMinutes;
+      // Planned totals (always from plan)
+      const plannedKm = parseFloat((plannedDistanceMeters / 1000).toFixed(1));
+      const plannedHours = Math.floor(plannedDurationMinutes / 60);
+      const plannedMins = plannedDurationMinutes % 60;
 
-      if (isIndependent) {
-        const actualKm = completedSessions.reduce((sum, s) => sum + (s.actual_distance_km ?? 0), 0);
-        const actualTime = completedSessions.reduce((sum, s) => sum + (s.actual_time_minutes ?? 0), 0);
-        totalDistanceMeters = actualKm > 0 ? actualKm * 1000 : plannedDistanceMeters;
-        totalDurationMinutes = actualTime > 0 ? actualTime : plannedDurationMinutes;
+      // Completed totals (from Strava or actual data)
+      const hasStrava = stravaActivities.length > 0;
+      let completedDistanceMeters;
+      let completedDurationMinutes;
+
+      if (hasStrava) {
+        completedDistanceMeters = stravaDistanceMeters;
+        completedDurationMinutes = Math.round(stravaMovingTimeSeconds / 60);
       } else {
-        const hasStrava = stravaActivities.length > 0;
-        totalDistanceMeters = hasStrava ? stravaDistanceMeters : plannedDistanceMeters;
-        totalDurationMinutes = hasStrava
-          ? Math.round(stravaMovingTimeSeconds / 60)
-          : plannedDurationMinutes;
+        completedDistanceMeters = completedSessions.reduce((sum, s) => sum + ((s.actual_distance_km ?? 0) * 1000), 0);
+        completedDurationMinutes = completedSessions.reduce((sum, s) => sum + (s.actual_time_minutes ?? 0), 0);
       }
 
-      const totalKm = (totalDistanceMeters / 1000).toFixed(1);
-      const hours = Math.floor(totalDurationMinutes / 60);
-      const minutes = totalDurationMinutes % 60;
-      const totalTime = `${hours}h ${minutes}m`;
+      const completedKm = parseFloat((completedDistanceMeters / 1000).toFixed(1));
+      const completedHours = Math.floor(completedDurationMinutes / 60);
+      const completedMins = Math.round(completedDurationMinutes % 60);
 
       setWeekStats({
-        totalKm: parseFloat(totalKm),
-        totalTime,
+        totalKm: plannedKm,
+        totalTime: `${plannedHours}h ${plannedMins}m`,
+        completedKm,
+        completedTime: `${completedHours}h ${completedMins}m`,
         sessions: nonRestSessions.length,
         completed: completedSessions.length,
       });

@@ -4,6 +4,17 @@ import { FiZap, FiSend, FiTrash2, FiChevronDown, FiChevronUp, FiLoader } from 'r
 import { useAuth } from '../../contexts/AuthContext';
 import { sendAthleteChatMessage, getChatSession, clearChatSession } from '../../services/aiChatService';
 
+const stripMarkdown = (text) => {
+  if (!text) return '';
+  return text
+    .replace(/^#{1,6}\s+/gm, '')
+    .replace(/\*\*(.+?)\*\*/g, '$1')
+    .replace(/\*(.+?)\*/g, '$1')
+    .replace(/`{1,3}[^`]*`{1,3}/g, m => m.replace(/`/g, ''))
+    .replace(/^[\s]*[-*]\s+/gm, '• ')
+    .replace(/^>\s+/gm, '');
+};
+
 const SUGGESTED = [
   '¿Está listo para subir volumen esta semana?',
   '¿Tiene riesgo de lesión?',
@@ -203,7 +214,7 @@ export default function AthleteAIChat({ athleteId, athleteName, inline = false }
                           : 'bg-slate-800 text-slate-200 rounded-bl-sm'
                     }`}
                   >
-                    {msg.content}
+                    {msg.role === 'user' ? msg.content : stripMarkdown(msg.content)}
                   </div>
                 </motion.div>
               ))}

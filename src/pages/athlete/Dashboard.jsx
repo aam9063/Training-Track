@@ -18,6 +18,7 @@ import {
   FiStar,
   FiAward,
   FiWatch,
+  FiCheckCircle,
 } from 'react-icons/fi';
 import useGamificationData from '../../hooks/useGamificationData';
 import { toLocalDateStr } from '../../lib/dateUtils';
@@ -136,33 +137,33 @@ const AthleteDashboard = () => {
           <StatCard
             accent
             icon={FiActivity}
-            label="Esta semana"
+            label="Planificado"
             value={`${weekStats.totalKm} km`}
             sub={`${weekStats.sessions} entrenamientos`}
           />
           <StatCard
-            icon={FiClock}
-            label="Tiempo total"
-            value={weekStats.totalTime}
-            sub="Esta semana"
-            iconBg="bg-purple-50 dark:bg-purple-900/30"
-            iconColor="text-purple-600 dark:text-purple-400"
+            icon={FiCheckCircle}
+            label="Completado"
+            value={weekStats.completedKm > 0 ? `${weekStats.completedKm} km` : '0 km'}
+            sub={weekStats.completedTime !== '0h 0m' ? weekStats.completedTime : 'Sin actividad aún'}
+            iconBg="bg-ath-accent-surface"
+            iconColor="text-ath-accent-text"
           />
           <StatCard
             icon={FiTrendingUp}
             label="Racha"
             value={streak > 0 ? `${streak}d` : '—'}
             sub={streak >= 3 ? '¡Sigue así!' : streak > 0 ? 'días seguidos' : 'Sin racha aún'}
-            iconBg="bg-orange-50 dark:bg-orange-900/30"
-            iconColor="text-orange-500 dark:text-orange-400"
+            iconBg="bg-ath-accent-surface"
+            iconColor="text-ath-accent-text"
           />
           <StatCard
             icon={FiCalendar}
             label="Sesiones"
             value={weekStats.sessions}
             sub={pendingSessions > 0 ? `${pendingSessions} pendiente${pendingSessions > 1 ? 's' : ''}` : 'Planificadas'}
-            iconBg="bg-orange-50 dark:bg-orange-900/30"
-            iconColor="text-orange-500 dark:text-orange-400"
+            iconBg="bg-ath-accent-surface"
+            iconColor="text-ath-accent-text"
           />
         </div>
 
@@ -188,7 +189,7 @@ const AthleteDashboard = () => {
               </div>
               <div className="flex items-center justify-between mt-2">
                 <span className="text-[11px] text-ath-text-muted">
-                  {weekStats.totalKm} km esta semana
+                  {weekStats.completedKm > 0 ? `${weekStats.completedKm}` : '0'} / {weekStats.totalKm} km
                 </span>
                 {weeklyRpeAvg != null && (
                   <span className="text-[11px] text-ath-text-muted flex items-center gap-1">
@@ -218,30 +219,26 @@ const AthleteDashboard = () => {
           </div>
         )}
 
-        {/* COACHED ATHLETE: Sunday banner, wellness, diary */}
-        {!isIndependent && (
-          <>
-            {isSunday && !hasDiaryThisWeek && (
-              <div className="flex items-start gap-3 bg-amber-50 dark:bg-amber-900/20 border border-amber-200 dark:border-amber-700 rounded-xl px-4 py-3">
-                <span className="text-lg" role="img" aria-label="calendario">📅</span>
-                <div>
-                  <p className="text-sm font-semibold text-amber-800 dark:text-amber-300">Es domingo — rellena tu diario semanal</p>
-                  <p className="text-xs text-amber-700 dark:text-amber-400 mt-0.5">Tu entrenador lo tendrá en cuenta en el informe del lunes.</p>
-                </div>
-              </div>
-            )}
-
-            <div className="space-y-4">
-              <WellnessForm compact onSaved={() => setWellnessRefreshKey(k => k + 1)} />
-              <ReadinessScore onRefresh={wellnessRefreshKey} />
+        {/* Wellness + Diary — both athlete types */}
+        {isSunday && !hasDiaryThisWeek && (
+          <div className="flex items-start gap-3 bg-amber-50 dark:bg-amber-900/20 border border-amber-200 dark:border-amber-700 rounded-xl px-4 py-3">
+            <span className="text-lg" role="img" aria-label="calendario">📅</span>
+            <div>
+              <p className="text-sm font-semibold text-amber-800 dark:text-amber-300">Es domingo — rellena tu diario semanal</p>
+              <p className="text-xs text-amber-700 dark:text-amber-400 mt-0.5">{isIndependent ? 'Hermes IA lo tendrá en cuenta para mejorar tus planes.' : 'Tu entrenador lo tendrá en cuenta en el informe del lunes.'}</p>
             </div>
-
-            <WeeklyDiaryForm
-              compact
-              onSaved={() => setHasDiaryThisWeek(true)}
-            />
-          </>
+          </div>
         )}
+
+        <div className="space-y-4">
+          <WellnessForm compact onSaved={() => setWellnessRefreshKey(k => k + 1)} />
+          <ReadinessScore onRefresh={wellnessRefreshKey} />
+        </div>
+
+        <WeeklyDiaryForm
+          compact
+          onSaved={() => setHasDiaryThisWeek(true)}
+        />
 
         {/* IA CARD — for coached athletes only */}
         {!isIndependent && (

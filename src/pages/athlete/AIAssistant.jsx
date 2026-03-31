@@ -14,6 +14,19 @@ const SUGGESTED_PROMPTS = [
   '¿Cómo mejorar mi ritmo de carrera?',
 ];
 
+// ─── Strip markdown from AI responses ─────────────────────────────────────────
+
+const stripMarkdown = (text) => {
+  if (!text) return '';
+  return text
+    .replace(/^#{1,6}\s+/gm, '')       // headers: ### Title → Title
+    .replace(/\*\*(.+?)\*\*/g, '$1')   // bold: **text** → text
+    .replace(/\*(.+?)\*/g, '$1')       // italic: *text* → text
+    .replace(/`{1,3}[^`]*`{1,3}/g, m => m.replace(/`/g, '')) // inline code
+    .replace(/^[\s]*[-*]\s+/gm, '• ')  // list bullets: - item → • item
+    .replace(/^>\s+/gm, '');           // blockquotes: > text → text
+};
+
 // ─── Message bubble ───────────────────────────────────────────────────────────
 
 const MessageBubble = ({ message }) => {
@@ -31,7 +44,7 @@ const MessageBubble = ({ message }) => {
             : 'bg-ath-inset text-ath-text-primary rounded-bl-sm'
         }`}
       >
-        {message.content}
+        {isUser ? message.content : stripMarkdown(message.content)}
       </div>
     </motion.div>
   );

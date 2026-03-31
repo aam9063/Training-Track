@@ -86,6 +86,26 @@ export const autoAssignPlan = async (planData, userId, startDate = null) => {
   const planStart = new Date(assignDate);
   planStart.setDate(planStart.getDate() - daysFromMonday);
 
+  // 0. Cleanup: deactivate previous plans and delete future planned sessions
+  const todayStr = toLocalDateStr(new Date());
+
+  // Deactivate any active plans for this user
+  await supabase
+    .from('training_plans')
+    .update({ is_active: false })
+    .eq('created_by', userId)
+    .is('coach_id', null)
+    .eq('is_active', true);
+
+  // Delete future planned sessions (not completed/skipped) from today onwards
+  await supabase
+    .from('training_sessions')
+    .delete()
+    .eq('athlete_id', userId)
+    .is('coach_id', null)
+    .eq('status', 'planned')
+    .gte('scheduled_date', todayStr);
+
   // 1. Create the training_plan
   const { data: plan, error: planError } = await supabase
     .from('training_plans')

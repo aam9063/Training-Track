@@ -41,7 +41,6 @@ export const getCoachPlans = async (coachId) => {
 
     return { data: sorted, error: null };
   } catch (error) {
-    console.error('Error fetching coach plans:', error);
     return { data: [], error };
   }
 };
@@ -64,7 +63,6 @@ export const createPlan = async ({ coachId, name, description, modality }) => {
     if (error) throw error;
     return { data, error: null };
   } catch (error) {
-    console.error('Error creating plan:', error);
     return { data: null, error };
   }
 };
@@ -81,13 +79,39 @@ export const updatePlan = async (planId, updates) => {
     if (error) throw error;
     return { data, error: null };
   } catch (error) {
-    console.error('Error updating plan:', error);
     return { data: null, error };
   }
 };
 
 export const deletePlan = async (planId) => {
   try {
+    // 1. Get athletes assigned to this plan
+    const { data: assignments } = await supabase
+      .from('plan_assignments')
+      .select('athlete_id, start_date')
+      .eq('plan_id', planId);
+
+    // 2. Get plan duration to calculate date range
+    const { data: plan } = await supabase
+      .from('training_plans')
+      .select('weeks, coach_id')
+      .eq('id', planId)
+      .maybeSingle();
+
+    // 3. Delete future planned sessions for each assigned athlete
+    if (assignments?.length && plan) {
+      const today = toLocalDateStr(new Date());
+      for (const assignment of assignments) {
+        await supabase
+          .from('training_sessions')
+          .delete()
+          .eq('athlete_id', assignment.athlete_id)
+          .eq('status', 'planned')
+          .gte('scheduled_date', today);
+      }
+    }
+
+    // 4. Delete the plan (cascades to mesocycles, microcycles, plan_assignments via FK)
     const { error } = await supabase
       .from('training_plans')
       .delete()
@@ -96,8 +120,7 @@ export const deletePlan = async (planId) => {
     if (error) throw error;
     return { error: null };
   } catch (error) {
-    console.error('Error deleting plan:', error);
-    return { error };
+    return { error: { message: 'Error al eliminar el plan' } };
   }
 };
 
@@ -153,7 +176,6 @@ export const createMesocycle = async (planId, { name, phase, weeks, sortOrder })
 
     return { data: { ...data, microcycles: createdMicros || [] }, error: null };
   } catch (error) {
-    console.error('Error creating mesocycle:', error);
     return { data: null, error };
   }
 };
@@ -170,7 +192,6 @@ export const updateMesocycle = async (mesocycleId, updates) => {
     if (error) throw error;
     return { data, error: null };
   } catch (error) {
-    console.error('Error updating mesocycle:', error);
     return { data: null, error };
   }
 };
@@ -185,7 +206,6 @@ export const deleteMesocycle = async (mesocycleId) => {
     if (error) throw error;
     return { error: null };
   } catch (error) {
-    console.error('Error deleting mesocycle:', error);
     return { error };
   }
 };
@@ -210,7 +230,6 @@ export const updateMicrocycleContent = async (microcycleId, content, plannedKm) 
     if (error) throw error;
     return { data, error: null };
   } catch (error) {
-    console.error('Error updating microcycle content:', error);
     return { data: null, error };
   }
 };
@@ -248,7 +267,6 @@ export const getCoachAthletesList = async (coachId) => {
 
     return { data: athletes, error: null };
   } catch (error) {
-    console.error('Error fetching coach athletes list:', error);
     return { data: [], error };
   }
 };
@@ -272,7 +290,6 @@ export const getPlanAssignments = async (planId) => {
     if (error) throw error;
     return { data: data || [], error: null };
   } catch (error) {
-    console.error('Error fetching plan assignments:', error);
     return { data: [], error };
   }
 };
@@ -412,7 +429,6 @@ export const assignPlanToAthletes = async (planId, coachId, athleteIds, startDat
 
     return { sessionsCreated: sessions.length, error: null };
   } catch (error) {
-    console.error('Error assigning plan to athletes:', error);
     return { sessionsCreated: 0, error };
   }
 };

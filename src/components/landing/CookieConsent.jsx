@@ -38,13 +38,13 @@ export default function CookieConsent() {
     {
       key: 'necessary',
       label: 'Cookies necesarias',
-      description: 'Imprescindibles para el funcionamiento de la web. Incluyen inicio de sesion, preferencias de tema y seguridad.',
+      description: 'Imprescindibles para el funcionamiento de la web. Incluyen inicio de sesión, preferencias de tema y seguridad.',
       locked: true,
     },
     {
       key: 'analytics',
-      label: 'Cookies de analisis',
-      description: 'Nos ayudan a entender como se usa la plataforma para mejorar la experiencia (visitas, paginas mas vistas).',
+      label: 'Cookies de análisis',
+      description: 'Nos ayudan a entender cómo se usa la plataforma para mejorar la experiencia (visitas, páginas más vistas).',
       locked: false,
     },
     {
@@ -65,7 +65,7 @@ export default function CookieConsent() {
           transition={{ type: 'spring', damping: 25, stiffness: 200 }}
           className="fixed bottom-0 left-0 right-0 z-[60] p-4 sm:p-6"
         >
-          <div className="max-w-4xl mx-auto bg-white dark:bg-gray-800 rounded-2xl shadow-2xl border border-gray-200 dark:border-gray-700 overflow-hidden">
+          <div className="max-w-4xl mx-auto bg-white dark:bg-[#141414] rounded-2xl shadow-2xl border border-gray-200 dark:border-[#2A2A2A] overflow-hidden">
             {/* Main banner */}
             <div className="p-5 sm:p-6">
               <div className="flex items-start gap-4">
@@ -77,7 +77,7 @@ export default function CookieConsent() {
                     Utilizamos cookies
                   </h3>
                   <p className="text-sm text-gray-600 dark:text-gray-400 leading-relaxed">
-                    Usamos cookies propias y de terceros para mejorar tu experiencia, analizar el trafico
+                    Usamos cookies propias y de terceros para mejorar tu experiencia, analizar el tráfico
                     y personalizar el contenido. Puedes aceptar todas, solo las necesarias o configurar
                     tus preferencias.
                   </p>
@@ -94,7 +94,7 @@ export default function CookieConsent() {
                     transition={{ duration: 0.3 }}
                     className="overflow-hidden"
                   >
-                    <div className="mt-5 pt-5 border-t border-gray-200 dark:border-gray-700 space-y-4">
+                    <div className="mt-5 pt-5 border-t border-gray-200 dark:border-[#2A2A2A] space-y-4">
                       {cookieTypes.map((cookie) => (
                         <div
                           key={cookie.key}
@@ -121,7 +121,7 @@ export default function CookieConsent() {
                             className={`relative flex-shrink-0 w-11 h-6 rounded-full transition-colors ${
                               preferences[cookie.key]
                                 ? 'bg-sky-600'
-                                : 'bg-gray-300 dark:bg-gray-600'
+                                : 'bg-gray-300 dark:bg-[#2A2A2A]'
                             } ${cookie.locked ? 'opacity-70 cursor-not-allowed' : 'cursor-pointer'}`}
                           >
                             <span
@@ -147,7 +147,7 @@ export default function CookieConsent() {
                 </button>
                 <button
                   onClick={() => accept('necessary')}
-                  className="px-5 py-2.5 bg-gray-100 dark:bg-gray-700 hover:bg-gray-200 dark:hover:bg-gray-600 text-gray-700 dark:text-gray-300 text-sm font-semibold rounded-xl transition-colors"
+                  className="px-5 py-2.5 bg-gray-100 dark:bg-[#242424] hover:bg-gray-200 dark:hover:bg-gray-600 text-gray-700 dark:text-gray-300 text-sm font-semibold rounded-xl transition-colors"
                 >
                   Solo necesarias
                 </button>

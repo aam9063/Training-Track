@@ -43,40 +43,18 @@ import { getRPEEmoji } from '../../services/rpeService';
 import { inferTrainingType, toLocalDateStr } from '../../lib/dateUtils';
 import useAthleteTestData from '../../hooks/useAthleteTestData';
 import VAMTestModal from '../../components/dashboard/VAMTestModal';
+import {
+  BG_COLORS, PCT_LABELS,
+  fmtPaceTest, fmtRecTest, fmtVamP,
+  computeConconiData, computeVamData,
+} from '../../lib/testCalculations';
+import { getTypeLabel, getTypeColor, isPastOrToday } from '../../lib/trainingHelpers';
 
 // ---------------------------------------------------------------------------
 // Helpers
 // ---------------------------------------------------------------------------
 
-const getTypeLabel = (session) => {
-  const t = typeof session === 'string' ? session : inferTrainingType(session);
-  const labels = {
-    running: 'Carrera',
-    gym: 'Gimnasio',
-    rest: 'Descanso',
-    cross_training: 'Cross Training',
-    bike: 'Bici / Rodillo',
-  };
-  return labels[t] || t;
-};
-
-const getTypeColor = (session) => {
-  const t = typeof session === 'string' ? session : inferTrainingType(session);
-  const colors = {
-    running: 'bg-blue-100 text-blue-700 dark:bg-blue-900/30 dark:text-blue-400',
-    gym: 'bg-purple-100 text-purple-700 dark:bg-purple-900/30 dark:text-purple-400',
-    rest: 'bg-gray-100 text-gray-700 dark:bg-gray-700 dark:text-gray-400',
-    cross_training: 'bg-orange-100 text-orange-700 dark:bg-orange-900/30 dark:text-orange-400',
-    bike: 'bg-yellow-100 text-yellow-700 dark:bg-yellow-900/30 dark:text-yellow-400',
-  };
-  return colors[t] || colors.running;
-};
-
-const isPastOrToday = (dateStr) => {
-  if (!dateStr) return false;
-  const todayStr = toLocalDateStr(new Date());
-  return dateStr <= todayStr;
-};
+// getTypeLabel, getTypeColor, isPastOrToday imported from trainingHelpers.js
 
 // ---------------------------------------------------------------------------
 // Empty state (no plan yet)
@@ -169,35 +147,12 @@ function ActivePlanView({
   const [showVamModal, setShowVamModal] = useState(false);
 
   // ---- Tests de rendimiento: cálculos compartidos ----
-  const paceOrder = ['RM', 'R10', 'R9', 'R8', 'R7', 'R6', 'R5', 'R4', 'R3', 'R2', 'R1', 'RR'];
-  const sortedPaces = paceOrder.map(code => athletePaces.find(p => p.pace_code === code)).filter(Boolean);
-  const bgColors = { RM:'bg-red-600', R10:'bg-red-500', R9:'bg-red-400', R8:'bg-orange-500', R7:'bg-orange-400', R6:'bg-yellow-500', R5:'bg-yellow-400', R4:'bg-lime-400', R3:'bg-lime-500', R2:'bg-green-400', R1:'bg-green-500', RR:'bg-emerald-600' };
-  const pctLabels = { RM:'100%', R10:'92%', R9:'90%', R8:'88%', R7:'86%', R6:'84%', R5:'82%', R4:'78%', R3:'72%', R2:'62%', R1:'50%', RR:'42%' };
-  const seriesRecovery = (() => {
-    const rec = {};
-    if (latestConconiTest?.conconi_test_series) {
-      const series = [...latestConconiTest.conconi_test_series].sort((a, b) => a.series_number - b.series_number);
-      sortedPaces.forEach((pace, i) => {
-        if (pace.pace_code === 'RR') return;
-        const idx = Math.round((i / (sortedPaces.length - 1)) * (series.length - 1));
-        const s = series[Math.min(idx, series.length - 1)];
-        if (s?.recovery_time_seconds) rec[pace.pace_code] = s.recovery_time_seconds;
-      });
-    }
-    return rec;
-  })();
-  const conconiMaxHr = latestConconiTest?.max_hr_reached;
-  const fmtPaceTest = (secs) => { const m=Math.floor(secs/60); const s=Math.round(secs%60); return `${m}'${String(s).padStart(2,'0')}"`; };
-  const fmtRecTest  = (secs) => { if(!secs) return ''; const m=Math.floor(secs/60); const s=secs%60; return s>0?`${m}'${String(s).padStart(2,'0')}"` :`${m}'`; };
-  const conconiR10 = sortedPaces.find(p => p.pace_code === 'R10');
-  const conconiFirstRecov = Object.values(seriesRecovery)[0];
-  const vamKmh = latestVam ? parseFloat(latestVam.vam_kmh) : null;
-  const vamVo2max = vamKmh ? (vamKmh * 3.5).toFixed(1) : null;
-  const vamMlssKmh = vamKmh ? (vamKmh * 0.88).toFixed(1) : null;
-  const vamMlssPace = vamKmh ? Math.round(3600 / (vamKmh * 0.88)) : null;
-  const vamVt2Kmh = vamKmh ? (vamKmh * 0.875).toFixed(1) : null;
-  const vamVt2Pace = vamKmh ? Math.round(3600 / (vamKmh * 0.875)) : null;
-  const fmtVamP = (secs) => { const m=Math.floor(secs/60); const s=Math.round(secs%60); return `${m}'${String(s).padStart(2,'0')}"`; };
+  const { sortedPaces, seriesRecovery, conconiMaxHr, conconiR10, conconiFirstRecov } =
+    computeConconiData(athletePaces, latestConconiTest);
+  const { vamKmh, vamVo2max, vamMlssKmh, vamMlssPace, vamVt2Kmh, vamVt2Pace } =
+    computeVamData(latestVam);
+  const bgColors = BG_COLORS;
+  const pctLabels = PCT_LABELS;
 
   const { mapContainerRef } = useMapbox(selectedActivity?.polyline, selectedActivity?.loading);
 
@@ -689,8 +644,8 @@ function ActivePlanView({
                           )}
                           <div className={`w-1 h-8 rounded-full ml-1 ${
                             isCompleted ? 'bg-green-500'
-                              : isSkipped ? 'bg-gray-300 dark:bg-gray-600'
-                              : isRest ? 'bg-gray-200 dark:bg-gray-700'
+                              : isSkipped ? 'bg-gray-300 dark:bg-[#2A2A2A]'
+                              : isRest ? 'bg-gray-200 dark:bg-[#242424]'
                               : hasTraining ? 'bg-blue-400'
                               : 'bg-transparent'
                           }`} />
@@ -753,7 +708,7 @@ function ActivePlanView({
                             : isToday
                               ? 'border-blue-500 dark:border-blue-400'
                               : 'border-ath-border'}
-                        ${isRest ? 'bg-gray-50 dark:bg-gray-800/50' : ''}
+                        ${isRest ? 'bg-gray-50 dark:bg-[#141414]/50' : ''}
                         min-h-[300px]
                       `}
                     >
@@ -805,7 +760,7 @@ function ActivePlanView({
                               </span>
                             )}
                             {isSkipped && (
-                              <span className="inline-block text-xs px-2 py-1 rounded-full bg-gray-200 text-gray-600 dark:bg-gray-700 dark:text-gray-400">
+                              <span className="inline-block text-xs px-2 py-1 rounded-full bg-gray-200 text-gray-600 dark:bg-[#242424] dark:text-gray-400">
                                 Omitido
                               </span>
                             )}

@@ -1785,7 +1785,7 @@ const AthleteProfile = () => {
                                     effort.pr_rank === 1
                                       ? 'bg-yellow-100 dark:bg-yellow-900/30 text-yellow-700 dark:text-yellow-400'
                                       : effort.pr_rank === 2
-                                      ? 'bg-gray-100 dark:bg-gray-700/50 text-gray-700 dark:text-gray-300'
+                                      ? 'bg-gray-100 dark:bg-[#242424]/50 text-gray-700 dark:text-gray-300'
                                       : effort.pr_rank === 3
                                       ? 'bg-orange-100 dark:bg-orange-900/30 text-orange-700 dark:text-orange-400'
                                       : 'bg-blue-100 dark:bg-blue-900/30 text-blue-700 dark:text-blue-400'

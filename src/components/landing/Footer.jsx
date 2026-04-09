@@ -1,6 +1,6 @@
 import { motion } from 'framer-motion';
 import { Link } from 'react-router-dom';
-import { HiMail, HiLocationMarker, HiArrowRight } from 'react-icons/hi';
+import { HiMail, HiLocationMarker } from 'react-icons/hi';
 import WaitlistForm from './WaitlistForm';
 import { FaFacebook, FaInstagram, FaLinkedin, FaYoutube, FaTiktok } from 'react-icons/fa';
 import { FaXTwitter } from 'react-icons/fa6';
@@ -28,13 +28,13 @@ export default function Footer() {
     { icon: FaFacebook, href: '#', label: 'Facebook', color: 'hover:text-blue-600' },
     { icon: FaXTwitter, href: '#', label: 'Twitter', color: 'hover:text-blue-400' },
     { icon: FaInstagram, href: '#', label: 'Instagram', color: 'hover:text-pink-600' },
-    { icon: FaTiktok, href: '#', label: 'TikTok', color: 'hover:text-black-600' },
+    { icon: FaTiktok, href: '#', label: 'TikTok', color: 'hover:text-black' },
     { icon: FaLinkedin, href: '#', label: 'LinkedIn', color: 'hover:text-blue-700' },
     { icon: FaYoutube, href: '#', label: 'YouTube', color: 'hover:text-red-600' },
   ];
 
   return (
-    <footer className="bg-gray-100 dark:bg-gray-900 text-gray-600 dark:text-gray-300 relative overflow-hidden">
+    <footer className="bg-gray-100 dark:bg-[#0A0A0A] text-gray-600 dark:text-gray-300 relative overflow-hidden">
       {/* Background decoration */}
       <div className="absolute inset-0 overflow-hidden opacity-10">
         <div className="absolute top-0 left-1/4 w-96 h-96 bg-sky-500 rounded-full blur-3xl" />
@@ -53,8 +53,8 @@ export default function Footer() {
               transition={{ duration: 0.5 }}
             >
               <div className="flex items-center space-x-2 mb-4">
-                <div className="w-10 h-10 bg-sky-600 rounded-lg flex items-center justify-center">
-                <img src="/img/logo.png" alt="TrainingTrack" className="w-16 h-16 object-contain" />
+                <div className="w-10 h-10 bg-sky-600 rounded-lg flex items-center justify-center overflow-hidden">
+                <img src="/img/logo.png" alt="TrainingTrack" className="w-8 h-8 object-contain" />
 
                 </div>
                 <span className="text-2xl font-bold text-gray-900 dark:text-white">Training Track</span>

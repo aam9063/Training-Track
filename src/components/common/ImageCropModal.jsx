@@ -2,6 +2,7 @@ import { useState, useCallback } from 'react';
 import Cropper from 'react-easy-crop';
 import { motion } from 'framer-motion';
 import { FiX, FiZoomIn, FiZoomOut } from 'react-icons/fi';
+import { showError } from '../../lib/toast';
 
 const createImage = (url) =>
   new Promise((resolve, reject) => {
@@ -60,8 +61,7 @@ const ImageCropModal = ({ imageSrc, onCropComplete, onCancel }) => {
     try {
       const croppedBlob = await getCroppedImg(imageSrc, croppedAreaPixels);
       await onCropComplete(croppedBlob);
-    } catch (error) {
-      console.error('Error cropping image:', error);
+    } catch { showError('Error al recortar la imagen');
     } finally {
       setSaving(false);
     }
@@ -72,10 +72,10 @@ const ImageCropModal = ({ imageSrc, onCropComplete, onCancel }) => {
       <motion.div
         initial={{ opacity: 0, scale: 0.95 }}
         animate={{ opacity: 1, scale: 1 }}
-        className="bg-white dark:bg-gray-800 rounded-xl shadow-xl w-full max-w-lg overflow-hidden"
+        className="bg-white dark:bg-[#141414] rounded-xl shadow-xl w-full max-w-lg overflow-hidden"
       >
         {/* Header */}
-        <div className="flex items-center justify-between p-4 border-b border-gray-200 dark:border-gray-700">
+        <div className="flex items-center justify-between p-4 border-b border-gray-200 dark:border-[#2A2A2A]">
           <h3 className="text-lg font-bold text-gray-900 dark:text-white">
             Ajustar foto de perfil
           </h3>
@@ -113,7 +113,7 @@ const ImageCropModal = ({ imageSrc, onCropComplete, onCancel }) => {
               step={0.05}
               value={zoom}
               onChange={(e) => setZoom(Number(e.target.value))}
-              className="flex-1 h-1.5 bg-gray-200 dark:bg-gray-600 rounded-full appearance-none cursor-pointer accent-blue-600"
+              className="flex-1 h-1.5 bg-gray-200 dark:bg-[#2A2A2A] rounded-full appearance-none cursor-pointer accent-blue-600"
             />
             <FiZoomIn className="w-4 h-4 text-gray-400 flex-shrink-0" />
           </div>
@@ -123,7 +123,7 @@ const ImageCropModal = ({ imageSrc, onCropComplete, onCancel }) => {
         <div className="flex justify-end space-x-3 px-6 pb-4">
           <button
             onClick={onCancel}
-            className="px-4 py-2 text-sm font-medium text-gray-700 dark:text-gray-300 border border-gray-300 dark:border-gray-600 rounded-lg hover:bg-gray-100 dark:hover:bg-gray-700 transition-colors"
+            className="px-4 py-2 text-sm font-medium text-gray-700 dark:text-gray-300 border border-gray-300 dark:border-[#2A2A2A] rounded-lg hover:bg-gray-100 dark:hover:bg-gray-700 transition-colors"
           >
             Cancelar
           </button>
@@ -140,4 +140,5 @@ const ImageCropModal = ({ imageSrc, onCropComplete, onCancel }) => {
   );
 };
 
+export { ImageCropModal };
 export default ImageCropModal;

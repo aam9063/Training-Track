@@ -30,7 +30,6 @@ export default function AuthCallback() {
 
         await completeOAuthRegistration(session);
       } catch (err) {
-        console.error('OAuth callback error:', err);
         setError(err.message);
         setTimeout(() => navigate('/login'), 3000);
       }
@@ -72,7 +71,7 @@ export default function AuthCallback() {
 
         if (existingUser) {
           // Update the users row with correct data
-          await supabase
+          const { error: updateError } = await supabase
             .from('users')
             .update({
               role: meta.role,
@@ -81,16 +80,18 @@ export default function AuthCallback() {
               auth_provider: 'google',
             })
             .eq('id', user.id);
+          if (updateError) throw updateError;
 
           // Ensure role-specific table exists
           if (meta.role === 'athlete') {
-            await supabase
+            const { error: athErr } = await supabase
               .from('athletes')
               .upsert({ id: user.id }, { onConflict: 'id', ignoreDuplicates: true });
+            if (athErr) throw athErr;
 
             // Create coach-athlete relationship if coachId provided
             if (meta.coachId) {
-              await supabase
+              const { error: relErr } = await supabase
                 .from('coach_athlete_relationship')
                 .upsert({
                   coach_id: meta.coachId,
@@ -98,11 +99,13 @@ export default function AuthCallback() {
                   status: 'active',
                   start_date: toLocalDateStr(new Date()),
                 }, { onConflict: 'coach_id,athlete_id', ignoreDuplicates: true });
+              if (relErr) throw relErr;
             }
           } else if (meta.role === 'coach') {
-            await supabase
+            const { error: coachErr } = await supabase
               .from('coaches')
               .upsert({ id: user.id }, { onConflict: 'id', ignoreDuplicates: true });
+            if (coachErr) throw coachErr;
           }
         }
         // If no existingUser, the handle_new_user trigger should create it
@@ -113,11 +116,12 @@ export default function AuthCallback() {
       } else {
         // This is a LOGIN via Google — just redirect based on existing role
         // Set auth_provider on users table if not already set
-        await supabase
+        const { error: provErr } = await supabase
           .from('users')
           .update({ auth_provider: 'google' })
           .eq('id', user.id)
           .is('auth_provider', null);
+        if (provErr) throw provErr;
 
         const { data: userData } = await supabase
           .from('users')
@@ -136,7 +140,7 @@ export default function AuthCallback() {
 
   if (error) {
     return (
-      <div className="min-h-screen flex items-center justify-center bg-gray-50 dark:bg-gray-900">
+      <div className="min-h-screen flex items-center justify-center bg-gray-50 dark:bg-[#0A0A0A]">
         <div className="text-center">
           <p className="text-red-500 mb-2">Error al procesar el inicio de sesión</p>
           <p className="text-sm text-gray-500">{error}</p>
@@ -147,7 +151,7 @@ export default function AuthCallback() {
   }
 
   return (
-    <div className="min-h-screen flex items-center justify-center bg-gray-50 dark:bg-gray-900">
+    <div className="min-h-screen flex items-center justify-center bg-gray-50 dark:bg-[#0A0A0A]">
       <div className="flex flex-col items-center gap-3">
         <div className="w-8 h-8 border-3 border-blue-600 border-t-transparent rounded-full animate-spin" />
         <p className="text-sm text-gray-500 dark:text-gray-400">Completando inicio de sesión...</p>

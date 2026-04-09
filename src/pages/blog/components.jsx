@@ -71,7 +71,7 @@ export function Blockquote({ children }) {
 }
 
 export function Divider() {
-  return <hr className="my-8 border-gray-200 dark:border-gray-700" />;
+  return <hr className="my-8 border-gray-200 dark:border-[#2A2A2A]" />;
 }
 
 export function InternalLink({ to, children }) {

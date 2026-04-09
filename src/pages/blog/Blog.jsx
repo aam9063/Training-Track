@@ -33,7 +33,7 @@ function ArticleCard({ article, index }) {
     >
       <Link
         to={`/blog/${article.slug}`}
-        className="group block bg-white dark:bg-gray-800 rounded-2xl shadow-lg hover:shadow-xl overflow-hidden transition-all duration-300 hover:-translate-y-1"
+        className="group block bg-white dark:bg-[#141414] rounded-2xl shadow-lg hover:shadow-xl overflow-hidden transition-all duration-300 hover:-translate-y-1"
       >
         {/* Image */}
         <div className="relative aspect-video overflow-hidden">
@@ -101,7 +101,7 @@ export default function Blog() {
   });
 
   return (
-    <div className="min-h-screen bg-white dark:bg-gray-900">
+    <div className="min-h-screen bg-white dark:bg-[#0A0A0A]">
       <Navbar />
 
       {/* Hero */}

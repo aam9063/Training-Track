@@ -76,12 +76,12 @@ export default function FAQ() {
     <section
       id="faq"
       ref={ref}
-      className="py-24 bg-gradient-to-br from-gray-50 to-sky-50 dark:from-gray-800 dark:to-gray-900 relative overflow-hidden"
+      className="py-24 bg-gradient-to-br from-gray-50 to-sky-50 dark:from-[#0A0A0A] dark:to-[#141414] relative overflow-hidden"
     >
       {/* Background decoration */}
       <div className="absolute inset-0 overflow-hidden opacity-30">
         <div className="absolute top-1/4 left-0 w-96 h-96 bg-sky-300 dark:bg-sky-900/30 rounded-full blur-3xl" />
-        <div className="absolute bottom-1/4 right-0 w-96 h-96 bg-gray-300 dark:bg-gray-700/30 rounded-full blur-3xl" />
+        <div className="absolute bottom-1/4 right-0 w-96 h-96 bg-gray-300 dark:bg-[#242424]/30 rounded-full blur-3xl" />
       </div>
 
       <div className="relative max-w-4xl mx-auto px-4 sm:px-6 lg:px-8">
@@ -126,7 +126,7 @@ export default function FAQ() {
               initial={{ opacity: 0, x: -20 }}
               animate={isInView ? { opacity: 1, x: 0 } : { opacity: 0, x: -20 }}
               transition={{ duration: 0.5, delay: 0.1 * index }}
-              className="bg-white dark:bg-gray-800 rounded-xl shadow-lg overflow-hidden border border-gray-100 dark:border-gray-700"
+              className="bg-white dark:bg-[#141414] rounded-xl shadow-lg overflow-hidden border border-gray-100 dark:border-[#2A2A2A]"
             >
               <button
                 onClick={() => toggleFAQ(index)}
@@ -168,7 +168,7 @@ export default function FAQ() {
           initial={{ opacity: 0, y: 30 }}
           animate={isInView ? { opacity: 1, y: 0 } : { opacity: 0, y: 30 }}
           transition={{ duration: 0.6, delay: 0.8 }}
-          className="mt-16 text-center bg-white dark:bg-gray-800 rounded-2xl p-8 shadow-xl border border-gray-100 dark:border-gray-700"
+          className="mt-16 text-center bg-white dark:bg-[#141414] rounded-2xl p-8 shadow-xl border border-gray-100 dark:border-[#2A2A2A]"
         >
           <h3 className="text-2xl font-bold text-gray-900 dark:text-white mb-3">
             ¿Aún tienes preguntas?
@@ -185,7 +185,7 @@ export default function FAQ() {
             </a>
             <Link
               to="/casos-de-uso"
-              className="px-8 py-3 bg-gray-100 dark:bg-gray-700 text-gray-900 dark:text-white rounded-xl font-semibold hover:bg-gray-200 dark:hover:bg-gray-600 transition-all duration-200 hover:scale-105 active:scale-95 transform"
+              className="px-8 py-3 bg-gray-100 dark:bg-[#242424] text-gray-900 dark:text-white rounded-xl font-semibold hover:bg-gray-200 dark:hover:bg-gray-600 transition-all duration-200 hover:scale-105 active:scale-95 transform"
             >
               Ver Casos de Uso
             </Link>

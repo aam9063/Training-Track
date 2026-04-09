@@ -83,7 +83,7 @@ export default function WaitlistForm({ source = 'landing', variant = 'light', cl
                 className={`w-full pl-11 pr-4 py-3.5 rounded-xl text-sm font-medium transition-all outline-none ${
                   isOnBlue
                     ? 'bg-white/20 text-white placeholder-white/50 border border-white/30 focus:border-white/60 focus:bg-white/25'
-                    : 'bg-white dark:bg-gray-800 text-gray-900 dark:text-white placeholder-gray-400 dark:placeholder-gray-500 border border-gray-300 dark:border-gray-600 focus:border-sky-500 focus:ring-2 focus:ring-sky-500/20'
+                    : 'bg-white dark:bg-[#141414] text-gray-900 dark:text-white placeholder-gray-400 dark:placeholder-gray-500 border border-gray-300 dark:border-[#2A2A2A] focus:border-sky-500 focus:ring-2 focus:ring-sky-500/20'
                 } disabled:opacity-60`}
               />
             </div>

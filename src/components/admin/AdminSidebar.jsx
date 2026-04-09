@@ -62,7 +62,7 @@ const AdminSidebar = ({ onCollapse }) => {
       {/* Mobile Menu Button */}
       <button
         onClick={() => setMobileOpen(!mobileOpen)}
-        className="lg:hidden fixed top-4 left-4 z-50 p-2 bg-white dark:bg-gray-800 rounded-lg shadow-lg border border-gray-200 dark:border-gray-700"
+        className="lg:hidden fixed top-4 left-4 z-50 p-2 bg-white dark:bg-[#141414] rounded-lg shadow-lg border border-gray-200 dark:border-[#2A2A2A]"
       >
         {mobileOpen ? (
           <FiX className="w-6 h-6 text-gray-600 dark:text-gray-400" />
@@ -84,8 +84,8 @@ const AdminSidebar = ({ onCollapse }) => {
         className={`
           ${collapsed ? 'lg:w-20' : 'lg:w-64'}
           w-64
-          bg-white dark:bg-gray-800
-          border-r border-gray-200 dark:border-gray-700
+          bg-white dark:bg-[#141414]
+          border-r border-gray-200 dark:border-[#2A2A2A]
           transition-all duration-300 ease-in-out
           flex flex-col
           h-screen
@@ -96,7 +96,7 @@ const AdminSidebar = ({ onCollapse }) => {
         `}
       >
         {/* Logo & Toggle */}
-        <div className={`h-16 flex items-center border-b border-gray-200 dark:border-gray-700 ${collapsed ? 'justify-center px-2' : 'justify-between px-4'}`}>
+        <div className={`h-16 flex items-center border-b border-gray-200 dark:border-[#2A2A2A] ${collapsed ? 'justify-center px-2' : 'justify-between px-4'}`}>
           <Link to="/admin" className={`flex items-center ${collapsed ? '' : 'space-x-2'}`}>
             <div className="w-8 h-8 rounded-lg bg-sky-600 flex items-center justify-center flex-shrink-0">
               <FiShield className="w-5 h-5 text-white" />
@@ -118,7 +118,7 @@ const AdminSidebar = ({ onCollapse }) => {
           {collapsed && (
             <button
               onClick={() => setCollapsed(!collapsed)}
-              className="absolute top-16 left-1/2 -translate-x-1/2 -translate-y-1/2 p-1 rounded-full bg-white dark:bg-gray-800 border border-gray-200 dark:border-gray-700 shadow-sm hover:bg-gray-100 dark:hover:bg-gray-700 text-gray-500 dark:text-gray-400 transition-colors z-10"
+              className="absolute top-16 left-1/2 -translate-x-1/2 -translate-y-1/2 p-1 rounded-full bg-white dark:bg-[#141414] border border-gray-200 dark:border-[#2A2A2A] shadow-sm hover:bg-gray-100 dark:hover:bg-gray-700 text-gray-500 dark:text-gray-400 transition-colors z-10"
             >
               <FiChevronRight className="w-4 h-4" />
             </button>
@@ -152,7 +152,7 @@ const AdminSidebar = ({ onCollapse }) => {
           })}
 
           {/* Separator */}
-          <div className="border-t border-gray-200 dark:border-gray-700 my-3"></div>
+          <div className="border-t border-gray-200 dark:border-[#2A2A2A] my-3"></div>
 
           {/* Back to Dashboard */}
           <Link
@@ -182,7 +182,7 @@ const AdminSidebar = ({ onCollapse }) => {
             `}
             title={collapsed ? (theme === 'light' ? 'Modo oscuro' : 'Modo claro') : ''}
           >
-            <div className="relative w-11 h-6 bg-gray-300 dark:bg-gray-600 rounded-full flex-shrink-0 transition-colors">
+            <div className="relative w-11 h-6 bg-gray-300 dark:bg-[#2A2A2A] rounded-full flex-shrink-0 transition-colors">
               <div className={`absolute top-0.5 w-5 h-5 rounded-full bg-white shadow-md flex items-center justify-center transition-transform duration-300 ${theme === 'dark' ? 'translate-x-[22px]' : 'translate-x-0.5'}`}>
                 {theme === 'light' ? (
                   <FiSun className="w-3 h-3 text-yellow-500" />
@@ -200,7 +200,7 @@ const AdminSidebar = ({ onCollapse }) => {
         </div>
 
         {/* User Section */}
-        <div className="border-t border-gray-200 dark:border-gray-700 p-3">
+        <div className="border-t border-gray-200 dark:border-[#2A2A2A] p-3">
           <button
             ref={userBtnRef}
             onClick={() => {
@@ -239,7 +239,7 @@ const AdminSidebar = ({ onCollapse }) => {
         <>
           <div className="fixed inset-0 z-50" onClick={() => setShowUserMenu(false)} />
           <div
-            className="fixed w-48 bg-white dark:bg-gray-800 rounded-lg shadow-lg border border-gray-200 dark:border-gray-700 py-1 z-50"
+            className="fixed w-48 bg-white dark:bg-[#141414] rounded-lg shadow-lg border border-gray-200 dark:border-[#2A2A2A] py-1 z-50"
             style={{ bottom: menuPos.bottom, left: menuPos.left }}
           >
             <button

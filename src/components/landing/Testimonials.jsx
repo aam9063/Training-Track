@@ -38,12 +38,12 @@ export default function Testimonials() {
     <section
       id="testimonios"
       ref={ref}
-      className="py-24 bg-gradient-to-br from-gray-50 to-sky-50 dark:from-gray-800 dark:to-gray-900 relative overflow-hidden"
+      className="py-24 bg-gradient-to-br from-gray-50 to-sky-50 dark:from-[#0A0A0A] dark:to-[#141414] relative overflow-hidden"
     >
       {/* Background elements */}
       <div className="absolute inset-0 overflow-hidden opacity-30">
         <div className="absolute top-0 left-1/4 w-96 h-96 bg-sky-300 dark:bg-sky-900/30 rounded-full blur-3xl" />
-        <div className="absolute bottom-0 right-1/4 w-96 h-96 bg-gray-300 dark:bg-gray-700/30 rounded-full blur-3xl" />
+        <div className="absolute bottom-0 right-1/4 w-96 h-96 bg-gray-300 dark:bg-[#242424]/30 rounded-full blur-3xl" />
       </div>
 
       <div className="relative max-w-7xl mx-auto px-4 sm:px-6 lg:px-8">
@@ -91,7 +91,7 @@ export default function Testimonials() {
                 initial={{ opacity: 0, y: 20 }}
                 animate={isInView ? { opacity: 1, y: 0 } : { opacity: 0, y: 20 }}
                 transition={{ duration: 0.5, delay: 0.3 + index * 0.1 }}
-                className="bg-white dark:bg-gray-800 rounded-2xl p-8 shadow-xl hover:shadow-2xl transition-all duration-300 border border-gray-100 dark:border-gray-700 group"
+                className="bg-white dark:bg-[#141414] rounded-2xl p-8 shadow-xl hover:shadow-2xl transition-all duration-300 border border-gray-100 dark:border-[#2A2A2A] group"
               >
                 <div className="flex items-start gap-5">
                   <div className="w-12 h-12 rounded-xl bg-sky-100 dark:bg-sky-900/40 flex items-center justify-center flex-shrink-0 group-hover:scale-110 transition-transform duration-300">

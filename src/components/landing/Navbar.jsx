@@ -67,7 +67,7 @@ export default function Navbar() {
       transition={{ duration: 0.6, ease: 'easeOut' }}
       className={`fixed top-0 left-0 right-0 z-50 transition-all duration-300 ${
         isScrolled
-          ? 'bg-white/80 dark:bg-gray-900/80 backdrop-blur-lg shadow-lg'
+          ? 'bg-white/80 dark:bg-[#0A0A0A]/80 backdrop-blur-lg shadow-lg'
           : 'bg-transparent'
       }`}
     >
@@ -87,7 +87,7 @@ export default function Navbar() {
               }
             }} className="flex items-center space-x-2">
               <div className="w-10 h-10 bg-sky-600 rounded-lg flex items-center justify-center overflow-hidden">
-                <img src="/img/logo.png" alt="trainingtrack" className="w-16 h-16 object-contain" />
+                <img src={theme === 'dark' ? '/img/logo-dark.png' : '/img/logo.png'} alt="TrainingTrack logo" className="w-16 h-16 object-contain" />
               </div>
               <span className={`text-2xl font-bold ${!isScrolled && hasDarkHero ? 'text-white' : 'text-gray-900 dark:text-white'}`}>
                 Training<span className={!isScrolled && hasDarkHero ? 'text-sky-400' : 'text-sky-600 dark:text-sky-400'}>Track</span>
@@ -130,14 +130,14 @@ export default function Navbar() {
               className={`p-2 rounded-lg transition-colors duration-200 ${
                 !isScrolled && hasDarkHero
                   ? 'bg-white/20 hover:bg-white/30'
-                  : 'bg-gray-200 dark:bg-gray-700 hover:bg-gray-300 dark:hover:bg-gray-600'
+                  : 'bg-gray-200 dark:bg-[#242424] hover:bg-gray-300 dark:hover:bg-gray-600'
               }`}
               aria-label="Toggle theme"
             >
               {theme === 'light' ? (
                 <HiMoon className={`w-5 h-5 ${!isScrolled && hasDarkHero ? 'text-white' : 'text-gray-700'}`} />
               ) : (
-                <HiSun className="w-5 h-5 text-yellow-400" />
+                <HiSun className="w-5 h-5 text-sky-400" />
               )}
             </motion.button>
 
@@ -181,14 +181,14 @@ export default function Navbar() {
               className={`p-2 rounded-lg ${
                 !isScrolled && hasDarkHero
                   ? 'bg-white/20'
-                  : 'bg-gray-200 dark:bg-gray-700'
+                  : 'bg-gray-200 dark:bg-[#242424]'
               }`}
               aria-label="Toggle theme"
             >
               {theme === 'light' ? (
                 <HiMoon className={`w-5 h-5 ${!isScrolled && hasDarkHero ? 'text-white' : 'text-gray-700'}`} />
               ) : (
-                <HiSun className="w-5 h-5 text-yellow-400" />
+                <HiSun className="w-5 h-5 text-sky-400" />
               )}
             </button>
 
@@ -197,7 +197,7 @@ export default function Navbar() {
               className={`p-2 rounded-lg ${
                 !isScrolled && hasDarkHero
                   ? 'bg-white/20'
-                  : 'bg-gray-200 dark:bg-gray-700'
+                  : 'bg-gray-200 dark:bg-[#242424]'
               }`}
               aria-label="Toggle menu"
             >
@@ -219,7 +219,7 @@ export default function Navbar() {
             animate={{ opacity: 1, height: 'auto' }}
             exit={{ opacity: 0, height: 0 }}
             transition={{ duration: 0.3 }}
-            className="md:hidden bg-white dark:bg-gray-900 border-t border-gray-200 dark:border-gray-800"
+            className="md:hidden bg-white dark:bg-[#0A0A0A] border-t border-gray-200 dark:border-gray-800"
           >
             <div className="px-4 py-6 space-y-4">
               {navLinks.map((link) => (
@@ -236,7 +236,7 @@ export default function Navbar() {
                 <Link
                   to="/login"
                   onClick={() => setIsMobileMenuOpen(false)}
-                  className="block w-full px-6 py-3 mb-4 text-gray-700 dark:text-gray-300 border-2 border-gray-300 dark:border-gray-600 rounded-lg font-medium hover:border-sky-600 dark:hover:border-sky-400 transition-colors duration-200 text-center"
+                  className="block w-full px-6 py-3 mb-4 text-gray-700 dark:text-gray-300 border-2 border-gray-300 dark:border-[#2A2A2A] rounded-lg font-medium hover:border-sky-600 dark:hover:border-sky-400 transition-colors duration-200 text-center"
                 >
                   Iniciar Sesión
                 </Link>

@@ -28,7 +28,7 @@ export default function ForgotPassword() {
   };
 
   return (
-    <div className="min-h-screen flex items-center justify-center px-4 sm:px-6 lg:px-8 bg-white dark:bg-gray-900">
+    <div className="min-h-screen flex items-center justify-center px-4 sm:px-6 lg:px-8 bg-white dark:bg-[#0A0A0A]">
       <motion.div
         initial={{ opacity: 0, y: 20 }}
         animate={{ opacity: 1, y: 0 }}
@@ -105,7 +105,7 @@ export default function ForgotPassword() {
                     required
                     value={email}
                     onChange={(e) => { setEmail(e.target.value); setError(''); }}
-                    className="w-full pl-10 pr-4 py-3 border-2 border-gray-200 dark:border-gray-700 rounded-xl bg-white dark:bg-gray-800 text-gray-900 dark:text-white placeholder-gray-400 focus:outline-none focus:border-sky-500 dark:focus:border-sky-400 transition-colors"
+                    className="w-full pl-10 pr-4 py-3 border-2 border-gray-200 dark:border-[#2A2A2A] rounded-xl bg-white dark:bg-[#141414] text-gray-900 dark:text-white placeholder-gray-400 focus:outline-none focus:border-sky-500 dark:focus:border-sky-400 transition-colors"
                     placeholder="tu@email.com"
                   />
                 </div>

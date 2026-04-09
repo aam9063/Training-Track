@@ -9,7 +9,7 @@ const StatCard = ({ icon: Icon, label, value, color, delay = 0 }) => (
     initial={{ opacity: 0, y: 20 }}
     animate={{ opacity: 1, y: 0 }}
     transition={{ delay }}
-    className="bg-white dark:bg-gray-800 rounded-xl p-5 border border-gray-200 dark:border-gray-700 shadow-sm"
+    className="bg-white dark:bg-[#141414] rounded-xl p-5 border border-gray-200 dark:border-[#2A2A2A] shadow-sm"
   >
     <div className="flex items-center justify-between">
       <div>
@@ -41,8 +41,7 @@ export default function AdminDashboard() {
 
       if (statsRes.data) setStats(statsRes.data);
       if (usersRes.data) setRecentUsers(usersRes.data.slice(0, 5));
-    } catch (error) {
-      console.error('Error loading admin dashboard:', error);
+    } catch { /* silenced */
     } finally {
       setLoading(false);
     }
@@ -66,7 +65,7 @@ export default function AdminDashboard() {
       <div className="flex items-center justify-center min-h-screen">
         <div className="text-center">
           <div className="animate-spin rounded-full h-12 w-12 border-b-2 border-sky-600 mx-auto"></div>
-          <p className="mt-4 text-gray-600 dark:text-gray-400">Cargando panel de administracion...</p>
+          <p className="mt-4 text-gray-600 dark:text-gray-400">Cargando panel de administración...</p>
         </div>
       </div>
     );
@@ -81,7 +80,7 @@ export default function AdminDashboard() {
         className="mb-8"
       >
         <h1 className="text-2xl sm:text-3xl font-bold text-gray-900 dark:text-white">
-          Panel de Administracion
+          Panel de Administración
         </h1>
         <p className="text-gray-500 dark:text-gray-400 mt-1">
           Resumen general de la plataforma
@@ -132,9 +131,9 @@ export default function AdminDashboard() {
         initial={{ opacity: 0, y: 20 }}
         animate={{ opacity: 1, y: 0 }}
         transition={{ delay: 0.25 }}
-        className="bg-white dark:bg-gray-800 rounded-xl border border-gray-200 dark:border-gray-700 shadow-sm"
+        className="bg-white dark:bg-[#141414] rounded-xl border border-gray-200 dark:border-[#2A2A2A] shadow-sm"
       >
-        <div className="flex items-center justify-between p-5 border-b border-gray-200 dark:border-gray-700">
+        <div className="flex items-center justify-between p-5 border-b border-gray-200 dark:border-[#2A2A2A]">
           <h2 className="text-lg font-semibold text-gray-900 dark:text-white">
             Usuarios Recientes
           </h2>
@@ -151,7 +150,7 @@ export default function AdminDashboard() {
             No hay usuarios registrados
           </div>
         ) : (
-          <div className="divide-y divide-gray-200 dark:divide-gray-700">
+          <div className="divide-y divide-gray-200 dark:divide-[#2A2A2A]">
             {recentUsers.map((user) => (
               <Link
                 key={user.id}

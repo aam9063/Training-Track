@@ -35,7 +35,7 @@ export default function PWAInstallPrompt() {
 
     window.addEventListener('beforeinstallprompt', handler);
     return () => window.removeEventListener('beforeinstallprompt', handler);
-  }, []);
+  }, [user]);
 
   const handleInstall = async () => {
     if (!deferredPrompt) return;
@@ -53,7 +53,7 @@ export default function PWAInstallPrompt() {
   if (!show) return null;
 
   return (
-    <div className="fixed bottom-4 left-4 right-4 sm:left-auto sm:right-4 sm:w-80 z-50 bg-white dark:bg-gray-800 rounded-xl shadow-xl border border-gray-200 dark:border-gray-700 p-4 flex items-start gap-3">
+    <div className="fixed bottom-4 left-4 right-4 sm:left-auto sm:right-4 sm:w-80 z-50 bg-white dark:bg-[#141414] rounded-xl shadow-xl border border-gray-200 dark:border-[#2A2A2A] p-4 flex items-start gap-3">
       <div className="w-10 h-10 flex-shrink-0 rounded-xl overflow-hidden">
         <img src="/img/logo_192.png" alt="TrainingTrack" className="w-full h-full object-cover" />
       </div>

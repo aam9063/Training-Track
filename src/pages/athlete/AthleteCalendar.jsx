@@ -84,8 +84,9 @@ const AthleteCalendar = () => {
           .lte('event_date', endDate)
           .order('event_date', { ascending: true }),
       ]);
-      setSessions(sessionsRes.data || []);
-      setCompetitions((compsRes.data || []).map(c => ({ ...c, isCompetition: true })));
+      if (sessionsRes?.error || compsRes?.error) throw new Error('Error cargando calendario');
+      setSessions(sessionsRes?.data || []);
+      setCompetitions((compsRes?.data || []).map(c => ({ ...c, isCompetition: true })));
     } catch {
       setSessions([]);
       setCompetitions([]);
@@ -232,7 +233,7 @@ const AthleteCalendar = () => {
       planned: 'bg-blue-100 text-blue-700 dark:bg-blue-900/30 dark:text-blue-400',
       in_progress: 'bg-yellow-100 text-yellow-700 dark:bg-yellow-900/30 dark:text-yellow-400',
       completed: 'bg-green-100 text-green-700 dark:bg-green-900/30 dark:text-green-400',
-      skipped: 'bg-gray-100 text-gray-700 dark:bg-gray-700 dark:text-gray-400',
+      skipped: 'bg-gray-100 text-gray-700 dark:bg-[#242424] dark:text-gray-400',
     };
     return colors[status] || colors.planned;
   };

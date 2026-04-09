@@ -3,6 +3,7 @@ import { motion, AnimatePresence } from 'framer-motion';
 import { useTheme } from '../../contexts/ThemeContext';
 import { FiSmartphone, FiDownload, FiShare2 } from 'react-icons/fi';
 import { BsStars } from 'react-icons/bs';
+import IphoneMockup from '../common/IphoneMockup';
 
 const mobileScreenshots = [
   {
@@ -58,7 +59,7 @@ export default function MobileShowcase() {
   const active = mobileScreenshots[activeIndex];
 
   return (
-    <section className="py-24 bg-gradient-to-b from-white via-sky-50/30 to-white dark:from-gray-900 dark:via-gray-800/50 dark:to-gray-900 overflow-hidden">
+    <section className="py-24 bg-gradient-to-b from-white via-sky-50/30 to-white dark:from-[#0A0A0A] dark:via-[#111111] dark:to-[#0A0A0A] overflow-hidden">
       <div className="relative max-w-7xl mx-auto px-4 sm:px-6 lg:px-8">
 
         {/* Section header */}
@@ -104,28 +105,26 @@ export default function MobileShowcase() {
             <div className="absolute inset-0 bg-sky-400/10 dark:bg-sky-600/10 rounded-full blur-3xl pointer-events-none" />
 
             {/* 3D perspective wrapper */}
-            <div className="relative z-10 w-full max-w-[200px] sm:max-w-[240px]" style={{ perspective: '900px' }}>
+            <div className="relative z-10 w-full max-w-[200px] sm:max-w-[240px] [perspective:900px]">
 
-              {/* Phone frame — tilted */}
+              {/* iPhone mockup — tilted */}
               <motion.div
                 initial={{ rotateY: 0, rotateX: 0 }}
-                whileInView={{ rotateY: -18, rotateX: 6 }}
+                whileInView={{ rotateY: -16, rotateX: 5 }}
                 viewport={{ once: true, margin: '-50px' }}
-                transition={{ duration: 1, ease: 'easeOut' }}
-                whileHover={{ rotateY: -8, rotateX: 3, transition: { duration: 0.4 } }}
-                className="bg-gray-900 rounded-[2.5rem] p-2.5 ring-1 ring-white/10"
-                style={{
-                  transformStyle: 'preserve-3d',
-                  boxShadow: '-20px 20px 60px rgba(0,0,0,0.45), -8px 8px 20px rgba(0,0,0,0.25)',
-                }}
+                transition={{ duration: 1.2, ease: 'easeOut' }}
+                whileHover={{ rotateY: -6, rotateX: 2, transition: { duration: 0.5 } }}
+                className="[transform-style:preserve-3d] [filter:drop-shadow(-20px_20px_40px_rgba(0,0,0,0.35))]"
               >
-                <div className="rounded-[2rem] overflow-hidden bg-white aspect-[9/19.5] relative">
-                  {/* Notch bar */}
-                  <div className="absolute top-0 left-0 right-0 h-7 bg-gray-900 flex items-center justify-center z-10">
-                    <div className="w-20 h-4 bg-gray-900 rounded-full" />
-                  </div>
-                  {/* Screenshot */}
-                  <div className="absolute inset-0 top-7 overflow-hidden">
+                <div className="relative">
+                  {/* Animated screenshot layer */}
+                  <div
+                    className="absolute z-[1] overflow-hidden pointer-events-none"
+                    style={{
+                      left: '4.91%', top: '2.18%', width: '89.95%', height: '95.64%',
+                      borderRadius: '14.31% / 6.61%',
+                    }}
+                  >
                     <AnimatePresence mode="wait">
                       <motion.img
                         key={`${active.id}-${theme}`}
@@ -140,6 +139,7 @@ export default function MobileShowcase() {
                       />
                     </AnimatePresence>
                   </div>
+                  <IphoneMockup />
                 </div>
               </motion.div>
 
@@ -149,11 +149,11 @@ export default function MobileShowcase() {
                 whileInView={{ opacity: 1, scale: 1 }}
                 viewport={{ once: true }}
                 transition={{ delay: 0.6, type: 'spring', stiffness: 200 }}
-                className="absolute -top-3 -right-14 sm:-right-16 bg-white dark:bg-gray-800 rounded-2xl shadow-xl p-2.5 border border-gray-200 dark:border-gray-700 hidden sm:flex items-center gap-2"
+                className="absolute -top-3 -right-14 sm:-right-16 bg-white dark:bg-[#141414] rounded-2xl shadow-xl p-2.5 border border-gray-200 dark:border-[#2A2A2A] hidden sm:flex items-center gap-2"
               >
                 <div className="w-8 h-8 rounded-lg overflow-hidden flex-shrink-0">
                   <img
-                    src="/img/mobile-pwa.jpg"
+                    src="/img/mobile-pwa.png"
                     alt="TrainingTrack instalada en móvil"
                     loading="lazy"
                     className="w-full h-full object-cover"
@@ -197,10 +197,10 @@ export default function MobileShowcase() {
                   className={`text-left p-4 rounded-xl border-2 transition-all duration-200 ${
                     i === activeIndex
                       ? 'border-sky-500 bg-sky-50 dark:bg-sky-900/20'
-                      : 'border-gray-200 dark:border-gray-700 bg-white dark:bg-gray-800 hover:border-sky-300 dark:hover:border-sky-700'
+                      : 'border-gray-200 dark:border-[#2A2A2A] bg-white dark:bg-[#141414] hover:border-sky-300 dark:hover:border-sky-700'
                   }`}
                 >
-                  <div className={`w-8 h-1.5 rounded-full mb-2 ${i === activeIndex ? 'bg-sky-500' : 'bg-gray-300 dark:bg-gray-600'}`} />
+                  <div className={`w-8 h-1.5 rounded-full mb-2 ${i === activeIndex ? 'bg-sky-500' : 'bg-gray-300 dark:bg-[#2A2A2A]'}`} />
                   <p className={`text-sm font-semibold leading-tight ${i === activeIndex ? 'text-sky-600 dark:text-sky-400' : 'text-gray-700 dark:text-gray-300'}`}>
                     {s.title}
                   </p>

@@ -15,7 +15,8 @@ export default function PromoBanner() {
 
     let timer;
     const checkAndShow = async () => {
-      const { data: { session } } = await supabase.auth.getSession();
+      const { data: { session }, error } = await supabase.auth.getSession();
+      if (error) return;
       // Only show to non-logged-in users
       if (!session) {
         timer = setTimeout(() => setShow(true), 6000);
@@ -42,7 +43,7 @@ export default function PromoBanner() {
           transition={{ type: 'spring', damping: 25, stiffness: 300 }}
           className="fixed bottom-6 right-6 z-40 w-[340px] sm:w-[380px]"
         >
-          <div className="bg-white dark:bg-gray-800 rounded-2xl shadow-2xl border border-gray-200 dark:border-gray-700 overflow-hidden">
+          <div className="bg-white dark:bg-[#141414] rounded-2xl shadow-2xl border border-gray-200 dark:border-[#2A2A2A] overflow-hidden">
             {/* Header gradient */}
             <div className="bg-gradient-to-r from-sky-600 to-sky-700 px-5 py-3 flex items-center justify-between">
               <div className="flex items-center gap-2">

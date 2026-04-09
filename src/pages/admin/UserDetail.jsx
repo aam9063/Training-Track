@@ -39,8 +39,7 @@ export default function UserDetail() {
           setMaxAthletes(data.roleData.max_athletes || 10);
         }
       }
-    } catch (error) {
-      console.error('Error loading user:', error);
+    } catch { /* silenced */
     } finally {
       setLoading(false);
     }
@@ -60,8 +59,7 @@ export default function UserDetail() {
         setUser(prev => ({ ...prev, is_active: newStatus }));
         showSuccess(newStatus ? 'Usuario activado' : 'Usuario desactivado');
       }
-    } catch (error) {
-      console.error('Error toggling user:', error);
+    } catch { /* silenced */
     } finally {
       setToggling(false);
     }
@@ -85,8 +83,7 @@ export default function UserDetail() {
         }));
         showSuccess('Plan actualizado correctamente');
       }
-    } catch (error) {
-      console.error('Error saving plan:', error);
+    } catch { /* silenced */
     } finally {
       setSavingPlan(false);
     }
@@ -154,7 +151,7 @@ export default function UserDetail() {
       <motion.div
         initial={{ opacity: 0, y: 20 }}
         animate={{ opacity: 1, y: 0 }}
-        className="bg-white dark:bg-gray-800 rounded-xl border border-gray-200 dark:border-gray-700 shadow-sm p-6 mb-6"
+        className="bg-white dark:bg-[#141414] rounded-xl border border-gray-200 dark:border-[#2A2A2A] shadow-sm p-6 mb-6"
       >
         <div className="flex flex-col sm:flex-row sm:items-center gap-4">
           {user.profile_image ? (
@@ -198,14 +195,14 @@ export default function UserDetail() {
             </div>
             {user.last_login && (
               <p className="text-xs text-gray-400 dark:text-gray-500 mt-1 flex items-center gap-1.5">
-                <FiClock className="w-3.5 h-3.5" /> Ultimo acceso: {formatDate(user.last_login)}
+                <FiClock className="w-3.5 h-3.5" /> Último acceso: {formatDate(user.last_login)}
               </p>
             )}
           </div>
         </div>
 
         {/* Status & Toggle */}
-        <div className="flex items-center justify-between mt-6 pt-4 border-t border-gray-200 dark:border-gray-700">
+        <div className="flex items-center justify-between mt-6 pt-4 border-t border-gray-200 dark:border-[#2A2A2A]">
           <div className="flex items-center gap-2">
             <span className={`inline-flex items-center gap-1.5 text-sm font-medium ${
               user.is_active !== false ? 'text-green-600 dark:text-green-400' : 'text-red-600 dark:text-red-400'
@@ -219,7 +216,7 @@ export default function UserDetail() {
             disabled={toggling || user.is_admin}
             className={`flex items-center gap-2 px-4 py-2 rounded-lg text-sm font-medium transition-colors ${
               user.is_admin
-                ? 'bg-gray-100 dark:bg-gray-700 text-gray-400 cursor-not-allowed'
+                ? 'bg-gray-100 dark:bg-[#242424] text-gray-400 cursor-not-allowed'
                 : user.is_active !== false
                   ? 'bg-red-50 dark:bg-red-900/20 text-red-600 dark:text-red-400 hover:bg-red-100 dark:hover:bg-red-900/30'
                   : 'bg-green-50 dark:bg-green-900/20 text-green-600 dark:text-green-400 hover:bg-green-100 dark:hover:bg-green-900/30'
@@ -246,11 +243,11 @@ export default function UserDetail() {
           initial={{ opacity: 0, y: 20 }}
           animate={{ opacity: 1, y: 0 }}
           transition={{ delay: 0.1 }}
-          className="bg-white dark:bg-gray-800 rounded-xl border border-gray-200 dark:border-gray-700 shadow-sm p-6 mb-6"
+          className="bg-white dark:bg-[#141414] rounded-xl border border-gray-200 dark:border-[#2A2A2A] shadow-sm p-6 mb-6"
         >
           <h2 className="text-lg font-semibold text-gray-900 dark:text-white flex items-center gap-2 mb-4">
             <FiShield className="w-5 h-5 text-sky-600" />
-            Plan de Suscripcion
+            Plan de Suscripción
           </h2>
 
           <div className="grid grid-cols-1 sm:grid-cols-3 gap-4">
@@ -266,7 +263,7 @@ export default function UserDetail() {
                   const plan = PLANS.find(p => p.value === e.target.value);
                   if (plan) setMaxAthletes(plan.maxAthletes);
                 }}
-                className="w-full px-3 py-2.5 bg-gray-50 dark:bg-gray-900 border border-gray-200 dark:border-gray-700 rounded-lg text-sm text-gray-900 dark:text-white focus:ring-2 focus:ring-sky-500 focus:border-transparent outline-none"
+                className="w-full px-3 py-2.5 bg-gray-50 dark:bg-[#0A0A0A] border border-gray-200 dark:border-[#2A2A2A] rounded-lg text-sm text-gray-900 dark:text-white focus:ring-2 focus:ring-sky-500 focus:border-transparent outline-none"
               >
                 {PLANS.map(plan => (
                   <option key={plan.value} value={plan.value}>{plan.label}</option>
@@ -285,7 +282,7 @@ export default function UserDetail() {
                 max="999"
                 value={maxAthletes}
                 onChange={(e) => setMaxAthletes(e.target.value)}
-                className="w-full px-3 py-2.5 bg-gray-50 dark:bg-gray-900 border border-gray-200 dark:border-gray-700 rounded-lg text-sm text-gray-900 dark:text-white focus:ring-2 focus:ring-sky-500 focus:border-transparent outline-none"
+                className="w-full px-3 py-2.5 bg-gray-50 dark:bg-[#0A0A0A] border border-gray-200 dark:border-[#2A2A2A] rounded-lg text-sm text-gray-900 dark:text-white focus:ring-2 focus:ring-sky-500 focus:border-transparent outline-none"
               />
             </div>
 
@@ -310,18 +307,18 @@ export default function UserDetail() {
           initial={{ opacity: 0, y: 20 }}
           animate={{ opacity: 1, y: 0 }}
           transition={{ delay: 0.15 }}
-          className="bg-white dark:bg-gray-800 rounded-xl border border-gray-200 dark:border-gray-700 shadow-sm p-6"
+          className="bg-white dark:bg-[#141414] rounded-xl border border-gray-200 dark:border-[#2A2A2A] shadow-sm p-6"
         >
           <h2 className="text-lg font-semibold text-gray-900 dark:text-white flex items-center gap-2 mb-4">
             <FiUsers className="w-5 h-5 text-sky-600" />
             {user.role === 'coach' ? 'Sus Atletas' : 'Su Entrenador'}
           </h2>
 
-          <div className="divide-y divide-gray-200 dark:divide-gray-700">
+          <div className="divide-y divide-gray-200 dark:divide-[#2A2A2A]">
             {user.relationships.map((rel) => (
               <div key={rel.id} className="flex items-center justify-between py-3">
                 <div className="flex items-center gap-3">
-                  <div className="w-8 h-8 rounded-full bg-gray-100 dark:bg-gray-700 flex items-center justify-center">
+                  <div className="w-8 h-8 rounded-full bg-gray-100 dark:bg-[#242424] flex items-center justify-center">
                     <FiUser className="w-4 h-4 text-gray-500 dark:text-gray-400" />
                   </div>
                   <div>
@@ -334,7 +331,7 @@ export default function UserDetail() {
                     ? 'bg-green-100 dark:bg-green-900/30 text-green-700 dark:text-green-400'
                     : rel.status === 'pending'
                       ? 'bg-yellow-100 dark:bg-yellow-900/30 text-yellow-700 dark:text-yellow-400'
-                      : 'bg-gray-100 dark:bg-gray-700 text-gray-600 dark:text-gray-400'
+                      : 'bg-gray-100 dark:bg-[#242424] text-gray-600 dark:text-gray-400'
                 }`}>
                   {rel.status === 'active' ? 'Activo' : rel.status === 'pending' ? 'Pendiente' : 'Inactivo'}
                 </span>

@@ -60,7 +60,7 @@ export default function BlogPost() {
   });
 
   return (
-    <div className="min-h-screen bg-white dark:bg-gray-900">
+    <div className="min-h-screen bg-white dark:bg-[#0A0A0A]">
       <Navbar />
 
       {/* Hero */}

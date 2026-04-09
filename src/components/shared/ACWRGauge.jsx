@@ -15,7 +15,7 @@ const ACWRGauge = ({ acwr }) => {
   return (
     <div className="flex flex-col items-center">
       <div className="relative w-48 h-24 sm:w-56 sm:h-28 overflow-hidden">
-        {/* Background arc with color zones */}
+        {/* Background arc with color zones — Dynamic computed style, cannot use Tailwind */}
         <div
           className="absolute w-48 h-48 sm:w-56 sm:h-56 rounded-full"
           style={{
@@ -34,7 +34,7 @@ const ACWRGauge = ({ acwr }) => {
           }}
         />
         {/* Inner cutout */}
-        <div className="absolute top-5 left-5 sm:top-6 sm:left-6 w-[152px] h-[152px] sm:w-[176px] sm:h-[176px] rounded-full bg-white dark:bg-gray-800" />
+        <div className="absolute top-5 left-5 sm:top-6 sm:left-6 w-[152px] h-[152px] sm:w-[176px] sm:h-[176px] rounded-full bg-white dark:bg-[#141414]" />
         {/* Needle */}
         <div
           className="absolute bottom-0 left-1/2 origin-bottom h-[76px] sm:h-[88px] w-0.5 bg-gray-800 dark:bg-white transition-transform duration-700"
@@ -62,4 +62,5 @@ export const getACWRZone = (acwr) => {
   return { label: 'Peligro', textClass: 'text-red-500', badgeClass: 'bg-red-100 text-red-700 dark:bg-red-900/50 dark:text-red-300' };
 };
 
+export { ACWRGauge };
 export default ACWRGauge;

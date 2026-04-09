@@ -17,8 +17,7 @@ export default function Users() {
     try {
       const { data } = await getAllUsers({ search, roleFilter, statusFilter });
       setUsers(data || []);
-    } catch (error) {
-      console.error('Error fetching users:', error);
+    } catch { /* silenced */
     } finally {
       setLoading(false);
     }
@@ -40,8 +39,7 @@ export default function Users() {
           u.id === userId ? { ...u, is_active: !currentStatus } : u
         ));
       }
-    } catch (error) {
-      console.error('Error toggling user:', error);
+    } catch { /* silenced */
     } finally {
       setToggling(null);
     }
@@ -74,7 +72,7 @@ export default function Users() {
         className="mb-6"
       >
         <h1 className="text-2xl sm:text-3xl font-bold text-gray-900 dark:text-white">
-          Gestion de Usuarios
+          Gestión de Usuarios
         </h1>
         <p className="text-gray-500 dark:text-gray-400 mt-1">
           {users.length} usuario{users.length !== 1 ? 's' : ''} encontrado{users.length !== 1 ? 's' : ''}
@@ -96,7 +94,7 @@ export default function Users() {
             placeholder="Buscar por nombre o email..."
             value={search}
             onChange={(e) => setSearch(e.target.value)}
-            className="w-full pl-10 pr-4 py-2.5 bg-white dark:bg-gray-800 border border-gray-200 dark:border-gray-700 rounded-lg text-sm text-gray-900 dark:text-white placeholder-gray-400 focus:ring-2 focus:ring-sky-500 focus:border-transparent outline-none"
+            className="w-full pl-10 pr-4 py-2.5 bg-white dark:bg-[#141414] border border-gray-200 dark:border-[#2A2A2A] rounded-lg text-sm text-gray-900 dark:text-white placeholder-gray-400 focus:ring-2 focus:ring-sky-500 focus:border-transparent outline-none"
           />
         </div>
 
@@ -106,7 +104,7 @@ export default function Users() {
           <select
             value={roleFilter}
             onChange={(e) => setRoleFilter(e.target.value)}
-            className="pl-9 pr-8 py-2.5 bg-white dark:bg-gray-800 border border-gray-200 dark:border-gray-700 rounded-lg text-sm text-gray-900 dark:text-white focus:ring-2 focus:ring-sky-500 focus:border-transparent outline-none appearance-none cursor-pointer"
+            className="pl-9 pr-8 py-2.5 bg-white dark:bg-[#141414] border border-gray-200 dark:border-[#2A2A2A] rounded-lg text-sm text-gray-900 dark:text-white focus:ring-2 focus:ring-sky-500 focus:border-transparent outline-none appearance-none cursor-pointer"
           >
             <option value="all">Todos los roles</option>
             <option value="coach">Entrenadores</option>
@@ -118,7 +116,7 @@ export default function Users() {
         <select
           value={statusFilter}
           onChange={(e) => setStatusFilter(e.target.value)}
-          className="px-4 py-2.5 bg-white dark:bg-gray-800 border border-gray-200 dark:border-gray-700 rounded-lg text-sm text-gray-900 dark:text-white focus:ring-2 focus:ring-sky-500 focus:border-transparent outline-none appearance-none cursor-pointer"
+          className="px-4 py-2.5 bg-white dark:bg-[#141414] border border-gray-200 dark:border-[#2A2A2A] rounded-lg text-sm text-gray-900 dark:text-white focus:ring-2 focus:ring-sky-500 focus:border-transparent outline-none appearance-none cursor-pointer"
         >
           <option value="all">Todos los estados</option>
           <option value="active">Activos</option>
@@ -142,11 +140,11 @@ export default function Users() {
             initial={{ opacity: 0 }}
             animate={{ opacity: 1 }}
             transition={{ delay: 0.1 }}
-            className="hidden lg:block bg-white dark:bg-gray-800 rounded-xl border border-gray-200 dark:border-gray-700 shadow-sm overflow-hidden"
+            className="hidden lg:block bg-white dark:bg-[#141414] rounded-xl border border-gray-200 dark:border-[#2A2A2A] shadow-sm overflow-hidden"
           >
             <table className="w-full">
               <thead>
-                <tr className="bg-gray-50 dark:bg-gray-900/50 border-b border-gray-200 dark:border-gray-700">
+                <tr className="bg-gray-50 dark:bg-[#0A0A0A]/50 border-b border-gray-200 dark:border-[#2A2A2A]">
                   <th className="text-left px-5 py-3.5 text-xs font-semibold text-gray-500 dark:text-gray-400 uppercase tracking-wider">Usuario</th>
                   <th className="text-left px-5 py-3.5 text-xs font-semibold text-gray-500 dark:text-gray-400 uppercase tracking-wider">Rol</th>
                   <th className="text-left px-5 py-3.5 text-xs font-semibold text-gray-500 dark:text-gray-400 uppercase tracking-wider">Plan</th>
@@ -155,7 +153,7 @@ export default function Users() {
                   <th className="text-center px-5 py-3.5 text-xs font-semibold text-gray-500 dark:text-gray-400 uppercase tracking-wider">Acciones</th>
                 </tr>
               </thead>
-              <tbody className="divide-y divide-gray-200 dark:divide-gray-700">
+              <tbody className="divide-y divide-gray-200 dark:divide-[#2A2A2A]">
                 {users.map((user) => (
                   <tr key={user.id} className="hover:bg-gray-50 dark:hover:bg-gray-700/30 transition-colors">
                     <td className="px-5 py-4">
@@ -254,7 +252,7 @@ export default function Users() {
               >
                 <Link
                   to={`/admin/users/${user.id}`}
-                  className="block bg-white dark:bg-gray-800 rounded-xl border border-gray-200 dark:border-gray-700 p-4 shadow-sm"
+                  className="block bg-white dark:bg-[#141414] rounded-xl border border-gray-200 dark:border-[#2A2A2A] p-4 shadow-sm"
                 >
                   <div className="flex items-center justify-between">
                     <div className="flex items-center gap-3 min-w-0">

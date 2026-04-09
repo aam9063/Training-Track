@@ -186,12 +186,12 @@ export default function About() {
           className="relative"
         >
           <div className="bg-gradient-to-br from-gray-100 via-gray-50 to-gray-100 dark:from-[#141414] dark:via-[#1A1A1A] dark:to-[#141414] rounded-3xl p-8 md:p-12 lg:p-16 overflow-hidden border border-gray-200 dark:border-[#2A2A2A]">
-            {/* Interactive dot grid background — colors map to slate-300 / sky-500 */}
+            {/* Interactive dot grid background — Design tokens: slate-300 / sky-500 */}
             <DotGrid
-              dotSize={5}
+              dotSize={3}
               gap={28}
-              baseColor="var(--coach-text-muted, #cbd5e1)"
-              activeColor="var(--coach-accent, #0ea5e9)"
+              baseColor="#cbd5e1"
+              activeColor="#0ea5e9"
               proximity={150}
               shockRadius={200}
               shockStrength={4}

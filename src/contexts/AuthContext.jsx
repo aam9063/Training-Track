@@ -69,9 +69,17 @@ export function AuthProvider({ children }) {
         if (!athleteError) roleData = athleteData;
       }
 
+      // Fetch subscription data
+      const { data: subscription } = await supabase
+        .from('subscriptions')
+        .select('*')
+        .eq('user_id', userId)
+        .maybeSingle();
+
       return {
         ...userData,
         ...(userData.role === 'coach' ? { coach: roleData } : { athlete: roleData }),
+        subscription: subscription || null,
       };
     } catch {
       return fallbackProfile;

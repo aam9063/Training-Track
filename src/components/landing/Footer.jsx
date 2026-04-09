@@ -3,7 +3,6 @@
 import { motion } from 'framer-motion';
 import { Link } from 'react-router-dom';
 import { HiMail, HiLocationMarker } from 'react-icons/hi';
-import WaitlistForm from './WaitlistForm';
 import { FaFacebook, FaInstagram, FaLinkedin, FaYoutube, FaTiktok } from 'react-icons/fa';
 import { FaXTwitter } from 'react-icons/fa6';
 
@@ -22,6 +21,7 @@ export default function Footer() {
     ],
     legal: [
       { name: 'Privacidad', href: '/privacidad' },
+      { name: 'Términos y condiciones', href: '/terminos-y-condiciones' },
       { name: 'Cookies', href: '#', onClick: () => { localStorage.removeItem('cookie_consent'); window.location.reload(); } },
     ],
   };
@@ -173,23 +173,6 @@ export default function Footer() {
             </ul>
           </motion.div>
         </div>
-
-        {/* Register CTA Section */}
-        <motion.div
-          initial={{ opacity: 0, y: 20 }}
-          whileInView={{ opacity: 1, y: 0 }}
-          viewport={{ once: true }}
-          transition={{ duration: 0.5, delay: 0.5 }}
-          className="border-t border-gray-200 dark:border-gray-800 pt-8 mb-8"
-        >
-          <div className="max-w-md mx-auto text-center">
-            <h3 className="text-gray-900 dark:text-white font-semibold mb-2">Únete a la lista de espera</h3>
-            <p className="text-gray-500 dark:text-gray-400 text-sm mb-4">
-              Para entrenadores y atletas independientes. Te avisaremos cuando esté lista.
-            </p>
-            <WaitlistForm source="footer" variant="light" />
-          </div>
-        </motion.div>
 
         {/* Bottom Section */}
         <motion.div

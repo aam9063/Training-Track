@@ -4,9 +4,10 @@ import { motion } from 'framer-motion';
 import {
   FiArrowLeft, FiMail, FiCalendar, FiClock,
   FiShield, FiUser, FiUsers, FiSave,
-  FiToggleLeft, FiToggleRight,
+  FiToggleLeft, FiToggleRight, FiCreditCard,
 } from 'react-icons/fi';
-import { getUserDetail, toggleUserActive, updateCoachSubscription } from '../../services/adminService';
+import { getUserDetail, toggleUserActive, updateCoachSubscription, toggleExempt } from '../../services/adminService';
+import { showError, showSuccess } from '../../lib/toast';
 
 const PLANS = [
   { value: 'starter', label: 'Starter', maxAthletes: 10 },
@@ -39,7 +40,7 @@ export default function UserDetail() {
           setMaxAthletes(data.roleData.max_athletes || 10);
         }
       }
-    } catch { /* silenced */
+    } catch { showError('Error al procesar la operación');
     } finally {
       setLoading(false);
     }
@@ -59,7 +60,7 @@ export default function UserDetail() {
         setUser(prev => ({ ...prev, is_active: newStatus }));
         showSuccess(newStatus ? 'Usuario activado' : 'Usuario desactivado');
       }
-    } catch { /* silenced */
+    } catch { showError('Error al procesar la operación');
     } finally {
       setToggling(false);
     }
@@ -83,15 +84,10 @@ export default function UserDetail() {
         }));
         showSuccess('Plan actualizado correctamente');
       }
-    } catch { /* silenced */
+    } catch { showError('Error al procesar la operación');
     } finally {
       setSavingPlan(false);
     }
-  };
-
-  const showSuccess = (msg) => {
-    setSuccessMsg(msg);
-    setTimeout(() => setSuccessMsg(''), 3000);
   };
 
   const formatDate = (dateStr) => {
@@ -234,6 +230,91 @@ export default function UserDetail() {
               </>
             )}
           </button>
+        </div>
+      </motion.div>
+
+      {/* Subscription & Exempt Status */}
+      <motion.div
+        initial={{ opacity: 0, y: 20 }}
+        animate={{ opacity: 1, y: 0 }}
+        transition={{ delay: 0.05 }}
+        className="bg-white dark:bg-[#141414] rounded-xl border border-gray-200 dark:border-[#2A2A2A] shadow-sm p-6 mb-6"
+      >
+        <h2 className="text-lg font-semibold text-gray-900 dark:text-white flex items-center gap-2 mb-4">
+          <FiCreditCard className="w-5 h-5 text-sky-500" />
+          Suscripción
+        </h2>
+
+        {/* Exempt toggle */}
+        <div className="flex items-center justify-between py-3 border-b border-gray-100 dark:border-[#2A2A2A]">
+          <div>
+            <p className="text-sm font-medium text-gray-900 dark:text-white">Usuario exento</p>
+            <p className="text-xs text-gray-500 dark:text-gray-400">Acceso completo sin pagar</p>
+          </div>
+          <button
+            onClick={async () => {
+              const newVal = !user.is_exempt;
+              const { error } = await toggleExempt(userId, newVal);
+              if (!error) {
+                setUser(prev => ({ ...prev, is_exempt: newVal }));
+                showSuccess(newVal ? 'Usuario marcado como exento' : 'Exención eliminada');
+              }
+            }}
+            className={`relative inline-flex h-6 w-11 flex-shrink-0 cursor-pointer rounded-full border-2 border-transparent transition-colors ${
+              user.is_exempt ? 'bg-sky-500' : 'bg-gray-300 dark:bg-gray-600'
+            }`}
+            role="switch"
+            aria-checked={user.is_exempt}
+            aria-label="Toggle exento"
+          >
+            <span className={`pointer-events-none inline-block h-5 w-5 rounded-full bg-white shadow-md ring-0 transition-transform ${
+              user.is_exempt ? 'translate-x-5' : 'translate-x-0'
+            }`} />
+          </button>
+        </div>
+
+        {/* Subscription info */}
+        <div className="py-3 space-y-2">
+          <div className="flex justify-between text-sm">
+            <span className="text-gray-500 dark:text-gray-400">Trial hasta</span>
+            <span className="text-gray-900 dark:text-white font-medium">
+              {user.trial_ends_at ? new Date(user.trial_ends_at).toLocaleDateString('es-ES') : '—'}
+            </span>
+          </div>
+          <div className="flex justify-between text-sm">
+            <span className="text-gray-500 dark:text-gray-400">Plan</span>
+            <span className="text-gray-900 dark:text-white font-medium">
+              {user.subscription?.plan_key?.replace('_', ' ').replace(/\b\w/g, c => c.toUpperCase()) || 'Sin suscripción'}
+            </span>
+          </div>
+          <div className="flex justify-between text-sm">
+            <span className="text-gray-500 dark:text-gray-400">Estado</span>
+            <span className={`font-medium ${
+              user.subscription?.status === 'active' ? 'text-green-600 dark:text-green-400'
+                : user.subscription?.status === 'past_due' ? 'text-amber-600 dark:text-amber-400'
+                : user.subscription?.status === 'canceled' ? 'text-red-600 dark:text-red-400'
+                : 'text-gray-500 dark:text-gray-400'
+            }`}>
+              {user.subscription?.status === 'active' ? 'Activa'
+                : user.subscription?.status === 'past_due' ? 'Pago pendiente'
+                : user.subscription?.status === 'canceled' ? 'Cancelada'
+                : user.is_exempt ? 'Exento' : 'Sin suscripción'}
+            </span>
+          </div>
+          {user.subscription?.current_period_end && (
+            <div className="flex justify-between text-sm">
+              <span className="text-gray-500 dark:text-gray-400">Período hasta</span>
+              <span className="text-gray-900 dark:text-white font-medium">
+                {new Date(user.subscription.current_period_end).toLocaleDateString('es-ES')}
+              </span>
+            </div>
+          )}
+          {user.stripe_customer_id && (
+            <div className="flex justify-between text-sm">
+              <span className="text-gray-500 dark:text-gray-400">Stripe ID</span>
+              <span className="text-xs text-gray-400 dark:text-gray-500 font-mono">{user.stripe_customer_id}</span>
+            </div>
+          )}
         </div>
       </motion.div>
 

@@ -6,7 +6,7 @@ import { FcGoogle } from 'react-icons/fc';
 import useRegisterForm from '../hooks/useRegisterForm';
 
 // Toggle: set to false to require invite link for registration
-const OPEN_REGISTRATION = false;
+const OPEN_REGISTRATION = true;
 
 export default function Register() {
   const {
@@ -467,11 +467,11 @@ export default function Register() {
                       />
                       <span className="ml-2 text-sm text-gray-600 dark:text-gray-400">
                         Acepto los{' '}
-                        <Link to="/terms" className="text-sky-600 hover:text-sky-500 dark:text-sky-400">
+                        <Link to="/terminos-y-condiciones" className="text-sky-600 hover:text-sky-500 dark:text-sky-400">
                           Términos y Condiciones
                         </Link>{' '}
                         y la{' '}
-                        <Link to="/privacy" className="text-sky-600 hover:text-sky-500 dark:text-sky-400">
+                        <Link to="/privacidad" className="text-sky-600 hover:text-sky-500 dark:text-sky-400">
                           Política de Privacidad
                         </Link>
                       </span>

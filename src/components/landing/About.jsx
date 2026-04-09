@@ -9,6 +9,16 @@ import {
   HiTrendingUp,
   HiRefresh
 } from 'react-icons/hi';
+import DotGrid from '../common/DotGrid';
+import LogoLoop from '../common/LogoLoop';
+
+const StatItem = ({ value, label, sublabel }) => (
+  <div className="text-center px-4 select-none">
+    <div className="text-4xl md:text-5xl font-bold text-sky-600 dark:text-sky-400 mb-1">{value}</div>
+    <div className="text-gray-900 dark:text-white font-semibold text-sm">{label}</div>
+    <div className="text-xs text-gray-500 dark:text-gray-400">{sublabel}</div>
+  </div>
+);
 
 export default function About() {
   const ref = useRef(null);
@@ -84,7 +94,7 @@ export default function About() {
     <section
       id="conocenos"
       ref={ref}
-      className="py-24 bg-gradient-to-b from-gray-50 via-white to-gray-50 dark:from-gray-900 dark:via-gray-800 dark:to-gray-900 relative overflow-hidden"
+      className="py-24 bg-gradient-to-b from-gray-50 via-white to-gray-50 dark:from-[#0A0A0A] dark:via-[#111111] dark:to-[#0A0A0A] relative overflow-hidden"
     >
       {/* Background decoration */}
       <div className="absolute inset-0 overflow-hidden pointer-events-none">
@@ -141,7 +151,7 @@ export default function About() {
                 key={index}
                 variants={itemVariants}
                 whileHover={{ y: -8, transition: { duration: 0.2 } }}
-                className="group relative bg-white dark:bg-gray-800/80 backdrop-blur-sm rounded-3xl p-8 shadow-lg hover:shadow-2xl transition-all duration-500 border border-gray-100 dark:border-gray-700/50 overflow-hidden"
+                className="group relative bg-white dark:bg-[#141414]/80 backdrop-blur-sm rounded-3xl p-8 shadow-lg hover:shadow-2xl transition-all duration-500 border border-gray-100 dark:border-[#2A2A2A]/50 overflow-hidden"
               >
                 {/* Gradient background on hover */}
                 <div className={`absolute inset-0 bg-gradient-to-br ${feature.gradient} opacity-0 group-hover:opacity-5 transition-opacity duration-500`} />
@@ -175,14 +185,18 @@ export default function About() {
           transition={{ duration: 0.7, delay: 0.5 }}
           className="relative"
         >
-          <div className="bg-gradient-to-br from-gray-100 via-gray-50 to-gray-100 dark:from-gray-800 dark:via-gray-700 dark:to-gray-800 rounded-3xl p-8 md:p-12 lg:p-16 overflow-hidden border border-gray-200 dark:border-gray-700">
-            {/* Background pattern */}
-            <div className="absolute inset-0 opacity-10 dark:opacity-10">
-              <div className="absolute inset-0" style={{
-                backgroundImage: 'radial-gradient(circle at 2px 2px, currentColor 1px, transparent 0)',
-                backgroundSize: '32px 32px'
-              }} />
-            </div>
+          <div className="bg-gradient-to-br from-gray-100 via-gray-50 to-gray-100 dark:from-[#141414] dark:via-[#1A1A1A] dark:to-[#141414] rounded-3xl p-8 md:p-12 lg:p-16 overflow-hidden border border-gray-200 dark:border-[#2A2A2A]">
+            {/* Interactive dot grid background — Design tokens: slate-300 / sky-500 */}
+            <DotGrid
+              dotSize={3}
+              gap={28}
+              baseColor="#cbd5e1"
+              activeColor="#0ea5e9"
+              proximity={150}
+              shockRadius={200}
+              shockStrength={4}
+              className="opacity-50 dark:opacity-40"
+            />
 
             <div className="relative grid lg:grid-cols-2 gap-12 items-center">
               {/* Left content */}
@@ -279,12 +293,9 @@ export default function About() {
                               alt={integration.name}
                               loading="lazy"
                               className="w-full h-full object-contain"
-                              onError={(e) => {
-                                e.currentTarget.style.display = 'none';
-                                e.currentTarget.nextElementSibling.style.display = 'flex';
-                              }}
+                              onError={(e) => { e.currentTarget.classList.add('hidden'); e.currentTarget.nextElementSibling?.classList.remove('hidden'); }}
                             />
-                            <span className="text-gray-800 font-bold text-xs text-center hidden items-center justify-center w-full h-full">
+                            <span className="text-gray-800 font-bold text-xs text-center hidden items-center justify-center w-full h-full" aria-hidden="true">
                               {integration.name}
                             </span>
                           </div>
@@ -317,37 +328,27 @@ export default function About() {
           </div>
         </motion.div>
 
-        {/* Bottom Stats */}
+        {/* Bottom Stats — Logo Loop */}
         <motion.div
           initial={{ opacity: 0, y: 30 }}
           animate={isInView ? { opacity: 1, y: 0 } : { opacity: 0, y: 30 }}
           transition={{ duration: 0.6, delay: 0.8 }}
-          className="mt-20 grid grid-cols-2 md:grid-cols-4 gap-8"
+          className="mt-20"
         >
-          {[
-            { value: '800m', label: 'hasta Maratón', sublabel: 'Todas las distancias' },
-            { value: '100%', label: 'Personalizable', sublabel: 'Adapta todo a tu método' },
-            { value: '24/7', label: 'Sincronizado', sublabel: 'Siempre actualizado' },
-            { value: '∞', label: 'Atletas', sublabel: 'Sin límites de gestión' },
-          ].map((stat, index) => (
-            <motion.div
-              key={index}
-              initial={{ opacity: 0, y: 20 }}
-              animate={isInView ? { opacity: 1, y: 0 } : { opacity: 0, y: 20 }}
-              transition={{ duration: 0.5, delay: 0.9 + index * 0.1 }}
-              className="text-center group"
-            >
-              <div className="text-4xl md:text-5xl font-bold text-sky-600 dark:text-sky-400 mb-2 group-hover:scale-110 transition-transform duration-300">
-                {stat.value}
-              </div>
-              <div className="text-gray-900 dark:text-white font-semibold">
-                {stat.label}
-              </div>
-              <div className="text-sm text-gray-500 dark:text-gray-400">
-                {stat.sublabel}
-              </div>
-            </motion.div>
-          ))}
+          <LogoLoop
+            logos={[
+              { node: <StatItem value="800m" label="hasta Maratón" sublabel="Todas las distancias" /> },
+              { node: <StatItem value="100%" label="Personalizable" sublabel="Adapta todo a tu método" /> },
+              { node: <StatItem value="24/7" label="Sincronizado" sublabel="Siempre actualizado" /> },
+              { node: <StatItem value="∞" label="Atletas" sublabel="Sin límites de gestión" /> },
+            ]}
+            speed={40}
+            logoHeight={80}
+            gap={64}
+            pauseOnHover
+            fadeOut
+            ariaLabel="Estadísticas de TrainingTrack"
+          />
         </motion.div>
       </div>
     </section>

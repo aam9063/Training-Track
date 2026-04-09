@@ -19,7 +19,7 @@ const aiFeatures = [
     title: 'Plan personalizado con IA',
     description:
       'Genera un plan de 4 semanas adaptado a tu nivel, objetivos, días disponibles y kilómetros semanales. Periodización inteligente desde 800m hasta maratón.',
-    bgClass: 'bg-gray-50 dark:bg-gray-800/60',
+    bgClass: 'bg-gray-50 dark:bg-[#141414]/60',
     iconBgClass: 'bg-gradient-to-br from-sky-500 to-sky-700',
     iconColor: 'text-white',
   },
@@ -37,7 +37,7 @@ const aiFeatures = [
     title: 'Competiciones con cuenta atrás',
     description:
       'Registra tus carreras y objetivos. Cuenta atrás en tiempo real, seguimiento de preparación y recordatorios para que llegues al día de la carrera en tu mejor versión.',
-    bgClass: 'bg-gray-50 dark:bg-gray-800/60',
+    bgClass: 'bg-gray-50 dark:bg-[#141414]/60',
     iconBgClass: 'bg-gradient-to-br from-sky-600 to-sky-800',
     iconColor: 'text-white',
   },
@@ -60,7 +60,7 @@ export default function AITrainingSection() {
     <section
       id="entrenamiento-ia"
       ref={ref}
-      className="py-24 bg-white dark:bg-gray-900 relative overflow-hidden"
+      className="py-24 bg-white dark:bg-[#0A0A0A] relative overflow-hidden"
     >
       {/* Background decoration */}
       <div className="absolute inset-0 overflow-hidden pointer-events-none opacity-40">
@@ -111,7 +111,7 @@ export default function AITrainingSection() {
                 initial="hidden"
                 animate={isInView ? 'visible' : 'hidden'}
                 whileHover={{ y: -4, transition: { duration: 0.25 } }}
-                className={`${feature.bgClass} rounded-2xl p-6 border border-gray-100 dark:border-gray-700/50 shadow-sm hover:shadow-lg transition-shadow duration-300`}
+                className={`${feature.bgClass} rounded-2xl p-6 border border-gray-100 dark:border-[#2A2A2A]/50 shadow-sm hover:shadow-lg transition-shadow duration-300`}
               >
                 <div className="flex items-start gap-4">
                   <div className={`w-12 h-12 ${feature.iconBgClass} rounded-xl flex items-center justify-center flex-shrink-0 shadow-md`}>
@@ -136,10 +136,10 @@ export default function AITrainingSection() {
           initial={{ opacity: 0, y: 40 }}
           animate={isInView ? { opacity: 1, y: 0 } : { opacity: 0, y: 40 }}
           transition={{ duration: 0.6, delay: 0.5 }}
-          className="max-w-2xl mx-auto mb-12 bg-white dark:bg-gray-800 rounded-2xl shadow-xl border border-gray-100 dark:border-gray-700 overflow-hidden"
+          className="max-w-2xl mx-auto mb-12 bg-white dark:bg-[#141414] rounded-2xl shadow-xl border border-gray-100 dark:border-[#2A2A2A] overflow-hidden"
         >
           {/* Chat header */}
-          <div className="flex items-center gap-3 px-5 py-4 border-b border-gray-100 dark:border-gray-700 bg-gradient-to-r from-sky-600 to-sky-700">
+          <div className="flex items-center gap-3 px-5 py-4 border-b border-gray-100 dark:border-[#2A2A2A] bg-gradient-to-r from-sky-600 to-sky-700">
             <div className="w-9 h-9 rounded-full bg-white/20 flex items-center justify-center">
               <BsStars className="w-5 h-5 text-white" />
             </div>
@@ -174,7 +174,7 @@ export default function AITrainingSection() {
 
           {/* Chat input hint */}
           <div className="px-5 pb-4">
-            <div className="flex items-center gap-2 bg-gray-100 dark:bg-gray-700/60 rounded-xl px-4 py-2.5">
+            <div className="flex items-center gap-2 bg-gray-100 dark:bg-[#242424]/60 rounded-xl px-4 py-2.5">
               <span className="text-sm text-gray-400 dark:text-gray-500 flex-1">Pregunta a Hermes IA...</span>
               <BsStars className="w-4 h-4 text-sky-500" />
             </div>

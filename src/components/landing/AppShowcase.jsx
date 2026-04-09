@@ -74,13 +74,12 @@ export default function AppShowcase() {
   return (
     <section
       ref={containerRef}
-      className="relative py-24 overflow-hidden bg-gradient-to-b from-white via-sky-50/50 to-white dark:from-gray-900 dark:via-gray-800 dark:to-gray-900"
-      style={{ position: 'relative' }}
+      className="relative py-24 overflow-hidden bg-gradient-to-b from-white via-sky-50/50 to-white dark:from-[#0A0A0A] dark:via-[#111111] dark:to-[#0A0A0A]"
     >
       {/* Background decorations */}
       <div className="absolute inset-0 overflow-hidden pointer-events-none">
         <div className="absolute top-1/4 left-0 w-72 h-72 bg-sky-400/10 dark:bg-sky-600/5 rounded-full blur-3xl" />
-        <div className="absolute bottom-1/4 right-0 w-96 h-96 bg-gray-400/10 dark:bg-gray-600/5 rounded-full blur-3xl" />
+        <div className="absolute bottom-1/4 right-0 w-96 h-96 bg-gray-400/10 dark:bg-[#2A2A2A]/5 rounded-full blur-3xl" />
       </div>
 
       <div className="relative max-w-7xl mx-auto px-4 sm:px-6 lg:px-8">
@@ -126,12 +125,11 @@ export default function AppShowcase() {
               whileInView={{ opacity: 1, y: 0, rotateX: 0 }}
               viewport={{ once: true, margin: '-50px' }}
               transition={{ duration: 0.8, ease: 'easeOut' }}
-              className="relative"
-              style={{ perspective: '1000px' }}
+              className="relative [perspective:1000px]"
             >
-              <div className="relative bg-gradient-to-b from-gray-100 to-gray-200 dark:from-gray-800 dark:to-gray-900 rounded-2xl p-2 shadow-2xl">
+              <div className="relative bg-gradient-to-b from-gray-100 to-gray-200 dark:from-[#0A0A0A] dark:to-[#141414] rounded-2xl p-2 shadow-2xl">
                 {/* Browser chrome */}
-                <div className="flex items-center gap-2 px-4 py-3 bg-gray-100 dark:bg-gray-800 rounded-t-xl">
+                <div className="flex items-center gap-2 px-4 py-3 bg-gray-100 dark:bg-[#141414] rounded-t-xl">
                   <div className="flex gap-1.5">
                     <div className="w-3 h-3 rounded-full bg-red-500" />
                     <div className="w-3 h-3 rounded-full bg-yellow-500" />
@@ -160,7 +158,7 @@ export default function AppShowcase() {
                     />
                   </AnimatePresence>
                   {/* Bottom fade-out gradient */}
-                  <div className="absolute inset-x-0 bottom-0 h-1/3 bg-gradient-to-t from-gray-200 dark:from-gray-900 to-transparent pointer-events-none" />
+                  <div className="absolute inset-x-0 bottom-0 h-1/3 bg-gradient-to-t from-gray-200 dark:from-[#0A0A0A] to-transparent pointer-events-none" />
                 </div>
 
                 {/* Current screenshot title badge */}
@@ -172,7 +170,7 @@ export default function AppShowcase() {
                       animate={{ opacity: 1, y: 0 }}
                       exit={{ opacity: 0, y: -10 }}
                       transition={{ duration: 0.3 }}
-                      className="bg-white/90 dark:bg-gray-900/90 backdrop-blur-sm rounded-lg px-4 py-2 inline-block"
+                      className="bg-white/90 dark:bg-[#0A0A0A]/90 backdrop-blur-sm rounded-lg px-4 py-2 inline-block"
                     >
                       <span className="text-sm font-semibold text-gray-900 dark:text-white">
                         {mainScreenshot.title}
@@ -188,7 +186,7 @@ export default function AppShowcase() {
                 whileInView={{ opacity: 1, x: 0 }}
                 viewport={{ once: true }}
                 transition={{ delay: 0.5, duration: 0.5 }}
-                className="absolute -left-4 top-1/4 bg-white dark:bg-gray-800 rounded-xl shadow-xl p-4 border border-gray-200 dark:border-gray-700 hidden lg:block"
+                className="absolute -left-4 top-1/4 bg-white dark:bg-[#141414] rounded-xl shadow-xl p-4 border border-gray-200 dark:border-[#2A2A2A] hidden lg:block"
               >
                 <div className="flex items-center gap-3">
                   <div className="w-10 h-10 bg-green-100 dark:bg-green-900/30 rounded-full flex items-center justify-center">
@@ -209,7 +207,7 @@ export default function AppShowcase() {
                 whileInView={{ opacity: 1, x: 0 }}
                 viewport={{ once: true }}
                 transition={{ delay: 0.7, duration: 0.5 }}
-                className="absolute -right-4 bottom-1/4 bg-white dark:bg-gray-800 rounded-xl shadow-xl p-4 border border-gray-200 dark:border-gray-700 hidden lg:block"
+                className="absolute -right-4 bottom-1/4 bg-white dark:bg-[#141414] rounded-xl shadow-xl p-4 border border-gray-200 dark:border-[#2A2A2A] hidden lg:block"
               >
                 <div className="text-center">
                   <p className="text-2xl font-bold text-sky-600 dark:text-sky-400">
@@ -240,7 +238,7 @@ export default function AppShowcase() {
                 {/* Hover glow */}
                 <div className="absolute -inset-2 bg-sky-600/0 group-hover:bg-sky-600/20 rounded-2xl blur-xl transition-all duration-500 opacity-0 group-hover:opacity-100" />
 
-                <div className="relative bg-white dark:bg-gray-800 rounded-xl overflow-hidden shadow-lg border border-gray-200 dark:border-gray-700 group-hover:border-sky-500/50 dark:group-hover:border-sky-400/50 transition-all duration-300">
+                <div className="relative bg-white dark:bg-[#141414] rounded-xl overflow-hidden shadow-lg border border-gray-200 dark:border-[#2A2A2A] group-hover:border-sky-500/50 dark:group-hover:border-sky-400/50 transition-all duration-300">
                   <img
                     src={getSrc(screenshot)}
                     alt={screenshot.alt}

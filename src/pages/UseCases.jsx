@@ -18,6 +18,10 @@ import {
   HiTrendingUp,
   HiBeaker,
   HiDeviceMobile,
+  HiSparkles,
+  HiChatAlt2,
+  HiRefresh,
+  HiFlag,
 } from 'react-icons/hi';
 import { FaStrava } from 'react-icons/fa';
 import Navbar from '../components/landing/Navbar';
@@ -150,6 +154,65 @@ const athleteUseCases = [
   },
 ];
 
+const independentUseCases = [
+  {
+    icon: HiSparkles,
+    title: 'Planes de entrenamiento con IA',
+    description:
+      'Genera planes personalizados de 4 semanas con inteligencia artificial. La IA analiza tu perfil deportivo, datos de Strava, historial de entrenamientos y objetivos para crear un plan adaptado a tu nivel.',
+    color: 'purple',
+  },
+  {
+    icon: HiChatAlt2,
+    title: 'Hermes IA — Tu entrenador virtual',
+    description:
+      'Consulta a Hermes, tu asistente de entrenamiento con IA. Pregunta sobre ritmos, preparación para competiciones, carga de entrenamiento o cualquier duda. Responde con tus datos reales.',
+    color: 'sky',
+  },
+  {
+    icon: FaStrava,
+    title: 'Sincronización automática con Strava',
+    description:
+      'Conecta Strava y tus actividades se importan automáticamente. Las sesiones se marcan como completadas con distancia, ritmo, FC y desnivel reales.',
+    color: 'orange',
+  },
+  {
+    icon: HiBeaker,
+    title: 'Test VAM y métricas fisiológicas',
+    description:
+      'Realiza tu propio test VAM para calcular tu Velocidad Aeróbica Máxima, VO2max estimado, MLSS y VT2. Datos que alimentan la IA para planes más precisos.',
+    color: 'emerald',
+  },
+  {
+    icon: HiFlag,
+    title: 'Gestión de competiciones',
+    description:
+      'Añade tus próximas carreras con fecha, distancia, ubicación y tiempo objetivo. Hermes IA las tiene en cuenta para ajustar tu preparación y darte consejos específicos.',
+    color: 'rose',
+  },
+  {
+    icon: HiHeart,
+    title: 'Wellness y diario semanal',
+    description:
+      'Registra tu sueño, fatiga, dolor muscular, estado de ánimo y estrés diariamente. El diario semanal permite reflexionar sobre tu semana. Todo alimenta el contexto de la IA.',
+    color: 'amber',
+  },
+  {
+    icon: HiTrendingUp,
+    title: 'Métricas avanzadas y progresión',
+    description:
+      'Visualiza kilometraje semanal, carga de entrenamiento (CTL/ATL/TSB), distribución de actividades, mejores marcas personales y predicción de tiempos de carrera.',
+    color: 'blue',
+  },
+  {
+    icon: HiRefresh,
+    title: 'Completar sesiones manualmente',
+    description:
+      'Si no usas Strava, completa tus sesiones manualmente con RPE, distancia, tiempo y sensación. La app se adapta a tu forma de entrenar.',
+    color: 'teal',
+  },
+];
+
 const sharedFeatures = [
   {
     icon: HiGlobe,
@@ -194,7 +257,7 @@ function UseCaseCard({ useCase, index }) {
       whileInView="visible"
       viewport={{ once: true }}
       custom={index % 4}
-      className={`bg-white dark:bg-gray-800 rounded-2xl p-6 border ${colors.border} hover:shadow-lg transition-shadow duration-300`}
+      className={`bg-white dark:bg-[#141414] rounded-2xl p-6 border ${colors.border} hover:shadow-lg transition-shadow duration-300`}
     >
       <div className={`w-12 h-12 ${colors.bg} rounded-xl flex items-center justify-center mb-4`}>
         <useCase.icon className={`w-6 h-6 ${colors.text}`} />
@@ -217,7 +280,7 @@ export default function UseCases() {
   });
 
   return (
-    <div className="min-h-screen bg-white dark:bg-gray-900">
+    <div className="min-h-screen bg-white dark:bg-[#0A0A0A]">
       <Navbar />
 
       {/* Hero */}
@@ -284,7 +347,7 @@ export default function UseCases() {
       </section>
 
       {/* Athlete Use Cases */}
-      <section className="py-16 bg-gray-50 dark:bg-gray-800/50">
+      <section className="py-16 bg-gray-50 dark:bg-[#141414]/50">
         <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8">
           <motion.div
             initial={{ opacity: 0, y: 20 }}
@@ -306,6 +369,35 @@ export default function UseCases() {
 
           <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-4 gap-6">
             {athleteUseCases.map((uc, i) => (
+              <UseCaseCard key={uc.title} useCase={uc} index={i} />
+            ))}
+          </div>
+        </div>
+      </section>
+
+      {/* Independent Athlete Use Cases */}
+      <section className="py-16">
+        <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8">
+          <motion.div
+            initial={{ opacity: 0, y: 20 }}
+            whileInView={{ opacity: 1, y: 0 }}
+            viewport={{ once: true }}
+            transition={{ duration: 0.5 }}
+            className="text-center mb-12"
+          >
+            <span className="inline-block px-4 py-1.5 bg-purple-100 dark:bg-purple-900/30 text-purple-700 dark:text-purple-300 rounded-full text-sm font-semibold mb-4">
+              Para Atletas Independientes
+            </span>
+            <h2 className="text-3xl sm:text-4xl font-bold text-gray-900 dark:text-white mb-4">
+              Entrena sin entrenador, con IA
+            </h2>
+            <p className="text-gray-600 dark:text-gray-400 max-w-2xl mx-auto">
+              Planes personalizados con inteligencia artificial, tu entrenador virtual Hermes IA, métricas avanzadas y todo lo que necesitas para progresar por tu cuenta.
+            </p>
+          </motion.div>
+
+          <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-4 gap-6">
+            {independentUseCases.map((uc, i) => (
               <UseCaseCard key={uc.title} useCase={uc} index={i} />
             ))}
           </div>
@@ -342,7 +434,7 @@ export default function UseCases() {
                 whileInView="visible"
                 viewport={{ once: true }}
                 custom={i}
-                className="bg-gradient-to-br from-gray-50 to-white dark:from-gray-800 dark:to-gray-800 rounded-2xl p-6 border border-gray-200 dark:border-gray-700 text-center hover:shadow-lg transition-shadow duration-300"
+                className="bg-gradient-to-br from-gray-50 to-white dark:from-[#141414] dark:to-[#141414] rounded-2xl p-6 border border-gray-200 dark:border-[#2A2A2A] text-center hover:shadow-lg transition-shadow duration-300"
               >
                 <div className="w-12 h-12 bg-purple-100 dark:bg-purple-900/30 rounded-xl flex items-center justify-center mx-auto mb-4">
                   <feature.icon className="w-6 h-6 text-purple-600 dark:text-purple-400" />

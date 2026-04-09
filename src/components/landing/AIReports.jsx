@@ -51,7 +51,7 @@ export default function AIReports() {
     <section
       id="informes-ia"
       ref={ref}
-      className="py-24 bg-gradient-to-b from-gray-50 via-white to-gray-50 dark:from-gray-900 dark:via-gray-800 dark:to-gray-900 relative overflow-hidden"
+      className="py-24 bg-gradient-to-b from-gray-50 via-white to-gray-50 dark:from-[#0A0A0A] dark:via-[#111111] dark:to-[#0A0A0A] relative overflow-hidden"
     >
       {/* Background */}
       <div className="absolute inset-0 overflow-hidden pointer-events-none">
@@ -100,9 +100,9 @@ export default function AIReports() {
             transition={{ duration: 0.7, delay: 0.2 }}
             className="relative"
           >
-            <div className="bg-white rounded-2xl p-6 transform -rotate-1 hover:rotate-0 transition-transform duration-500 shadow-[0_20px_60px_-15px_rgba(0,0,0,0.25)] border border-gray-200 dark:border-gray-700 dark:bg-gray-800">
+            <div className="bg-white rounded-2xl p-6 transform -rotate-1 hover:rotate-0 transition-transform duration-500 shadow-[0_20px_60px_-15px_rgba(0,0,0,0.25)] border border-gray-200 dark:border-[#2A2A2A] dark:bg-[#141414]">
               {/* Header */}
-              <div className="flex items-center justify-between mb-5 pb-4 border-b border-gray-100 dark:border-gray-700">
+              <div className="flex items-center justify-between mb-5 pb-4 border-b border-gray-100 dark:border-[#2A2A2A]">
                 <div className="flex items-center gap-3">
                   <div className="w-9 h-9 rounded-full bg-gradient-to-br from-blue-500 to-indigo-600 flex items-center justify-center text-white font-bold text-sm">
                     DM
@@ -143,11 +143,11 @@ export default function AIReports() {
 
               {/* AI summary */}
               <div className="flex gap-2.5 p-3 bg-slate-900 rounded-xl mb-4">
-                <div className="w-7 h-7 rounded-lg flex items-center justify-center flex-shrink-0" style={{ background: 'rgba(26,107,255,0.2)' }}>
-                  <FiZap className="w-3.5 h-3.5" style={{ color: '#1A6BFF' }} />
+                <div className="w-7 h-7 rounded-lg flex items-center justify-center flex-shrink-0 bg-blue-500/20">
+                  <FiZap className="w-3.5 h-3.5 text-blue-500" />
                 </div>
                 <div>
-                  <p className="text-[9px] font-bold uppercase tracking-widest mb-1" style={{ color: '#1A6BFF' }}>Análisis IA</p>
+                  <p className="text-[9px] font-bold uppercase tracking-widest mb-1 text-blue-500">Análisis IA</p>
                   <p className="text-[10px] leading-relaxed text-slate-300">Semana de alta carga con buen cumplimiento (80%). El RPE 7.2 es elevado — vigilar la recuperación esta semana. ACWR en zona de atención.</p>
                 </div>
               </div>
@@ -167,7 +167,7 @@ export default function AIReports() {
                   <span className="font-medium">Km totales</span>
                   <span><span className="font-semibold text-gray-900 dark:text-white">62km</span> / 58km</span>
                 </div>
-                <div className="relative h-1.5 bg-gray-100 dark:bg-gray-700 rounded-full">
+                <div className="relative h-1.5 bg-gray-100 dark:bg-[#242424] rounded-full">
                   <div className="absolute top-0 left-0 h-full rounded-full bg-red-500" style={{ width: '100%' }} />
                 </div>
               </div>
@@ -240,7 +240,7 @@ export default function AIReports() {
                 initial={{ opacity: 0, y: 10 }}
                 animate={isInView ? { opacity: 1, y: 0 } : { opacity: 0, y: 10 }}
                 transition={{ duration: 0.3, delay: 0.8 + i * 0.05 }}
-                className="bg-gray-100 dark:bg-gray-800/50 border border-gray-200 dark:border-gray-700/50 rounded-xl p-4 text-center hover:border-sky-400 dark:hover:border-sky-700/50 transition-colors duration-300"
+                className="bg-gray-100 dark:bg-[#141414]/50 border border-gray-200 dark:border-[#2A2A2A]/50 rounded-xl p-4 text-center hover:border-sky-400 dark:hover:border-sky-700/50 transition-colors duration-300"
               >
                 <p className="text-sky-600 dark:text-sky-400 font-bold text-lg">{m.label}</p>
                 <p className="text-gray-500 dark:text-gray-500 text-xs mt-1">{m.description}</p>

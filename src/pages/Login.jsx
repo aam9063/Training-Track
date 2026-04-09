@@ -1,5 +1,5 @@
 import { useState, useEffect } from 'react';
-import { Link } from 'react-router-dom';
+import { Link, useNavigate } from 'react-router-dom';
 import { motion } from 'framer-motion';
 import { HiMail, HiLockClosed, HiEye, HiEyeOff } from 'react-icons/hi';
 import { FcGoogle } from 'react-icons/fc';
@@ -10,20 +10,21 @@ export default function Login() {
   const { user, loading } = useAuth();
   const { form, isLoading, error, onSubmit, handleGoogleLogin } = useLoginForm();
   const [showPassword, setShowPassword] = useState(false);
+  const navigate = useNavigate();
 
   // Redirigir si ya está logueado
   useEffect(() => {
     if (user) {
       const userRole = user.user_metadata?.role || 'coach';
       const redirectPath = userRole === 'athlete' ? '/athlete/dashboard' : '/dashboard';
-      window.location.replace(redirectPath);
+      navigate(redirectPath, { replace: true });
     }
-  }, [user, loading]);
+  }, [user, loading, navigate]);
 
   return (
     <div className="min-h-screen flex">
       {/* Left Side - Form */}
-      <div className="flex-1 flex items-center justify-center px-4 sm:px-6 lg:px-8 bg-white dark:bg-gray-900">
+      <div className="flex-1 flex items-center justify-center px-4 sm:px-6 lg:px-8 bg-white dark:bg-[#0A0A0A]">
         <motion.div
           initial={{ opacity: 0, y: 20 }}
           animate={{ opacity: 1, y: 0 }}
@@ -55,7 +56,7 @@ export default function Login() {
             whileHover={{ scale: 1.02 }}
             whileTap={{ scale: 0.98 }}
             onClick={handleGoogleLogin}
-            className="w-full flex items-center justify-center gap-3 px-4 py-3 border-2 border-gray-200 dark:border-gray-700 rounded-xl hover:bg-gray-50 dark:hover:bg-gray-800 transition-colors duration-200"
+            className="w-full flex items-center justify-center gap-3 px-4 py-3 border-2 border-gray-200 dark:border-[#2A2A2A] rounded-xl hover:bg-gray-50 dark:hover:bg-gray-800 transition-colors duration-200"
           >
             <FcGoogle className="w-6 h-6" />
             <span className="font-medium text-gray-700 dark:text-gray-300">
@@ -66,10 +67,10 @@ export default function Login() {
           {/* Divider */}
           <div className="relative">
             <div className="absolute inset-0 flex items-center">
-              <div className="w-full border-t border-gray-200 dark:border-gray-700" />
+              <div className="w-full border-t border-gray-200 dark:border-[#2A2A2A]" />
             </div>
             <div className="relative flex justify-center text-sm">
-              <span className="px-4 bg-white dark:bg-gray-900 text-gray-500">
+              <span className="px-4 bg-white dark:bg-[#0A0A0A] text-gray-500">
                 o continúa con email
               </span>
             </div>
@@ -99,7 +100,7 @@ export default function Login() {
                   id="email"
                   type="email"
                   {...form.register('email')}
-                  className="w-full pl-10 pr-4 py-3 border-2 border-gray-200 dark:border-gray-700 rounded-xl bg-white dark:bg-gray-800 text-gray-900 dark:text-white placeholder-gray-400 focus:outline-none focus:border-sky-500 dark:focus:border-sky-400 transition-colors"
+                  className="w-full pl-10 pr-4 py-3 border-2 border-gray-200 dark:border-[#2A2A2A] rounded-xl bg-white dark:bg-[#141414] text-gray-900 dark:text-white placeholder-gray-400 focus:outline-none focus:border-sky-500 dark:focus:border-sky-400 transition-colors"
                   placeholder="tu@email.com"
                 />
               </div>
@@ -119,7 +120,7 @@ export default function Login() {
                   id="password"
                   type={showPassword ? 'text' : 'password'}
                   {...form.register('password')}
-                  className="w-full pl-10 pr-12 py-3 border-2 border-gray-200 dark:border-gray-700 rounded-xl bg-white dark:bg-gray-800 text-gray-900 dark:text-white placeholder-gray-400 focus:outline-none focus:border-sky-500 dark:focus:border-sky-400 transition-colors"
+                  className="w-full pl-10 pr-12 py-3 border-2 border-gray-200 dark:border-[#2A2A2A] rounded-xl bg-white dark:bg-[#141414] text-gray-900 dark:text-white placeholder-gray-400 focus:outline-none focus:border-sky-500 dark:focus:border-sky-400 transition-colors"
                   placeholder="••••••••"
                 />
                 <button

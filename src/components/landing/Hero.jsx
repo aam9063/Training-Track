@@ -4,6 +4,8 @@ import { FiZap, FiCalendar, FiTrendingUp, FiSmartphone, FiUsers, FiUser } from '
 import { BsStars } from 'react-icons/bs';
 import { useTheme } from '../../contexts/ThemeContext';
 import WaitlistForm from './WaitlistForm';
+import SplitText from '../common/SplitText';
+import IphoneMockup from '../common/IphoneMockup';
 
 export default function Hero({ audience, onSelectAudience }) {
   const { theme } = useTheme();
@@ -46,7 +48,7 @@ export default function Hero({ audience, onSelectAudience }) {
   return (
     <section
       id="inicio"
-      className="relative min-h-screen flex items-center justify-center overflow-hidden bg-gradient-to-br from-sky-50 via-white to-gray-50 dark:from-gray-900 dark:via-gray-800 dark:to-gray-900 pt-20"
+      className="relative min-h-screen flex items-center justify-center overflow-hidden bg-gradient-to-br from-sky-50 via-white to-gray-50 dark:from-[#0A0A0A] dark:via-[#111111] dark:to-[#0A0A0A] pt-20"
     >
       {/* Animated background blobs */}
       <div className="absolute inset-0 overflow-hidden pointer-events-none">
@@ -83,16 +85,36 @@ export default function Hero({ audience, onSelectAudience }) {
             </motion.div>
 
             {/* Heading */}
-            <motion.h1
-              variants={itemVariants}
-              className="text-4xl sm:text-5xl lg:text-6xl font-bold text-gray-900 dark:text-white mb-5 leading-tight text-center lg:text-left"
-            >
-              Entrena con datos.
-              <br />
-              <span className="text-sky-600 dark:text-sky-400">
-                No con Excel
-              </span>
-            </motion.h1>
+            <div className="mb-5 text-center lg:text-left">
+              <SplitText
+                text="Entrena con datos."
+                className="text-4xl sm:text-5xl lg:text-6xl font-bold text-gray-900 dark:text-white leading-tight"
+                tag="h1"
+                delay={40}
+                duration={0.8}
+                ease="power3.out"
+                splitType="chars"
+                from={{ opacity: 0, y: 30 }}
+                to={{ opacity: 1, y: 0 }}
+                threshold={0.1}
+                rootMargin="-50px"
+                textAlign="inherit"
+              />
+              <SplitText
+                text="No con Excel"
+                className="text-4xl sm:text-5xl lg:text-6xl font-bold text-sky-600 dark:text-sky-400 leading-tight"
+                tag="span"
+                delay={40}
+                duration={0.8}
+                ease="power3.out"
+                splitType="chars"
+                from={{ opacity: 0, y: 30 }}
+                to={{ opacity: 1, y: 0 }}
+                threshold={0.1}
+                rootMargin="-50px"
+                textAlign="inherit"
+              />
+            </div>
 
             {/* Subtitle */}
             <motion.p
@@ -147,7 +169,7 @@ export default function Hero({ audience, onSelectAudience }) {
                 onClick={handleAthleteClick}
                 whileHover={{ scale: 1.03 }}
                 whileTap={{ scale: 0.98 }}
-                className="group flex items-start gap-3 p-4 rounded-2xl border-2 border-gray-200 dark:border-gray-700 bg-white dark:bg-gray-800 hover:border-sky-400 dark:hover:border-sky-600 hover:bg-sky-50 dark:hover:bg-sky-900/20 transition-all duration-200 cursor-pointer"
+                className="group flex items-start gap-3 p-4 rounded-2xl border-2 border-gray-200 dark:border-[#2A2A2A] bg-white dark:bg-[#141414] hover:border-sky-400 dark:hover:border-sky-600 hover:bg-sky-50 dark:hover:bg-sky-900/20 transition-all duration-200 cursor-pointer"
               >
                 <div className="w-10 h-10 rounded-xl bg-gradient-to-br from-sky-500 to-sky-700 flex items-center justify-center flex-shrink-0">
                   <BsStars className="w-5 h-5 text-white" />
@@ -185,33 +207,16 @@ export default function Hero({ audience, onSelectAudience }) {
             transition={{ duration: 0.8, delay: 0.4, ease: 'easeOut' }}
             className="relative hidden lg:flex justify-center"
           >
-            {/* Phone frame */}
-            <div className="relative w-64 mx-auto" style={{ perspective: '900px' }}>
+            {/* iPhone mockup */}
+            <div className="relative w-72 mx-auto [perspective:1000px]">
               <motion.div
                 initial={{ rotateY: 0, rotateX: 0 }}
-                animate={{ rotateY: 18, rotateX: 6 }}
-                transition={{ duration: 1, delay: 0.6, ease: 'easeOut' }}
-                whileHover={{ rotateY: 8, rotateX: 3, transition: { duration: 0.4 } }}
-                className="bg-gray-900 rounded-[2.5rem] p-2.5 ring-1 ring-white/10"
-                style={{
-                  transformStyle: 'preserve-3d',
-                  boxShadow: '20px 20px 60px rgba(0,0,0,0.45), 8px 8px 20px rgba(0,0,0,0.25)',
-                }}
+                animate={{ rotateY: 16, rotateX: 5 }}
+                transition={{ duration: 1.2, delay: 0.6, ease: 'easeOut' }}
+                whileHover={{ rotateY: 6, rotateX: 2, transition: { duration: 0.5 } }}
+                className="[transform-style:preserve-3d] [filter:drop-shadow(20px_20px_40px_rgba(0,0,0,0.35))]"
               >
-                <div className="rounded-[2rem] overflow-hidden bg-white relative">
-                  {/* Notch bar — covers top of screenshot */}
-                  <div className="absolute top-0 left-0 right-0 h-7 bg-gray-900 flex items-center justify-center z-10">
-                    <div className="w-20 h-4 bg-gray-900 rounded-full" />
-                  </div>
-                  {/* Screenshot below notch */}
-                  <div className="pt-7">
-                    <img
-                      src={mobileImg}
-                      alt="TrainingTrack en móvil"
-                      className="w-full"
-                    />
-                  </div>
-                </div>
+                <IphoneMockup src={mobileImg} />
               </motion.div>
             </div>
 
@@ -220,7 +225,7 @@ export default function Hero({ audience, onSelectAudience }) {
               initial={{ opacity: 0, x: -30 }}
               animate={{ opacity: 1, x: 0 }}
               transition={{ delay: 0.9, duration: 0.5 }}
-              className="absolute -left-6 top-1/4 bg-white dark:bg-gray-800 rounded-2xl shadow-xl p-3.5 border border-gray-100 dark:border-gray-700 max-w-[180px]"
+              className="absolute -left-6 top-1/4 bg-white dark:bg-[#141414] rounded-2xl shadow-xl p-3.5 border border-gray-100 dark:border-[#2A2A2A] max-w-[180px]"
             >
               <div className="flex items-center gap-2 mb-1.5">
                 <div className="w-7 h-7 rounded-lg bg-blue-600 flex items-center justify-center">
@@ -236,7 +241,7 @@ export default function Hero({ audience, onSelectAudience }) {
               initial={{ opacity: 0, x: 30 }}
               animate={{ opacity: 1, x: 0 }}
               transition={{ delay: 1.1, duration: 0.5 }}
-              className="absolute -right-6 bottom-1/3 bg-white dark:bg-gray-800 rounded-2xl shadow-xl p-3.5 border border-gray-100 dark:border-gray-700"
+              className="absolute -right-6 bottom-1/3 bg-white dark:bg-[#141414] rounded-2xl shadow-xl p-3.5 border border-gray-100 dark:border-[#2A2A2A]"
             >
               <div className="flex items-center gap-2">
                 <div className="w-7 h-7 rounded-full bg-green-100 dark:bg-green-900/30 flex items-center justify-center">
@@ -264,12 +269,12 @@ export default function Hero({ audience, onSelectAudience }) {
         <motion.div
           animate={{ y: [0, 10, 0] }}
           transition={{ duration: 1.5, repeat: Infinity }}
-          className="w-6 h-10 border-2 border-gray-400 dark:border-gray-600 rounded-full flex items-start justify-center p-2"
+          className="w-6 h-10 border-2 border-gray-400 dark:border-[#2A2A2A] rounded-full flex items-start justify-center p-2"
         >
           <motion.div
             animate={{ height: ['0%', '40%', '0%'] }}
             transition={{ duration: 1.5, repeat: Infinity }}
-            className="w-1 bg-gray-400 dark:bg-gray-600 rounded-full"
+            className="w-1 bg-gray-400 dark:bg-[#2A2A2A] rounded-full"
           />
         </motion.div>
       </motion.div>

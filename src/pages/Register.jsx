@@ -21,7 +21,7 @@ export default function Register() {
   return (
     <div className="min-h-screen flex">
       {/* Left Side - Form */}
-      <div className="flex-1 flex items-center justify-center px-4 sm:px-6 lg:px-8 bg-white dark:bg-gray-900 py-12">
+      <div className="flex-1 flex items-center justify-center px-4 sm:px-6 lg:px-8 bg-white dark:bg-[#0A0A0A] py-12">
         <motion.div
           initial={{ opacity: 0, y: 20 }}
           animate={{ opacity: 1, y: 0 }}
@@ -118,7 +118,7 @@ export default function Register() {
                     whileHover={{ scale: 1.02 }}
                     whileTap={{ scale: 0.98 }}
                     onClick={() => selectRole('coach')}
-                    className="w-full p-6 border-2 border-gray-200 dark:border-gray-700 rounded-2xl hover:border-sky-500 dark:hover:border-sky-400 transition-all duration-200 text-left group"
+                    className="w-full p-6 border-2 border-gray-200 dark:border-[#2A2A2A] rounded-2xl hover:border-sky-500 dark:hover:border-sky-400 transition-all duration-200 text-left group"
                   >
                     <div className="flex items-start space-x-4">
                       <div className="w-14 h-14 bg-sky-600 rounded-xl flex items-center justify-center flex-shrink-0">
@@ -140,7 +140,7 @@ export default function Register() {
                     whileHover={{ scale: 1.02 }}
                     whileTap={{ scale: 0.98 }}
                     onClick={() => selectRole('athlete')}
-                    className="w-full p-6 border-2 border-gray-200 dark:border-gray-700 rounded-2xl hover:border-sky-500 dark:hover:border-sky-400 transition-all duration-200 text-left group"
+                    className="w-full p-6 border-2 border-gray-200 dark:border-[#2A2A2A] rounded-2xl hover:border-sky-500 dark:hover:border-sky-400 transition-all duration-200 text-left group"
                   >
                     <div className="flex items-start space-x-4">
                       <div className="w-14 h-14 bg-sky-600 rounded-xl flex items-center justify-center flex-shrink-0">
@@ -162,7 +162,7 @@ export default function Register() {
                     whileHover={{ scale: 1.02 }}
                     whileTap={{ scale: 0.98 }}
                     onClick={() => selectRole('independent_athlete')}
-                    className="w-full p-6 border-2 border-gray-200 dark:border-gray-700 rounded-2xl hover:border-sky-500 dark:hover:border-sky-400 transition-all duration-200 text-left group"
+                    className="w-full p-6 border-2 border-gray-200 dark:border-[#2A2A2A] rounded-2xl hover:border-sky-500 dark:hover:border-sky-400 transition-all duration-200 text-left group"
                   >
                     <div className="flex items-start space-x-4">
                       <div className="w-14 h-14 bg-sky-600 rounded-xl flex items-center justify-center flex-shrink-0">
@@ -233,7 +233,7 @@ export default function Register() {
                   whileHover={{ scale: 1.02 }}
                   whileTap={{ scale: 0.98 }}
                   onClick={handleGoogleRegister}
-                  className="w-full flex items-center justify-center gap-3 px-4 py-3 border-2 border-gray-200 dark:border-gray-700 rounded-xl hover:bg-gray-50 dark:hover:bg-gray-800 transition-colors duration-200"
+                  className="w-full flex items-center justify-center gap-3 px-4 py-3 border-2 border-gray-200 dark:border-[#2A2A2A] rounded-xl hover:bg-gray-50 dark:hover:bg-gray-800 transition-colors duration-200"
                 >
                   <FcGoogle className="w-6 h-6" />
                   <span className="font-medium text-gray-700 dark:text-gray-300">
@@ -244,10 +244,10 @@ export default function Register() {
                 {/* Divider */}
                 <div className="relative">
                   <div className="absolute inset-0 flex items-center">
-                    <div className="w-full border-t border-gray-200 dark:border-gray-700" />
+                    <div className="w-full border-t border-gray-200 dark:border-[#2A2A2A]" />
                   </div>
                   <div className="relative flex justify-center text-sm">
-                    <span className="px-4 bg-white dark:bg-gray-900 text-gray-500">
+                    <span className="px-4 bg-white dark:bg-[#0A0A0A] text-gray-500">
                       o completa el formulario
                     </span>
                   </div>
@@ -289,9 +289,9 @@ export default function Register() {
                           id="firstName"
                           type="text"
                           {...form.register('firstName')}
-                          className={`w-full pl-10 pr-4 py-3 border-2 rounded-xl bg-white dark:bg-gray-800 text-gray-900 dark:text-white placeholder-gray-400 focus:outline-none transition-colors ${errors.firstName
+                          className={`w-full pl-10 pr-4 py-3 border-2 rounded-xl bg-white dark:bg-[#141414] text-gray-900 dark:text-white placeholder-gray-400 focus:outline-none transition-colors ${errors.firstName
                               ? 'border-red-500 focus:border-red-500'
-                              : 'border-gray-200 dark:border-gray-700 focus:border-sky-500 dark:focus:border-sky-400'
+                              : 'border-gray-200 dark:border-[#2A2A2A] focus:border-sky-500 dark:focus:border-sky-400'
                             }`}
                           placeholder="Juan"
                         />
@@ -309,9 +309,9 @@ export default function Register() {
                         id="lastName"
                         type="text"
                         {...form.register('lastName')}
-                        className={`w-full px-4 py-3 border-2 rounded-xl bg-white dark:bg-gray-800 text-gray-900 dark:text-white placeholder-gray-400 focus:outline-none transition-colors ${errors.lastName
+                        className={`w-full px-4 py-3 border-2 rounded-xl bg-white dark:bg-[#141414] text-gray-900 dark:text-white placeholder-gray-400 focus:outline-none transition-colors ${errors.lastName
                             ? 'border-red-500 focus:border-red-500'
-                            : 'border-gray-200 dark:border-gray-700 focus:border-sky-500 dark:focus:border-sky-400'
+                            : 'border-gray-200 dark:border-[#2A2A2A] focus:border-sky-500 dark:focus:border-sky-400'
                           }`}
                         placeholder="Pérez"
                       />
@@ -332,9 +332,9 @@ export default function Register() {
                         id="email"
                         type="email"
                         {...form.register('email')}
-                        className={`w-full pl-10 pr-4 py-3 border-2 rounded-xl bg-white dark:bg-gray-800 text-gray-900 dark:text-white placeholder-gray-400 focus:outline-none transition-colors ${errors.email
+                        className={`w-full pl-10 pr-4 py-3 border-2 rounded-xl bg-white dark:bg-[#141414] text-gray-900 dark:text-white placeholder-gray-400 focus:outline-none transition-colors ${errors.email
                             ? 'border-red-500 focus:border-red-500'
-                            : 'border-gray-200 dark:border-gray-700 focus:border-sky-500 dark:focus:border-sky-400'
+                            : 'border-gray-200 dark:border-[#2A2A2A] focus:border-sky-500 dark:focus:border-sky-400'
                           }`}
                         placeholder="tu@email.com"
                       />
@@ -381,9 +381,9 @@ export default function Register() {
                           id="coachEmail"
                           type="email"
                           {...form.register('coachEmail')}
-                          className={`w-full pl-10 pr-4 py-3 border-2 rounded-xl bg-white dark:bg-gray-800 text-gray-900 dark:text-white placeholder-gray-400 focus:outline-none transition-colors ${errors.coachEmail
+                          className={`w-full pl-10 pr-4 py-3 border-2 rounded-xl bg-white dark:bg-[#141414] text-gray-900 dark:text-white placeholder-gray-400 focus:outline-none transition-colors ${errors.coachEmail
                               ? 'border-red-500 focus:border-red-500'
-                              : 'border-gray-200 dark:border-gray-700 focus:border-sky-500 dark:focus:border-sky-400'
+                              : 'border-gray-200 dark:border-[#2A2A2A] focus:border-sky-500 dark:focus:border-sky-400'
                             }`}
                           placeholder="entrenador@email.com"
                         />
@@ -408,9 +408,9 @@ export default function Register() {
                         id="password"
                         type={showPassword ? 'text' : 'password'}
                         {...form.register('password')}
-                        className={`w-full pl-10 pr-12 py-3 border-2 rounded-xl bg-white dark:bg-gray-800 text-gray-900 dark:text-white placeholder-gray-400 focus:outline-none transition-colors ${errors.password
+                        className={`w-full pl-10 pr-12 py-3 border-2 rounded-xl bg-white dark:bg-[#141414] text-gray-900 dark:text-white placeholder-gray-400 focus:outline-none transition-colors ${errors.password
                             ? 'border-red-500 focus:border-red-500'
-                            : 'border-gray-200 dark:border-gray-700 focus:border-sky-500 dark:focus:border-sky-400'
+                            : 'border-gray-200 dark:border-[#2A2A2A] focus:border-sky-500 dark:focus:border-sky-400'
                           }`}
                         placeholder="Mínimo 8 caracteres"
                       />
@@ -438,9 +438,9 @@ export default function Register() {
                         id="confirmPassword"
                         type={showConfirmPassword ? 'text' : 'password'}
                         {...form.register('confirmPassword')}
-                        className={`w-full pl-10 pr-12 py-3 border-2 rounded-xl bg-white dark:bg-gray-800 text-gray-900 dark:text-white placeholder-gray-400 focus:outline-none transition-colors ${errors.confirmPassword
+                        className={`w-full pl-10 pr-12 py-3 border-2 rounded-xl bg-white dark:bg-[#141414] text-gray-900 dark:text-white placeholder-gray-400 focus:outline-none transition-colors ${errors.confirmPassword
                             ? 'border-red-500 focus:border-red-500'
-                            : 'border-gray-200 dark:border-gray-700 focus:border-sky-500 dark:focus:border-sky-400'
+                            : 'border-gray-200 dark:border-[#2A2A2A] focus:border-sky-500 dark:focus:border-sky-400'
                           }`}
                         placeholder="Repite tu contraseña"
                       />

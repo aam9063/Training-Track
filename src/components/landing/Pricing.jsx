@@ -133,12 +133,12 @@ export default function Pricing({ audience, onAudienceChange }) {
     <section
       id="pricing"
       ref={ref}
-      className="py-24 bg-white dark:bg-gray-900 relative overflow-hidden"
+      className="py-24 bg-white dark:bg-[#0A0A0A] relative overflow-hidden"
     >
       {/* Background decoration */}
       <div className="absolute inset-0 overflow-hidden opacity-30 pointer-events-none">
         <div className="absolute top-0 right-0 w-96 h-96 bg-sky-200 dark:bg-sky-900/20 rounded-full blur-3xl" />
-        <div className="absolute bottom-0 left-0 w-96 h-96 bg-gray-200 dark:bg-gray-800/30 rounded-full blur-3xl" />
+        <div className="absolute bottom-0 left-0 w-96 h-96 bg-gray-200 dark:bg-[#141414]/30 rounded-full blur-3xl" />
       </div>
 
       <div className="relative max-w-7xl mx-auto px-4 sm:px-6 lg:px-8">
@@ -177,12 +177,12 @@ export default function Pricing({ audience, onAudienceChange }) {
           transition={{ duration: 0.5, delay: 0.15 }}
           className="flex justify-center mb-6"
         >
-          <div className="inline-flex items-center gap-1 bg-gray-100 dark:bg-gray-800 rounded-2xl p-1.5">
+          <div className="inline-flex items-center gap-1 bg-gray-100 dark:bg-[#141414] rounded-2xl p-1.5">
             <button
               onClick={() => onAudienceChange?.('coach')}
               className={`flex items-center gap-2 px-5 py-2.5 rounded-xl font-medium text-sm transition-all duration-200 ${
                 !isAthlete
-                  ? 'bg-white dark:bg-gray-700 text-sky-600 dark:text-sky-400 shadow-md'
+                  ? 'bg-white dark:bg-[#242424] text-sky-600 dark:text-sky-400 shadow-md'
                   : 'text-gray-600 dark:text-gray-400 hover:text-gray-800 dark:hover:text-gray-200'
               }`}
             >
@@ -193,7 +193,7 @@ export default function Pricing({ audience, onAudienceChange }) {
               onClick={() => onAudienceChange?.('athlete')}
               className={`flex items-center gap-2 px-5 py-2.5 rounded-xl font-medium text-sm transition-all duration-200 ${
                 isAthlete
-                  ? 'bg-white dark:bg-gray-700 text-sky-600 dark:text-sky-400 shadow-md'
+                  ? 'bg-white dark:bg-[#242424] text-sky-600 dark:text-sky-400 shadow-md'
                   : 'text-gray-600 dark:text-gray-400 hover:text-gray-800 dark:hover:text-gray-200'
               }`}
             >
@@ -253,12 +253,12 @@ export default function Pricing({ audience, onAudienceChange }) {
           transition={{ duration: 0.5, delay: 0.35 }}
           className="flex justify-center mb-10"
         >
-          <div className="inline-flex items-center space-x-4 bg-gray-100 dark:bg-gray-800 rounded-full p-1">
+          <div className="inline-flex items-center space-x-4 bg-gray-100 dark:bg-[#141414] rounded-full p-1">
             <button
               onClick={() => setBillingCycle('monthly')}
               className={`px-6 py-2 rounded-full font-medium transition-all duration-200 ${
                 billingCycle === 'monthly'
-                  ? 'bg-white dark:bg-gray-700 text-sky-600 dark:text-sky-400 shadow-md'
+                  ? 'bg-white dark:bg-[#242424] text-sky-600 dark:text-sky-400 shadow-md'
                   : 'text-gray-600 dark:text-gray-400'
               }`}
             >
@@ -268,7 +268,7 @@ export default function Pricing({ audience, onAudienceChange }) {
               onClick={() => setBillingCycle('yearly')}
               className={`px-6 py-2 rounded-full font-medium transition-all duration-200 flex items-center space-x-2 ${
                 billingCycle === 'yearly'
-                  ? 'bg-white dark:bg-gray-700 text-sky-600 dark:text-sky-400 shadow-md'
+                  ? 'bg-white dark:bg-[#242424] text-sky-600 dark:text-sky-400 shadow-md'
                   : 'text-gray-600 dark:text-gray-400'
               }`}
             >
@@ -294,7 +294,7 @@ export default function Pricing({ audience, onAudienceChange }) {
             animate={{ opacity: 1, y: 0 }}
             exit={{ opacity: 0, y: -20 }}
             transition={{ duration: 0.35 }}
-            className={`grid gap-8 mb-12 ${
+            className={`grid gap-8 mb-12 items-center ${
               isAthlete
                 ? 'grid-cols-1 md:grid-cols-2 max-w-3xl mx-auto'
                 : 'grid-cols-1 md:grid-cols-3'
@@ -308,10 +308,10 @@ export default function Pricing({ audience, onAudienceChange }) {
                 initial="hidden"
                 animate="visible"
                 whileHover={{ y: -4, transition: { duration: 0.25 } }}
-                className={`relative bg-white dark:bg-gray-800 rounded-2xl p-8 shadow-xl border-2 transition-all duration-300 ${
+                className={`relative bg-white dark:bg-[#141414] rounded-2xl shadow-xl border-2 transition-all duration-300 ${
                   plan.popular
-                    ? 'border-sky-500 dark:border-sky-400 scale-105'
-                    : 'border-gray-200 dark:border-gray-700 hover:border-sky-300 dark:hover:border-sky-600'
+                    ? 'border-sky-500 dark:border-sky-400 scale-[1.08] -my-6 py-14 px-8 z-10 shadow-2xl shadow-sky-500/20'
+                    : 'border-gray-200 dark:border-[#2A2A2A] hover:border-sky-300 dark:hover:border-sky-600 p-8'
                 }`}
               >
                 {/* Popular Badge */}
@@ -386,7 +386,7 @@ export default function Pricing({ audience, onAudienceChange }) {
                   className={`block w-full py-4 rounded-xl font-semibold text-lg text-center transition-all duration-200 ${
                     plan.popular
                       ? `bg-gradient-to-r ${plan.gradient} text-white shadow-lg hover:shadow-xl hover:opacity-90`
-                      : 'bg-gray-100 dark:bg-gray-700 text-gray-900 dark:text-white hover:bg-gray-200 dark:hover:bg-gray-600'
+                      : 'bg-gray-100 dark:bg-[#242424] text-gray-900 dark:text-white hover:bg-gray-200 dark:hover:bg-gray-600'
                   }`}
                 >
                   {plan.cta}
@@ -409,9 +409,9 @@ export default function Pricing({ audience, onAudienceChange }) {
               <h3 className="text-xl font-bold text-gray-900 dark:text-white text-center mb-6">
                 Comparativa de planes
               </h3>
-              <div className="overflow-hidden rounded-2xl border border-gray-200 dark:border-gray-700 shadow-sm">
+              <div className="overflow-hidden rounded-2xl border border-gray-200 dark:border-[#2A2A2A] shadow-sm">
                 {/* Table header */}
-                <div className="grid grid-cols-3 bg-gray-50 dark:bg-gray-800 border-b border-gray-200 dark:border-gray-700">
+                <div className="grid grid-cols-3 bg-gray-50 dark:bg-[#141414] border-b border-gray-200 dark:border-[#2A2A2A]">
                   <div className="px-4 py-3 text-sm font-semibold text-gray-700 dark:text-gray-300">Función</div>
                   <div className="px-4 py-3 text-sm font-semibold text-center text-gray-600 dark:text-gray-400">Gratis</div>
                   <div className="px-4 py-3 text-sm font-semibold text-center text-sky-600 dark:text-sky-400">Premium</div>
@@ -420,8 +420,8 @@ export default function Pricing({ audience, onAudienceChange }) {
                 {athleteComparisonRows.map((row, i) => (
                   <div
                     key={i}
-                    className={`grid grid-cols-3 border-b border-gray-100 dark:border-gray-700/50 last:border-0 ${
-                      i % 2 === 0 ? 'bg-white dark:bg-gray-800/40' : 'bg-gray-50/50 dark:bg-gray-800/20'
+                    className={`grid grid-cols-3 border-b border-gray-100 dark:border-[#2A2A2A]/50 last:border-0 ${
+                      i % 2 === 0 ? 'bg-white dark:bg-[#141414]/40' : 'bg-gray-50/50 dark:bg-[#141414]/20'
                     }`}
                   >
                     <div className="px-4 py-3 text-sm text-gray-700 dark:text-gray-300">{row.feature}</div>

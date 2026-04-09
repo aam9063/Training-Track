@@ -10,7 +10,7 @@ const AdminLayout = () => {
   // Show loading while auth or profile is being resolved
   if (loading || (user && !profile)) {
     return (
-      <div className="min-h-screen flex items-center justify-center bg-gray-50 dark:bg-gray-900">
+      <div className="min-h-screen flex items-center justify-center bg-gray-50 dark:bg-[#0A0A0A]">
         <div className="text-center">
           <div className="animate-spin rounded-full h-12 w-12 border-b-2 border-sky-600 mx-auto"></div>
           <p className="mt-4 text-gray-600 dark:text-gray-400">Cargando...</p>
@@ -30,7 +30,7 @@ const AdminLayout = () => {
   }
 
   return (
-    <div className="min-h-screen bg-gray-50 dark:bg-gray-900 overflow-x-hidden">
+    <div className="min-h-screen bg-gray-50 dark:bg-[#0A0A0A] overflow-x-hidden">
       <AdminSidebar onCollapse={setSidebarCollapsed} />
       <div
         className={`

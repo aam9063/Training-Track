@@ -9,7 +9,7 @@ export default function BlogPreview() {
   if (latestArticles.length === 0) return null;
 
   return (
-    <section className="py-24 bg-gray-50 dark:bg-gray-800/50">
+    <section className="py-24 bg-gray-50 dark:bg-[#141414]/50">
       <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8">
         {/* Header */}
         <motion.div
@@ -42,7 +42,7 @@ export default function BlogPreview() {
             >
               <Link
                 to={`/blog/${article.slug}`}
-                className="group block bg-white dark:bg-gray-800 rounded-2xl shadow-lg hover:shadow-xl overflow-hidden transition-all duration-300 hover:-translate-y-1"
+                className="group block bg-white dark:bg-[#141414] rounded-2xl shadow-lg hover:shadow-xl overflow-hidden transition-all duration-300 hover:-translate-y-1"
               >
                 <div className="relative aspect-video overflow-hidden">
                   <img

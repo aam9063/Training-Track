@@ -9,7 +9,7 @@ export default function NotFound() {
     description: 'La página que buscas no existe o está en construcción. Vuelve al inicio de TrainingTrack.',
   });
   return (
-    <div className="min-h-screen bg-gradient-to-br from-gray-50 via-white to-sky-50 dark:from-gray-900 dark:via-gray-900 dark:to-gray-800 flex items-center justify-center px-4 relative overflow-hidden">
+    <div className="min-h-screen bg-gradient-to-br from-gray-50 via-white to-sky-50 dark:from-[#0A0A0A] dark:via-gray-900 dark:to-[#141414] flex items-center justify-center px-4 relative overflow-hidden">
       {/* Background decorations */}
       <div className="absolute inset-0 overflow-hidden pointer-events-none">
         <div className="absolute top-1/4 -left-32 w-[500px] h-[500px] bg-sky-400/10 dark:bg-sky-600/10 rounded-full blur-3xl" />
@@ -90,7 +90,7 @@ export default function NotFound() {
 
           <button
             onClick={() => window.history.back()}
-            className="flex items-center gap-2 px-8 py-3.5 bg-white dark:bg-gray-800 text-gray-700 dark:text-gray-300 font-semibold rounded-xl border border-gray-200 dark:border-gray-700 hover:border-sky-400 dark:hover:border-sky-600 transition-colors"
+            className="flex items-center gap-2 px-8 py-3.5 bg-white dark:bg-[#141414] text-gray-700 dark:text-gray-300 font-semibold rounded-xl border border-gray-200 dark:border-[#2A2A2A] hover:border-sky-400 dark:hover:border-sky-600 transition-colors"
           >
             <HiArrowLeft className="w-5 h-5" />
             Página anterior

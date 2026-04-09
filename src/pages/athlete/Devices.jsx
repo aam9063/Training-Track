@@ -76,10 +76,10 @@ const Devices = () => {
               .update({ strava_athlete_id: athlete.id })
               .eq('athlete_id', profile.id)
               .eq('device_type', 'strava');
-            if (updateErr) return;
+            if (updateErr) return; // Non-critical backfill — silent fail ok
           }
         }
-      } catch {
+      } catch { /* silenced */
         // Backfill is non-critical — silently ignore
       }
     })();
@@ -133,7 +133,7 @@ const Devices = () => {
       setLastSyncDate(new Date().toISOString());
       setSyncResult(`${totalSynced} actividades procesadas correctamente.`);
     } catch (err) {
-      setSyncResult(`Error: ${err.message}`);
+      setSyncResult(`Error: ${err?.message || 'Error de sincronización'}`);
     } finally {
       setSyncing(false);
       setSyncProgress(null);
@@ -265,7 +265,7 @@ const Devices = () => {
 
         {/* Connected: stats + sync */}
         {stravaConnected && (
-          <div className="border-t border-ath-border px-5 py-4 bg-slate-50/50 dark:bg-gray-800/50">
+          <div className="border-t border-ath-border px-5 py-4 bg-slate-50/50 dark:bg-[#141414]/50">
             <div className="flex items-center justify-between">
               <div>
                 <p className="text-xs font-medium text-ath-text-secondary">

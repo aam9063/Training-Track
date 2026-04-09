@@ -78,7 +78,7 @@ export default function InfoTooltip({ text }) {
         <div
           ref={tooltipRef}
           style={{ position: 'fixed', top: pos.top, left: pos.left, zIndex: 9999 }}
-          className="w-64 sm:w-72 p-3 text-xs leading-relaxed text-gray-700 dark:text-gray-200 bg-white dark:bg-gray-700 rounded-lg shadow-lg border border-gray-200 dark:border-gray-600"
+          className="w-64 sm:w-72 p-3 text-xs leading-relaxed text-gray-700 dark:text-gray-200 bg-white dark:bg-[#242424] rounded-lg shadow-lg border border-gray-200 dark:border-[#2A2A2A]"
         >
           {text}
           <div
@@ -92,10 +92,10 @@ export default function InfoTooltip({ text }) {
             }}
           >
             <div
-              className={`w-2.5 h-2.5 bg-white dark:bg-gray-700 ${
+              className={`w-2.5 h-2.5 bg-white dark:bg-[#242424] ${
                 pos.placement === 'top'
-                  ? 'border-r border-b border-gray-200 dark:border-gray-600'
-                  : 'border-l border-t border-gray-200 dark:border-gray-600'
+                  ? 'border-r border-b border-gray-200 dark:border-[#2A2A2A]'
+                  : 'border-l border-t border-gray-200 dark:border-[#2A2A2A]'
               }`}
               style={{
                 transform: pos.placement === 'top'

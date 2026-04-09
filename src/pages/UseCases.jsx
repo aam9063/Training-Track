@@ -464,7 +464,7 @@ export default function UseCases() {
               Empieza a entrenar mejor hoy
             </h2>
             <p className="text-sky-100 text-lg mb-8 max-w-2xl mx-auto">
-              Acceso gratuito completo durante la fase beta. Sin compromisos, sin tarjeta de crédito.
+              Crea tu cuenta gratis y empieza a entrenar con datos reales. Sin compromisos.
             </p>
             <Link
               to="/register"

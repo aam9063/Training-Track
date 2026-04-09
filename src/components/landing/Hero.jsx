@@ -3,7 +3,7 @@ import { motion } from 'framer-motion';
 import { FiZap, FiCalendar, FiTrendingUp, FiSmartphone, FiUsers, FiUser } from 'react-icons/fi';
 import { BsStars } from 'react-icons/bs';
 import { useTheme } from '../../contexts/ThemeContext';
-import WaitlistForm from './WaitlistForm';
+
 import SplitText from '../common/SplitText';
 import IphoneMockup from '../common/IphoneMockup';
 
@@ -197,7 +197,7 @@ export default function Hero({ audience, onSelectAudience }) {
               </Link>
             </motion.div>
 
-            <WaitlistForm source="hero" variant="light" className="mt-6" />
+
           </motion.div>
 
           {/* Right — Mock phone + floating cards */}

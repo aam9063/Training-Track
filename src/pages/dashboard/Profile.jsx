@@ -3,6 +3,7 @@ import { showSuccess, showError, showWarning } from '../../lib/toast';
 import { useAuth } from '../../contexts/AuthContext';
 import { uploadProfileImage, deleteProfileImage } from '../../services/storageService';
 import ImageCropModal from '../../components/common/ImageCropModal';
+import { SubscriptionSection } from '../../components/common/SubscriptionSection';
 import { motion } from 'framer-motion';
 import {
   FiMail,
@@ -243,7 +244,7 @@ const Profile = () => {
       <motion.div
         initial={{ opacity: 0, y: 20 }}
         animate={{ opacity: 1, y: 0 }}
-        className="bg-coach-surface rounded-xl shadow-sm border border-gray-200 dark:border-coach-border"
+        className="mb-4 bg-coach-surface rounded-xl shadow-sm border border-gray-200 dark:border-coach-border"
       >
         <div className="p-6">
           {/* Avatar Section */}
@@ -566,6 +567,9 @@ const Profile = () => {
           </div>
         </div>
       </motion.div>
+
+      {/* Subscription Management */}
+      <SubscriptionSection />
 
       {/* Image Crop Modal */}
       {cropImage && (

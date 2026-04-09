@@ -22,6 +22,9 @@ const PrivacyPolicy = lazy(() => import('./pages/PrivacyPolicy'));
 const Blog = lazy(() => import('./pages/blog/Blog'));
 const BlogPost = lazy(() => import('./pages/blog/BlogPost'));
 const AuthCallback = lazy(() => import('./pages/AuthCallback'));
+const PricingPage = lazy(() => import('./pages/PricingPage'));
+const TermsConditions = lazy(() => import('./pages/TermsConditions'));
+const CheckoutSuccess = lazy(() => import('./pages/CheckoutSuccess'));
 
 // Coach pages
 const Dashboard = lazy(() => import('./pages/dashboard/Dashboard'));
@@ -92,9 +95,12 @@ function App() {
                 <Route path="/reset-password" element={<ResetPassword />} />
                 <Route path="/casos-de-uso" element={<UseCases />} />
                 <Route path="/privacidad" element={<PrivacyPolicy />} />
+                <Route path="/terminos-y-condiciones" element={<TermsConditions />} />
                 <Route path="/blog" element={<Blog />} />
                 <Route path="/blog/:slug" element={<BlogPost />} />
+                <Route path="/pricing" element={<PricingPage />} />
                 <Route path="/auth/callback" element={<AuthCallback />} />
+                <Route path="/checkout/success" element={<CheckoutSuccess />} />
 
                 {/* Protected Coach Dashboard Routes */}
                 <Route path="/dashboard" element={<DashboardLayout />}>

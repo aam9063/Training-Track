@@ -4,7 +4,7 @@ import { zodResolver } from '@hookform/resolvers/zod';
 import { z } from 'zod';
 import { useSearchParams, useNavigate } from 'react-router-dom';
 import { useAuth } from '../contexts/AuthContext';
-import { supabase } from '../lib/supabase';
+import { getCoachPublicInfo } from '../services/athleteService';
 
 const registerSchema = z.object({
   firstName: z.string().min(1, 'El nombre es requerido'),
@@ -57,7 +57,7 @@ export default function useRegisterForm() {
     const inviteId = searchParams.get('invite');
     if (inviteId) {
       setLoadingInvite(true);
-      supabase.rpc('get_coach_public_info', { coach_uuid: inviteId })
+      getCoachPublicInfo(inviteId)
         .then(({ data, error }) => {
           if (!error && data?.length > 0) {
             setInviteCoachId(inviteId);
@@ -67,6 +67,20 @@ export default function useRegisterForm() {
           }
           setLoadingInvite(false);
         });
+      return;
+    }
+
+    // Pre-select role from query param (from pricing page)
+    const roleParam = searchParams.get('role');
+    if (roleParam === 'coach') {
+      setRole('coach');
+      setStep(2);
+    } else if (roleParam === 'independent') {
+      setRole('independent_athlete');
+      setStep(2);
+    } else if (roleParam === 'athlete') {
+      setRole('athlete');
+      setStep(2);
     }
   }, [searchParams]);
 

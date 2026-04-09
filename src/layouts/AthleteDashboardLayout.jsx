@@ -6,6 +6,8 @@ import AthleteBottomNav from '../components/athlete/AthleteBottomNav';
 import AthleteMobileHeader from '../components/athlete/AthleteMobileHeader';
 import NotificationPanel from '../components/common/NotificationPanel';
 import PushNotificationBanner from '../components/common/PushNotificationBanner';
+import { TrialBanner } from '../components/common/TrialBanner';
+import { SubscriptionGuard } from '../components/common/SubscriptionGuard';
 
 const AthleteDashboardLayout = () => {
   const { user, loading, profile } = useAuth();
@@ -59,8 +61,11 @@ const AthleteDashboardLayout = () => {
         `}
       >
         <main className="overflow-x-hidden pb-[72px] lg:pb-0">
+          <TrialBanner />
           <PushNotificationBanner />
-          <Outlet />
+          <SubscriptionGuard>
+            <Outlet />
+          </SubscriptionGuard>
         </main>
       </div>
     </div>

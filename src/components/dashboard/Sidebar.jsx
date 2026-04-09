@@ -3,6 +3,7 @@ import { Link, useLocation, useNavigate } from 'react-router-dom';
 import { useAuth } from '../../contexts/AuthContext';
 import { useTheme } from '../../contexts/ThemeContext';
 import { useNotifications } from '../../contexts/NotificationContext';
+import useSubscription from '../../hooks/useSubscription';
 import {
   FiHome,
   FiUsers,
@@ -32,6 +33,7 @@ const Sidebar = ({ onCollapse }) => {
   const { user, profile, signOut } = useAuth();
   const { theme, toggleTheme } = useTheme();
   const { unreadMessages } = useNotifications();
+  const { planLabel, isTrialing, isExempt } = useSubscription();
 
   // Usar profile si existe, sino usar datos básicos del user
   const displayName = profile?.first_name || user?.user_metadata?.first_name || 'Usuario';
@@ -234,8 +236,15 @@ const Sidebar = ({ onCollapse }) => {
               <p className="text-sm font-medium text-gray-900 dark:text-white truncate">
                 {displayName} {displayLastName}
               </p>
-              <p className="text-xs text-gray-500 dark:text-gray-400">
+              <p className="text-xs text-gray-500 dark:text-gray-400 flex items-center gap-1.5">
                 Coach
+                <span className={`px-1.5 py-0.5 rounded text-[10px] font-semibold leading-none ${
+                  isExempt ? 'bg-purple-100 dark:bg-purple-900/30 text-purple-600 dark:text-purple-400'
+                    : isTrialing ? 'bg-sky-100 dark:bg-sky-900/30 text-sky-600 dark:text-sky-400'
+                    : 'bg-sky-100 dark:bg-sky-900/30 text-sky-600 dark:text-sky-400'
+                }`}>
+                  {isExempt ? 'VIP' : isTrialing ? 'Trial' : planLabel}
+                </span>
               </p>
             </div>
           </button>

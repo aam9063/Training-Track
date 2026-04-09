@@ -1,9 +1,12 @@
 import { motion, useInView, AnimatePresence } from 'framer-motion';
 import { useRef, useState } from 'react';
-import { Link } from 'react-router-dom';
-import { HiCheck, HiX, HiSparkles, HiLightningBolt } from 'react-icons/hi';
-import { FiUsers, FiUser } from 'react-icons/fi';
+import { useNavigate } from 'react-router-dom';
+import { HiCheck, HiX, HiSparkles, HiShieldCheck } from 'react-icons/hi';
+import { FiUsers, FiLock } from 'react-icons/fi';
 import { BsStars } from 'react-icons/bs';
+import { useAuth } from '../../contexts/AuthContext';
+import { createCheckout } from '../../services/subscriptionService';
+import { showError } from '../../lib/toast';
 
 const coachPlans = [
   {
@@ -24,6 +27,7 @@ const coachPlans = [
     gradient: 'from-sky-400 to-sky-500',
     popular: false,
     cta: 'Empezar gratis',
+    planKey: null,
   },
   {
     name: 'Pro',
@@ -42,7 +46,8 @@ const coachPlans = [
     ],
     gradient: 'from-sky-600 to-sky-700',
     popular: true,
-    cta: 'Regístrate',
+    cta: 'Suscribirse',
+    planKey: 'coach_pro',
   },
   {
     name: 'Team',
@@ -61,7 +66,8 @@ const coachPlans = [
     ],
     gradient: 'from-sky-700 to-sky-900',
     popular: false,
-    cta: 'Regístrate',
+    cta: 'Suscribirse',
+    planKey: 'coach_team',
   },
 ];
 
@@ -82,6 +88,7 @@ const athletePlans = [
     gradient: 'from-sky-400 to-sky-500',
     popular: false,
     cta: 'Empezar Gratis',
+    planKey: null,
   },
   {
     name: 'Premium',
@@ -99,6 +106,7 @@ const athletePlans = [
     gradient: 'from-sky-600 to-sky-700',
     popular: true,
     cta: 'Comenzar Premium',
+    planKey: 'athlete_premium',
   },
 ];
 
@@ -124,10 +132,47 @@ export default function Pricing({ audience, onAudienceChange }) {
   const ref = useRef(null);
   const isInView = useInView(ref, { once: true, margin: '-100px' });
   const [billingCycle, setBillingCycle] = useState('monthly');
+  const [checkoutLoading, setCheckoutLoading] = useState(false);
+  const { user } = useAuth();
+  const navigate = useNavigate();
 
   const activeAudience = audience ?? 'coach';
   const isAthlete = activeAudience === 'athlete';
   const plans = isAthlete ? athletePlans : coachPlans;
+
+  const handlePlanClick = async (plan) => {
+    const role = isAthlete ? 'independent' : 'coach';
+    const registerPath = isAthlete ? '/register?role=independent' : '/register?role=coach';
+
+    if (!user) {
+      // Not logged in → register directly with correct role
+      if (!plan.planKey) {
+        // Free plan → register
+        navigate(registerPath);
+      } else {
+        // Paid plan → register with plan info (after trial they can subscribe)
+        navigate(`${registerPath}&plan=${plan.planKey}&interval=${billingCycle === 'monthly' ? 'month' : 'year'}`);
+      }
+      return;
+    }
+
+    // Logged in
+    if (!plan.planKey) {
+      // Free plan → go to dashboard
+      navigate(isAthlete ? '/athlete/dashboard' : '/dashboard');
+      return;
+    }
+
+    // Logged in + paid plan → Stripe Checkout
+    setCheckoutLoading(plan.planKey);
+    const result = await createCheckout(plan.planKey, billingCycle === 'monthly' ? 'month' : 'year');
+    setCheckoutLoading(null);
+    if (result.url) {
+      window.location.href = result.url;
+    } else {
+      showError(result.error || 'Error al iniciar el pago');
+    }
+  };
 
   return (
     <section
@@ -203,55 +248,12 @@ export default function Pricing({ audience, onAudienceChange }) {
           </div>
         </motion.div>
 
-        {/* Beta Banner — coach only */}
-        <AnimatePresence mode="wait">
-          {!isAthlete && (
-            <motion.div
-              key="beta-banner"
-              initial={{ opacity: 0, y: 20 }}
-              animate={{ opacity: 1, y: 0 }}
-              exit={{ opacity: 0, y: -10 }}
-              transition={{ duration: 0.4 }}
-              className="bg-gradient-to-r from-sky-600 to-sky-700 dark:from-sky-700 dark:to-sky-800 rounded-2xl p-6 md:p-8 mb-12 text-center"
-            >
-              <div className="flex items-center justify-center gap-3 mb-2">
-                <HiLightningBolt className="w-6 h-6 text-sky-200" />
-                <h3 className="text-2xl md:text-3xl font-bold text-white">
-                  Gratis durante la beta
-                </h3>
-              </div>
-              <p className="text-sky-100 text-lg max-w-2xl mx-auto mb-4">
-                Todas las funcionalidades de todos los planes disponibles sin coste.
-                Acceso completo mientras dure la fase beta.
-              </p>
-              <Link
-                to="/register"
-                className="inline-flex items-center gap-2 px-8 py-3 bg-white text-sky-700 font-semibold rounded-xl hover:bg-sky-50 transition-colors shadow-lg"
-              >
-                Empezar gratis
-              </Link>
-            </motion.div>
-          )}
-        </AnimatePresence>
-
-        {/* Future Plans Label — coach only */}
-        {!isAthlete && (
-          <motion.p
-            initial={{ opacity: 0 }}
-            animate={isInView ? { opacity: 1 } : { opacity: 0 }}
-            transition={{ duration: 0.5, delay: 0.3 }}
-            className="text-center text-sm font-medium text-gray-500 dark:text-gray-400 uppercase tracking-wider mb-4"
-          >
-            Planes tras la fase beta
-          </motion.p>
-        )}
-
         {/* Billing Toggle */}
         <motion.div
           initial={{ opacity: 0 }}
           animate={isInView ? { opacity: 1 } : { opacity: 0 }}
           transition={{ duration: 0.5, delay: 0.35 }}
-          className="flex justify-center mb-10"
+          className="flex justify-center mb-14"
         >
           <div className="inline-flex items-center space-x-4 bg-gray-100 dark:bg-[#141414] rounded-full p-1">
             <button
@@ -381,16 +383,17 @@ export default function Pricing({ audience, onAudienceChange }) {
                 </ul>
 
                 {/* CTA Button */}
-                <Link
-                  to="/register"
-                  className={`block w-full py-4 rounded-xl font-semibold text-lg text-center transition-all duration-200 ${
+                <button
+                  onClick={() => handlePlanClick(plan)}
+                  disabled={checkoutLoading && checkoutLoading === plan.planKey}
+                  className={`block w-full py-4 rounded-xl font-semibold text-lg text-center transition-all duration-200 disabled:opacity-60 ${
                     plan.popular
                       ? `bg-gradient-to-r ${plan.gradient} text-white shadow-lg hover:shadow-xl hover:opacity-90`
-                      : 'bg-gray-100 dark:bg-[#242424] text-gray-900 dark:text-white hover:bg-gray-200 dark:hover:bg-gray-600'
+                      : 'bg-gray-100 dark:bg-coach-elevated text-gray-900 dark:text-white hover:bg-gray-200 dark:hover:bg-coach-inset'
                   }`}
                 >
-                  {plan.cta}
-                </Link>
+                  {checkoutLoading && checkoutLoading === plan.planKey ? 'Redirigiendo a Stripe...' : plan.cta}
+                </button>
               </motion.div>
             ))}
           </motion.div>
@@ -455,11 +458,6 @@ export default function Pricing({ audience, onAudienceChange }) {
           transition={{ duration: 0.6, delay: 0.7 }}
           className="text-center"
         >
-          {!isAthlete && (
-            <p className="text-gray-600 dark:text-gray-400 mb-4">
-              Durante la beta, todas las funcionalidades son gratuitas. No se requiere tarjeta de crédito.
-            </p>
-          )}
           <div className="flex flex-wrap items-center justify-center gap-6 text-sm text-gray-500 dark:text-gray-500">
             <div className="flex items-center">
               <HiCheck className="w-4 h-4 text-green-500 mr-2" />
@@ -467,7 +465,7 @@ export default function Pricing({ audience, onAudienceChange }) {
             </div>
             <div className="flex items-center">
               <HiCheck className="w-4 h-4 text-green-500 mr-2" />
-              {isAthlete ? 'Plan gratis disponible siempre' : 'Acceso completo en beta'}
+              Plan gratis disponible siempre
             </div>
             <div className="flex items-center">
               <HiCheck className="w-4 h-4 text-green-500 mr-2" />
@@ -477,6 +475,31 @@ export default function Pricing({ audience, onAudienceChange }) {
               <HiCheck className="w-4 h-4 text-green-500 mr-2" />
               Actualizaciones gratuitas
             </div>
+          </div>
+        </motion.div>
+
+        {/* Trust badges */}
+        <motion.div
+          initial={{ opacity: 0 }}
+          animate={isInView ? { opacity: 1 } : { opacity: 0 }}
+          transition={{ delay: 0.8 }}
+          className="flex flex-wrap items-center justify-center gap-6 mt-12 text-sm text-gray-500 dark:text-gray-400"
+        >
+          <div className="flex items-center gap-2">
+            <FiLock className="w-4 h-4 text-green-500" />
+            <span>Pago seguro con Stripe</span>
+          </div>
+          <div className="flex items-center gap-2">
+            <HiShieldCheck className="w-4 h-4 text-sky-500" />
+            <span>Cifrado SSL 256-bit</span>
+          </div>
+          <div className="flex items-center gap-2">
+            <HiCheck className="w-4 h-4 text-green-500" />
+            <span>Cancela cuando quieras</span>
+          </div>
+          <div className="flex items-center gap-2">
+            <HiCheck className="w-4 h-4 text-green-500" />
+            <span>14 días de prueba gratis</span>
           </div>
         </motion.div>
       </div>

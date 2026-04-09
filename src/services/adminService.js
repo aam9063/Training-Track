@@ -70,6 +70,16 @@ export const toggleUserActive = async (userId, isActive) => {
   }
 };
 
+// Toggle exempt status
+export const toggleExempt = async (userId, isExempt) => {
+  try {
+    const data = await callAdminApi('toggle_exempt', { userId, isExempt });
+    return { data, error: null };
+  } catch (error) {
+    return { data: null, error };
+  }
+};
+
 // Update coach subscription plan
 export const updateCoachSubscription = async (coachId, { subscription_plan, max_athletes }) => {
   try {

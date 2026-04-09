@@ -24,7 +24,7 @@ export default function Landing() {
 
   useSEO({
     title: 'Plataforma de entrenamiento de running y atletismo con IA',
-    description: 'Plataforma para entrenadores de running y atletismo. Planifica entrenamientos, controla la carga con ACWR y TSB, sincroniza Strava, genera informes IA semanales y comunícate con tus atletas. Desde 800m hasta maratón. Gratis durante la beta.',
+    description: 'Plataforma para entrenadores de running y atletismo. Planifica entrenamientos, controla la carga con ACWR y TSB, sincroniza Strava, genera informes IA semanales y comunícate con tus atletas. Desde 800m hasta maratón.',
     path: '/',
   });
 

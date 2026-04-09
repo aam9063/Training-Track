@@ -1,5 +1,6 @@
 import { motion, useInView } from 'framer-motion';
 import { useRef } from 'react';
+import { Link } from 'react-router-dom';
 import { HiLightningBolt, HiUserGroup, HiChartBar, HiChatAlt2 } from 'react-icons/hi';
 import { BsStars } from 'react-icons/bs';
 
@@ -60,7 +61,7 @@ export default function Testimonials() {
             transition={{ duration: 0.5 }}
             className="inline-block px-4 py-2 bg-sky-100 dark:bg-sky-900/30 text-sky-600 dark:text-sky-400 rounded-full text-sm font-semibold mb-4"
           >
-            BETA ABIERTA
+            POR QUE ELEGIRNOS
           </motion.span>
 
           <h2 className="text-4xl sm:text-5xl font-bold text-gray-900 dark:text-white mb-6">
@@ -120,18 +121,17 @@ export default function Testimonials() {
         >
           <HiLightningBolt className="w-10 h-10 text-sky-200 mx-auto mb-4" />
           <h3 className="text-2xl md:text-3xl font-bold text-white mb-3">
-            Estamos en fase beta
+            Empieza a entrenar mejor hoy
           </h3>
           <p className="text-sky-100 text-lg max-w-2xl mx-auto mb-6">
-            Todas las funcionalidades disponibles de forma gratuita.
-            Regístrate, prueba la plataforma y ayúdanos a mejorarla con tu feedback.
+            Regístrate gratis y descubre todas las funcionalidades que Training Track tiene para ti.
           </p>
-          <a
-            href="/register"
+          <Link
+            to="/register"
             className="inline-flex items-center gap-2 px-8 py-3 bg-white text-sky-700 font-semibold rounded-xl hover:bg-sky-50 transition-colors shadow-lg"
           >
             Crear cuenta gratis
-          </a>
+          </Link>
         </motion.div>
       </div>
     </section>

@@ -33,7 +33,7 @@ export default function PrivacyPolicy() {
             Política de Privacidad
           </h1>
           <p className="text-sm text-gray-500 dark:text-gray-400 mb-10">
-            Última actualización: 11 de febrero de 2026
+            Última actualización: 9 de abril de 2026
           </p>
 
           <div className="prose prose-gray dark:prose-invert max-w-none space-y-8 text-gray-700 dark:text-gray-300 leading-relaxed">
@@ -326,7 +326,85 @@ export default function PrivacyPolicy() {
             {/* 10 */}
             <section>
               <h2 className="text-xl font-bold text-gray-900 dark:text-white mb-3">
-                10. Conservación de datos
+                10. Procesamiento de pagos (Stripe)
+              </h2>
+              <p>
+                TrainingTrack utiliza <strong>Stripe, Inc.</strong> como procesador de pagos para gestionar las
+                suscripciones y cobros de la plataforma.
+              </p>
+
+              <h3 className="text-lg font-semibold text-gray-900 dark:text-white mt-4 mb-2">
+                10.1. Datos procesados por Stripe
+              </h3>
+              <p>
+                Al realizar un pago o suscribirte a un plan de pago, Stripe procesa directamente los siguientes datos:
+              </p>
+              <ul className="list-disc pl-6 space-y-1">
+                <li>Número de tarjeta de crédito o débito</li>
+                <li>Fecha de caducidad de la tarjeta</li>
+                <li>Código de verificación (CVC/CVV)</li>
+                <li>Dirección de facturación</li>
+              </ul>
+
+              <h3 className="text-lg font-semibold text-gray-900 dark:text-white mt-4 mb-2">
+                10.2. Datos que TrainingTrack almacena
+              </h3>
+              <p>
+                TrainingTrack <strong>no almacena, procesa ni tiene acceso</strong> a los datos completos de tu tarjeta
+                bancaria. Únicamente almacenamos:
+              </p>
+              <ul className="list-disc pl-6 space-y-1">
+                <li>Identificador de cliente de Stripe (Stripe Customer ID)</li>
+                <li>Estado de la suscripción (activa, cancelada, período de prueba, etc.)</li>
+                <li>Plan contratado y fecha de renovación</li>
+              </ul>
+
+              <h3 className="text-lg font-semibold text-gray-900 dark:text-white mt-4 mb-2">
+                10.3. Datos compartidos con Stripe
+              </h3>
+              <p>
+                Para la creación y gestión de tu cuenta de pago, TrainingTrack transfiere a Stripe los siguientes datos:
+              </p>
+              <ul className="list-disc pl-6 space-y-1">
+                <li>Dirección de correo electrónico</li>
+                <li>Nombre del usuario</li>
+                <li>Plan de suscripción seleccionado</li>
+              </ul>
+
+              <h3 className="text-lg font-semibold text-gray-900 dark:text-white mt-4 mb-2">
+                10.4. Seguridad y certificaciones
+              </h3>
+              <p>
+                Stripe cuenta con la certificación <strong>PCI DSS Nivel 1</strong>, el estándar de seguridad más
+                exigente de la industria de pagos. Todos los datos de pago se transmiten y almacenan de forma cifrada
+                en los servidores de Stripe.
+              </p>
+
+              <h3 className="text-lg font-semibold text-gray-900 dark:text-white mt-4 mb-2">
+                10.5. Base jurídica y política de privacidad
+              </h3>
+              <p>
+                La base jurídica para el tratamiento de datos relacionados con pagos es la{' '}
+                <strong>ejecución del contrato</strong> (artículo 6.1.b del RGPD), ya que el procesamiento de pagos es
+                necesario para la prestación del servicio contratado.
+              </p>
+              <p className="mt-2">
+                Para más información sobre cómo Stripe trata tus datos, consulta su{' '}
+                <a
+                  href="https://stripe.com/privacy"
+                  className="text-sky-600 dark:text-sky-400 underline"
+                  target="_blank"
+                  rel="noopener noreferrer"
+                >
+                  Política de Privacidad
+                </a>.
+              </p>
+            </section>
+
+            {/* 11 */}
+            <section>
+              <h2 className="text-xl font-bold text-gray-900 dark:text-white mb-3">
+                11. Conservación de datos
               </h2>
               <p>
                 Los datos personales se conservan durante el tiempo necesario para cumplir con la finalidad
@@ -344,10 +422,10 @@ export default function PrivacyPolicy() {
               </p>
             </section>
 
-            {/* 11 */}
+            {/* 12 */}
             <section>
               <h2 className="text-xl font-bold text-gray-900 dark:text-white mb-3">
-                11. Derechos del usuario
+                12. Derechos del usuario
               </h2>
               <p>
                 De conformidad con el RGPD y la LOPD-GDD, puedes ejercer los siguientes derechos:
@@ -378,10 +456,10 @@ export default function PrivacyPolicy() {
               </p>
             </section>
 
-            {/* 12 */}
+            {/* 13 */}
             <section>
               <h2 className="text-xl font-bold text-gray-900 dark:text-white mb-3">
-                12. Medidas de seguridad
+                13. Medidas de seguridad
               </h2>
               <p>
                 Aplicamos medidas técnicas y organizativas adecuadas para garantizar la seguridad de los datos personales,
@@ -398,10 +476,10 @@ export default function PrivacyPolicy() {
               </ul>
             </section>
 
-            {/* 13 */}
+            {/* 14 */}
             <section>
               <h2 className="text-xl font-bold text-gray-900 dark:text-white mb-3">
-                13. Política de cookies
+                14. Política de cookies
               </h2>
               <p>
                 Training Track utiliza cookies para el funcionamiento del servicio. Para más información,
@@ -419,10 +497,10 @@ export default function PrivacyPolicy() {
               </p>
             </section>
 
-            {/* 14 */}
+            {/* 15 */}
             <section>
               <h2 className="text-xl font-bold text-gray-900 dark:text-white mb-3">
-                14. Menores de edad
+                15. Menores de edad
               </h2>
               <p>
                 Conforme al artículo 7 de la LOPD-GDD, el tratamiento de datos de menores de 14 años requiere
@@ -432,10 +510,10 @@ export default function PrivacyPolicy() {
               </p>
             </section>
 
-            {/* 15 */}
+            {/* 16 */}
             <section>
               <h2 className="text-xl font-bold text-gray-900 dark:text-white mb-3">
-                15. Modificaciones de esta política
+                16. Modificaciones de esta política
               </h2>
               <p>
                 Nos reservamos el derecho de modificar esta Política de Privacidad para adaptarla a novedades legislativas
@@ -445,10 +523,10 @@ export default function PrivacyPolicy() {
               </p>
             </section>
 
-            {/* 16 */}
+            {/* 17 */}
             <section>
               <h2 className="text-xl font-bold text-gray-900 dark:text-white mb-3">
-                16. Contacto
+                17. Contacto
               </h2>
               <p>
                 Para cualquier consulta relacionada con esta Política de Privacidad o el tratamiento de tus datos

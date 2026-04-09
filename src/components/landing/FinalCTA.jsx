@@ -2,7 +2,6 @@ import { motion, AnimatePresence, useInView } from 'framer-motion';
 import { useRef } from 'react';
 import { Link } from 'react-router-dom';
 import { HiRefresh, HiTrendingUp, HiArrowRight } from 'react-icons/hi';
-import WaitlistForm from './WaitlistForm';
 
 export default function FinalCTA({ audience = 'coach' }) {
   const ref = useRef(null);
@@ -76,7 +75,6 @@ export default function FinalCTA({ audience = 'coach' }) {
                   <HiArrowRight className="w-5 h-5" />
                 </Link>
 
-                <WaitlistForm source="cta" variant="on-blue" className="mt-6" />
               </motion.div>
             </AnimatePresence>
           </motion.div>

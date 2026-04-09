@@ -2,6 +2,13 @@ import { supabase } from '../lib/supabase';
 import { toLocalDateStr } from '../lib/dateUtils';
 
 /**
+ * Fetch public coach info for invite link registration.
+ */
+export const getCoachPublicInfo = async (coachUuid) => {
+  return supabase.rpc('get_coach_public_info', { coach_uuid: coachUuid });
+};
+
+/**
  * Service for managing athletes
  * Optimized queries without complex joins
  */
@@ -39,7 +46,6 @@ const refreshStravaTokenViaEdge = async (refreshToken, athleteId) => {
 // Get all athletes for the current coach (active relationships)
 export const getAthletes = async (coachId) => {
   if (!coachId) {
-    console.warn('getAthletes: No coachId provided');
     return { data: [], error: null };
   }
 
@@ -52,7 +58,6 @@ export const getAthletes = async (coachId) => {
       .eq('status', 'active');
 
     if (relError) {
-      console.error('Error fetching relationships:', relError);
       return { data: [], error: relError };
     }
 
@@ -68,12 +73,8 @@ export const getAthletes = async (coachId) => {
       supabase.from('users').select('*').in('id', athleteIds),
     ]);
 
-    if (athletesRes.error) {
-      console.error('Error fetching athletes:', athletesRes.error);
-    }
-    if (usersRes.error) {
-      console.error('Error fetching users:', usersRes.error);
-    }
+    if (athletesRes.error) return { data: [], error: athletesRes.error };
+    if (usersRes.error) return { data: [], error: usersRes.error };
 
     // Step 3: Combine data
     const combined = relationships.map(rel => {
@@ -102,7 +103,6 @@ export const getAthletes = async (coachId) => {
 
     return { data: combined, error: null };
   } catch (error) {
-    console.error('Error in getAthletes:', error);
     return { data: [], error };
   }
 };
@@ -122,7 +122,6 @@ export const getAthleteDetails = async (athleteId) => {
       .single();
 
     if (athleteError) {
-      console.error('Error fetching athlete:', athleteError);
       return { data: null, error: athleteError };
     }
 
@@ -133,9 +132,7 @@ export const getAthleteDetails = async (athleteId) => {
       .eq('id', athleteId)
       .single();
 
-    if (userError) {
-      console.error('Error fetching user:', userError);
-    }
+    if (userError) return { data: null, error: userError };
 
     // Fetch personal bests, paces, latest VAM test, and latest Conconi test in parallel
     const [pbRes, pacesRes, vamRes, conconiRes] = await Promise.all([
@@ -156,7 +153,6 @@ export const getAthleteDetails = async (athleteId) => {
 
     return { data: combined, error: null };
   } catch (error) {
-    console.error('Error fetching athlete details:', error);
     return { data: null, error };
   }
 };
@@ -178,7 +174,6 @@ export const updateAthlete = async (athleteId, updates) => {
     if (error) throw error;
     return { data, error: null };
   } catch (error) {
-    console.error('Error updating athlete:', error);
     return { data: null, error };
   }
 };
@@ -198,7 +193,6 @@ export const removeAthlete = async (relationshipId) => {
     if (error) throw error;
     return { error: null };
   } catch (error) {
-    console.error('Error removing athlete:', error);
     return { error };
   }
 };
@@ -228,7 +222,6 @@ export const getAthleteMetrics = async (athleteId, startDate, endDate) => {
     if (error) throw error;
     return { data: data || [], error: null };
   } catch (error) {
-    console.error('Error fetching athlete metrics:', error);
     return { data: [], error };
   }
 };
@@ -264,7 +257,6 @@ export const getAthleteSessions = async (athleteId, options = {}) => {
     if (error) throw error;
     return { data: data || [], error: null };
   } catch (error) {
-    console.error('Error fetching athlete sessions:', error);
     return { data: [], error };
   }
 };
@@ -286,7 +278,6 @@ export const getAthletePaces = async (athleteId) => {
     if (error) throw error;
     return { data: data || [], error: null };
   } catch (error) {
-    console.error('Error fetching athlete paces:', error);
     return { data: [], error };
   }
 };
@@ -294,7 +285,6 @@ export const getAthletePaces = async (athleteId) => {
 // Get pending athlete requests for the coach
 export const getPendingAthleteRequests = async (coachId) => {
   if (!coachId) {
-    console.warn('getPendingAthleteRequests: No coachId provided');
     return { data: [], error: null };
   }
 
@@ -308,7 +298,6 @@ export const getPendingAthleteRequests = async (coachId) => {
       .order('created_at', { ascending: false });
 
     if (relError) {
-      console.error('Error fetching pending relationships:', relError);
       return { data: [], error: relError };
     }
 
@@ -344,7 +333,6 @@ export const getPendingAthleteRequests = async (coachId) => {
 
     return { data: combined, error: null };
   } catch (error) {
-    console.error('Error in getPendingAthleteRequests:', error);
     return { data: [], error };
   }
 };
@@ -369,7 +357,6 @@ export const acceptAthleteRequest = async (relationshipId) => {
     if (error) throw error;
     return { data, error: null };
   } catch (error) {
-    console.error('Error accepting athlete request:', error);
     return { data: null, error };
   }
 };
@@ -389,7 +376,6 @@ export const rejectAthleteRequest = async (relationshipId) => {
     if (error) throw error;
     return { error: null };
   } catch (error) {
-    console.error('Error rejecting athlete request:', error);
     return { error };
   }
 };
@@ -436,7 +422,6 @@ export const getAthleteStravaConnection = async (athleteId) => {
     if (error && error.code !== 'PGRST116') throw error;
     return { data, error: null };
   } catch (error) {
-    console.error('Error fetching athlete Strava connection:', error);
     return { data: null, error };
   }
 };
@@ -460,7 +445,6 @@ export const getAthleteStravaActivities = async (athleteId, params = {}) => {
     if (error.message?.includes('not connected') || error.message?.includes('Not authorized')) {
       return { data: [], error: null, notConnected: true };
     }
-    console.error('Error fetching athlete Strava activities:', error);
     return { data: [], error };
   }
 };
@@ -478,7 +462,6 @@ export const getAthleteStravaActivityDetail = async (athleteId, activityId) => {
 
     return { data: activity, error: null };
   } catch (error) {
-    console.error('Error fetching activity details:', error);
     return { data: null, error };
   }
 };
@@ -507,7 +490,6 @@ export const getAthleteCompetitions = async (athleteId) => {
     if (error) throw error;
     return { data: data || [], error: null };
   } catch (error) {
-    console.error('Error fetching athlete competitions:', error);
     return { data: [], error };
   }
 };
@@ -528,7 +510,6 @@ export const getAthleteAllCompetitions = async (athleteId) => {
     if (error) throw error;
     return { data: data || [], error: null };
   } catch (error) {
-    console.error('Error fetching all athlete competitions:', error);
     return { data: [], error };
   }
 };
@@ -564,7 +545,6 @@ export const createAthleteCompetition = async (coachId, athleteId, competitionDa
     if (error) throw error;
     return { data, error: null };
   } catch (error) {
-    console.error('Error creating athlete competition:', error);
     return { data: null, error };
   }
 };
@@ -601,7 +581,6 @@ export const createCompetitionForAthletes = async (coachId, athleteIds, competit
     if (error) throw error;
     return { data, error: null };
   } catch (error) {
-    console.error('Error creating competitions for athletes:', error);
     return { data: null, error };
   }
 };
@@ -638,7 +617,6 @@ export const addAthletesToCompetition = async (coachId, athleteIds, competitionD
     if (error) throw error;
     return { data, error: null };
   } catch (error) {
-    console.error('Error adding athletes to competition:', error);
     return { data: null, error };
   }
 };
@@ -660,7 +638,6 @@ export const updateAthleteCompetition = async (competitionId, updates) => {
     if (error) throw error;
     return { data, error: null };
   } catch (error) {
-    console.error('Error updating athlete competition:', error);
     return { data: null, error };
   }
 };
@@ -680,7 +657,6 @@ export const deleteAthleteCompetition = async (competitionId) => {
     if (error) throw error;
     return { error: null };
   } catch (error) {
-    console.error('Error deleting athlete competition:', error);
     return { error };
   }
 };

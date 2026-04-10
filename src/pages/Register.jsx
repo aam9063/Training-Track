@@ -4,6 +4,7 @@ import { motion, AnimatePresence } from 'framer-motion';
 import { HiUser, HiMail, HiLockClosed, HiEye, HiEyeOff, HiUserGroup, HiAcademicCap, HiArrowLeft, HiLockOpen, HiShieldCheck, HiLightningBolt } from 'react-icons/hi';
 import { FcGoogle } from 'react-icons/fc';
 import useRegisterForm from '../hooks/useRegisterForm';
+import PlanSelectionStep from '../components/register/PlanSelectionStep';
 
 // Toggle: set to false to require invite link for registration
 const OPEN_REGISTRATION = true;
@@ -12,7 +13,9 @@ export default function Register() {
   const {
     form, step, role, isLoading, successMessage,
     inviteCoachId, inviteCoachName, loadingInvite,
+    plan, billingInterval,
     onSubmit, handleGoogleRegister, selectRole, goBack,
+    selectPlan, setBillingInterval, confirmPlan,
   } = useRegisterForm();
   const [showPassword, setShowPassword] = useState(false);
   const [showConfirmPassword, setShowConfirmPassword] = useState(false);
@@ -191,8 +194,46 @@ export default function Register() {
                   </Link>
                 </p>
               </motion.div>
+            ) : !loadingInvite && step === 2 ? (
+              /* Step 2: Plan Selection */
+              <motion.div
+                key="plan-selection"
+                initial={{ opacity: 0, x: 20 }}
+                animate={{ opacity: 1, x: 0 }}
+                exit={{ opacity: 0, x: -20 }}
+                transition={{ duration: 0.3 }}
+                className="space-y-6"
+              >
+                <button
+                  type="button"
+                  onClick={goBack}
+                  className="flex items-center text-gray-600 dark:text-gray-400 hover:text-gray-900 dark:hover:text-white transition-colors"
+                >
+                  <HiArrowLeft className="w-5 h-5 mr-2" />
+                  Volver
+                </button>
+
+                <PlanSelectionStep
+                  role={role === 'coach' ? 'coach' : 'athlete'}
+                  value={plan}
+                  onChange={selectPlan}
+                  interval={billingInterval}
+                  onIntervalChange={setBillingInterval}
+                  onNext={confirmPlan}
+                />
+
+                <p className="text-center text-gray-600 dark:text-gray-400">
+                  ¿Ya tienes cuenta?{' '}
+                  <Link
+                    to="/login"
+                    className="font-semibold text-sky-600 hover:text-sky-500 dark:text-sky-400"
+                  >
+                    Inicia sesión
+                  </Link>
+                </p>
+              </motion.div>
             ) : (
-              /* Step 2: Registration Form */
+              /* Step 3: Registration Form */
               <motion.div
                 key="registration-form"
                 initial={{ opacity: 0, x: 20 }}

@@ -25,6 +25,7 @@ const AuthCallback = lazy(() => import('./pages/AuthCallback'));
 const PricingPage = lazy(() => import('./pages/PricingPage'));
 const TermsConditions = lazy(() => import('./pages/TermsConditions'));
 const CheckoutSuccess = lazy(() => import('./pages/CheckoutSuccess'));
+const SelectPlan = lazy(() => import('./pages/SelectPlan'));
 
 // Coach pages
 const Dashboard = lazy(() => import('./pages/dashboard/Dashboard'));
@@ -68,6 +69,17 @@ const IndependentRoute = ({ children }) => {
   return isIndependent ? children : <Navigate to="/athlete/dashboard" replace />;
 };
 
+// Guard: requires an authenticated session but no specific role or plan.
+// Used by /select-plan so anonymous visitors are redirected to /login instead
+// of hitting commitPlanSelection and getting an `unauthorized` error. Must
+// NOT be wrapped with PlanSelectionGuard (would cause a self-redirect loop).
+const AuthenticatedRoute = ({ children }) => {
+  const { user, loading } = useAuth();
+  if (loading) return null;
+  if (!user) return <Navigate to="/login" replace />;
+  return children;
+};
+
 // Loading fallback
 const PageLoader = () => (
   <div className="flex items-center justify-center min-h-screen bg-gray-50 dark:bg-[#0A0A0A]">
@@ -101,6 +113,14 @@ function App() {
                 <Route path="/pricing" element={<PricingPage />} />
                 <Route path="/auth/callback" element={<AuthCallback />} />
                 <Route path="/checkout/success" element={<CheckoutSuccess />} />
+                <Route
+                  path="/select-plan"
+                  element={
+                    <AuthenticatedRoute>
+                      <SelectPlan />
+                    </AuthenticatedRoute>
+                  }
+                />
 
                 {/* Protected Coach Dashboard Routes */}
                 <Route path="/dashboard" element={<DashboardLayout />}>

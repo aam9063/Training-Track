@@ -157,9 +157,9 @@ export default function PlanSelectionStep({
         role="radiogroup"
         aria-label="Planes disponibles"
         aria-describedby={!hasSelection ? 'plan-selection-error' : undefined}
-        className={`grid gap-4 ${
+        className={`grid gap-6 lg:gap-8 ${
           sortedKeys.length >= 3
-            ? 'sm:grid-cols-3'
+            ? 'sm:grid-cols-2 lg:grid-cols-3'
             : 'sm:grid-cols-2'
         }`}
       >
@@ -178,7 +178,7 @@ export default function PlanSelectionStep({
               aria-checked={isSelected}
               onClick={() => onChange(planKey)}
               onKeyDown={(e) => handleKeyDown(e, planKey)}
-              className={`relative cursor-pointer rounded-2xl border-2 p-5 transition-all bg-white dark:bg-[#141414] focus:outline-none focus:ring-2 focus:ring-sky-500 focus:ring-offset-2 dark:focus:ring-offset-[#0A0A0A] ${
+              className={`relative cursor-pointer rounded-2xl border-2 p-6 lg:p-8 transition-all bg-white dark:bg-[#141414] focus:outline-none focus:ring-2 focus:ring-sky-500 focus:ring-offset-2 dark:focus:ring-offset-[#0A0A0A] ${
                 isSelected
                   ? 'border-sky-500 dark:border-sky-400 shadow-lg'
                   : 'border-gray-200 dark:border-[#2A2A2A] hover:border-sky-300 dark:hover:border-sky-600'
@@ -186,49 +186,49 @@ export default function PlanSelectionStep({
             >
               {meta.featured && (
                 <div className="absolute -top-3 left-1/2 -translate-x-1/2">
-                  <span className="inline-flex items-center gap-1 bg-sky-600 text-white text-[11px] font-semibold px-3 py-1 rounded-full">
-                    <HiSparkles className="w-3 h-3" />
+                  <span className="inline-flex items-center gap-1 bg-sky-600 text-white text-xs font-semibold px-3 py-1 rounded-full">
+                    <HiSparkles className="w-3.5 h-3.5" />
                     Recomendado
                   </span>
                 </div>
               )}
 
               {isSelected && (
-                <div className="absolute top-3 right-3 w-6 h-6 rounded-full bg-sky-600 text-white flex items-center justify-center">
+                <div className="absolute top-4 right-4 w-7 h-7 rounded-full bg-sky-600 text-white flex items-center justify-center">
                   <HiCheck className="w-4 h-4" aria-hidden="true" />
                 </div>
               )}
 
-              <div className="text-center mb-4">
-                <h3 className="text-lg font-bold text-gray-900 dark:text-white">
+              <div className="text-center mb-5">
+                <h3 className="text-xl font-bold text-gray-900 dark:text-white">
                   {meta.label}
                 </h3>
-                <p className="text-xs text-gray-500 dark:text-gray-400 mt-1">
+                <p className="text-sm text-gray-500 dark:text-gray-400 mt-1">
                   {meta.tagline}
                 </p>
               </div>
 
-              <div className="text-center mb-4">
+              <div className="text-center mb-6">
                 <div className="flex items-end justify-center">
-                  <span className="text-3xl font-bold text-gray-900 dark:text-white">
+                  <span className="text-4xl font-bold text-gray-900 dark:text-white">
                     {price}€
                   </span>
                   {price > 0 && (
-                    <span className="text-xs text-gray-500 dark:text-gray-400 ml-1 mb-1">
+                    <span className="text-sm text-gray-500 dark:text-gray-400 ml-1 mb-1">
                       /{interval === 'month' ? 'mes' : 'año'}
                     </span>
                   )}
                 </div>
-                <p className="mt-1 text-[11px] text-sky-600 dark:text-sky-400 font-medium">
+                <p className="mt-2 text-xs text-sky-600 dark:text-sky-400 font-medium">
                   14 días de prueba gratis incluidos
                 </p>
               </div>
 
-              <ul className="space-y-2">
+              <ul className="space-y-3">
                 {topFeatures.map((label) => (
                   <li
                     key={label}
-                    className="flex items-start text-xs text-gray-700 dark:text-gray-300"
+                    className="flex items-start text-sm text-gray-700 dark:text-gray-300"
                   >
                     <HiCheck className="w-4 h-4 text-green-500 mr-2 flex-shrink-0 mt-0.5" />
                     <span>{label}</span>

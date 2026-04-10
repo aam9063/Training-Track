@@ -21,6 +21,10 @@ export default function Register() {
   const [showConfirmPassword, setShowConfirmPassword] = useState(false);
   const { errors } = form.formState;
 
+  // Plan step needs the full viewport width so coach's 3 cards don't get
+  // squashed into the default narrow form column.
+  const isPlanStep = step === 2;
+
   return (
     <div className="min-h-screen flex">
       {/* Left Side - Form */}
@@ -29,7 +33,7 @@ export default function Register() {
           initial={{ opacity: 0, y: 20 }}
           animate={{ opacity: 1, y: 0 }}
           transition={{ duration: 0.5 }}
-          className="max-w-md w-full space-y-6"
+          className={`${isPlanStep ? 'max-w-5xl' : 'max-w-md'} w-full space-y-6`}
         >
           {/* Logo */}
           <div className="text-center">
@@ -560,8 +564,9 @@ export default function Register() {
         </motion.div>
       </div>
 
-      {/* Right Side - Image/Branding */}
-      <div className="hidden lg:flex lg:flex-1 bg-sky-600 relative overflow-hidden">
+      {/* Right Side - Image/Branding. Hidden on the plan step so the cards
+          have room to breathe at full viewport width. */}
+      <div className={`${isPlanStep ? 'hidden' : 'hidden lg:flex'} lg:flex-1 bg-sky-600 relative overflow-hidden`}>
         {/* Background decorations */}
         <div className="absolute inset-0">
           <div className="absolute top-20 right-20 w-72 h-72 bg-white/10 rounded-full blur-3xl" />

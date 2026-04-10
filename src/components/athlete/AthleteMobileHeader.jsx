@@ -4,11 +4,13 @@ import { motion, AnimatePresence } from 'framer-motion';
 import { FiUser, FiMessageSquare, FiLogOut, FiSun, FiMoon } from 'react-icons/fi';
 import { useAuth } from '../../contexts/AuthContext';
 import { useTheme } from '../../contexts/ThemeContext';
+import useSubscription from '../../hooks/useSubscription';
 import NotificationPanel from '../common/NotificationPanel';
 
 const AthleteMobileHeader = () => {
   const { user, profile, signOut, isIndependent } = useAuth();
   const { theme, toggleTheme } = useTheme();
+  const { planLabel, isTrialing, isExempt } = useSubscription();
   const navigate = useNavigate();
   const [showUserMenu, setShowUserMenu] = useState(false);
   const menuRef = useRef(null);
@@ -69,7 +71,16 @@ const AthleteMobileHeader = () => {
                     <p className="text-sm font-semibold text-ath-text-primary truncate">
                       {displayName} {displayLastName}
                     </p>
-                    <p className="text-xs text-ath-text-muted">Atleta</p>
+                    <p className="text-xs text-ath-text-muted flex items-center gap-1.5 flex-wrap mt-0.5">
+                      Atleta
+                      <span className={`px-1.5 py-0.5 rounded text-[10px] font-semibold leading-none ${
+                        isExempt
+                          ? 'bg-purple-100 dark:bg-purple-900/30 text-purple-600 dark:text-purple-400'
+                          : 'bg-ath-accent-surface text-ath-accent-text'
+                      }`}>
+                        {isExempt ? 'VIP' : isTrialing ? 'Trial' : planLabel}
+                      </span>
+                    </p>
                   </div>
 
                   <button
@@ -96,7 +107,7 @@ const AthleteMobileHeader = () => {
                     <div className="flex items-center gap-2.5">
                       {theme === 'light'
                         ? <FiMoon className="w-4 h-4" />
-                        : <FiSun className="w-4 h-4 text-yellow-400" />
+                        : <FiSun className="w-4 h-4 text-ath-accent" />
                       }
                       {theme === 'light' ? 'Modo oscuro' : 'Modo claro'}
                     </div>

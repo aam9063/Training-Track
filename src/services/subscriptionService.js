@@ -44,3 +44,34 @@ export const getSubscription = async (userId) => {
 
   return data;
 };
+
+/**
+ * Commit a plan selection via the commit_plan_selection RPC.
+ * Writes users.plan_selected_at + users.selected_plan and, for free plans,
+ * inserts a row in subscriptions. The RPC is SECURITY DEFINER and idempotent.
+ *
+ * @param {string} planKey - one of coach_free|coach_pro|coach_team|athlete_free|athlete_premium
+ * @param {'month'|'year'} [billingInterval='month']
+ * @returns {Promise<{ data: object|null, error: { code: string, message: string } | null }>}
+ */
+export const commitPlanSelection = async (planKey, billingInterval = 'month') => {
+  const { data, error } = await supabase.rpc('commit_plan_selection', {
+    p_plan_key: planKey,
+    p_billing_interval: billingInterval,
+  });
+
+  if (error) {
+    // Map known RPC error messages. We MUST match on the message text because
+    // SQLSTATE 23505 is shared with regular unique_violation errors.
+    const msg = (error.message || '').toLowerCase();
+    let code = 'unknown';
+    if (msg.includes('plan_already_selected')) code = 'plan_already_selected';
+    else if (msg.includes('invalid_plan_key')) code = 'invalid_plan_key';
+    else if (msg.includes('invalid_billing_interval')) code = 'invalid_billing_interval';
+    else if (msg.includes('plan_role_mismatch')) code = 'plan_role_mismatch';
+    else if (msg.includes('unauthorized')) code = 'unauthorized';
+    return { data: null, error: { code, message: error.message } };
+  }
+
+  return { data, error: null };
+};

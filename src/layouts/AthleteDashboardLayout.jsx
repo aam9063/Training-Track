@@ -8,6 +8,7 @@ import NotificationPanel from '../components/common/NotificationPanel';
 import PushNotificationBanner from '../components/common/PushNotificationBanner';
 import { TrialBanner } from '../components/common/TrialBanner';
 import { SubscriptionGuard } from '../components/common/SubscriptionGuard';
+import PlanSelectionGuard from '../components/common/PlanSelectionGuard';
 
 const AthleteDashboardLayout = () => {
   const { user, loading, profile } = useAuth();
@@ -63,9 +64,11 @@ const AthleteDashboardLayout = () => {
         <main className="overflow-x-hidden pb-[72px] lg:pb-0">
           <TrialBanner />
           <PushNotificationBanner />
-          <SubscriptionGuard>
-            <Outlet />
-          </SubscriptionGuard>
+          <PlanSelectionGuard>
+            <SubscriptionGuard>
+              <Outlet />
+            </SubscriptionGuard>
+          </PlanSelectionGuard>
         </main>
       </div>
     </div>

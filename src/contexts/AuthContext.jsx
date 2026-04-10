@@ -1,4 +1,4 @@
-import { createContext, useContext, useState, useEffect, useCallback, useMemo } from 'react';
+import { createContext, useContext, useState, useEffect, useCallback, useMemo, useRef } from 'react';
 import { supabase } from '../lib/supabase';
 import { toLocalDateStr } from '../lib/dateUtils';
 
@@ -8,21 +8,19 @@ export function AuthProvider({ children }) {
   const [user, setUser] = useState(null);
   const [profile, setProfile] = useState(null);
   const [loading, setLoading] = useState(true);
+  const [profileLoaded, setProfileLoaded] = useState(false);
+  const [profileError, setProfileError] = useState(null);
+  // Monotonic counter for fetchProfile calls. Only the latest fetch's result
+  // is allowed to update `profile` — stale in-flight fetches (e.g. from
+  // onAuthStateChange racing with refreshProfile after a plan commit) are
+  // discarded. Prevents a stale fetch from overwriting a fresh one.
+  const fetchIdRef = useRef(0);
 
-  // Fetch user profile from our users table with role-specific data
-  const fetchProfile = useCallback(async (userId, sessionUser) => {
-    // Create fallback profile from session metadata
-    const userMetadata = sessionUser?.user_metadata || {};
-    const fallbackProfile = {
-      id: userId,
-      email: sessionUser?.email || '',
-      role: userMetadata.role || 'coach',
-      first_name: userMetadata.first_name || 'Usuario',
-      last_name: userMetadata.last_name || '',
-      is_independent: userMetadata.is_independent || false,
-      created_at: sessionUser?.created_at,
-    };
-
+  // Fetch user profile from our users table with role-specific data.
+  // On error returns null and sets `profileError` so downstream guards can
+  // react (e.g. render a retry UI instead of redirecting to /select-plan with
+  // a stale fallback profile).
+  const fetchProfile = useCallback(async (userId) => {
     try {
       // First get the base user info
       const { data: userData, error: userError } = await supabase
@@ -32,7 +30,8 @@ export function AuthProvider({ children }) {
         .single();
 
       if (userError) {
-        return fallbackProfile;
+        setProfileError(userError);
+        return null;
       }
 
       // Check if account is deactivated
@@ -76,13 +75,15 @@ export function AuthProvider({ children }) {
         .eq('user_id', userId)
         .maybeSingle();
 
+      setProfileError(null);
       return {
         ...userData,
         ...(userData.role === 'coach' ? { coach: roleData } : { athlete: roleData }),
         subscription: subscription || null,
       };
-    } catch {
-      return fallbackProfile;
+    } catch (err) {
+      setProfileError(err);
+      return null;
     }
   }, []);
 
@@ -110,26 +111,35 @@ export function AuthProvider({ children }) {
           setProfile(initialProfile);
           setLoading(false);
 
-          // Fetch full profile in background (non-blocking)
-          fetchProfile(session.user.id, session.user)
+          // Fetch full profile in background (non-blocking). On error,
+          // fetchProfile sets `profileError` and returns null — we surface
+          // that by setting profile to null so guards can render retry UI
+          // instead of acting on stale metadata.
+          const fetchId = ++fetchIdRef.current;
+          fetchProfile(session.user.id)
             .then(dbProfile => {
-              if (mounted && dbProfile) {
-                setProfile(dbProfile);
-              }
+              if (!mounted || fetchId !== fetchIdRef.current) return;
+              setProfile(dbProfile);
             })
             .catch(() => {
-              // Keep metadata profile on error
+              if (!mounted || fetchId !== fetchIdRef.current) return;
+              setProfile(null);
+            })
+            .finally(() => {
+              if (mounted && fetchId === fetchIdRef.current) setProfileLoaded(true);
             });
         } else {
           setUser(null);
           setProfile(null);
           setLoading(false);
+          setProfileLoaded(true);
         }
       } catch {
         if (mounted) {
           setUser(null);
           setProfile(null);
           setLoading(false);
+          setProfileLoaded(true);
         }
       }
     };
@@ -154,18 +164,28 @@ export function AuthProvider({ children }) {
             is_independent: session.user.user_metadata?.is_independent || false,
           };
           setProfile(metadataProfile);
+          setProfileLoaded(false);
 
-          // Fetch full profile in background
-          fetchProfile(session.user.id, session.user)
+          // Fetch full profile in background. On error, `dbProfile` will be
+          // null — set profile accordingly so consumers don't act on stale
+          // metadata (profileError is also set by fetchProfile).
+          const fetchId = ++fetchIdRef.current;
+          fetchProfile(session.user.id)
             .then(dbProfile => {
-              if (mounted && dbProfile) {
-                setProfile(dbProfile);
-              }
+              if (!mounted || fetchId !== fetchIdRef.current) return;
+              setProfile(dbProfile);
             })
-            .catch(() => {});
+            .catch(() => {
+              if (!mounted || fetchId !== fetchIdRef.current) return;
+              setProfile(null);
+            })
+            .finally(() => {
+              if (mounted && fetchId === fetchIdRef.current) setProfileLoaded(true);
+            });
         } else {
           setUser(null);
           setProfile(null);
+          setProfileLoaded(false);
         }
 
         setLoading(false);
@@ -220,11 +240,30 @@ export function AuthProvider({ children }) {
 
   // Sign in with Google
   // metadata: { role, coachId, coachEmail } — saved to localStorage for post-OAuth callback
-  const signInWithGoogle = useCallback(async (metadata = null) => {
+  // pendingPlan: { planKey, billingInterval, role } — saved to sessionStorage so
+  // AuthCallback can commit the plan after OAuth returns. Safe to call from
+  // landing pages or entry points that don't manage sessionStorage themselves.
+  const signInWithGoogle = useCallback(async (metadata = null, pendingPlan = null) => {
     try {
       // Store registration metadata before redirect (OAuth loses state)
       if (metadata) {
         localStorage.setItem('google_oauth_metadata', JSON.stringify(metadata));
+      }
+
+      // Store pending plan selection before redirect (tab-scoped)
+      if (pendingPlan?.planKey) {
+        try {
+          sessionStorage.setItem(
+            'pending_plan_selection',
+            JSON.stringify({
+              plan_key: pendingPlan.planKey,
+              billing_interval: pendingPlan.billingInterval || 'month',
+              role: pendingPlan.role || metadata?.role || null,
+            }),
+          );
+        } catch {
+          // sessionStorage unavailable — non-blocking.
+        }
       }
 
       const { data, error } = await supabase.auth.signInWithOAuth({
@@ -239,6 +278,7 @@ export function AuthProvider({ children }) {
     } catch (error) {
       // Clean up on error
       localStorage.removeItem('google_oauth_metadata');
+      try { sessionStorage.removeItem('pending_plan_selection'); } catch { /* ignore */ }
       return { data: null, error };
     }
   }, []);
@@ -459,14 +499,29 @@ export function AuthProvider({ children }) {
     }
   }, []);
 
-  // Refresh profile data
-  const refreshProfile = useCallback(async () => {
-    if (user) {
-      const newProfile = await fetchProfile(user.id, user);
-      setProfile(newProfile);
+  // Refresh profile data. Resets `profileLoaded` to false before fetching so
+  // consumers (e.g. AuthCallback) can wait for the fresh value before acting.
+  // Optional userIdOverride lets callers refetch a profile immediately after
+  // signUp, before onAuthStateChange has finished propagating the new user
+  // into the AuthContext state. Without this, refreshProfile would see
+  // `user === null` and early-return, leaving the guard with a stale profile.
+  const refreshProfile = useCallback(async (userIdOverride) => {
+    const targetUserId = userIdOverride || user?.id;
+    if (!targetUserId) return null;
+    setProfileLoaded(false);
+    const fetchId = ++fetchIdRef.current;
+    try {
+      const newProfile = await fetchProfile(targetUserId);
+      // Only apply if no newer fetch has started while we were awaiting.
+      if (fetchId === fetchIdRef.current) {
+        setProfile(newProfile);
+      }
       return newProfile;
+    } finally {
+      if (fetchId === fetchIdRef.current) {
+        setProfileLoaded(true);
+      }
     }
-    return null;
   }, [user, fetchProfile]);
 
   // Memoize the context value to prevent unnecessary re-renders
@@ -474,6 +529,8 @@ export function AuthProvider({ children }) {
     user,
     profile,
     loading,
+    profileLoaded,
+    profileError,
     isCoach: profile?.role === 'coach',
     isAthlete: profile?.role === 'athlete',
     isIndependent: profile?.role === 'athlete' && profile?.is_independent === true,
@@ -495,6 +552,8 @@ export function AuthProvider({ children }) {
     user,
     profile,
     loading,
+    profileLoaded,
+    profileError,
     signUp,
     signIn,
     signInWithGoogle,

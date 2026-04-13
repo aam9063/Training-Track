@@ -33,7 +33,7 @@ const MobileHeader = () => {
     <header className="lg:hidden fixed top-0 left-0 right-0 z-30 bg-coach-surface border-b border-[#E2E8F0] dark:border-coach-border px-5 py-3 flex items-center justify-between">
       {/* Logo */}
       <button onClick={() => navigate('/dashboard')} className="flex items-center gap-2">
-        <img src="/img/logo.png" alt="TrainingTrack" className="h-8 w-auto" />
+        <img src="/img/logo.png" alt="TrainingTrack" className="h-8 w-auto rounded-lg" />
         <span className="text-xl font-bold tracking-tight text-slate-900 dark:text-white">
           Training<span className="text-blue-500">Track</span>
         </span>

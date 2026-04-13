@@ -61,7 +61,7 @@ const AthleteDashboardLayout = () => {
           ${sidebarCollapsed ? 'lg:pl-20' : 'lg:pl-64'}
         `}
       >
-        <main className="overflow-x-hidden pb-[72px] lg:pb-0">
+        <main className="overflow-x-hidden pb-24 lg:pb-0">
           <TrialBanner />
           <PushNotificationBanner />
           <PlanSelectionGuard>

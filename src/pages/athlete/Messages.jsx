@@ -182,12 +182,12 @@ const AthleteMessages = () => {
           decrementUnread(1);
         }
       });
-    } catch (error) {
-      console.error('Error loading messages:', error);
+    } catch {
+      showError('Error al cargar mensajes');
     } finally {
       setLoading(false);
     }
-  }, [profile?.id, getMyCoach, refreshUnreadCount, decrementUnread]);
+  }, [profile?.id, getMyCoach, refreshUnreadCount, decrementUnread, setActiveConversationPartnerId]);
 
   useEffect(() => {
     loadData();
@@ -225,8 +225,7 @@ const AthleteMessages = () => {
     try {
       const { error } = await sendMessage(profile.id, coachInfo.id, content);
       if (error) throw error;
-    } catch (error) {
-      console.error('Error sending message:', error);
+    } catch {
       showError('Error al enviar el mensaje');
       setNewMessageText(content);
     } finally {
@@ -305,7 +304,7 @@ const AthleteMessages = () => {
   }
 
   return (
-    <div className="flex flex-col h-[calc(100dvh-62px-72px)] lg:h-[calc(100vh-52px)] overflow-hidden -mb-[72px] lg:mb-0">
+    <div className="flex flex-col h-[calc(100dvh-62px-88px)] lg:h-[calc(100vh-80px-12px)] overflow-hidden -mb-[88px] lg:mb-0 lg:rounded-2xl lg:border lg:border-black/[0.06] lg:dark:border-white/[0.08]">
       {/* Chat Header */}
       <div className="px-4 py-3 border-b border-ath-border bg-ath-surface flex items-center space-x-3">
         {coachInfo.profile_image ? (
@@ -419,8 +418,7 @@ const AthleteMessages = () => {
             onKeyDown={handleKeyDown}
             placeholder="Escribe un mensaje..."
             rows={1}
-            className="flex-1 px-4 py-2.5 border border-ath-border rounded-2xl bg-ath-inset text-ath-text-primary text-sm focus:ring-2 focus:ring-ath-accent focus:border-transparent resize-none overflow-hidden"
-            style={{ minHeight: '40px', maxHeight: '120px' }}
+            className="flex-1 px-4 py-2.5 border border-ath-border rounded-2xl bg-ath-inset text-ath-text-primary text-sm focus:ring-2 focus:ring-ath-accent focus:border-transparent resize-none overflow-hidden min-h-10 max-h-[120px]"
           />
           <button
             onClick={handleSend}

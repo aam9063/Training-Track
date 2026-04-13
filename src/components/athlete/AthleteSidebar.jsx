@@ -1,21 +1,13 @@
-import { useState, useEffect, useRef } from 'react';
-import { Link, useLocation, useNavigate } from 'react-router-dom';
+import { Link, useLocation } from 'react-router-dom';
 import { useAuth } from '../../contexts/AuthContext';
 import { useTheme } from '../../contexts/ThemeContext';
 import { useNotifications } from '../../contexts/NotificationContext';
-import useSubscription from '../../hooks/useSubscription';
 import {
   FiHome,
   FiCalendar,
   FiActivity,
   FiBarChart2,
   FiWatch,
-  FiChevronLeft,
-  FiChevronRight,
-  FiLogOut,
-  FiUser,
-  FiMenu,
-  FiX,
   FiMessageSquare,
   FiSun,
   FiMoon,
@@ -24,33 +16,11 @@ import {
   FiFlag,
 } from 'react-icons/fi';
 
-const AthleteSidebar = ({ onCollapse }) => {
-  const [collapsed, setCollapsed] = useState(false);
-  const [mobileOpen, setMobileOpen] = useState(false);
-  const [showUserMenu, setShowUserMenu] = useState(false);
-  const [menuPos, setMenuPos] = useState({ bottom: 0, left: 0 });
-  const userBtnRef = useRef(null);
+const AthleteSidebar = () => {
   const location = useLocation();
-  const navigate = useNavigate();
-  const { user, profile, signOut, isIndependent } = useAuth();
+  const { isIndependent } = useAuth();
   const { theme, toggleTheme } = useTheme();
   const { unreadMessages } = useNotifications();
-  const { planLabel, isTrialing, isExempt } = useSubscription();
-
-  // Usar profile si existe, sino usar datos básicos del user
-  const displayName = profile?.first_name || user?.user_metadata?.first_name || 'Atleta';
-  const displayLastName = profile?.last_name || user?.user_metadata?.last_name || '';
-
-  useEffect(() => {
-    if (onCollapse) {
-      onCollapse(collapsed);
-    }
-  }, [collapsed, onCollapse]);
-
-  // Cerrar menú móvil al cambiar de ruta
-  useEffect(() => {
-    setMobileOpen(false);
-  }, [location.pathname]);
 
   const independentMenuItems = [
     { path: '/athlete/dashboard', icon: FiHome, label: 'Inicio' },
@@ -74,18 +44,6 @@ const AthleteSidebar = ({ onCollapse }) => {
 
   const menuItems = isIndependent ? independentMenuItems : coachedMenuItems;
 
-  const handleSignOut = async () => {
-    setShowUserMenu(false);
-
-    // Ejecutar signOut pero NO esperar
-    signOut().catch(() => {});
-
-    // Limpiar localStorage y redirigir inmediatamente
-    localStorage.clear();
-
-    window.location.href = '/login';
-  };
-
   const isActive = (path) => {
     if (path === '/athlete/dashboard') {
       return location.pathname === '/athlete/dashboard';
@@ -94,222 +52,74 @@ const AthleteSidebar = ({ onCollapse }) => {
   };
 
   return (
-    <>
-      {/* Overlay for mobile */}
-      {mobileOpen && (
-        <div
-          className="lg:hidden fixed inset-0 bg-black bg-opacity-50 z-30"
-          onClick={() => setMobileOpen(false)}
-        />
-      )}
+    <div className="hidden lg:block w-[76px] fixed inset-y-0 left-0 z-40 p-3 pr-0">
+      {/* Floating column */}
+      <div className="w-[52px] h-full rounded-2xl bg-white dark:bg-ath-elevated border border-black/[0.06] dark:border-white/[0.08] shadow-sm flex flex-col items-center py-4">
+        {/* Logo */}
+        <Link to="/athlete/dashboard" className="mb-4 flex-shrink-0">
+          <img
+            src={theme === 'dark' ? '/img/logo-user-dark.png' : '/img/logo-user.png'}
+            alt="TrainingTrack"
+            className="w-8 h-8 object-contain rounded-lg"
+          />
+        </Link>
 
-      {/* Sidebar */}
-      <div
-        className={`
-          ${collapsed ? 'lg:w-20' : 'lg:w-64'}
-          w-64
-          bg-ath-surface
-          border-r border-ath-border
-          transition-all duration-300 ease-in-out
-          flex flex-col
-          h-screen
-          fixed left-0 top-0
-          z-40
-          ${mobileOpen ? 'translate-x-0' : '-translate-x-full lg:translate-x-0'}
-        `}
-        style={{ overflowX: 'clip' }}
-      >
-        {/* Logo & Toggle */}
-        <div className={`h-16 flex items-center border-b border-ath-border ${collapsed ? 'justify-center px-2' : 'justify-between px-4'}`}>
-          <Link to="/athlete/dashboard" className={`flex items-center ${collapsed ? '' : 'space-x-2'}`}>
-            <img src={theme === 'dark' ? '/img/logo-user-dark.png' : '/img/logo-user.png'} alt="trainingtrack" className="w-8 h-8 object-contain flex-shrink-0" />
-            {!collapsed && (
-              <span className="text-xl font-bold text-ath-text-primary">
-                Training<span className="text-ath-accent">Track</span>
-              </span>
-            )}
-          </Link>
-          {!collapsed && (
-            <button
-              onClick={() => setCollapsed(!collapsed)}
-              className="hidden lg:block p-1.5 rounded-lg hover:bg-ath-inset text-ath-text-muted transition-colors"
-              aria-label="Colapsar sidebar"
-            >
-              <FiChevronLeft className="w-5 h-5" />
-            </button>
-          )}
-          {collapsed && (
-            <button
-              onClick={() => setCollapsed(!collapsed)}
-              className="hidden lg:block absolute top-16 left-1/2 -translate-x-1/2 -translate-y-1/2 p-1 rounded-full bg-ath-surface border border-ath-border shadow-sm hover:bg-ath-inset text-ath-text-muted transition-colors z-10"
-              aria-label="Expandir sidebar"
-            >
-              <FiChevronRight className="w-4 h-4" />
-            </button>
-          )}
-        </div>
-
-        {/* Navigation Menu */}
-        <nav className="flex-1 px-3 py-4 space-y-1 overflow-y-auto">
+        {/* Nav items — centered vertically between logo and dark mode toggle */}
+        <nav className="flex-1 flex flex-col items-center justify-center gap-1 overflow-y-auto">
           {menuItems.map((item) => {
             const Icon = item.icon;
             const active = isActive(item.path);
 
             return (
-              <Link
-                key={item.path}
-                to={item.path}
-                className={`
-                  relative flex items-center space-x-3 px-3 py-2.5 rounded-lg
-                  transition-all duration-200
-                  ${collapsed ? 'lg:justify-center' : ''}
-                  ${
-                    active
-                      ? 'bg-ath-accent-surface text-ath-accent-text'
-                      : 'text-ath-text-secondary hover:bg-ath-inset'
-                  }
-                `}
-              >
-                <Icon className={`w-5 h-5 flex-shrink-0 ${active ? 'text-ath-accent-text' : ''}`} />
-                <span className={`text-sm font-medium flex-1 ${collapsed ? 'lg:hidden' : ''}`}>{item.label}</span>
-                {item.badge > 0 && (
-                  collapsed ? (
-                    <span className="absolute -top-1 -right-1 bg-red-500 text-white text-[10px] font-bold rounded-full w-4 h-4 flex items-center justify-center lg:flex hidden">
-                      {item.badge > 9 ? '9+' : item.badge}
-                    </span>
-                  ) : (
-                    <span className="bg-red-500 text-white text-xs font-bold rounded-full px-1.5 py-0.5 min-w-[20px] text-center">
-                      {item.badge > 99 ? '99+' : item.badge}
-                    </span>
-                  )
-                )}
-              </Link>
+              <div key={item.path} className="group relative">
+                <Link
+                  to={item.path}
+                  className={`
+                    w-10 h-10 rounded-xl flex items-center justify-center
+                    transition-colors relative cursor-pointer
+                    ${
+                      active
+                        ? 'bg-ath-accent-surface text-ath-accent-text'
+                        : 'text-slate-400 dark:text-slate-500 hover:bg-slate-100 dark:hover:bg-white/5 hover:text-slate-600 dark:hover:text-slate-300'
+                    }
+                  `}
+                  aria-label={item.label}
+                >
+                  <Icon className="w-5 h-5" />
+                  {item.badge > 0 && (
+                    <span className="absolute -top-0.5 -right-0.5 w-2 h-2 rounded-full bg-red-500" />
+                  )}
+                </Link>
+                {/* Tooltip */}
+                <div className="absolute left-full ml-2 top-1/2 -translate-y-1/2 px-2.5 py-1.5 rounded-lg bg-slate-900 dark:bg-slate-700 text-white text-xs font-medium whitespace-nowrap opacity-0 group-hover:opacity-100 pointer-events-none transition-opacity duration-150 z-50">
+                  {item.label}
+                </div>
+              </div>
             );
           })}
         </nav>
 
-        {/* Theme Toggle Switch */}
-        <div className="px-3 pb-2">
-          <button
-            onClick={toggleTheme}
-            className={`
-              w-full flex items-center px-3 py-2.5 rounded-lg
-              text-ath-text-secondary hover:bg-ath-inset
-              transition-colors
-              ${collapsed ? 'lg:justify-center' : 'space-x-3'}
-            `}
-            title={collapsed ? (theme === 'light' ? 'Modo oscuro' : 'Modo claro') : ''}
-          >
-            <div className={`relative w-11 h-6 rounded-full flex-shrink-0 transition-colors ${theme === 'dark' ? 'bg-ath-accent' : 'bg-gray-300'}`}>
-              <div className={`absolute top-0.5 w-5 h-5 rounded-full bg-white shadow-md flex items-center justify-center transition-transform duration-300 ${theme === 'dark' ? 'translate-x-[22px]' : 'translate-x-0.5'}`}>
-                {theme === 'light' ? (
-                  <FiSun className="w-3 h-3 text-ath-accent" />
-                ) : (
-                  <FiMoon className="w-3 h-3 text-ath-accent-text" />
-                )}
-              </div>
+        {/* Dark mode toggle */}
+        <div className="mt-2 flex-shrink-0">
+          <div className="group relative">
+            <button
+              onClick={toggleTheme}
+              className="w-10 h-10 rounded-xl flex items-center justify-center text-slate-400 dark:text-slate-500 hover:bg-slate-100 dark:hover:bg-white/5 hover:text-slate-600 dark:hover:text-slate-300 transition-colors cursor-pointer"
+              aria-label={theme === 'light' ? 'Modo oscuro' : 'Modo claro'}
+            >
+              {theme === 'light' ? (
+                <FiMoon className="w-5 h-5" />
+              ) : (
+                <FiSun className="w-5 h-5 text-ath-accent" />
+              )}
+            </button>
+            <div className="absolute left-full ml-2 top-1/2 -translate-y-1/2 px-2.5 py-1.5 rounded-lg bg-slate-900 dark:bg-slate-700 text-white text-xs font-medium whitespace-nowrap opacity-0 group-hover:opacity-100 pointer-events-none transition-opacity duration-150 z-50">
+              {theme === 'light' ? 'Modo oscuro' : 'Modo claro'}
             </div>
-            <span className={`font-medium text-sm ${collapsed ? 'lg:hidden' : ''}`}>
-              {theme === 'light' ? 'Modo claro' : 'Modo oscuro'}
-            </span>
-          </button>
-        </div>
-
-        {/* User Profile Section */}
-        <div className="border-t border-ath-border p-3">
-          <button
-            ref={userBtnRef}
-            onClick={() => {
-              if (!showUserMenu && userBtnRef.current) {
-                const rect = userBtnRef.current.getBoundingClientRect();
-                setMenuPos({ bottom: window.innerHeight - rect.top + 8, left: rect.left });
-              }
-              setShowUserMenu(!showUserMenu);
-            }}
-            className={`
-              w-full flex items-center space-x-3 px-3 py-2.5 rounded-lg
-              hover:bg-ath-inset
-              transition-colors
-              ${collapsed ? 'lg:justify-center' : ''}
-            `}
-          >
-            {profile?.profile_image ? (
-              <img
-                src={profile.profile_image}
-                alt={`${displayName} ${displayLastName}`}
-                className="w-8 h-8 rounded-full object-cover flex-shrink-0"
-              />
-            ) : (
-              <div className="w-8 h-8 rounded-full bg-ath-accent flex items-center justify-center flex-shrink-0">
-                <span className="text-ath-on-accent font-semibold text-sm">
-                  {displayName[0]}{displayLastName[0] || 'A'}
-                </span>
-              </div>
-            )}
-            <div className={`flex-1 text-left min-w-0 ${collapsed ? 'lg:hidden' : ''}`}>
-              <p className="text-sm font-medium text-ath-text-primary truncate">
-                {displayName} {displayLastName}
-              </p>
-              <p className="text-xs text-ath-text-muted flex items-center gap-1.5">
-                Atleta
-                <span className={`px-1.5 py-0.5 rounded text-[10px] font-semibold leading-none ${
-                  isExempt ? 'bg-purple-100 dark:bg-purple-900/30 text-purple-600 dark:text-purple-400'
-                    : isTrialing ? 'bg-ath-accent-surface text-ath-accent-text'
-                    : 'bg-ath-accent-surface text-ath-accent-text'
-                }`}>
-                  {isExempt ? 'VIP' : isTrialing ? 'Trial' : planLabel}
-                </span>
-              </p>
-            </div>
-          </button>
+          </div>
         </div>
       </div>
-
-      {/* User Dropdown Menu - rendered outside sidebar to avoid overflow clip */}
-      {showUserMenu && (
-        <>
-          <div
-            className="fixed inset-0 z-50"
-            onClick={() => setShowUserMenu(false)}
-          />
-          <div
-            className="fixed w-48 bg-ath-surface rounded-lg shadow-lg border border-ath-border py-1 z-50"
-            style={{ bottom: menuPos.bottom, left: menuPos.left }}
-          >
-            <button
-              onClick={() => {
-                navigate('/athlete/profile');
-                setShowUserMenu(false);
-              }}
-              className="w-full flex items-center space-x-2 px-4 py-2 text-sm text-ath-text-secondary hover:bg-ath-inset transition-colors"
-            >
-              <FiUser className="w-4 h-4" />
-              <span>Mi Perfil</span>
-            </button>
-            {!isIndependent && (
-              <button
-                onClick={() => {
-                  navigate('/athlete/messages');
-                  setShowUserMenu(false);
-                }}
-                className="w-full flex items-center space-x-2 px-4 py-2 text-sm text-ath-text-secondary hover:bg-ath-inset transition-colors"
-              >
-                <FiMessageSquare className="w-4 h-4" />
-                <span>Mis Mensajes</span>
-              </button>
-            )}
-            <div className="border-t border-ath-border my-1"></div>
-            <button
-              onClick={handleSignOut}
-              className="w-full flex items-center space-x-2 px-4 py-2 text-sm text-red-600 dark:text-red-400 hover:bg-red-50 dark:hover:bg-red-900/20 transition-colors"
-            >
-              <FiLogOut className="w-4 h-4" />
-              <span>Cerrar Sesión</span>
-            </button>
-          </div>
-        </>
-      )}
-    </>
+    </div>
   );
 };
 

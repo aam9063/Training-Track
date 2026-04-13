@@ -33,7 +33,7 @@ const AthleteMobileHeader = () => {
     <header className="lg:hidden fixed top-0 left-0 right-0 z-30 bg-ath-surface border-b border-ath-border px-5 py-3 flex items-center justify-between">
       {/* Logo */}
       <button onClick={() => navigate('/athlete/dashboard')} className="flex items-center gap-2">
-        <img src={theme === 'dark' ? '/img/logo-user-dark.png' : '/img/logo-user.png'} alt="TrainingTrack" className="h-8 w-auto" />
+        <img src={theme === 'dark' ? '/img/logo-user-dark.png' : '/img/logo-user.png'} alt="TrainingTrack" className="h-8 w-auto rounded-lg" />
         <span className="text-xl font-bold tracking-tight text-ath-text-primary">
           Training<span className="text-ath-accent">Track</span>
         </span>
@@ -50,7 +50,7 @@ const AthleteMobileHeader = () => {
             className="w-[38px] h-[38px] rounded-full flex items-center justify-center text-white text-sm font-semibold overflow-hidden flex-shrink-0 bg-ath-accent"
           >
             {profile?.profile_image
-              ? <img src={profile.profile_image} alt="" className="w-full h-full object-cover" />
+              ? <img src={profile.profile_image} alt="Foto de perfil" className="w-full h-full object-cover" />
               : initials
             }
           </button>

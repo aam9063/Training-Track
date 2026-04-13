@@ -1,6 +1,5 @@
 import { useState, useEffect, useCallback, useRef } from 'react';
 import { useLocation } from 'react-router-dom';
-import { motion } from 'framer-motion';
 import {
   FiMessageSquare,
   FiLoader,
@@ -90,7 +89,7 @@ const CoachMessages = () => {
       });
 
       setConversations(all);
-    } catch { /* silenced */ } finally {
+    } catch { showError('Error al cargar conversaciones'); } finally {
       setLoading(false);
     }
   }, [profile?.id]);
@@ -174,10 +173,10 @@ const CoachMessages = () => {
           }
         }
       );
-    } catch { /* silenced */ } finally {
+    } catch { showError('Error al cargar mensajes'); } finally {
       setLoadingMessages(false);
     }
-  }, [profile?.id, decrementUnread]);
+  }, [profile?.id, decrementUnread, setActiveConversationPartnerId]);
 
   // Cleanup on unmount
   useEffect(() => {
@@ -220,7 +219,7 @@ const CoachMessages = () => {
         content
       );
       if (error) throw error;
-    } catch (error) {
+    } catch {
       showError('Error al enviar el mensaje');
       setNewMessageText(content);
     } finally {
@@ -299,7 +298,7 @@ const CoachMessages = () => {
   }
 
   return (
-    <div className="flex h-[calc(100dvh-62px-72px)] lg:h-[calc(100vh-52px)] overflow-hidden -mb-[72px] lg:mb-0">
+    <div className="flex h-[calc(100dvh-62px-88px)] lg:h-[calc(100vh-80px-12px)] overflow-hidden -mb-[88px] lg:mb-0 lg:rounded-2xl lg:border lg:border-black/[0.06] lg:dark:border-white/[0.08]">
       {/* Left Panel — Conversation List */}
       <div
         className={`
@@ -540,8 +539,7 @@ const CoachMessages = () => {
                   onKeyDown={handleKeyDown}
                   placeholder="Escribe un mensaje..."
                   rows={1}
-                  className="flex-1 px-4 py-2.5 border border-coach-border rounded-2xl bg-coach-inset text-coach-text-primary text-sm focus:ring-2 focus:ring-sky-500 focus:border-transparent resize-none overflow-hidden"
-                  style={{ minHeight: '40px', maxHeight: '120px' }}
+                  className="flex-1 px-4 py-2.5 border border-coach-border rounded-2xl bg-coach-inset text-coach-text-primary text-sm focus:ring-2 focus:ring-sky-500 focus:border-transparent resize-none overflow-hidden min-h-10 max-h-[120px]"
                 />
                 <button
                   onClick={handleSend}

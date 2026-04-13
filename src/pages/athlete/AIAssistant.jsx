@@ -55,9 +55,9 @@ const MessageBubble = ({ message }) => {
 const TypingIndicator = () => (
   <div className="flex justify-start">
     <div className="bg-ath-inset rounded-2xl rounded-bl-sm px-4 py-3 flex gap-1 items-center">
-      <span className="w-1.5 h-1.5 rounded-full bg-ath-text-muted animate-bounce" style={{ animationDelay: '0ms' }} />
-      <span className="w-1.5 h-1.5 rounded-full bg-ath-text-muted animate-bounce" style={{ animationDelay: '150ms' }} />
-      <span className="w-1.5 h-1.5 rounded-full bg-ath-text-muted animate-bounce" style={{ animationDelay: '300ms' }} />
+      <span className="w-1.5 h-1.5 rounded-full bg-ath-text-muted animate-bounce [animation-delay:0ms]" />
+      <span className="w-1.5 h-1.5 rounded-full bg-ath-text-muted animate-bounce [animation-delay:150ms]" />
+      <span className="w-1.5 h-1.5 rounded-full bg-ath-text-muted animate-bounce [animation-delay:300ms]" />
     </div>
   </div>
 );
@@ -128,7 +128,7 @@ export default function AIAssistant() {
   const displayName = profile?.first_name || user?.user_metadata?.first_name || 'Atleta';
 
   return (
-    <div className="flex flex-col h-[calc(100vh-62px-72px)] lg:h-[calc(100vh-52px)] overflow-hidden bg-ath-base">
+    <div className="flex flex-col h-[calc(100dvh-62px-100px)] lg:h-[calc(100vh-80px-12px)] overflow-hidden bg-ath-base lg:rounded-2xl lg:border lg:border-black/[0.06] lg:dark:border-white/[0.08]">
 
       {/* ── Header ─────────────────────────────────────────────────────────── */}
       <div className="flex items-center justify-between px-4 lg:px-8 py-4 bg-ath-surface border-b border-ath-border flex-shrink-0">
@@ -199,7 +199,7 @@ export default function AIAssistant() {
           <>
             <AnimatePresence initial={false}>
               {messages.map((msg, i) => (
-                <MessageBubble key={i} message={msg} />
+                <MessageBubble key={msg.id || msg.created_at || i} message={msg} />
               ))}
             </AnimatePresence>
 
@@ -235,8 +235,7 @@ export default function AIAssistant() {
             onKeyDown={handleKeyDown}
             placeholder="Pregunta a tu entrenador virtual..."
             rows={1}
-            className="flex-1 bg-transparent text-sm resize-none outline-none leading-relaxed text-ath-text-primary placeholder-gray-400 dark:placeholder-slate-500"
-            style={{ maxHeight: '80px' }}
+            className="flex-1 bg-transparent text-sm resize-none outline-none leading-relaxed text-ath-text-primary placeholder-gray-400 dark:placeholder-slate-500 max-h-20"
           />
           <button
             onClick={() => handleSend()}

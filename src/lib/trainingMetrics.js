@@ -417,6 +417,27 @@ export const DANIELS_ZONES = [
 ];
 
 /**
+ * Calculate Karvonen HR training zones from max HR and resting HR.
+ * Returns an enriched 5-zone array with bpmMin/bpmMax and a display colour
+ * for each zone. Intended for UI panels (Metrics page) — `generateHrZones`
+ * below is the simpler max-HR-only variant used elsewhere.
+ */
+export const calculateHRZones = (maxHR, restingHR) => {
+  const zones = [
+    { name: 'Z1 - Recuperación', min: 0.50, max: 0.60, color: '#94a3b8' },
+    { name: 'Z2 - Base Aeróbica', min: 0.60, max: 0.70, color: '#3b82f6' },
+    { name: 'Z3 - Aeróbica', min: 0.70, max: 0.80, color: '#22c55e' },
+    { name: 'Z4 - Umbral', min: 0.80, max: 0.90, color: '#f97316' },
+    { name: 'Z5 - VO2max', min: 0.90, max: 1.00, color: '#ef4444' },
+  ];
+  return zones.map((z) => ({
+    ...z,
+    bpmMin: Math.round(restingHR + z.min * (maxHR - restingHR)),
+    bpmMax: Math.round(restingHR + z.max * (maxHR - restingHR)),
+  }));
+};
+
+/**
  * Generate HR zones from max HR (5-zone model)
  */
 export const generateHrZones = (maxHR) => {

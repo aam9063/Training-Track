@@ -662,6 +662,71 @@ export const deleteAthleteCompetition = async (competitionId) => {
 };
 
 // =============================================
+// VDOT / HR PROFILE
+// =============================================
+
+// Fetch the athlete's VDOT index.
+export const getAthleteVdot = async (athleteId) => {
+  if (!athleteId) {
+    return { data: null, error: new Error('No athleteId provided') };
+  }
+
+  try {
+    const { data, error } = await supabase
+      .from('athletes')
+      .select('vdot, max_heart_rate, resting_heart_rate')
+      .eq('id', athleteId)
+      .single();
+
+    if (error) throw error;
+    return { data, error: null };
+  } catch (error) {
+    return { data: null, error };
+  }
+};
+
+// Persist a new VDOT value for the athlete.
+export const setAthleteVdot = async (athleteId, vdot) => {
+  if (!athleteId) {
+    return { data: null, error: new Error('No athleteId provided') };
+  }
+
+  try {
+    const { data, error } = await supabase
+      .from('athletes')
+      .update({ vdot })
+      .eq('id', athleteId)
+      .select()
+      .single();
+
+    if (error) throw error;
+    return { data, error: null };
+  } catch (error) {
+    return { data: null, error };
+  }
+};
+
+// Fetch the athlete's heart-rate profile (max / resting).
+export const getAthleteHrProfile = async (athleteId) => {
+  if (!athleteId) {
+    return { data: null, error: new Error('No athleteId provided') };
+  }
+
+  try {
+    const { data, error } = await supabase
+      .from('athletes')
+      .select('max_heart_rate, resting_heart_rate')
+      .eq('id', athleteId)
+      .single();
+
+    if (error) throw error;
+    return { data, error: null };
+  } catch (error) {
+    return { data: null, error };
+  }
+};
+
+// =============================================
 // LEGACY ALIASES (para compatibilidad)
 // =============================================
 export const getAthleteEvents = getAthleteCompetitions;

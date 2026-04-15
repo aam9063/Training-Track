@@ -3,14 +3,14 @@ import { motion } from 'framer-motion';
 import { FiTarget, FiRefreshCw, FiChevronDown, FiChevronUp, FiEdit2, FiCheck, FiX } from 'react-icons/fi';
 import { useAuth } from '../../contexts/AuthContext';
 import { getTrainingZones, updateAthleteVdot, saveTrainingZones } from '../../services/trainingLoadService';
+import { getAthleteVdot, setAthleteVdot } from '../../services/athleteService';
 import { getTrainingPaces, generateHrZones, formatPace, DANIELS_ZONES } from '../../lib/trainingMetrics';
 import { showSuccess, showError } from '../../lib/toast';
-import { supabase } from '../../lib/supabase';
+import { TRAINING_ZONE_BG_CLASSES } from '../../lib/chartColors';
 import InfoTooltip from '../common/InfoTooltip';
+import MetricAIAnalyzer from './MetricAIAnalyzer';
 
-const ZONE_COLORS = ['#3B82F6', '#10B981', '#F59E0B', '#EF4444', '#8B5CF6'];
-
-export default function TrainingZonesCard({ bestEfforts, athleteId: propAthleteId }) {
+export default function TrainingZonesCard({ bestEfforts, athleteId: propAthleteId, athleteContext, hrDistribution }) {
   const { user, profile } = useAuth();
   const athleteId = propAthleteId || profile?.id || user?.id;
   // If viewing own profile, use local profile data; otherwise fetch from DB
@@ -44,32 +44,34 @@ export default function TrainingZonesCard({ bestEfforts, athleteId: propAthleteI
 
   // Fetch remote athlete data when viewing another athlete (coach view)
   useEffect(() => {
-    if (isOwnProfile || !athleteId) return;
+    if (isOwnProfile || !athleteId) return undefined;
+    let cancelled = false;
     const fetchAthleteData = async () => {
-      const { data } = await supabase
-        .from('athletes')
-        .select('vdot, max_heart_rate, resting_heart_rate')
-        .eq('id', athleteId)
-        .single();
-      if (data) setRemoteAthleteData(data);
+      const { data } = await getAthleteVdot(athleteId);
+      if (!cancelled && data) setRemoteAthleteData(data);
     };
     fetchAthleteData();
+    return () => { cancelled = true; };
   }, [athleteId, isOwnProfile]);
 
   useEffect(() => {
+    let cancelled = false;
     const loadZones = async () => {
       if (!athleteId) return;
       try {
         const zones = await getTrainingZones(athleteId);
-        setPaceZones(zones.filter(z => z.zone_type === 'pace_daniels'));
-        setHrZones(zones.filter(z => z.zone_type === 'hr'));
-      } catch (err) {
-        console.error('Error loading zones:', err);
+        if (!cancelled) {
+          setPaceZones(zones.filter(z => z.zone_type === 'pace_daniels'));
+          setHrZones(zones.filter(z => z.zone_type === 'hr'));
+        }
+      } catch {
+        if (!cancelled) showError('No se pudieron cargar las zonas de entrenamiento');
       } finally {
-        setLoading(false);
+        if (!cancelled) setLoading(false);
       }
     };
     loadZones();
+    return () => { cancelled = true; };
   }, [athleteId]);
 
   const handleUpdateVdot = async () => {
@@ -91,8 +93,7 @@ export default function TrainingZonesCard({ bestEfforts, athleteId: propAthleteI
       } else {
         showError('No se pudo calcular VDOT');
       }
-    } catch (err) {
-      console.error('Error updating VDOT:', err);
+    } catch {
       showError('Error al actualizar VDOT');
     } finally {
       setUpdating(false);
@@ -107,10 +108,7 @@ export default function TrainingZonesCard({ bestEfforts, athleteId: propAthleteI
     }
     setUpdating(true);
     try {
-      await supabase
-        .from('athletes')
-        .update({ vdot: val })
-        .eq('id', athleteId);
+      await setAthleteVdot(athleteId, val);
 
       const paces = getTrainingPaces(val);
       if (paces) {
@@ -127,10 +125,8 @@ export default function TrainingZonesCard({ bestEfforts, athleteId: propAthleteI
       }
 
       if (isOwnProfile) {
-        // Refresh local profile
-        const { data } = await supabase.from('athletes').select('vdot').eq('id', athleteId).single();
+        const { data } = await getAthleteVdot(athleteId);
         if (data) {
-          // Force re-render by updating remote data (profile.athlete.vdot will update on next load)
           setRemoteAthleteData(prev => ({ ...(prev || profile?.athlete), vdot: data.vdot }));
         }
       } else {
@@ -139,13 +135,30 @@ export default function TrainingZonesCard({ bestEfforts, athleteId: propAthleteI
 
       showSuccess(`VDOT actualizado: ${val}`);
       setEditingVdot(false);
-    } catch (err) {
-      console.error('Error saving manual VDOT:', err);
+    } catch {
       showError('Error al guardar VDOT');
     } finally {
       setUpdating(false);
     }
   };
+
+  const restHr = athleteData?.resting_heart_rate;
+
+  // AI payload: VDOT + HR + zone distribution (from prop or derived from hrZones)
+  // NOTE: must be before the early return below to keep hook order stable.
+  const aiData = useMemo(() => {
+    const dist = hrDistribution || { z1: 0, z2: 0, z3: 0, z4: 0, z5: 0 };
+    return {
+      vdot: vdot ?? null,
+      max_hr: maxHR ?? null,
+      rest_hr: restHr ?? null,
+      distribution: dist,
+      weeks: 8,
+      sample: 'fc',
+    };
+  }, [vdot, maxHR, restHr, hrDistribution]);
+
+  const hasAiData = !!(vdot || maxHR || (hrDistribution && Object.values(hrDistribution).some((v) => v > 0)));
 
   if (loading) {
     return (
@@ -229,6 +242,14 @@ export default function TrainingZonesCard({ bestEfforts, athleteId: propAthleteI
           <button onClick={() => setExpanded(!expanded)} className="text-gray-400 hover:text-gray-600 dark:hover:text-gray-300">
             {expanded ? <FiChevronUp className="w-4 h-4" /> : <FiChevronDown className="w-4 h-4" />}
           </button>
+          <MetricAIAnalyzer
+            chartType="training_zones"
+            data={aiData}
+            athleteContext={athleteContext}
+            compact
+            title="Análisis de Zonas de Entrenamiento"
+            disabled={!hasAiData}
+          />
         </div>
       </div>
 
@@ -275,7 +296,7 @@ export default function TrainingZonesCard({ bestEfforts, athleteId: propAthleteI
 
                 return (
                   <div key={i} className="flex items-center gap-3">
-                    <div className="w-2 h-8 rounded-full" style={{ backgroundColor: ZONE_COLORS[i] }} />
+                    <div className={`w-2 h-8 rounded-full ${TRAINING_ZONE_BG_CLASSES[i] || TRAINING_ZONE_BG_CLASSES[0]}`} />
                     <div className="flex-1">
                       <div className="flex items-center justify-between">
                         <span className="text-sm font-medium text-ath-text-primary">
@@ -312,7 +333,7 @@ export default function TrainingZonesCard({ bestEfforts, athleteId: propAthleteI
 
                 return (
                   <div key={i} className="flex items-center gap-3">
-                    <div className="w-2 h-8 rounded-full" style={{ backgroundColor: ZONE_COLORS[i] }} />
+                    <div className={`w-2 h-8 rounded-full ${TRAINING_ZONE_BG_CLASSES[i] || TRAINING_ZONE_BG_CLASSES[0]}`} />
                     <div className="flex-1">
                       <div className="flex items-center justify-between">
                         <span className="text-sm font-medium text-ath-text-primary">

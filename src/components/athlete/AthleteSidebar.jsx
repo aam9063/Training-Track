@@ -14,6 +14,7 @@ import {
   FiZap,
   FiClipboard,
   FiFlag,
+  FiFileText,
 } from 'react-icons/fi';
 
 const AthleteSidebar = () => {
@@ -29,6 +30,7 @@ const AthleteSidebar = () => {
     { path: '/athlete/metrics', icon: FiBarChart2, label: 'Mis Métricas' },
     { path: '/athlete/competitions', icon: FiFlag, label: 'Competiciones' },
     { path: '/athlete/ai-assistant', icon: FiZap, label: 'Hermes IA' },
+    { path: '/athlete/analysis-history', icon: FiFileText, label: 'Mis análisis' },
     { path: '/athlete/devices', icon: FiWatch, label: 'Dispositivos' },
   ];
 
@@ -38,6 +40,7 @@ const AthleteSidebar = () => {
     { path: '/athlete/calendar', icon: FiCalendar, label: 'Calendario' },
     { path: '/athlete/metrics', icon: FiBarChart2, label: 'Mis Métricas' },
     { path: '/athlete/my-reports', icon: FiZap, label: 'Mis Informes IA' },
+    { path: '/athlete/analysis-history', icon: FiFileText, label: 'Mis análisis' },
     { path: '/athlete/devices', icon: FiWatch, label: 'Dispositivos' },
     { path: '/athlete/messages', icon: FiMessageSquare, label: 'Mensajes', badge: unreadMessages },
   ];

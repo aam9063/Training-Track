@@ -1,6 +1,6 @@
 /**
  * AI Report Service
- * Generates performance analysis reports using DeepSeek API via Edge Function
+ * Generates performance analysis reports using Gemma 4 API via Edge Function
  * Aggregates athlete data from Strava, physiological tests, and training metrics
  * Reports are saved to Supabase (ai_reports table) by the Edge Function
  */
@@ -351,7 +351,7 @@ export const aggregateReportData = async (athlete, activities) => {
 
 /**
  * Call the generate-ai-report Edge Function
- * The Edge Function handles: DeepSeek API call + saving to ai_reports table
+ * The Edge Function handles: Gemma 4 API call + saving to ai_reports table
  */
 const callEdgeFunction = async (reportData, athleteId, periodWeeks) => {
   const { data: { session } } = await supabase.auth.getSession();

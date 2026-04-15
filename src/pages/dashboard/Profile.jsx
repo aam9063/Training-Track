@@ -16,6 +16,7 @@ import {
   FiLink,
   FiCopy,
   FiCheck,
+  FiHeart,
 } from 'react-icons/fi';
 
 const Profile = () => {
@@ -50,6 +51,8 @@ const Profile = () => {
     weight: displayProfile.athlete?.weight || '',
     height: displayProfile.athlete?.height || '',
     race_distances: displayProfile.athlete?.race_distances || [],
+    max_heart_rate: displayProfile.athlete?.max_heart_rate ?? '',
+    resting_heart_rate: displayProfile.athlete?.resting_heart_rate ?? '',
   });
   const [newDistance, setNewDistance] = useState('');
   const [loading, setLoading] = useState(false);
@@ -81,11 +84,46 @@ const Profile = () => {
         weight: profile.athlete?.weight || '',
         height: profile.athlete?.height || '',
         race_distances: profile.athlete?.race_distances || [],
+        max_heart_rate: profile.athlete?.max_heart_rate ?? '',
+        resting_heart_rate: profile.athlete?.resting_heart_rate ?? '',
       });
     }
   }, [profile, editing]);
 
+  // Scroll to section if hash present (e.g. /athlete/profile#frecuencia-cardiaca)
+  useEffect(() => {
+    if (typeof window === 'undefined') return;
+    const hash = window.location.hash?.replace('#', '');
+    if (!hash) return;
+    const timer = setTimeout(() => {
+      const el = document.getElementById(hash);
+      if (el) el.scrollIntoView({ behavior: 'smooth', block: 'start' });
+    }, 250);
+    return () => clearTimeout(timer);
+  }, [profile]);
+
   const handleSave = async () => {
+    // Validate heart rate fields if athlete
+    if (displayProfile.role === 'athlete') {
+      const maxHrRaw = formData.max_heart_rate;
+      const restHrRaw = formData.resting_heart_rate;
+
+      if (maxHrRaw !== '' && maxHrRaw !== null && maxHrRaw !== undefined) {
+        const v = Number(maxHrRaw);
+        if (!Number.isFinite(v) || v < 120 || v > 220) {
+          showWarning('La FC máxima debe estar entre 120 y 220 bpm');
+          return;
+        }
+      }
+      if (restHrRaw !== '' && restHrRaw !== null && restHrRaw !== undefined) {
+        const v = Number(restHrRaw);
+        if (!Number.isFinite(v) || v < 30 || v > 100) {
+          showWarning('La FC en reposo debe estar entre 30 y 100 bpm');
+          return;
+        }
+      }
+    }
+
     setLoading(true);
     try {
       // Update base user info
@@ -111,6 +149,14 @@ const Profile = () => {
           weight: formData.weight ? parseFloat(formData.weight) : null,
           height: formData.height ? parseFloat(formData.height) : null,
           race_distances: formData.race_distances,
+          max_heart_rate:
+            formData.max_heart_rate === '' || formData.max_heart_rate === null
+              ? null
+              : parseInt(formData.max_heart_rate, 10),
+          resting_heart_rate:
+            formData.resting_heart_rate === '' || formData.resting_heart_rate === null
+              ? null
+              : parseInt(formData.resting_heart_rate, 10),
         });
       }
 
@@ -135,6 +181,8 @@ const Profile = () => {
       weight: displayProfile.athlete?.weight || '',
       height: displayProfile.athlete?.height || '',
       race_distances: displayProfile.athlete?.race_distances || [],
+      max_heart_rate: displayProfile.athlete?.max_heart_rate ?? '',
+      resting_heart_rate: displayProfile.athlete?.resting_heart_rate ?? '',
     });
     setNewDistance('');
     setEditing(false);
@@ -561,6 +609,55 @@ const Profile = () => {
                       />
                     </div>
                   </div>
+                </div>
+
+                {/* Heart Rate */}
+                <div id="frecuencia-cardiaca" className="scroll-mt-24">
+                  <h3 className="text-lg font-semibold text-gray-900 dark:text-white mb-4 flex items-center gap-2">
+                    <FiHeart className="w-5 h-5 text-red-500" />
+                    Frecuencia cardíaca
+                  </h3>
+                  <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
+                    <div>
+                      <label className="block text-sm font-medium text-gray-700 dark:text-gray-300 mb-2">
+                        FC máxima (bpm)
+                      </label>
+                      <input
+                        type="number"
+                        value={formData.max_heart_rate}
+                        onChange={(e) =>
+                          setFormData({ ...formData, max_heart_rate: e.target.value })
+                        }
+                        disabled={!editing}
+                        min="120"
+                        max="220"
+                        step="1"
+                        placeholder="Ej: 190"
+                        className="w-full px-4 py-2 border border-gray-300 dark:border-coach-border rounded-lg bg-white dark:bg-coach-elevated text-gray-900 dark:text-white focus:ring-2 focus:ring-blue-500 focus:border-transparent disabled:bg-gray-100 dark:disabled:bg-coach-surface disabled:cursor-not-allowed"
+                      />
+                    </div>
+                    <div>
+                      <label className="block text-sm font-medium text-gray-700 dark:text-gray-300 mb-2">
+                        FC en reposo (bpm)
+                      </label>
+                      <input
+                        type="number"
+                        value={formData.resting_heart_rate}
+                        onChange={(e) =>
+                          setFormData({ ...formData, resting_heart_rate: e.target.value })
+                        }
+                        disabled={!editing}
+                        min="30"
+                        max="100"
+                        step="1"
+                        placeholder="Ej: 55"
+                        className="w-full px-4 py-2 border border-gray-300 dark:border-coach-border rounded-lg bg-white dark:bg-coach-elevated text-gray-900 dark:text-white focus:ring-2 focus:ring-blue-500 focus:border-transparent disabled:bg-gray-100 dark:disabled:bg-coach-surface disabled:cursor-not-allowed"
+                      />
+                    </div>
+                  </div>
+                  <p className="text-xs text-gray-500 dark:text-gray-400 mt-3">
+                    Usamos estos datos para estimar tu VO2max y calcular tus zonas de frecuencia cardíaca.
+                  </p>
                 </div>
               </>
             )}

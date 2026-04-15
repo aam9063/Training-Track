@@ -1,4 +1,5 @@
-import { useState, useEffect, useCallback, useMemo } from 'react';
+import { useState, useEffect, useMemo } from 'react';
+
 import { motion } from 'framer-motion';
 import { Line, Bar, Doughnut } from 'react-chartjs-2';
 import {
@@ -23,19 +24,10 @@ import {
   FiZap,
   FiMapPin,
   FiClock,
-  FiChevronLeft,
-  FiChevronRight,
   FiDownload,
-  FiAlertTriangle,
-  FiShield,
   FiNavigation,
-  FiAward,
-  FiCheckCircle,
 } from 'react-icons/fi';
 import { useAuth } from '../../contexts/AuthContext';
-import { supabase } from '../../lib/supabase';
-import { calculateVdot, predictAllRaceTimes } from '../../lib/trainingMetrics';
-import { getDailyLoads, calculateLoadMetrics } from '../../services/aiReportService';
 import ACWRGauge, { getACWRZone } from '../../components/shared/ACWRGauge';
 import PMCChart from '../../components/athlete/PMCChart';
 import TrainingZonesCard from '../../components/athlete/TrainingZonesCard';
@@ -44,6 +36,45 @@ import useStravaMetrics from '../../hooks/useStravaMetrics';
 import useInternalMetrics from '../../hooks/useInternalMetrics';
 import { computeAge } from '../../lib/athleteUtils';
 import { exportActivitiesCSV, exportLoadCSV } from '../../lib/dataExport';
+import useAiAnalysisQuota from '../../hooks/useAiAnalysisQuota';
+import useAthleteTestData from '../../hooks/useAthleteTestData';
+import useMetricsLoadData from '../../hooks/useMetricsLoadData';
+import useRacePredictions from '../../hooks/useRacePredictions';
+import useHrZoneData from '../../hooks/useHrZoneData';
+import useSportCharts from '../../hooks/useSportCharts';
+import { getPersonalBestsByAthlete } from '../../services/personalBestsService';
+import { CHART_COLORS } from '../../lib/chartColors';
+import { buildWeeklyChartData, buildAverageSpeedData } from '../../lib/chartBuilders';
+import { buildMetricsAnalysisPayload } from '../../lib/analysisPayloadBuilder';
+import BestEffortsChart from '../../components/athlete/charts/BestEffortsChart';
+import TimeInZoneChart from '../../components/athlete/charts/TimeInZoneChart';
+import IntensityDistributionChart from '../../components/athlete/charts/IntensityDistributionChart';
+import ShoesWidget from '../../components/athlete/charts/ShoesWidget';
+import ActivitySelector from '../../components/athlete/charts/ActivitySelector';
+import Vo2maxCard from '../../components/athlete/charts/Vo2maxCard';
+import SufferScoreChart from '../../components/athlete/charts/SufferScoreChart';
+import RestDaysCalendar from '../../components/athlete/charts/RestDaysCalendar';
+import WeeklyHeatmapChart from '../../components/athlete/charts/WeeklyHeatmapChart';
+import PaceZonesChart from '../../components/athlete/charts/PaceZonesChart';
+import CadenceHistogramChart from '../../components/athlete/charts/CadenceHistogramChart';
+import GapVsPaceChart from '../../components/athlete/charts/GapVsPaceChart';
+import VdotProgressionChart from '../../components/athlete/charts/VdotProgressionChart';
+import ElevationProfileChart from '../../components/athlete/charts/ElevationProfileChart';
+import SplitsComparisonChart from '../../components/athlete/charts/SplitsComparisonChart';
+import LapsAnalysisChart from '../../components/athlete/charts/LapsAnalysisChart';
+import AiAnalysisPanel from '../../components/athlete/AiAnalysisPanel';
+import MetricAIAnalyzer from '../../components/athlete/MetricAIAnalyzer';
+import {
+  getBestEffortsEvolution,
+  getTimeInZoneAggregate,
+  getIntensityDistribution,
+  getShoes,
+  getWeeklyLoadSeries,
+} from '../../services/metricsAnalyticsService';
+import { showError } from '../../lib/toast';
+import InternalMetricsSection from '../../components/athlete/InternalMetricsSection';
+import ActivityTypeDistribution from '../../components/athlete/charts/ActivityTypeDistribution';
+import TotalActivityTimeChart from '../../components/athlete/charts/TotalActivityTimeChart';
 
 // Register Chart.js components
 ChartJS.register(
@@ -59,686 +90,10 @@ ChartJS.register(
   Filler
 );
 
-// Activity Type Distribution Chart
-const ActivityTypeDistribution = ({ activities }) => {
-  // Activity type labels in Spanish
-  const activityTypeLabels = {
-    Run: 'Carrera',
-    TrailRun: 'Trail',
-    VirtualRun: 'Carrera Virtual',
-    Walk: 'Caminata',
-    Hike: 'Senderismo',
-    Ride: 'Ciclismo',
-    VirtualRide: 'Ciclismo Virtual',
-    Swim: 'Natación',
-    WeightTraining: 'Pesas',
-    Workout: 'Entrenamiento',
-    CrossFit: 'CrossFit',
-    Yoga: 'Yoga',
-    Other: 'Otro',
-  };
-
-  // Colors for each activity type
-  const activityColors = {
-    Run: '#3b82f6',
-    TrailRun: '#22c55e',
-    VirtualRun: '#06b6d4',
-    Walk: '#8b5cf6',
-    Hike: '#10b981',
-    Ride: '#f59e0b',
-    VirtualRide: '#eab308',
-    Swim: '#0ea5e9',
-    WeightTraining: '#6366f1',
-    Workout: '#ec4899',
-    CrossFit: '#ef4444',
-    Yoga: '#a855f7',
-    Other: '#6b7280',
-  };
-
-  // Calculate distribution
-  const distribution = {};
-  let totalTime = 0;
-  let totalDistance = 0;
-
-  activities?.forEach(activity => {
-    const type = activity.type || 'Other';
-    if (!distribution[type]) {
-      distribution[type] = { count: 0, time: 0, distance: 0 };
-    }
-    distribution[type].count++;
-    distribution[type].time += activity.moving_time || 0;
-    distribution[type].distance += activity.distance || 0;
-    totalTime += activity.moving_time || 0;
-    totalDistance += activity.distance || 0;
-  });
-
-  // Sort by time and get top activities
-  const sortedTypes = Object.entries(distribution)
-    .sort((a, b) => b[1].time - a[1].time)
-    .slice(0, 5);
-
-  const chartData = {
-    labels: sortedTypes.map(([type]) => activityTypeLabels[type] || type),
-    datasets: [{
-      data: sortedTypes.map(([, data]) => Math.round(data.time / 60)), // Convert to minutes
-      backgroundColor: sortedTypes.map(([type]) => activityColors[type] || '#6b7280'),
-      borderWidth: 0,
-      hoverOffset: 4,
-    }],
-  };
-
-  const formatTime = (seconds) => {
-    const hours = Math.floor(seconds / 3600);
-    const mins = Math.floor((seconds % 3600) / 60);
-    if (hours > 0) {
-      return `${hours}h ${mins}m`;
-    }
-    return `${mins}m`;
-  };
-
-  if (!activities?.length) {
-    return (
-      <div className="flex flex-col items-center justify-center h-full py-8">
-        <FiActivity className="w-12 h-12 text-ath-text-muted mb-3" />
-        <p className="text-ath-text-muted">No hay actividades</p>
-      </div>
-    );
-  }
-
-  return (
-    <div className="flex flex-col">
-      {/* Chart + List */}
-      <div className="flex flex-col sm:flex-row items-center gap-6">
-        {/* Doughnut chart */}
-        <div className="w-36 h-36 flex-shrink-0">
-          <Doughnut
-            data={chartData}
-            options={{
-              responsive: true,
-              maintainAspectRatio: true,
-              cutout: '65%',
-              plugins: {
-                legend: { display: false },
-                tooltip: {
-                  callbacks: {
-                    label: (ctx) => {
-                      const mins = ctx.parsed;
-                      const h = Math.floor(mins / 60);
-                      const m = mins % 60;
-                      return ` ${ctx.label}: ${h > 0 ? `${h}h ` : ''}${m}m`;
-                    },
-                  },
-                },
-              },
-            }}
-          />
-        </div>
-
-        {/* List */}
-        <div className="space-y-2 flex-1 w-full">
-          {sortedTypes.map(([type, data]) => {
-            const percentage = totalTime > 0 ? Math.round((data.time / totalTime) * 100) : 0;
-            return (
-              <div key={type} className="flex items-center gap-2.5">
-                <div
-                  className="w-2.5 h-2.5 rounded-full flex-shrink-0"
-                  style={{ backgroundColor: activityColors[type] || '#6b7280' }}
-                />
-                <span className="flex-1 text-sm font-medium text-ath-text-secondary truncate">
-                  {activityTypeLabels[type] || type}
-                </span>
-                <span className="text-xs text-ath-text-muted whitespace-nowrap">
-                  {data.count} act. · {formatTime(data.time)}
-                </span>
-                <span className="text-xs font-bold text-blue-600 dark:text-blue-400 w-8 text-right flex-shrink-0">
-                  {percentage}%
-                </span>
-              </div>
-            );
-          })}
-        </div>
-      </div>
-
-      {/* Summary */}
-      <div className="mt-4 pt-4 border-t border-ath-border grid grid-cols-2 gap-4 text-center">
-        <div>
-          <p className="text-2xl font-bold text-ath-text-primary">{activities.length}</p>
-          <p className="text-xs text-ath-text-muted">Actividades totales</p>
-        </div>
-        <div>
-          <p className="text-2xl font-bold text-ath-text-primary">{(totalDistance / 1000).toFixed(1)}</p>
-          <p className="text-xs text-ath-text-muted">km totales</p>
-        </div>
-      </div>
-    </div>
-  );
-};
-
-// Total Activity Time Chart (Garmin style)
-const getDateRangeForPeriod = (period) => {
-  const end = new Date();
-  const start = new Date();
-  switch (period) {
-    case '7days': start.setDate(end.getDate() - 6); break;
-    case '4weeks': start.setDate(end.getDate() - 27); break;
-    case '6months': start.setMonth(end.getMonth() - 6); break;
-    case '1year': start.setFullYear(end.getFullYear() - 1); break;
-    default: start.setDate(end.getDate() - 6);
-  }
-  return { start, end };
-};
-
-const TotalActivityTimeChart = ({ activities, selectedPeriod, onPeriodChange }) => {
-  const [dateRange, setDateRange] = useState(() => getDateRangeForPeriod(selectedPeriod));
-
-  useEffect(() => {
-    setDateRange(getDateRangeForPeriod(selectedPeriod));
-  }, [selectedPeriod]);
-
-  // Group activities by day/week/month depending on period
-  const chartData = useCallback(() => {
-    if (!activities?.length) return { labels: [], running: [], gym: [] };
-
-    const { start, end } = dateRange;
-    const labels = [];
-    const runningData = [];
-    const gymData = [];
-
-    if (selectedPeriod === '7days') {
-      // Daily data
-      for (let d = new Date(start); d <= end; d.setDate(d.getDate() + 1)) {
-        const dayStr = d.toLocaleDateString('es-ES', { weekday: 'short' });
-        labels.push(dayStr.charAt(0).toUpperCase() + dayStr.slice(1, 3));
-
-        const dayActivities = activities.filter(a => {
-          const actDate = new Date(a.start_date_local);
-          return actDate.toDateString() === d.toDateString();
-        });
-
-        const runningTime = dayActivities
-          .filter(a => ['Run', 'TrailRun', 'VirtualRun'].includes(a.type))
-          .reduce((sum, a) => sum + (a.moving_time || 0), 0) / 60;
-
-        const gymTime = dayActivities
-          .filter(a => ['WeightTraining', 'Workout', 'CrossFit'].includes(a.type))
-          .reduce((sum, a) => sum + (a.moving_time || 0), 0) / 60;
-
-        runningData.push(Math.round(runningTime));
-        gymData.push(Math.round(gymTime));
-      }
-    } else {
-      // Weekly/monthly aggregation simplified
-      const weeks = selectedPeriod === '4weeks' ? 4 : selectedPeriod === '6months' ? 26 : 52;
-      for (let i = weeks - 1; i >= 0; i--) {
-        const weekEnd = new Date();
-        weekEnd.setDate(weekEnd.getDate() - i * 7);
-        const weekStart = new Date(weekEnd);
-        weekStart.setDate(weekStart.getDate() - 6);
-
-        if (selectedPeriod === '4weeks') {
-          labels.push(weekEnd.toLocaleDateString('es-ES', { day: 'numeric', month: 'short' }));
-        } else {
-          labels.push(weekEnd.toLocaleDateString('es-ES', { month: 'short' }));
-        }
-
-        const weekActivities = activities.filter(a => {
-          const actDate = new Date(a.start_date_local);
-          return actDate >= weekStart && actDate <= weekEnd;
-        });
-
-        const runningTime = weekActivities
-          .filter(a => ['Run', 'TrailRun', 'VirtualRun'].includes(a.type))
-          .reduce((sum, a) => sum + (a.moving_time || 0), 0) / 60;
-
-        const gymTime = weekActivities
-          .filter(a => ['WeightTraining', 'Workout', 'CrossFit'].includes(a.type))
-          .reduce((sum, a) => sum + (a.moving_time || 0), 0) / 60;
-
-        runningData.push(Math.round(runningTime));
-        gymData.push(Math.round(gymTime));
-      }
-    }
-
-    return { labels, running: runningData, gym: gymData };
-  }, [activities, dateRange, selectedPeriod]);
-
-  const data = chartData();
-  const formatDateRange = () => {
-    const options = { day: 'numeric', month: 'short' };
-    return `${dateRange.start.toLocaleDateString('es-ES', options)} - ${dateRange.end.toLocaleDateString('es-ES', options)}`;
-  };
-
-  const navigatePeriod = (direction) => {
-    const days = selectedPeriod === '7days' ? 7 : selectedPeriod === '4weeks' ? 28 : selectedPeriod === '6months' ? 180 : 365;
-    const newEnd = new Date(dateRange.end);
-    newEnd.setDate(newEnd.getDate() + (direction * days));
-
-    // Don't go into the future
-    if (newEnd > new Date()) return;
-
-    const newStart = new Date(newEnd);
-    newStart.setDate(newStart.getDate() - days + 1);
-    setDateRange({ start: newStart, end: newEnd });
-  };
-
-  return (
-    <div className="bg-ath-surface rounded-xl p-4 sm:p-6 shadow-sm border border-ath-border">
-      <div className="flex flex-col sm:flex-row sm:items-center sm:justify-between mb-4 gap-3">
-        <div className="flex items-center justify-between">
-          <h3 className="text-base sm:text-lg font-bold text-ath-text-primary flex items-center">
-            Tiempo Total por Actividad
-            <InfoTooltip text="Tiempo de movimiento de cada actividad en el período seleccionado. Permite ver cómo se distribuye el esfuerzo en sesiones cortas vs largas." />
-          </h3>
-          <button className="sm:hidden text-ath-text-muted hover:text-ath-text-primary">
-            <FiDownload className="w-5 h-5" />
-          </button>
-        </div>
-        <button className="hidden sm:block text-ath-text-muted hover:text-ath-text-primary">
-          <FiDownload className="w-5 h-5" />
-        </button>
-      </div>
-
-      {/* Period selector and date navigation */}
-      <div className="flex flex-col sm:flex-row items-start sm:items-center justify-between mb-6 gap-3">
-        <div className="flex items-center space-x-2">
-          <button
-            onClick={() => navigatePeriod(-1)}
-            className="p-1.5 rounded-full hover:bg-gray-100 dark:hover:bg-gray-700 transition-colors"
-          >
-            <FiChevronLeft className="w-5 h-5 text-ath-text-secondary" />
-          </button>
-          <button
-            onClick={() => navigatePeriod(1)}
-            className="p-1.5 rounded-full hover:bg-gray-100 dark:hover:bg-gray-700 transition-colors"
-          >
-            <FiChevronRight className="w-5 h-5 text-ath-text-secondary" />
-          </button>
-          <span className="text-xs sm:text-sm text-ath-text-secondary flex items-center space-x-1 whitespace-nowrap">
-            <FiClock className="w-4 h-4 flex-shrink-0" />
-            <span>{formatDateRange()}</span>
-          </span>
-        </div>
-
-        <div className="flex items-center bg-ath-inset rounded-lg p-1">
-          {[
-            { value: '7days', label: '7d', labelSm: '7 días' },
-            { value: '4weeks', label: '4s', labelSm: '4 semanas' },
-            { value: '6months', label: '6m', labelSm: '6 meses' },
-            { value: '1year', label: '1a', labelSm: '1 año' },
-          ].map((period) => (
-            <button
-              key={period.value}
-              onClick={() => onPeriodChange(period.value)}
-              className={`px-2 sm:px-3 py-1.5 rounded-md text-xs sm:text-sm font-medium transition-all ${
-                selectedPeriod === period.value
-                  ? 'bg-ath-surface text-ath-text-primary shadow-sm'
-                  : 'text-ath-text-secondary hover:text-gray-900 dark:hover:text-white'
-              }`}
-            >
-              <span className="sm:hidden">{period.label}</span>
-              <span className="hidden sm:inline">{period.labelSm}</span>
-            </button>
-          ))}
-        </div>
-      </div>
-
-      {/* Chart */}
-      <div className="h-64">
-        <Bar
-          data={{
-            labels: data.labels,
-            datasets: [
-              {
-                label: 'Carrera',
-                data: data.running,
-                backgroundColor: 'rgba(59, 130, 246, 0.8)',
-                borderRadius: 4,
-                barPercentage: 0.7,
-              },
-              {
-                label: 'Gimnasio y equipo de fitness',
-                data: data.gym,
-                backgroundColor: 'rgba(17, 24, 39, 0.8)',
-                borderRadius: 4,
-                barPercentage: 0.7,
-              },
-            ],
-          }}
-          options={{
-            responsive: true,
-            maintainAspectRatio: false,
-            plugins: {
-              legend: {
-                display: true,
-                position: 'bottom',
-                labels: {
-                  usePointStyle: true,
-                  pointStyle: 'circle',
-                  padding: 20,
-                },
-              },
-              tooltip: {
-                callbacks: {
-                  label: (ctx) => `${ctx.dataset.label}: ${ctx.parsed.y} min`,
-                },
-              },
-            },
-            scales: {
-              x: {
-                stacked: true,
-                grid: { display: false },
-              },
-              y: {
-                stacked: true,
-                beginAtZero: true,
-                grid: { color: 'rgba(156, 163, 175, 0.1)' },
-                title: {
-                  display: true,
-                  text: 'Minutos',
-                },
-              },
-            },
-          }}
-        />
-      </div>
-    </div>
-  );
-};
-
-// ─── Helper: format minutes as "Xh Ym" or "Xm Ys" ──────────────────────────
-const formatMinutes = (totalMinutes) => {
-  if (!totalMinutes && totalMinutes !== 0) return '–';
-  const h = Math.floor(totalMinutes / 60);
-  const m = totalMinutes % 60;
-  if (h > 0) return `${h}h ${m}m`;
-  return `${m}m`;
-};
-
-// Format pace in min/km as "M:SS"
-const formatPace = (minPerKm) => {
-  if (!minPerKm) return '–';
-  const m = Math.floor(minPerKm);
-  const s = Math.round((minPerKm - m) * 60);
-  return `${m}:${String(s).padStart(2, '0')}`;
-};
-
-// ─── InternalMetricsSection ──────────────────────────────────────────────────
-/**
- * Displays progression metrics derived from completed training_sessions.
- * Shown for all athletes (independent and coached), with or without Strava.
- */
-const InternalMetricsSection = ({
-  weeklyKm,
-  weeklyRpe,
-  weeklyPace,
-  personalBests,
-  completionRate,
-  hasData,
-  loading,
-}) => {
-  const commonChartOptions = {
-    responsive: true,
-    maintainAspectRatio: false,
-    plugins: { legend: { display: false } },
-    scales: {
-      x: { grid: { display: false }, ticks: { color: 'rgb(156,163,175)', font: { size: 10 } } },
-      y: { beginAtZero: true, grid: { color: 'rgba(156,163,175,0.1)' }, ticks: { color: 'rgb(156,163,175)', font: { size: 10 } } },
-    },
-  };
-
-  const pbSlots = [
-    { key: '5k', label: '5K' },
-    { key: '10k', label: '10K' },
-    { key: 'half', label: 'Media Maratón' },
-    { key: 'marathon', label: 'Maratón' },
-  ];
-
-  if (loading) {
-    return (
-      <div className="flex items-center justify-center py-12">
-        <FiLoader className="w-6 h-6 animate-spin text-ath-accent" />
-      </div>
-    );
-  }
-
-  const emptyState = (
-    <div className="flex flex-col items-center justify-center py-10 bg-ath-surface rounded-2xl border border-ath-border">
-      <FiActivity className="w-10 h-10 text-ath-text-muted mb-3" />
-      <p className="text-sm font-medium text-ath-text-muted text-center max-w-xs">
-        Completa tus entrenamientos para ver tus métricas
-      </p>
-    </div>
-  );
-
-  return (
-    <section className="space-y-6">
-      <div className="flex items-center gap-2">
-        <FiTrendingUp className="w-4 h-4 text-ath-accent" />
-        <h2 className="text-base font-bold text-ath-text-primary">
-          Progresión de Entrenamientos
-        </h2>
-        <span className="text-[10px] font-semibold bg-green-100 dark:bg-green-900/40 text-green-700 dark:text-green-400 px-2 py-0.5 rounded-full">
-          Últimas 8 semanas
-        </span>
-      </div>
-
-      {!hasData ? (
-        emptyState
-      ) : (
-        <>
-          {/* Completion rate badge */}
-          {completionRate && completionRate.total > 0 && (
-            <motion.div
-              initial={{ opacity: 0, y: 16 }}
-              animate={{ opacity: 1, y: 0 }}
-              className="flex items-center gap-4 bg-ath-surface rounded-2xl border border-ath-border p-4"
-            >
-              <div className="flex-shrink-0 w-14 h-14 relative">
-                {/* Simple ring using SVG */}
-                <svg viewBox="0 0 56 56" className="w-full h-full -rotate-90">
-                  <circle cx="28" cy="28" r="22" fill="none" stroke="currentColor" strokeWidth="6" className="text-ath-inset" />
-                  <circle
-                    cx="28" cy="28" r="22" fill="none" stroke="currentColor" strokeWidth="6"
-                    className="text-green-500"
-                    strokeDasharray={`${2 * Math.PI * 22 * completionRate.pct / 100} ${2 * Math.PI * 22}`}
-                    strokeLinecap="round"
-                  />
-                </svg>
-                <span className="absolute inset-0 flex items-center justify-center text-xs font-bold text-ath-text-primary">
-                  {completionRate.pct}%
-                </span>
-              </div>
-              <div>
-                <p className="text-sm font-semibold text-ath-text-primary flex items-center gap-1.5">
-                  <FiCheckCircle className="w-4 h-4 text-green-500" />
-                  Tasa de cumplimiento
-                </p>
-                <p className="text-xs text-ath-text-muted mt-0.5">
-                  {completionRate.completed} de {completionRate.total} sesiones completadas (últimas 4 semanas)
-                </p>
-              </div>
-            </motion.div>
-          )}
-
-          {/* Charts grid: km + RPE */}
-          <div className="grid grid-cols-1 lg:grid-cols-2 gap-6">
-            {/* Weekly km bar chart */}
-            <motion.div
-              initial={{ opacity: 0, y: 16 }}
-              animate={{ opacity: 1, y: 0 }}
-              transition={{ delay: 0.05 }}
-              className="bg-ath-surface rounded-2xl border border-ath-border p-4"
-            >
-              <div className="flex items-center gap-2 mb-3">
-                <FiMapPin className="w-4 h-4 text-blue-500" />
-                <h3 className="text-sm font-bold text-ath-text-primary">
-                  Km semanales
-                </h3>
-              </div>
-              <div className="h-44">
-                {weeklyKm.some(w => w.km > 0) ? (
-                  <Bar
-                    data={{
-                      labels: weeklyKm.map(w => w.label),
-                      datasets: [{
-                        label: 'km',
-                        data: weeklyKm.map(w => w.km),
-                        backgroundColor: 'rgba(59, 130, 246, 0.7)',
-                        borderRadius: 4,
-                        barPercentage: 0.7,
-                      }],
-                    }}
-                    options={{
-                      ...commonChartOptions,
-                      scales: {
-                        ...commonChartOptions.scales,
-                        y: { ...commonChartOptions.scales.y, title: { display: true, text: 'km', color: 'rgb(156,163,175)', font: { size: 10 } } },
-                      },
-                    }}
-                  />
-                ) : (
-                  <div className="h-full flex items-center justify-center text-sm text-ath-text-muted">
-                    Sin datos de kilómetros aún
-                  </div>
-                )}
-              </div>
-            </motion.div>
-
-            {/* RPE trend line chart */}
-            <motion.div
-              initial={{ opacity: 0, y: 16 }}
-              animate={{ opacity: 1, y: 0 }}
-              transition={{ delay: 0.1 }}
-              className="bg-ath-surface rounded-2xl border border-ath-border p-4"
-            >
-              <div className="flex items-center gap-2 mb-3">
-                <FiZap className="w-4 h-4 text-orange-500" />
-                <h3 className="text-sm font-bold text-ath-text-primary">
-                  Esfuerzo percibido (RPE)
-                </h3>
-              </div>
-              <div className="h-44">
-                {weeklyRpe.some(w => w.avgRpe != null) ? (
-                  <Line
-                    data={{
-                      labels: weeklyRpe.map(w => w.label),
-                      datasets: [{
-                        label: 'RPE medio',
-                        data: weeklyRpe.map(w => w.avgRpe),
-                        borderColor: 'rgb(249, 115, 22)',
-                        backgroundColor: 'rgba(249, 115, 22, 0.1)',
-                        fill: true,
-                        tension: 0.4,
-                        pointRadius: 4,
-                        pointBackgroundColor: 'rgb(249, 115, 22)',
-                        spanGaps: true,
-                      }],
-                    }}
-                    options={{
-                      ...commonChartOptions,
-                      scales: {
-                        ...commonChartOptions.scales,
-                        y: {
-                          ...commonChartOptions.scales.y,
-                          min: 1,
-                          max: 10,
-                          title: { display: true, text: 'RPE (1-10)', color: 'rgb(156,163,175)', font: { size: 10 } },
-                        },
-                      },
-                    }}
-                  />
-                ) : (
-                  <div className="h-full flex items-center justify-center text-sm text-ath-text-muted">
-                    Sin datos de RPE aún
-                  </div>
-                )}
-              </div>
-            </motion.div>
-          </div>
-
-          {/* Pace trend */}
-          {weeklyPace.some(w => w.avgPace != null) && (
-            <motion.div
-              initial={{ opacity: 0, y: 16 }}
-              animate={{ opacity: 1, y: 0 }}
-              transition={{ delay: 0.15 }}
-              className="bg-ath-surface rounded-2xl border border-ath-border p-4"
-            >
-              <div className="flex items-center gap-2 mb-3">
-                <FiClock className="w-4 h-4 text-purple-500" />
-                <h3 className="text-sm font-bold text-ath-text-primary">
-                  Ritmo medio semanal (min/km)
-                </h3>
-              </div>
-              <div className="h-44">
-                <Line
-                  data={{
-                    labels: weeklyPace.map(w => w.label),
-                    datasets: [{
-                      label: 'min/km',
-                      data: weeklyPace.map(w => w.avgPace),
-                      borderColor: 'rgb(139, 92, 246)',
-                      backgroundColor: 'rgba(139, 92, 246, 0.1)',
-                      fill: true,
-                      tension: 0.4,
-                      pointRadius: 4,
-                      pointBackgroundColor: 'rgb(139, 92, 246)',
-                      spanGaps: true,
-                    }],
-                  }}
-                  options={{
-                    responsive: true,
-                    maintainAspectRatio: false,
-                    plugins: { legend: { display: false },
-                      tooltip: {
-                        callbacks: {
-                          label: (ctx) => ctx.parsed.y != null ? `${formatPace(ctx.parsed.y)} min/km` : '–',
-                        },
-                      },
-                    },
-                    scales: {
-                      x: { grid: { display: false }, ticks: { color: 'rgb(156,163,175)', font: { size: 10 } } },
-                      y: {
-                        reverse: true,
-                        grid: { color: 'rgba(156,163,175,0.1)' },
-                        ticks: {
-                          color: 'rgb(156,163,175)',
-                          font: { size: 10 },
-                          callback: (v) => formatPace(v),
-                        },
-                        title: { display: true, text: 'min/km', color: 'rgb(156,163,175)', font: { size: 10 } },
-                      },
-                    },
-                  }}
-                />
-              </div>
-            </motion.div>
-          )}
-
-        </>
-      )}
-    </section>
-  );
-};
-
-// Calculate HR training zones using Karvonen formula
-const calculateHRZones = (maxHR, restingHR) => {
-  const zones = [
-    { name: 'Z1 - Recuperación', min: 0.50, max: 0.60, color: '#94a3b8' },
-    { name: 'Z2 - Base Aeróbica', min: 0.60, max: 0.70, color: '#3b82f6' },
-    { name: 'Z3 - Aeróbica', min: 0.70, max: 0.80, color: '#22c55e' },
-    { name: 'Z4 - Umbral', min: 0.80, max: 0.90, color: '#f97316' },
-    { name: 'Z5 - VO2max', min: 0.90, max: 1.00, color: '#ef4444' },
-  ];
-  return zones.map(z => ({
-    ...z,
-    bpmMin: Math.round(restingHR + z.min * (maxHR - restingHR)),
-    bpmMax: Math.round(restingHR + z.max * (maxHR - restingHR)),
-  }));
-};
-
 const AthleteMetrics = () => {
   const { profile, isIndependent } = useAuth();
+  const { latestVam } = useAthleteTestData(profile?.id);
+  const aiQuota = useAiAnalysisQuota();
   const {
     loading, stravaConnected, stravaMetrics, bestEfforts,
     stravaStats, weekFilter, setWeekFilter, rawActivities,
@@ -746,6 +101,10 @@ const AthleteMetrics = () => {
   const [activityTimePeriod, setActivityTimePeriod] = useState('7days');
   const [exportOpen, setExportOpen] = useState(false);
   const [dbPersonalBests, setDbPersonalBests] = useState([]);
+  const [selectedActivity, setSelectedActivity] = useState(null);
+  const [analysisOpen, setAnalysisOpen] = useState(false);
+  const [preparingAnalysis, setPreparingAnalysis] = useState(false);
+  const [analysisPayload, setAnalysisPayload] = useState(null);
 
   // Internal metrics (from completed training_sessions, not Strava)
   const {
@@ -753,273 +112,85 @@ const AthleteMetrics = () => {
     weeklyKm,
     weeklyRpe,
     weeklyPace,
-    personalBests,
     completionRate,
     hasData: hasInternalData,
   } = useInternalMetrics(profile?.id, 8);
 
-  // Fetch personal bests from DB for race predictions
   useEffect(() => {
     if (!profile?.id) return;
-    supabase
-      .from('personal_bests')
-      .select('distance, time_seconds, date')
-      .eq('athlete_id', profile.id)
-      .order('time_seconds', { ascending: true })
-      .then(({ data }) => setDbPersonalBests(data || []));
+    getPersonalBestsByAthlete(profile.id).then(({ data }) => setDbPersonalBests(data || []));
   }, [profile?.id]);
 
-  // Training load calculations (ACWR, weekly loads)
-  const loadData = useMemo(() => {
-    if (!rawActivities || rawActivities.length === 0) return null;
+  const loadData = useMetricsLoadData(rawActivities);
 
-    const metrics = calculateLoadMetrics(rawActivities);
-    const daily56 = getDailyLoads(rawActivities, 56);
+  const racePredictions = useRacePredictions({
+    bestEfforts,
+    dbPersonalBests,
+    storedVdot: profile?.athlete?.vdot,
+  });
 
-    // Aggregate daily loads into 8 weekly buckets
-    const weeklyLoads = [];
-    for (let w = 7; w >= 0; w--) {
-      const startIdx = w * 7;
-      const weekSlice = daily56.slice(startIdx, startIdx + 7);
-      const weekKm = weekSlice.reduce((s, v) => s + v, 0);
-      const wStart = new Date(); wStart.setDate(wStart.getDate() - w * 7 - wStart.getDay() + 1);
-      weeklyLoads.push({
-        weekIndex: 7 - w,
-        km: +weekKm.toFixed(1),
-        label: w === 0 ? 'Esta sem.' : wStart.toLocaleDateString('es-ES', { day: 'numeric', month: 'short' }),
-      });
-    }
-
-    // Calculate per-week ACWR for bar coloring
-    const weeklyLoadsWithAcwr = weeklyLoads.map((week, idx) => {
-      if (idx < 4) {
-        return { ...week, acwr: null, color: 'rgba(249, 115, 22, 0.7)' };
-      }
-      const acute = week.km;
-      const chronic = (weeklyLoads[idx - 1].km + weeklyLoads[idx - 2].km +
-                       weeklyLoads[idx - 3].km + weeklyLoads[idx - 4].km) / 4;
-      const weekAcwr = chronic > 0 ? +(acute / chronic).toFixed(2) : 0;
-      let color;
-      if (weekAcwr < 0.8) color = 'rgba(59, 130, 246, 0.7)';
-      else if (weekAcwr <= 1.3) color = 'rgba(34, 197, 94, 0.7)';
-      else if (weekAcwr <= 1.5) color = 'rgba(249, 115, 22, 0.7)';
-      else color = 'rgba(239, 68, 68, 0.7)';
-      return { ...week, acwr: weekAcwr, color };
-    });
-
-    return {
-      acuteLoad: metrics.acuteLoad,
-      chronicLoadWeekly: metrics.chronicLoadWeekly,
-      acwr: metrics.acwr,
-      weeklyLoads: weeklyLoadsWithAcwr,
-    };
-  }, [rawActivities]);
-
-  // Race time predictions using Daniels-Gilbert VDOT model
-  const racePredictions = useMemo(() => {
-    // 1. Try stored VDOT from athlete profile
-    let vdot = profile?.athlete?.vdot;
-
-    // 2. If no stored VDOT, calculate from best effort or DB personal best
-    if (!vdot) {
-      const allEfforts = [...(bestEfforts || [])];
-
-      // Merge DB personal bests
-      const pbDistanceMap = {
-        '1 km': { name: '1 km', meters: 1000 },
-        '1k': { name: '1 km', meters: 1000 },
-        '1 Milla': { name: '1 Milla', meters: 1609 },
-        '1 mile': { name: '1 Milla', meters: 1609 },
-        '5 km': { name: '5 km', meters: 5000 },
-        '5k': { name: '5 km', meters: 5000 },
-        '10 km': { name: '10 km', meters: 10000 },
-        '10k': { name: '10 km', meters: 10000 },
-        'Media Maratón': { name: 'Media Maratón', meters: 21097 },
-        'Half-Marathon': { name: 'Media Maratón', meters: 21097 },
-        'Maratón': { name: 'Maratón', meters: 42195 },
-        'Marathon': { name: 'Maratón', meters: 42195 },
-      };
-
-      if (dbPersonalBests?.length) {
-        dbPersonalBests.forEach((pb) => {
-          const mapped = pbDistanceMap[pb.distance];
-          if (!mapped) return;
-          const existing = allEfforts.find((e) => e.name === mapped.name);
-          if (!existing || pb.time_seconds < existing.time) {
-            const idx = allEfforts.findIndex((e) => e.name === mapped.name);
-            const entry = {
-              name: mapped.name,
-              distance: mapped.meters,
-              time: pb.time_seconds,
-              date: pb.date,
-            };
-            if (idx >= 0) allEfforts[idx] = entry;
-            else allEfforts.push(entry);
-          }
-        });
-      }
-
-      if (!allEfforts.length) return null;
-
-      // Find best VDOT from all available efforts
-      let bestVdot = 0;
-      let bestRef = null;
-      for (const e of allEfforts) {
-        if (!e.distance || !e.time) continue;
-        const v = calculateVdot(e.distance, e.time / 60);
-        if (v && v > bestVdot) {
-          bestVdot = v;
-          bestRef = e;
-        }
-      }
-
-      if (!bestVdot || !bestRef) return null;
-      vdot = bestVdot;
-    }
-
-    const predictions = predictAllRaceTimes(vdot);
-    if (!predictions) return null;
-
-    return { vdot: Math.round(vdot * 10) / 10, predictions };
-  }, [bestEfforts, dbPersonalBests, profile?.athlete?.vdot]);
-
-  // HR training zones (Karvonen formula)
   const estimatedAge = profile?.athlete?.date_of_birth
     ? computeAge(profile.athlete.date_of_birth)
     : null;
-  const hrZoneData = useMemo(() => {
-    const maxHR = profile?.athlete?.max_heart_rate
-      || (estimatedAge ? 220 - estimatedAge : null);
-    if (!maxHR) return null;
-    const restingHR = profile?.athlete?.resting_heart_rate || 60;
-    const zones = calculateHRZones(maxHR, restingHR);
+  const hrZoneData = useHrZoneData({
+    rawActivities,
+    maxHeartRate: profile?.athlete?.max_heart_rate,
+    restingHeartRate: profile?.athlete?.resting_heart_rate,
+    estimatedAge,
+  });
 
-    // Distribute activities into zones by average_heartrate
-    const hrActivities = rawActivities.filter(a => a.average_heartrate);
-    zones.forEach(z => { z.count = 0; });
-    hrActivities.forEach(a => {
-      const hr = a.average_heartrate;
-      for (let i = zones.length - 1; i >= 0; i--) {
-        if (hr >= zones[i].bpmMin) { zones[i].count++; break; }
-      }
-    });
-
-    return { zones, maxHR, restingHR, totalHRActivities: hrActivities.length };
-  }, [rawActivities, profile, estimatedAge]);
-
-  // Per-sport weekly charts data
-  const sportCharts = useMemo(() => {
-    if (!rawActivities?.length) return {};
-
-    const now = new Date();
-    const CYCLING_TYPES = ['Ride', 'VirtualRide'];
-    const SWIM_TYPES = ['Swim'];
-    const GYM_TYPES = ['WeightTraining', 'Workout', 'CrossFit', 'Yoga'];
-
-    const buildWeeklyData = (filterFn, metricFn) => {
-      const weeks = [];
-      for (let w = 7; w >= 0; w--) {
-        const weekEnd = new Date(now);
-        weekEnd.setDate(weekEnd.getDate() - w * 7);
-        const weekStart = new Date(weekEnd);
-        weekStart.setDate(weekStart.getDate() - 6);
-
-        const weekActs = rawActivities.filter(a => {
-          if (!filterFn(a)) return false;
-          const d = new Date(a.start_date_local);
-          return d >= weekStart && d <= weekEnd;
-        });
-
-        const wLabel = w === 0 ? 'Esta sem.' : weekStart.toLocaleDateString('es-ES', { day: 'numeric', month: 'short' });
-        weeks.push({
-          label: wLabel,
-          ...metricFn(weekActs),
-        });
-      }
-      return weeks;
+  // Athlete context passed to the AI analyzers.
+  // VAM (Velocidad Aeróbica Máxima) comes from the `vam_tests` table in km/h
+  // (typical human range 10-22 km/h). We intentionally do NOT fall back to
+  // VDOT here — VDOT is a dimensionless Daniels-Gilbert index (~30-85) and
+  // passing it as "VAM km/h" caused Gemma to report absurd values like
+  // "VAM 46 km/h". If no VAM test is registered, send null and let the model
+  // skip the field.
+  const athleteContext = useMemo(() => {
+    const rawVam = latestVam?.vam_kmh != null ? parseFloat(latestVam.vam_kmh) : null;
+    // Defensive clamp: ignore anything outside biologically plausible human VAM.
+    const vamKmh = Number.isFinite(rawVam) && rawVam >= 8 && rawVam <= 25
+      ? Math.round(rawVam * 10) / 10
+      : null;
+    return {
+      nivel: profile?.athlete?.nivel || profile?.nivel || null,
+      objetivo: profile?.athlete?.objetivo || profile?.objetivo || null,
+      vam: vamKmh,
     };
+  }, [profile, latestVam]);
 
-    const result = {};
-
-    // Cycling
-    const cyclingActs = rawActivities.filter(a => CYCLING_TYPES.includes(a.type));
-    if (cyclingActs.length > 0) {
-      const weeklyKm = buildWeeklyData(
-        a => CYCLING_TYPES.includes(a.type),
-        acts => ({
-          km: +(acts.reduce((s, a) => s + (a.distance || 0), 0) / 1000).toFixed(1),
-          elevation: Math.round(acts.reduce((s, a) => s + (a.total_elevation_gain || 0), 0)),
-          avgSpeed: acts.length > 0
-            ? +((acts.reduce((s, a) => s + (a.average_speed || 0), 0) / acts.length) * 3.6).toFixed(1)
-            : 0,
-          count: acts.length,
-        })
-      );
-
-      const hrActs = cyclingActs.filter(a => a.average_heartrate);
-      result.cycling = {
-        weeklyKm,
-        totalKm: +(cyclingActs.reduce((s, a) => s + (a.distance || 0), 0) / 1000).toFixed(1),
-        totalElevation: Math.round(cyclingActs.reduce((s, a) => s + (a.total_elevation_gain || 0), 0)),
-        avgSpeed: +((cyclingActs.reduce((s, a) => s + (a.average_speed || 0), 0) / cyclingActs.length) * 3.6).toFixed(1),
-        avgHR: hrActs.length > 0 ? Math.round(hrActs.reduce((s, a) => s + a.average_heartrate, 0) / hrActs.length) : null,
-        count: cyclingActs.length,
-      };
+  const handleGenerateAnalysis = async () => {
+    if (preparingAnalysis) return;
+    if (!aiQuota.canUse) {
+      setAnalysisOpen(true);
+      return;
     }
-
-    // Swimming
-    const swimActs = rawActivities.filter(a => SWIM_TYPES.includes(a.type));
-    if (swimActs.length > 0) {
-      const weeklyMeters = buildWeeklyData(
-        a => SWIM_TYPES.includes(a.type),
-        acts => ({
-          meters: Math.round(acts.reduce((s, a) => s + (a.distance || 0), 0)),
-          avgPace100m: acts.length > 0 ? (() => {
-            const totalDist = acts.reduce((s, a) => s + (a.distance || 0), 0);
-            const totalTime = acts.reduce((s, a) => s + (a.moving_time || 0), 0);
-            if (totalDist === 0) return 0;
-            return Math.round(totalTime / (totalDist / 100));
-          })() : 0,
-          count: acts.length,
-        })
-      );
-
-      result.swimming = {
-        weeklyMeters,
-        totalMeters: Math.round(swimActs.reduce((s, a) => s + (a.distance || 0), 0)),
-        avgPace100m: (() => {
-          const d = swimActs.reduce((s, a) => s + (a.distance || 0), 0);
-          const t = swimActs.reduce((s, a) => s + (a.moving_time || 0), 0);
-          if (d === 0) return '-';
-          const secs = Math.round(t / (d / 100));
-          return `${Math.floor(secs / 60)}:${(secs % 60).toString().padStart(2, '0')}`;
-        })(),
-        count: swimActs.length,
-      };
+    setPreparingAnalysis(true);
+    try {
+      const [best, tiz, intensity, shoes, weeklyLoad] = await Promise.all([
+        getBestEffortsEvolution(profile.id, 50),
+        getTimeInZoneAggregate(profile.id, 4),
+        getIntensityDistribution(profile.id, 4),
+        getShoes(profile.id),
+        getWeeklyLoadSeries(profile.id, 12),
+      ]);
+      setAnalysisPayload(buildMetricsAnalysisPayload({
+        timeInZone: tiz.data,
+        intensity: intensity.data,
+        shoes: shoes.data,
+        bestEfforts: best.data,
+        weeklyLoad: weeklyLoad.data,
+        weeks: 4,
+      }));
+      setAnalysisOpen(true);
+    } catch (err) {
+      showError(err?.message || 'No se pudieron recopilar las métricas');
+    } finally {
+      setPreparingAnalysis(false);
     }
+  };
 
-    // Gym / Strength
-    const gymActs = rawActivities.filter(a => GYM_TYPES.includes(a.type));
-    if (gymActs.length > 0) {
-      const weeklyGym = buildWeeklyData(
-        a => GYM_TYPES.includes(a.type),
-        acts => ({
-          sessions: acts.length,
-          totalMinutes: Math.round(acts.reduce((s, a) => s + (a.moving_time || 0), 0) / 60),
-        })
-      );
-
-      result.gym = {
-        weeklyGym,
-        totalSessions: gymActs.length,
-        avgDurationMin: Math.round(gymActs.reduce((s, a) => s + (a.moving_time || 0), 0) / 60 / gymActs.length),
-        totalMinutes: Math.round(gymActs.reduce((s, a) => s + (a.moving_time || 0), 0) / 60),
-        count: gymActs.length,
-      };
-    }
-
-    return result;
-  }, [rawActivities]);
+  const sportCharts = useSportCharts(rawActivities);
 
   const chartOptions = {
     responsive: true,
@@ -1033,7 +204,7 @@ const AthleteMetrics = () => {
       y: {
         beginAtZero: true,
         grid: {
-          color: 'rgba(156, 163, 175, 0.1)',
+          color: CHART_COLORS.grid,
         },
       },
       x: {
@@ -1042,83 +213,6 @@ const AthleteMetrics = () => {
         },
       },
     },
-  };
-
-  // Prepare weekly progression chart data
-  const getWeeklyChartData = () => {
-    if (!stravaMetrics?.weeklyStats?.length) {
-      return {
-        labels: [],
-        datasets: [{
-          data: [],
-          borderColor: 'rgb(249, 115, 22)',
-          backgroundColor: 'rgba(249, 115, 22, 0.1)',
-          fill: true,
-          tension: 0.4,
-        }],
-      };
-    }
-
-    const reversed = [...stravaMetrics.weeklyStats].reverse();
-    return {
-      labels: reversed.map(w => w.weekNumber),
-      datasets: [{
-        label: 'Kilómetros',
-        data: reversed.map(w => parseFloat(w.distanceKm)),
-        borderColor: 'rgb(249, 115, 22)',
-        backgroundColor: 'rgba(249, 115, 22, 0.1)',
-        fill: true,
-        tension: 0.4,
-        pointRadius: 4,
-        pointBackgroundColor: 'rgb(249, 115, 22)',
-      }],
-    };
-  };
-
-  // Prepare average speed chart data (Garmin style - individual points per activity)
-  const getAverageSpeedData = () => {
-    if (!rawActivities?.length) {
-      return {
-        labels: [],
-        datasets: [],
-        avgSpeed: 0,
-      };
-    }
-
-    // Filter running activities and sort by date
-    const runningActivities = rawActivities
-      .filter(a => ['Run', 'TrailRun', 'VirtualRun'].includes(a.type))
-      .filter(a => a.average_speed > 0)
-      .sort((a, b) => new Date(a.start_date_local) - new Date(b.start_date_local));
-
-    if (runningActivities.length === 0) {
-      return { labels: [], datasets: [], avgSpeed: 0 };
-    }
-
-    // Calculate average speed in km/h for each activity
-    const speedsKmh = runningActivities.map(a => (a.average_speed * 3.6).toFixed(1));
-    const avgSpeed = (speedsKmh.reduce((sum, s) => sum + parseFloat(s), 0) / speedsKmh.length).toFixed(1);
-
-    // Labels as dates
-    const labels = runningActivities.map(a => {
-      const date = new Date(a.start_date_local);
-      return date.toLocaleDateString('es-ES', { day: 'numeric', month: 'short' });
-    });
-
-    return {
-      labels,
-      datasets: [{
-        label: 'Velocidad (km/h)',
-        data: speedsKmh.map(s => parseFloat(s)),
-        borderColor: 'transparent',
-        backgroundColor: 'rgba(59, 130, 246, 0.8)',
-        pointRadius: 6,
-        pointHoverRadius: 8,
-        showLine: false,
-        type: 'scatter',
-      }],
-      avgSpeed: parseFloat(avgSpeed),
-    };
   };
 
   if (loading) {
@@ -1149,7 +243,6 @@ const AthleteMetrics = () => {
           weeklyKm={weeklyKm}
           weeklyRpe={weeklyRpe}
           weeklyPace={weeklyPace}
-          personalBests={personalBests}
           completionRate={completionRate}
           hasData={hasInternalData}
           loading={internalLoading}
@@ -1157,7 +250,7 @@ const AthleteMetrics = () => {
 
         {/* Strava connect prompt (only for non-independent athletes) */}
         {!isIndependent && (
-          <div className="bg-ath-surface rounded-2xl p-8 sm:p-10 text-center shadow-sm border border-ath-border">
+          <div className="bg-ath-surface rounded-2xl border border-ath-border p-8 sm:p-10 text-center">
             <div className="w-16 h-16 bg-orange-100 dark:bg-orange-900/30 rounded-full flex items-center justify-center mx-auto mb-4">
               <FiActivity className="w-8 h-8 text-orange-500" />
             </div>
@@ -1225,6 +318,18 @@ const AthleteMetrics = () => {
           <p className="text-sm sm:text-base text-ath-text-secondary">
             Análisis de rendimiento basado en Strava
           </p>
+          {!aiQuota.loading && (
+            <div className="mt-2 inline-flex items-center gap-1.5 text-xs font-semibold px-2.5 py-1 rounded-full bg-ath-accent-surface text-ath-accent">
+              <FiZap className="w-3 h-3" />
+              {aiQuota.source === 'coach' ? (
+                <span>Análisis IA cubiertos por tu coach</span>
+              ) : aiQuota.limit === -1 ? (
+                <span>Análisis IA ilimitados</span>
+              ) : (
+                <span>{aiQuota.remaining}/{aiQuota.limit} análisis IA este mes</span>
+              )}
+            </div>
+          )}
         </div>
 
         {/* Week Filter */}
@@ -1335,12 +440,46 @@ const AthleteMetrics = () => {
         </div>
       )}
 
+      {/* Compact AI analysis banner — placed here so the primary action is high in the page */}
+      {profile?.id && (
+        <div className="mt-6 bg-ath-surface rounded-2xl border border-ath-border p-4 flex items-center justify-between gap-4">
+          <div className="flex items-center gap-3 min-w-0">
+            <div className="w-10 h-10 rounded-xl bg-ath-accent-surface flex items-center justify-center shrink-0">
+              <FiZap className="w-5 h-5 text-ath-accent-text" />
+            </div>
+            <div className="min-w-0">
+              <p className="font-semibold text-ath-text-primary truncate">Análisis general con IA</p>
+              <p className="text-xs text-ath-text-muted truncate">
+                Resumen holístico de tu forma, carga y progreso
+              </p>
+            </div>
+          </div>
+          <button
+            type="button"
+            onClick={handleGenerateAnalysis}
+            disabled={preparingAnalysis || aiQuota.loading}
+            className="px-4 py-2 rounded-xl bg-ath-accent text-ath-on-accent text-sm font-semibold hover:bg-ath-accent-hover transition-colors disabled:opacity-60 shrink-0 inline-flex items-center gap-2"
+          >
+            {preparingAnalysis ? (
+              <>
+                <FiLoader className="w-4 h-4 animate-spin" />
+                <span className="hidden sm:inline">Preparando...</span>
+              </>
+            ) : (
+              <>
+                <FiZap className="w-4 h-4" />
+                <span>Generar</span>
+              </>
+            )}
+          </button>
+        </div>
+      )}
+
       {/* Internal progression metrics (available even with Strava connected) */}
       <InternalMetricsSection
         weeklyKm={weeklyKm}
         weeklyRpe={weeklyRpe}
         weeklyPace={weeklyPace}
-        personalBests={personalBests}
         completionRate={completionRate}
         hasData={hasInternalData}
         loading={internalLoading}
@@ -1421,6 +560,7 @@ const AthleteMetrics = () => {
             activities={rawActivities}
             athleteProfile={profile?.athlete}
             athleteId={profile?.id}
+            athleteContext={athleteContext}
           />
         </motion.div>
       )}
@@ -1436,6 +576,14 @@ const AthleteMetrics = () => {
           <TrainingZonesCard
             bestEfforts={rawActivities.flatMap(a => a.best_efforts || [])}
             athleteId={profile?.id}
+            athleteContext={athleteContext}
+            hrDistribution={hrZoneData && hrZoneData.totalHRActivities > 0 ? {
+              z1: Math.round((hrZoneData.zones[0]?.count || 0) / hrZoneData.totalHRActivities * 100),
+              z2: Math.round((hrZoneData.zones[1]?.count || 0) / hrZoneData.totalHRActivities * 100),
+              z3: Math.round((hrZoneData.zones[2]?.count || 0) / hrZoneData.totalHRActivities * 100),
+              z4: Math.round((hrZoneData.zones[3]?.count || 0) / hrZoneData.totalHRActivities * 100),
+              z5: Math.round((hrZoneData.zones[4]?.count || 0) / hrZoneData.totalHRActivities * 100),
+            } : null}
           />
         </motion.div>
       )}
@@ -1449,9 +597,32 @@ const AthleteMetrics = () => {
           className="bg-ath-surface rounded-2xl mb-4 sm:mb-6 p-4 sm:p-5 border border-ath-border"
         >
           {/* Header */}
-          <div className="flex items-center gap-2 mb-0.5">
-            <FiClock className="w-4 h-4 text-slate-500" />
-            <h3 className="text-base font-bold text-ath-text-primary">Zonas de Entrenamiento</h3>
+          <div className="flex items-start justify-between gap-3 mb-0.5">
+            <div className="flex items-center gap-2 min-w-0">
+              <FiClock className="w-4 h-4 text-slate-500 shrink-0" />
+              <h3 className="text-base font-bold text-ath-text-primary">Zonas de Entrenamiento</h3>
+            </div>
+            <MetricAIAnalyzer
+              chartType="training_zones"
+              data={{
+                vdot: racePredictions?.vdot ?? null,
+                max_hr: hrZoneData.maxHR,
+                rest_hr: hrZoneData.restingHR,
+                distribution: hrZoneData.totalHRActivities > 0 ? {
+                  z1: Math.round((hrZoneData.zones[0]?.count || 0) / hrZoneData.totalHRActivities * 100),
+                  z2: Math.round((hrZoneData.zones[1]?.count || 0) / hrZoneData.totalHRActivities * 100),
+                  z3: Math.round((hrZoneData.zones[2]?.count || 0) / hrZoneData.totalHRActivities * 100),
+                  z4: Math.round((hrZoneData.zones[3]?.count || 0) / hrZoneData.totalHRActivities * 100),
+                  z5: Math.round((hrZoneData.zones[4]?.count || 0) / hrZoneData.totalHRActivities * 100),
+                } : { z1: 0, z2: 0, z3: 0, z4: 0, z5: 0 },
+                weeks: weekFilter,
+                sample: 'fc',
+              }}
+              athleteContext={athleteContext}
+              compact
+              title="Análisis de Zonas de Entrenamiento"
+              disabled={!hrZoneData || hrZoneData.totalHRActivities === 0}
+            />
           </div>
           <p className="text-xs text-ath-text-muted mb-4">
             VDOT: {racePredictions?.vdot ?? '–'} · FC Máx: {hrZoneData.maxHR} bpm · FC Reposo: {hrZoneData.restingHR} bpm
@@ -1614,12 +785,32 @@ const AthleteMetrics = () => {
           className="bg-ath-surface rounded-2xl p-4 sm:p-5 border border-ath-border mb-4 sm:mb-6"
         >
           {/* Header */}
-          <div className="flex items-center gap-2 mb-1">
-            <FiZap className="w-4 h-4 text-amber-500" />
-            <h3 className="text-base font-bold text-ath-text-primary">
-              Gestión de Carga
-              <InfoTooltip text="Ratio de carga aguda/crónica (ACWR): compara el volumen de la última semana con la media de las 4 anteriores. Zona óptima: 0.8–1.3. Por encima de 1.5 aumenta el riesgo de lesión." />
-            </h3>
+          <div className="flex items-start justify-between gap-3 mb-1">
+            <div className="flex items-center gap-2 min-w-0">
+              <FiZap className="w-4 h-4 text-amber-500 shrink-0" />
+              <h3 className="text-base font-bold text-ath-text-primary">
+                Gestión de Carga
+                <InfoTooltip text="Ratio de carga aguda/crónica (ACWR): compara el volumen de la última semana con la media de las 4 anteriores. Zona óptima: 0.8–1.3. Por encima de 1.5 aumenta el riesgo de lesión." />
+              </h3>
+            </div>
+            <MetricAIAnalyzer
+              chartType="acwr_load"
+              data={{
+                acute_km: loadData.acuteLoad,
+                chronic_km: loadData.chronicLoadWeekly,
+                acwr: Math.round(loadData.acwr * 100) / 100,
+                status: loadData.acwr < 0.8 ? 'bajo' : loadData.acwr <= 1.3 ? 'optimo' : loadData.acwr <= 1.5 ? 'alto' : 'peligro',
+                weeks: loadData.weeklyLoads.map((w) => ({
+                  wk: w.label,
+                  km: w.km,
+                  zone: w.acwr == null ? 'n/a' : (w.acwr < 0.8 ? 'bajo' : w.acwr <= 1.3 ? 'optimo' : w.acwr <= 1.5 ? 'alto' : 'peligro'),
+                })),
+              }}
+              athleteContext={athleteContext}
+              compact
+              title="Análisis de Gestión de Carga (ACWR)"
+              disabled={!loadData}
+            />
           </div>
           <p className="text-xs text-ath-text-muted mb-3">ACWR · ratio carga aguda/crónica</p>
 
@@ -1695,8 +886,8 @@ const AthleteMetrics = () => {
                   },
                 },
                 scales: {
-                  x: { grid: { display: false }, ticks: { color: 'rgb(156,163,175)', font: { size: 10 } } },
-                  y: { beginAtZero: true, grid: { color: 'rgba(156,163,175,0.1)' }, ticks: { color: 'rgb(156,163,175)', font: { size: 10 } } },
+                  x: { grid: { display: false }, ticks: { color: CHART_COLORS.axisTick, font: { size: 10 } } },
+                  y: { beginAtZero: true, grid: { color: CHART_COLORS.grid }, ticks: { color: CHART_COLORS.axisTick, font: { size: 10 } } },
                 },
               }}
             />
@@ -1719,7 +910,7 @@ const AthleteMetrics = () => {
           initial={{ opacity: 0, y: 20 }}
           animate={{ opacity: 1, y: 0 }}
           transition={{ delay: 0.6 }}
-          className="bg-ath-surface rounded-xl p-4 sm:p-6 shadow-sm border border-ath-border"
+          className="bg-ath-surface rounded-2xl border border-ath-border p-4 sm:p-5"
         >
           <h3 className="text-base sm:text-lg font-bold text-ath-text-primary mb-4 flex items-center">
             <FiTrendingUp className="w-5 h-5 mr-2 text-orange-500" />
@@ -1728,7 +919,7 @@ const AthleteMetrics = () => {
           </h3>
           <div className="h-48 sm:h-64">
             {stravaMetrics?.weeklyStats?.length > 0 ? (
-              <Line data={getWeeklyChartData()} options={chartOptions} />
+              <Line data={buildWeeklyChartData(stravaMetrics)} options={chartOptions} />
             ) : (
               <div className="h-full flex items-center justify-center text-gray-400">
                 No hay datos suficientes
@@ -1742,7 +933,7 @@ const AthleteMetrics = () => {
           initial={{ opacity: 0, y: 20 }}
           animate={{ opacity: 1, y: 0 }}
           transition={{ delay: 0.7 }}
-          className="bg-ath-surface rounded-xl p-4 sm:p-6 shadow-sm border border-ath-border"
+          className="bg-ath-surface rounded-2xl border border-ath-border p-4 sm:p-5"
         >
           <h3 className="text-base sm:text-lg font-bold text-ath-text-primary mb-4 flex items-center">
             <FiZap className="w-5 h-5 mr-2 text-blue-500" />
@@ -1750,7 +941,7 @@ const AthleteMetrics = () => {
             <InfoTooltip text="Velocidad media (km/h) de cada actividad a lo largo del tiempo. La línea punteada indica la media general. Permite ver tendencias de mejora o fatiga." />
           </h3>
           {(() => {
-            const speedData = getAverageSpeedData();
+            const speedData = buildAverageSpeedData(rawActivities);
             if (speedData.labels.length === 0) {
               return (
                 <div className="h-48 sm:h-64 flex items-center justify-center text-gray-400">
@@ -1776,7 +967,7 @@ const AthleteMetrics = () => {
                         {
                           label: 'Media',
                           data: speedData.labels.map(() => speedData.avgSpeed),
-                          borderColor: 'rgba(156, 163, 175, 0.6)',
+                          borderColor: CHART_COLORS.mutedDashed,
                           borderDash: [5, 5],
                           borderWidth: 1,
                           pointRadius: 0,
@@ -1787,7 +978,7 @@ const AthleteMetrics = () => {
                           label: 'Velocidad (km/h)',
                           data: speedData.datasets[0]?.data || [],
                           borderColor: 'transparent',
-                          backgroundColor: 'rgba(59, 130, 246, 0.8)',
+                          backgroundColor: CHART_COLORS.fitnessSolid,
                           pointRadius: 7,
                           pointHoverRadius: 9,
                           showLine: false,
@@ -1820,7 +1011,7 @@ const AthleteMetrics = () => {
                         },
                         y: {
                           beginAtZero: true,
-                          grid: { color: 'rgba(156, 163, 175, 0.1)' },
+                          grid: { color: CHART_COLORS.grid },
                           title: {
                             display: true,
                             text: 'Kilómetros por hora',
@@ -1844,7 +1035,7 @@ const AthleteMetrics = () => {
           initial={{ opacity: 0, y: 20 }}
           animate={{ opacity: 1, y: 0 }}
           transition={{ delay: 0.65 }}
-          className="bg-ath-surface rounded-xl p-4 sm:p-6 shadow-sm border border-ath-border mb-6 sm:mb-8"
+          className="bg-ath-surface rounded-2xl border border-ath-border p-4 sm:p-5 mb-6 sm:mb-8"
         >
           <h3 className="text-base sm:text-lg font-bold text-ath-text-primary mb-4 flex items-center">
             <FiNavigation className="w-5 h-5 mr-2 text-yellow-500" />
@@ -1883,7 +1074,7 @@ const AthleteMetrics = () => {
                     datasets: [{
                       label: 'km',
                       data: sportCharts.cycling.weeklyKm.map(w => w.km),
-                      backgroundColor: 'rgba(245, 158, 11, 0.7)',
+                      backgroundColor: CHART_COLORS.cyclingBar,
                       borderRadius: 4,
                       barPercentage: 0.7,
                     }],
@@ -1894,7 +1085,7 @@ const AthleteMetrics = () => {
                     plugins: { legend: { display: false } },
                     scales: {
                       x: { grid: { display: false } },
-                      y: { beginAtZero: true, grid: { color: 'rgba(156,163,175,0.1)' }, title: { display: true, text: 'km' } },
+                      y: { beginAtZero: true, grid: { color: CHART_COLORS.grid }, title: { display: true, text: 'km' } },
                     },
                   }}
                 />
@@ -1909,12 +1100,12 @@ const AthleteMetrics = () => {
                     datasets: [{
                       label: 'km/h',
                       data: sportCharts.cycling.weeklyKm.map(w => w.avgSpeed),
-                      borderColor: 'rgb(245, 158, 11)',
-                      backgroundColor: 'rgba(245, 158, 11, 0.1)',
+                      borderColor: CHART_COLORS.cycling,
+                      backgroundColor: CHART_COLORS.cyclingFill,
                       fill: true,
                       tension: 0.4,
                       pointRadius: 4,
-                      pointBackgroundColor: 'rgb(245, 158, 11)',
+                      pointBackgroundColor: CHART_COLORS.cycling,
                     }],
                   }}
                   options={{
@@ -1923,7 +1114,7 @@ const AthleteMetrics = () => {
                     plugins: { legend: { display: false } },
                     scales: {
                       x: { grid: { display: false } },
-                      y: { beginAtZero: false, grid: { color: 'rgba(156,163,175,0.1)' }, title: { display: true, text: 'km/h' } },
+                      y: { beginAtZero: false, grid: { color: CHART_COLORS.grid }, title: { display: true, text: 'km/h' } },
                     },
                   }}
                 />
@@ -1939,7 +1130,7 @@ const AthleteMetrics = () => {
           initial={{ opacity: 0, y: 20 }}
           animate={{ opacity: 1, y: 0 }}
           transition={{ delay: 0.7 }}
-          className="bg-ath-surface rounded-xl p-4 sm:p-6 shadow-sm border border-ath-border mb-6 sm:mb-8"
+          className="bg-ath-surface rounded-2xl border border-ath-border p-4 sm:p-5 mb-6 sm:mb-8"
         >
           <h3 className="text-base sm:text-lg font-bold text-ath-text-primary mb-4 flex items-center">
             <FiActivity className="w-5 h-5 mr-2 text-cyan-500" />
@@ -1974,7 +1165,7 @@ const AthleteMetrics = () => {
                     datasets: [{
                       label: 'metros',
                       data: sportCharts.swimming.weeklyMeters.map(w => w.meters),
-                      backgroundColor: 'rgba(14, 165, 233, 0.7)',
+                      backgroundColor: CHART_COLORS.swimmingBar,
                       borderRadius: 4,
                       barPercentage: 0.7,
                     }],
@@ -1985,7 +1176,7 @@ const AthleteMetrics = () => {
                     plugins: { legend: { display: false } },
                     scales: {
                       x: { grid: { display: false } },
-                      y: { beginAtZero: true, grid: { color: 'rgba(156,163,175,0.1)' }, title: { display: true, text: 'metros' } },
+                      y: { beginAtZero: true, grid: { color: CHART_COLORS.grid }, title: { display: true, text: 'metros' } },
                     },
                   }}
                 />
@@ -2000,12 +1191,12 @@ const AthleteMetrics = () => {
                     datasets: [{
                       label: 'seg/100m',
                       data: sportCharts.swimming.weeklyMeters.map(w => w.avgPace100m),
-                      borderColor: 'rgb(14, 165, 233)',
-                      backgroundColor: 'rgba(14, 165, 233, 0.1)',
+                      borderColor: CHART_COLORS.swimming,
+                      backgroundColor: CHART_COLORS.swimmingFill,
                       fill: true,
                       tension: 0.4,
                       pointRadius: 4,
-                      pointBackgroundColor: 'rgb(14, 165, 233)',
+                      pointBackgroundColor: CHART_COLORS.swimming,
                     }],
                   }}
                   options={{
@@ -2027,7 +1218,7 @@ const AthleteMetrics = () => {
                       x: { grid: { display: false } },
                       y: {
                         reverse: true,
-                        grid: { color: 'rgba(156,163,175,0.1)' },
+                        grid: { color: CHART_COLORS.grid },
                         title: { display: true, text: 'seg/100m' },
                         ticks: {
                           callback: (v) => `${Math.floor(v / 60)}:${(v % 60).toString().padStart(2, '0')}`,
@@ -2048,7 +1239,7 @@ const AthleteMetrics = () => {
           initial={{ opacity: 0, y: 20 }}
           animate={{ opacity: 1, y: 0 }}
           transition={{ delay: 0.75 }}
-          className="bg-ath-surface rounded-xl p-4 sm:p-6 shadow-sm border border-ath-border mb-6 sm:mb-8"
+          className="bg-ath-surface rounded-2xl border border-ath-border p-4 sm:p-5 mb-6 sm:mb-8"
         >
           <h3 className="text-base sm:text-lg font-bold text-ath-text-primary mb-4 flex items-center">
             <FiZap className="w-5 h-5 mr-2 text-indigo-500" />
@@ -2083,7 +1274,7 @@ const AthleteMetrics = () => {
                     datasets: [{
                       label: 'sesiones',
                       data: sportCharts.gym.weeklyGym.map(w => w.sessions),
-                      backgroundColor: 'rgba(99, 102, 241, 0.7)',
+                      backgroundColor: CHART_COLORS.gymBar,
                       borderRadius: 4,
                       barPercentage: 0.7,
                     }],
@@ -2096,7 +1287,7 @@ const AthleteMetrics = () => {
                       x: { grid: { display: false } },
                       y: {
                         beginAtZero: true,
-                        grid: { color: 'rgba(156,163,175,0.1)' },
+                        grid: { color: CHART_COLORS.grid },
                         title: { display: true, text: 'sesiones' },
                         ticks: { stepSize: 1 },
                       },
@@ -2114,8 +1305,8 @@ const AthleteMetrics = () => {
                     datasets: [{
                       label: 'minutos',
                       data: sportCharts.gym.weeklyGym.map(w => w.totalMinutes),
-                      backgroundColor: 'rgba(99, 102, 241, 0.4)',
-                      borderColor: 'rgb(99, 102, 241)',
+                      backgroundColor: CHART_COLORS.gymFill,
+                      borderColor: CHART_COLORS.gym,
                       borderWidth: 1,
                       borderRadius: 4,
                       barPercentage: 0.7,
@@ -2127,7 +1318,7 @@ const AthleteMetrics = () => {
                     plugins: { legend: { display: false } },
                     scales: {
                       x: { grid: { display: false } },
-                      y: { beginAtZero: true, grid: { color: 'rgba(156,163,175,0.1)' }, title: { display: true, text: 'minutos' } },
+                      y: { beginAtZero: true, grid: { color: CHART_COLORS.grid }, title: { display: true, text: 'minutos' } },
                     },
                   }}
                 />
@@ -2239,7 +1430,7 @@ const AthleteMetrics = () => {
           initial={{ opacity: 0, y: 20 }}
           animate={{ opacity: 1, y: 0 }}
           transition={{ delay: 0.8 }}
-          className="bg-ath-surface rounded-xl p-4 sm:p-6 shadow-sm border border-ath-border"
+          className="bg-ath-surface rounded-2xl border border-ath-border p-4 sm:p-5"
         >
           <h3 className="text-base sm:text-lg font-bold text-ath-text-primary mb-4 flex items-center">
             <FiActivity className="w-5 h-5 mr-2 text-orange-500" />
@@ -2273,6 +1464,89 @@ const AthleteMetrics = () => {
             </div>
           </div>
         </motion.div>
+      )}
+
+      {/* ─── Pillar A — Estado actual ─── */}
+      {profile?.id && (
+        <>
+          <h2 className="text-sm font-bold text-ath-text-muted uppercase tracking-wider mt-10 mb-4">
+            Estado actual
+          </h2>
+          <div className="grid grid-cols-1 lg:grid-cols-2 gap-5">
+            <VdotProgressionChart athleteId={profile.id} athleteContext={athleteContext} />
+            <Vo2maxCard athleteId={profile.id} />
+          </div>
+
+          {/* ─── Pillar B — Carga y ejecución ─── */}
+          <h2 className="text-sm font-bold text-ath-text-muted uppercase tracking-wider mt-10 mb-4">
+            Carga y ejecución
+          </h2>
+          <div className="grid grid-cols-1 lg:grid-cols-2 gap-5 mb-5">
+            <WeeklyHeatmapChart athleteId={profile.id} weeks={12} />
+            <SufferScoreChart
+              athleteId={profile.id}
+              athleteContext={athleteContext}
+              weeks={12}
+            />
+          </div>
+          <div className="grid grid-cols-1 lg:grid-cols-2 gap-5 mb-5">
+            <RestDaysCalendar athleteId={profile.id} weeks={8} />
+            <TimeInZoneChart athleteId={profile.id} athleteContext={athleteContext} />
+          </div>
+          <div className="grid grid-cols-1 lg:grid-cols-2 gap-5 mb-5">
+            <PaceZonesChart athleteId={profile.id} />
+            <IntensityDistributionChart athleteId={profile.id} />
+          </div>
+          <div className="grid grid-cols-1 lg:grid-cols-2 gap-5">
+            <CadenceHistogramChart athleteId={profile.id} />
+            <GapVsPaceChart activityId={selectedActivity} athleteContext={athleteContext} />
+          </div>
+
+          {/* ─── Pillar C — Rendimiento y detalle ─── */}
+          <h2 className="text-sm font-bold text-ath-text-muted uppercase tracking-wider mt-10 mb-4">
+            Rendimiento y detalle
+          </h2>
+          <div className="mb-5">
+            <BestEffortsChart
+              athleteId={profile.id}
+              athleteContext={athleteContext}
+            />
+          </div>
+          <div className="mb-5">
+            <ActivitySelector
+              athleteId={profile.id}
+              value={selectedActivity}
+              onChange={setSelectedActivity}
+            />
+          </div>
+          {selectedActivity && (
+            <>
+              <div className="grid grid-cols-1 lg:grid-cols-2 gap-5 mb-5">
+                <ElevationProfileChart activityId={selectedActivity} />
+                <SplitsComparisonChart activityId={selectedActivity} athleteContext={athleteContext} />
+              </div>
+              <div className="grid grid-cols-1 lg:grid-cols-2 gap-5 mb-5">
+                <LapsAnalysisChart activityId={selectedActivity} />
+                <div className="hidden lg:block" />
+              </div>
+            </>
+          )}
+          <div>
+            <ShoesWidget athleteId={profile.id} />
+          </div>
+        </>
+      )}
+
+      {analysisOpen && (
+        <AiAnalysisPanel
+          open={analysisOpen}
+          onClose={() => setAnalysisOpen(false)}
+          chartType="general"
+          data={analysisPayload || {}}
+          athleteContext={athleteContext}
+          title="Análisis general"
+          onSuccess={() => aiQuota.refetch()}
+        />
       )}
     </div>
   );

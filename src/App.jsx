@@ -56,16 +56,23 @@ const Devices = lazy(() => import('./pages/athlete/Devices'));
 const AthleteMessages = lazy(() => import('./pages/athlete/Messages'));
 const GymFiles = lazy(() => import('./pages/athlete/GymFiles'));
 const MyReports = lazy(() => import('./pages/athlete/MyReports'));
+const AnalysisHistory = lazy(() => import('./pages/athlete/AnalysisHistory'));
 
 // Independent athlete pages
 const MyPlan = lazy(() => import('./pages/athlete/MyPlan'));
 const Competitions = lazy(() => import('./pages/athlete/Competitions'));
 const AIAssistant = lazy(() => import('./pages/athlete/AIAssistant'));
 
-// Guard: only renders children when isIndependent is true, else redirects to dashboard
+// Guard: only renders children when isIndependent is true, else redirects to dashboard.
+// IMPORTANT: wait for profileLoaded before deciding — otherwise on F5 / tab return
+// the profile is momentarily null and isIndependent evaluates to false, causing
+// a redirect away from the current route.
 const IndependentRoute = ({ children }) => {
-  const { isIndependent, loading } = useAuth();
+  const { isIndependent, loading, profileLoaded, profile } = useAuth();
   if (loading) return null;
+  // Still hydrating the profile — render children (child routes can show their
+  // own loading state) instead of redirecting away.
+  if (!profileLoaded && !profile) return children;
   return isIndependent ? children : <Navigate to="/athlete/dashboard" replace />;
 };
 
@@ -146,6 +153,7 @@ function App() {
                   <Route path="messages" element={<AthleteMessages />} />
                   <Route path="gym-files" element={<GymFiles />} />
                   <Route path="my-reports" element={<MyReports />} />
+                  <Route path="analysis-history" element={<AnalysisHistory />} />
                   <Route path="profile" element={<Profile />} />
                   {/* Independent athlete routes */}
                   <Route path="my-plan" element={<IndependentRoute><MyPlan /></IndependentRoute>} />

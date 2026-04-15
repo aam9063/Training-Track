@@ -22,8 +22,19 @@ const PlanSelectionGuard = ({ children }) => {
     return children;
   }
 
-  // Profile still loading — render a neutral placeholder to avoid flash-redirects.
-  if (!profileLoaded) {
+  // Profile still loading → show placeholder. We MUST wait for the
+  // authoritative profile (profileLoaded === true) before deciding to redirect
+  // to /select-plan. On F5, AuthContext seeds `profile` immediately from
+  // user_metadata (which never contains `plan_selected_at`), so acting on that
+  // stale profile would bounce a legitimate user to /select-plan, and from
+  // there back to the role default (losing the original sub-route such as
+  // /athlete/metrics).
+  //
+  // Exception: if a profile already exists AND it has `plan_selected_at`
+  // (i.e. we have real DB data from a prior fetch), keep rendering children
+  // to avoid unmounting in-flight UI (e.g. AI modals) during background
+  // re-fetches triggered by refreshProfile().
+  if (!profileLoaded && !profile?.plan_selected_at) {
     return (
       <div className="min-h-screen flex items-center justify-center bg-brand-bg dark:bg-coach-base">
         <div className="flex flex-col items-center gap-3">

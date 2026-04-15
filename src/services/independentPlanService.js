@@ -5,7 +5,7 @@ const EDGE_URL = `${import.meta.env.VITE_SUPABASE_URL}/functions/v1/generate-ai-
 
 const DAY_OF_WEEK_ORDER = ['monday', 'tuesday', 'wednesday', 'thursday', 'friday', 'saturday', 'sunday'];
 
-/** Map Spanish training types from DeepSeek to DB enum values */
+/** Map Spanish training types from Gemma 4 to DB enum values */
 const TRAINING_TYPE_MAP = {
   carrera: 'running',
   running: 'running',
@@ -164,7 +164,7 @@ export const autoAssignPlan = async (planData, userId, startDate = null) => {
       })),
     };
 
-    const { data: micro, error: microError } = await supabase
+    const { error: microError } = await supabase
       .from('microcycles')
       .insert([{
         mesocycle_id: meso.id,

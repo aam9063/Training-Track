@@ -19,7 +19,7 @@ import {
 } from 'react-icons/fi';
 
 const DashboardLayout = () => {
-  const { user, loading, profile, signOut } = useAuth();
+  const { user, loading, profile, profileLoaded, signOut } = useAuth();
   const { planLabel, isTrialing, isExempt } = useSubscription();
   const navigate = useNavigate();
   const { searchQuery, searchResults, showSearchResults, setShowSearchResults, handleSearch, clearSearch } = useAthleteSearch(user?.id);
@@ -66,8 +66,10 @@ const DashboardLayout = () => {
     return <Navigate to="/login" replace />;
   }
 
-  const userRole = profile?.role || user?.user_metadata?.role || 'coach';
-  if (userRole === 'athlete') {
+  // Only redirect to athlete dashboard once the profile is authoritative.
+  // Otherwise on F5 / tab return the profile is momentarily null and metadata
+  // could misclassify, causing an unwanted navigation away from the user's route.
+  if (profileLoaded && profile?.role === 'athlete') {
     return <Navigate to="/athlete/dashboard" replace />;
   }
 

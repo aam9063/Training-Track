@@ -1,4 +1,4 @@
-import { useState, useEffect, useMemo } from 'react';
+import { useState, useEffect, useMemo, useRef } from 'react';
 import { motion } from 'framer-motion';
 import { Line } from 'react-chartjs-2';
 import { FiTrendingUp, FiLoader, FiInfo } from 'react-icons/fi';
@@ -6,7 +6,25 @@ import { useAuth } from '../../contexts/AuthContext';
 import { getDailyTrainingLoad, recalculateTrainingLoad, getCurrentPMCStatus } from '../../services/trainingLoadService';
 import { getTsbZone, getAcwrZone, calculateAcwr } from '../../lib/trainingMetrics';
 import { toLocalDateStr } from '../../lib/dateUtils';
+import { CHART_COLORS, CHART_TOOLTIP } from '../../lib/chartColors';
+import { showError } from '../../lib/toast';
 import InfoTooltip from '../common/InfoTooltip';
+import MetricAIAnalyzer from './MetricAIAnalyzer';
+
+// Status card styles for the TSB / ACWR state chips. Keys map to the `zone`
+// value returned by getTsbZone / getAcwrZone. Tailwind classes keep the
+// markup free of inline colour styles.
+const STATE_CARD_CLASSES = {
+  race_ready: 'bg-emerald-50 text-emerald-700 dark:bg-emerald-900/20 dark:text-emerald-400',
+  productive: 'bg-amber-50 text-amber-700 dark:bg-amber-900/20 dark:text-amber-400',
+  overreaching: 'bg-red-50 text-red-700 dark:bg-red-900/20 dark:text-red-400',
+  detrained: 'bg-blue-50 text-blue-700 dark:bg-blue-900/20 dark:text-blue-400',
+  undertraining: 'bg-blue-50 text-blue-700 dark:bg-blue-900/20 dark:text-blue-400',
+  optimal: 'bg-emerald-50 text-emerald-700 dark:bg-emerald-900/20 dark:text-emerald-400',
+  high: 'bg-amber-50 text-amber-700 dark:bg-amber-900/20 dark:text-amber-400',
+  danger: 'bg-red-50 text-red-700 dark:bg-red-900/20 dark:text-red-400',
+};
+const STATE_CARD_FALLBACK = 'bg-gray-50 text-gray-700 dark:bg-gray-800 dark:text-gray-300';
 
 const PERIOD_OPTIONS = [
   { value: '8weeks', label: '8 semanas', days: 56 },
@@ -15,7 +33,7 @@ const PERIOD_OPTIONS = [
   { value: '1year', label: '1 año', days: 365 },
 ];
 
-export default function PMCChart({ activities, athleteProfile, athleteId: propAthleteId }) {
+export default function PMCChart({ activities, athleteProfile, athleteId: propAthleteId, athleteContext }) {
   const { user, profile } = useAuth();
   const athleteId = propAthleteId || profile?.id || user?.id;
   const [loadData, setLoadData] = useState([]);
@@ -26,10 +44,14 @@ export default function PMCChart({ activities, athleteProfile, athleteId: propAt
 
   const selectedPeriod = PERIOD_OPTIONS.find(p => p.value === period);
 
+  const mountedRef = useRef(true);
+  useEffect(() => () => { mountedRef.current = false; }, []);
+
   useEffect(() => {
+    let cancelled = false;
     const fetchLoad = async () => {
       if (!athleteId) return;
-      setLoading(true);
+      if (!cancelled) setLoading(true);
       try {
         const endDate = toLocalDateStr(new Date());
         const startDateObj = new Date();
@@ -41,15 +63,18 @@ export default function PMCChart({ activities, athleteProfile, athleteId: propAt
           getCurrentPMCStatus(athleteId),
         ]);
 
-        setLoadData(data);
-        setCurrentStatus(status);
-      } catch (err) {
-        console.error('Error fetching training load:', err);
+        if (!cancelled) {
+          setLoadData(data);
+          setCurrentStatus(status);
+        }
+      } catch {
+        if (!cancelled) showError('No se pudo cargar la carga de entrenamiento');
       } finally {
-        setLoading(false);
+        if (!cancelled) setLoading(false);
       }
     };
     fetchLoad();
+    return () => { cancelled = true; };
   }, [athleteId, period, selectedPeriod.days]);
 
   const handleRecalculate = async () => {
@@ -66,13 +91,15 @@ export default function PMCChart({ activities, athleteProfile, athleteId: propAt
           getDailyTrainingLoad(athleteId, toLocalDateStr(startDateObj), endDate),
           getCurrentPMCStatus(athleteId),
         ]);
-        setLoadData(data);
-        setCurrentStatus(status);
+        if (mountedRef.current) {
+          setLoadData(data);
+          setCurrentStatus(status);
+        }
       }
-    } catch (err) {
-      console.error('Error recalculating:', err);
+    } catch {
+      if (mountedRef.current) showError('No se pudo recalcular la carga de entrenamiento');
     } finally {
-      setRecalculating(false);
+      if (mountedRef.current) setRecalculating(false);
     }
   };
 
@@ -88,8 +115,8 @@ export default function PMCChart({ activities, athleteProfile, athleteId: propAt
         {
           label: 'CTL (Fitness)',
           data: loadData.map(d => d.ctl),
-          borderColor: '#3B82F6',
-          backgroundColor: 'rgba(59, 130, 246, 0.1)',
+          borderColor: CHART_COLORS.fitness,
+          backgroundColor: CHART_COLORS.fitnessFill,
           fill: false,
           tension: 0.3,
           pointRadius: 0,
@@ -98,8 +125,8 @@ export default function PMCChart({ activities, athleteProfile, athleteId: propAt
         {
           label: 'ATL (Fatiga)',
           data: loadData.map(d => d.atl),
-          borderColor: '#EF4444',
-          backgroundColor: 'rgba(239, 68, 68, 0.1)',
+          borderColor: CHART_COLORS.fatigue,
+          backgroundColor: CHART_COLORS.fatigueFill,
           fill: false,
           tension: 0.3,
           pointRadius: 0,
@@ -108,11 +135,11 @@ export default function PMCChart({ activities, athleteProfile, athleteId: propAt
         {
           label: 'TSB (Forma)',
           data: loadData.map(d => d.tsb),
-          borderColor: '#10B981',
+          borderColor: CHART_COLORS.form,
           backgroundColor: (ctx) => {
             const value = ctx.raw;
-            if (value === undefined) return 'rgba(16, 185, 129, 0.1)';
-            return value >= 0 ? 'rgba(16, 185, 129, 0.15)' : 'rgba(239, 68, 68, 0.15)';
+            if (value === undefined) return CHART_COLORS.formFillSoft;
+            return value >= 0 ? CHART_COLORS.formFill : CHART_COLORS.fatigueFill;
           },
           fill: true,
           tension: 0.3,
@@ -122,8 +149,8 @@ export default function PMCChart({ activities, athleteProfile, athleteId: propAt
         {
           label: 'TSS diario',
           data: loadData.map(d => d.tss),
-          borderColor: 'rgba(156, 163, 175, 0.5)',
-          backgroundColor: 'rgba(156, 163, 175, 0.3)',
+          borderColor: CHART_COLORS.muted,
+          backgroundColor: CHART_COLORS.mutedLight,
           type: 'bar',
           yAxisID: 'tss',
           barPercentage: 0.8,
@@ -143,13 +170,13 @@ export default function PMCChart({ activities, athleteProfile, athleteId: propAt
           usePointStyle: true,
           padding: 15,
           font: { size: 11 },
-          color: '#9CA3AF',
+          color: CHART_TOOLTIP.legend,
         },
       },
       tooltip: {
-        backgroundColor: 'rgba(17, 24, 39, 0.95)',
-        titleColor: '#F9FAFB',
-        bodyColor: '#D1D5DB',
+        backgroundColor: CHART_TOOLTIP.bg,
+        titleColor: CHART_TOOLTIP.title,
+        bodyColor: CHART_TOOLTIP.body,
         padding: 12,
         cornerRadius: 8,
         callbacks: {
@@ -163,17 +190,17 @@ export default function PMCChart({ activities, athleteProfile, athleteId: propAt
     scales: {
       x: {
         grid: { display: false },
-        ticks: { maxTicksLimit: 12, color: '#9CA3AF', font: { size: 10 } },
+        ticks: { maxTicksLimit: 12, color: CHART_TOOLTIP.legend, font: { size: 10 } },
       },
       y: {
-        grid: { color: 'rgba(156, 163, 175, 0.1)' },
-        ticks: { color: '#9CA3AF', font: { size: 10 } },
+        grid: { color: CHART_COLORS.grid },
+        ticks: { color: CHART_TOOLTIP.legend, font: { size: 10 } },
       },
       tss: {
         position: 'right',
         grid: { display: false },
-        ticks: { color: '#9CA3AF', font: { size: 10 } },
-        title: { display: true, text: 'TSS', color: '#9CA3AF' },
+        ticks: { color: CHART_TOOLTIP.legend, font: { size: 10 } },
+        title: { display: true, text: 'TSS', color: CHART_TOOLTIP.legend },
       },
     },
   };
@@ -181,6 +208,42 @@ export default function PMCChart({ activities, athleteProfile, athleteId: propAt
   const tsbZone = currentStatus ? getTsbZone(currentStatus.tsb) : null;
   const acwr = currentStatus ? calculateAcwr(currentStatus.atl, currentStatus.ctl) : null;
   const acwrZone = acwr ? getAcwrZone(acwr) : null;
+
+  // AI payload: aggregate CTL/ATL/TSB + ACWR + CTL trend (last 4 weeks vs previous 4) + total TSS
+  const aiData = useMemo(() => {
+    if (!currentStatus || !loadData || loadData.length === 0) return null;
+
+    const tsb = currentStatus.tsb;
+    let tsbState = 'productivo';
+    if (tsb >= 5) tsbState = 'listo';
+    else if (tsb < -30) tsbState = 'sobrecarga';
+
+    // CTL trend: avg CTL of last 28 days vs previous 28 days
+    const last28 = loadData.slice(-28);
+    const prev28 = loadData.slice(-56, -28);
+    const avg = (arr) => arr.length > 0 ? arr.reduce((s, d) => s + (d.ctl || 0), 0) / arr.length : 0;
+    const recentAvg = avg(last28);
+    const previousAvg = avg(prev28);
+    const ctlTrendPct = previousAvg > 0
+      ? Math.round(((recentAvg - previousAvg) / previousAvg) * 100)
+      : 0;
+
+    const tssTotal = Math.round(loadData.reduce((s, d) => s + (d.tss || 0), 0));
+    const weeksApprox = Math.max(1, Math.round(loadData.length / 7));
+
+    return {
+      ctl: Math.round(currentStatus.ctl * 10) / 10,
+      atl: Math.round(currentStatus.atl * 10) / 10,
+      tsb: Math.round(tsb * 10) / 10,
+      acwr: acwr != null ? Math.round(acwr * 100) / 100 : null,
+      ctl_trend_pct: ctlTrendPct,
+      tsb_state: tsbState,
+      weeks: weeksApprox,
+      tss_total: tssTotal,
+    };
+  }, [currentStatus, loadData, acwr]);
+
+  const hasAiData = !!aiData;
 
   return (
     <motion.div
@@ -217,6 +280,14 @@ export default function PMCChart({ activities, athleteProfile, athleteId: propAt
               {recalculating ? 'Calculando...' : 'Recalcular'}
             </button>
           )}
+          <MetricAIAnalyzer
+            chartType="pmc_curve"
+            data={aiData}
+            athleteContext={athleteContext}
+            compact
+            title="Análisis de Curva de Rendimiento (PMC)"
+            disabled={!hasAiData}
+          />
         </div>
       </div>
 
@@ -231,15 +302,15 @@ export default function PMCChart({ activities, athleteProfile, athleteId: propAt
             <p className="text-xs text-red-600 dark:text-red-400 font-medium">ATL (Fatiga)</p>
             <p className="text-xl font-bold text-red-700 dark:text-red-300">{Math.round(currentStatus.atl)}</p>
           </div>
-          <div className="rounded-lg p-3 text-center" style={{ backgroundColor: tsbZone ? `${tsbZone.color}15` : '#F3F4F6' }}>
-            <p className="text-xs font-medium" style={{ color: tsbZone?.color || '#6B7280' }}>TSB (Forma)</p>
-            <p className="text-xl font-bold" style={{ color: tsbZone?.color || '#374151' }}>{Math.round(currentStatus.tsb)}</p>
-            <p className="text-[10px] mt-0.5" style={{ color: tsbZone?.color || '#6B7280' }}>{tsbZone?.label}</p>
+          <div className={`rounded-lg p-3 text-center ${tsbZone ? (STATE_CARD_CLASSES[tsbZone.zone] || STATE_CARD_FALLBACK) : STATE_CARD_FALLBACK}`}>
+            <p className="text-xs font-medium">TSB (Forma)</p>
+            <p className="text-xl font-bold">{Math.round(currentStatus.tsb)}</p>
+            <p className="text-[10px] mt-0.5">{tsbZone?.label}</p>
           </div>
-          <div className="rounded-lg p-3 text-center" style={{ backgroundColor: acwrZone ? `${acwrZone.color}15` : '#F3F4F6' }}>
-            <p className="text-xs font-medium" style={{ color: acwrZone?.color || '#6B7280' }}>ACWR</p>
-            <p className="text-xl font-bold" style={{ color: acwrZone?.color || '#374151' }}>{acwr?.toFixed(2) || '--'}</p>
-            <p className="text-[10px] mt-0.5" style={{ color: acwrZone?.color || '#6B7280' }}>{acwrZone?.label}</p>
+          <div className={`rounded-lg p-3 text-center ${acwrZone ? (STATE_CARD_CLASSES[acwrZone.zone] || STATE_CARD_FALLBACK) : STATE_CARD_FALLBACK}`}>
+            <p className="text-xs font-medium">ACWR</p>
+            <p className="text-xl font-bold">{acwr?.toFixed(2) || '--'}</p>
+            <p className="text-[10px] mt-0.5">{acwrZone?.label}</p>
           </div>
         </div>
       )}

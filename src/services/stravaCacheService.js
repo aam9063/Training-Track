@@ -136,15 +136,38 @@ export const upsertActivities = async (athleteId, activities) => {
 };
 
 /**
- * Update a cached activity with detail data (best_efforts).
+ * Update a cached activity with detail data (best_efforts, splits_metric, laps, etc.).
+ * Only writes columns whose value is provided (undefined → skipped) so partial
+ * detail payloads don't clobber existing data.
  */
 export const updateActivityDetails = async (athleteId, stravaId, detailData) => {
+  const patch = { has_details: true };
+
+  if (detailData.best_efforts !== undefined) {
+    patch.best_efforts = detailData.best_efforts || [];
+  }
+  if (detailData.splits_metric !== undefined) {
+    patch.splits_metric = detailData.splits_metric || null;
+  }
+  if (detailData.laps !== undefined) {
+    patch.laps = detailData.laps || null;
+  }
+  if (detailData.weighted_average_watts !== undefined) {
+    patch.weighted_average_watts = detailData.weighted_average_watts ?? null;
+  }
+  if (detailData.workout_type !== undefined) {
+    patch.workout_type = detailData.workout_type ?? null;
+  }
+  if (detailData.gear_id !== undefined) {
+    patch.gear_id = detailData.gear_id ?? null;
+  }
+  if (detailData.device_name !== undefined) {
+    patch.device_name = detailData.device_name ?? null;
+  }
+
   const { error } = await supabase
     .from('strava_activities')
-    .update({
-      best_efforts: detailData.best_efforts || [],
-      has_details: true,
-    })
+    .update(patch)
     .eq('athlete_id', athleteId)
     .eq('strava_id', stravaId);
 

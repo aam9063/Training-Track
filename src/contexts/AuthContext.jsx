@@ -15,6 +15,10 @@ export function AuthProvider({ children }) {
   // onAuthStateChange racing with refreshProfile after a plan commit) are
   // discarded. Prevents a stale fetch from overwriting a fresh one.
   const fetchIdRef = useRef(0);
+  // Snapshot of the current profile for the auth-change listener to read
+  // without creating a React dependency loop. Updated every render.
+  const profileRef = useRef(null);
+  profileRef.current = profile;
 
   // Fetch user profile from our users table with role-specific data.
   // On error returns null and sets `profileError` so downstream guards can
@@ -150,6 +154,38 @@ export function AuthProvider({ children }) {
     const { data: { subscription } } = supabase.auth.onAuthStateChange(
       async (event, session) => {
         if (!mounted) return;
+
+        // TOKEN_REFRESHED fires when the browser tab regains focus after a
+        // period of inactivity. We must NOT reset profile state here — doing
+        // so would unmount the whole app (guards see `profileLoaded=false`
+        // and show a loading screen), effectively re-navigating to the
+        // dashboard home and losing any in-flight UI like AI modals.
+        // Only update the `user` object quietly so the new JWT is picked up.
+        if (event === 'TOKEN_REFRESHED') {
+          if (session?.user) setUser(session.user);
+          return;
+        }
+
+        // USER_UPDATED also fires on metadata changes; keep the user object
+        // fresh but don't tear down the profile.
+        if (event === 'USER_UPDATED') {
+          if (session?.user) setUser(session.user);
+          return;
+        }
+
+        // SIGNED_IN also fires when the tab regains focus and Supabase detects
+        // an existing session. If the user id is the same as the one we already
+        // have, skip the full re-fetch — we already have the profile loaded.
+        // This is critical to avoid tearing down the app on tab switch / focus.
+        if (event === 'SIGNED_IN' && session?.user) {
+          setUser(session.user);
+          // If no profile yet (true first-time sign in), fall through to full
+          // init. Otherwise, this is a re-sign-in for the same user — no-op.
+          const currentProfile = profileRef.current;
+          if (currentProfile && currentProfile.id === session.user.id) {
+            return;
+          }
+        }
 
         if (session?.user) {
           setUser(session.user);

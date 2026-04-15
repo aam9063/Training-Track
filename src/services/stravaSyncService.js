@@ -104,6 +104,12 @@ export const syncActivityDetails = async (athleteId, batchSize = 20, onProgress)
 
     await updateActivityDetails(athleteId, act.strava_id, {
       best_efforts: detail.best_efforts || [],
+      splits_metric: detail.splits_metric || null,
+      laps: detail.laps || null,
+      weighted_average_watts: detail.weighted_average_watts ?? null,
+      workout_type: detail.workout_type ?? null,
+      gear_id: detail.gear_id ?? null,
+      device_name: detail.device_name ?? null,
     });
 
     if (detail.best_efforts?.length) {
@@ -186,4 +192,163 @@ const persistRacePredictions = async (athleteId, bestEfforts) => {
   if (error) {
     console.error('Error persisting race predictions:', error);
   }
+};
+
+// ─────────────────────────────────────────────────────────────────────────────
+// Deep-ingestion helpers (strava-deep-ingestion change)
+// ─────────────────────────────────────────────────────────────────────────────
+
+/**
+ * On-demand backfill of detailed fields (splits_metric, laps, best_efforts,
+ * weighted_average_watts, etc.) for a single activity identified by its
+ * internal `strava_activities.id` UUID.
+ *
+ * Flow:
+ *  1. Look up the row to resolve `strava_id` + `athlete_id`.
+ *  2. Fetch the detailed activity from Strava.
+ *  3. Persist via updateActivityDetails (splits/laps/best_efforts).
+ *
+ * Returns { data: { hasSplits, hasLaps, hasBestEfforts }, error }.
+ * Used by SplitsComparisonChart / LapsAnalysisChart when the local row has
+ * no detailed data. Respects Strava rate limits because each call is one
+ * detail request.
+ */
+export const fetchActivityDetailById = async (activityDbId) => {
+  if (!activityDbId) {
+    return { data: null, error: { code: 'invalid_input', message: 'activityDbId requerido' } };
+  }
+
+  // 1. Resolve the row (RLS ensures only the owner athlete can read it)
+  const { data: row, error: rowErr } = await supabase
+    .from('strava_activities')
+    .select('id, strava_id, athlete_id')
+    .eq('id', activityDbId)
+    .maybeSingle();
+
+  if (rowErr) {
+    return { data: null, error: { code: 'db_error', message: rowErr.message } };
+  }
+  if (!row) {
+    return { data: null, error: { code: 'not_found', message: 'Actividad no encontrada' } };
+  }
+  if (!row.strava_id) {
+    return { data: null, error: { code: 'no_strava_id', message: 'Actividad sin strava_id' } };
+  }
+
+  // 2. Fetch detail from Strava (scope: activity:read_all covers this)
+  const { data: detail, error: detailErr } = await getStravaActivityDetail(row.strava_id);
+  if (detailErr || !detail) {
+    return {
+      data: null,
+      error: {
+        code: 'strava_error',
+        message: detailErr?.message || 'No se pudo obtener el detalle desde Strava',
+      },
+    };
+  }
+
+  // 3. Persist the extended columns
+  await updateActivityDetails(row.athlete_id, row.strava_id, {
+    best_efforts: detail.best_efforts || [],
+    splits_metric: detail.splits_metric || null,
+    laps: detail.laps || null,
+    weighted_average_watts: detail.weighted_average_watts ?? null,
+    workout_type: detail.workout_type ?? null,
+    gear_id: detail.gear_id ?? null,
+    device_name: detail.device_name ?? null,
+  });
+
+  return {
+    data: {
+      hasSplits: Array.isArray(detail.splits_metric) && detail.splits_metric.length > 0,
+      hasLaps: Array.isArray(detail.laps) && detail.laps.length > 0,
+      hasBestEfforts: Array.isArray(detail.best_efforts) && detail.best_efforts.length > 0,
+    },
+    error: null,
+  };
+};
+
+/**
+ * On-demand streams fetch for a single activity.
+ * - First checks local cache (strava_activity_streams) via PostgREST.
+ * - If missing, invokes the strava-fetch-streams edge function.
+ * Returns { data, error } where data carries `{ cached, samples?, reason? }`.
+ */
+export const fetchStreamsForActivity = async (activityId) => {
+  if (!activityId) {
+    return { data: null, error: { code: 'invalid_input', message: 'activityId requerido' } };
+  }
+
+  // 1. Quick cache read via RLS-protected PostgREST
+  const { data: cached, error: cacheErr } = await supabase
+    .from('strava_activity_streams')
+    .select('activity_id')
+    .eq('activity_id', activityId)
+    .maybeSingle();
+
+  if (!cacheErr && cached) {
+    return { data: { cached: true }, error: null };
+  }
+
+  // 2. Resolve athlete_id of the caller
+  const { data: sessionData } = await supabase.auth.getSession();
+  const athleteId = sessionData?.session?.user?.id;
+  if (!athleteId) {
+    return { data: null, error: { code: 'unauthenticated', message: 'Debes iniciar sesión' } };
+  }
+
+  // 3. Invoke edge function
+  const { data, error } = await supabase.functions.invoke('strava-fetch-streams', {
+    body: { activity_id: activityId, athlete_id: athleteId },
+  });
+
+  if (error) {
+    return {
+      data: null,
+      error: { code: 'network', message: error.message || 'Error al obtener streams' },
+    };
+  }
+
+  if (data?.ok === false) {
+    return {
+      data: null,
+      error: { code: data.reason || data.code || 'unknown', message: data.message || '' },
+    };
+  }
+
+  return { data, error: null };
+};
+
+/**
+ * Trigger HR zones sync from Strava for an athlete.
+ * Phase 1 stub: real implementation ships with a dedicated edge function.
+ */
+export const syncAthleteHrZones = async (athleteId) => {
+  if (!athleteId) {
+    return { data: null, error: { code: 'invalid_input', message: 'athleteId requerido' } };
+  }
+  return {
+    data: null,
+    error: { code: 'not_implemented', message: 'syncAthleteHrZones llegará en fase 2' },
+  };
+};
+
+/**
+ * Read athlete gear from athlete_gear via RLS.
+ * Returns active gear sorted by distance_meters desc.
+ */
+export const getAthleteGear = async (athleteId) => {
+  if (!athleteId) {
+    return { data: [], error: { code: 'invalid_input', message: 'athleteId requerido' } };
+  }
+  const { data, error } = await supabase
+    .from('athlete_gear')
+    .select('id, name, brand_name, model_name, distance_meters, active, primary_gear, last_synced_at')
+    .eq('athlete_id', athleteId)
+    .order('distance_meters', { ascending: false });
+
+  if (error) {
+    return { data: [], error: { code: 'db_error', message: error.message } };
+  }
+  return { data: data ?? [], error: null };
 };

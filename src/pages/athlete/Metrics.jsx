@@ -26,10 +26,7 @@ import {
   FiChevronLeft,
   FiChevronRight,
   FiDownload,
-  FiAlertTriangle,
-  FiShield,
   FiNavigation,
-  FiAward,
   FiCheckCircle,
 } from 'react-icons/fi';
 import { useAuth } from '../../contexts/AuthContext';
@@ -44,6 +41,33 @@ import useStravaMetrics from '../../hooks/useStravaMetrics';
 import useInternalMetrics from '../../hooks/useInternalMetrics';
 import { computeAge } from '../../lib/athleteUtils';
 import { exportActivitiesCSV, exportLoadCSV } from '../../lib/dataExport';
+import useAiAnalysisQuota from '../../hooks/useAiAnalysisQuota';
+import useAthleteTestData from '../../hooks/useAthleteTestData';
+import BestEffortsChart from '../../components/athlete/charts/BestEffortsChart';
+import TimeInZoneChart from '../../components/athlete/charts/TimeInZoneChart';
+import IntensityDistributionChart from '../../components/athlete/charts/IntensityDistributionChart';
+import ShoesWidget from '../../components/athlete/charts/ShoesWidget';
+import ActivitySelector from '../../components/athlete/charts/ActivitySelector';
+import Vo2maxCard from '../../components/athlete/charts/Vo2maxCard';
+import SufferScoreChart from '../../components/athlete/charts/SufferScoreChart';
+import RestDaysCalendar from '../../components/athlete/charts/RestDaysCalendar';
+import WeeklyHeatmapChart from '../../components/athlete/charts/WeeklyHeatmapChart';
+import PaceZonesChart from '../../components/athlete/charts/PaceZonesChart';
+import CadenceHistogramChart from '../../components/athlete/charts/CadenceHistogramChart';
+import GapVsPaceChart from '../../components/athlete/charts/GapVsPaceChart';
+import VdotProgressionChart from '../../components/athlete/charts/VdotProgressionChart';
+import ElevationProfileChart from '../../components/athlete/charts/ElevationProfileChart';
+import SplitsComparisonChart from '../../components/athlete/charts/SplitsComparisonChart';
+import LapsAnalysisChart from '../../components/athlete/charts/LapsAnalysisChart';
+import AiAnalysisPanel from '../../components/athlete/AiAnalysisPanel';
+import {
+  getBestEffortsEvolution,
+  getTimeInZoneAggregate,
+  getIntensityDistribution,
+  getShoes,
+  getWeeklyLoadSeries,
+} from '../../services/metricsAnalyticsService';
+import { showError } from '../../lib/toast';
 
 // Register Chart.js components
 ChartJS.register(
@@ -322,7 +346,7 @@ const TotalActivityTimeChart = ({ activities, selectedPeriod, onPeriodChange }) 
   };
 
   return (
-    <div className="bg-ath-surface rounded-xl p-4 sm:p-6 shadow-sm border border-ath-border">
+    <div className="bg-ath-surface rounded-2xl border border-ath-border p-4 sm:p-5">
       <div className="flex flex-col sm:flex-row sm:items-center sm:justify-between mb-4 gap-3">
         <div className="flex items-center justify-between">
           <h3 className="text-base sm:text-lg font-bold text-ath-text-primary flex items-center">
@@ -739,6 +763,8 @@ const calculateHRZones = (maxHR, restingHR) => {
 
 const AthleteMetrics = () => {
   const { profile, isIndependent } = useAuth();
+  const { latestVam } = useAthleteTestData(profile?.id);
+  const aiQuota = useAiAnalysisQuota();
   const {
     loading, stravaConnected, stravaMetrics, bestEfforts,
     stravaStats, weekFilter, setWeekFilter, rawActivities,
@@ -746,6 +772,10 @@ const AthleteMetrics = () => {
   const [activityTimePeriod, setActivityTimePeriod] = useState('7days');
   const [exportOpen, setExportOpen] = useState(false);
   const [dbPersonalBests, setDbPersonalBests] = useState([]);
+  const [selectedActivity, setSelectedActivity] = useState(null);
+  const [analysisOpen, setAnalysisOpen] = useState(false);
+  const [preparingAnalysis, setPreparingAnalysis] = useState(false);
+  const [analysisPayload, setAnalysisPayload] = useState(null);
 
   // Internal metrics (from completed training_sessions, not Strava)
   const {
@@ -906,6 +936,76 @@ const AthleteMetrics = () => {
 
     return { zones, maxHR, restingHR, totalHRActivities: hrActivities.length };
   }, [rawActivities, profile, estimatedAge]);
+
+  // Athlete context passed to the AI analyzers.
+  // VAM (Velocidad Aeróbica Máxima) comes from the `vam_tests` table in km/h
+  // (typical human range 10-22 km/h). We intentionally do NOT fall back to
+  // VDOT here — VDOT is a dimensionless Daniels-Gilbert index (~30-85) and
+  // passing it as "VAM km/h" caused Gemma to report absurd values like
+  // "VAM 46 km/h". If no VAM test is registered, send null and let the model
+  // skip the field.
+  const athleteContext = useMemo(() => {
+    const rawVam = latestVam?.vam_kmh != null ? parseFloat(latestVam.vam_kmh) : null;
+    // Defensive clamp: ignore anything outside biologically plausible human VAM.
+    const vamKmh = Number.isFinite(rawVam) && rawVam >= 8 && rawVam <= 25
+      ? Math.round(rawVam * 10) / 10
+      : null;
+    return {
+      nivel: profile?.athlete?.nivel || profile?.nivel || null,
+      objetivo: profile?.athlete?.objetivo || profile?.objetivo || null,
+      vam: vamKmh,
+    };
+  }, [profile, latestVam]);
+
+  const handleGenerateAnalysis = async () => {
+    if (preparingAnalysis) return;
+    if (!aiQuota.canUse) {
+      setAnalysisOpen(true);
+      return;
+    }
+    setPreparingAnalysis(true);
+    try {
+      const [best, tiz, intensity, shoes, weeklyLoad] = await Promise.all([
+        getBestEffortsEvolution(profile.id, 50),
+        getTimeInZoneAggregate(profile.id, 4),
+        getIntensityDistribution(profile.id, 4),
+        getShoes(profile.id),
+        getWeeklyLoadSeries(profile.id, 12),
+      ]);
+      const summarizeBestEfforts = (rows) => {
+        const byKey = new Map();
+        (rows || []).forEach((r) => {
+          const cur = byKey.get(r.distance_key);
+          if (!cur || r.elapsed_time_sec < cur.best_time_sec) {
+            byKey.set(r.distance_key, {
+              distance: r.distance_key,
+              best_time_sec: r.elapsed_time_sec,
+              best_time_date: r.activity_date,
+            });
+          }
+        });
+        return Array.from(byKey.values());
+      };
+      setAnalysisPayload({
+        time_in_zone: tiz.data?.hasZones ? { zones: tiz.data.zones, weeks: 4 } : null,
+        intensity: intensity.data?.hasZones ? {
+          z12_pct: intensity.data.z12_pct,
+          z3_pct: intensity.data.z3_pct,
+          z45_pct: intensity.data.z45_pct,
+          label: intensity.data.label,
+          weeks: 4,
+        } : null,
+        shoes: { shoes: (shoes.data || []).slice(0, 6).map((s) => ({ name: s.name, distance_km: s.distance_km, active: s.active })) },
+        best_efforts_summary: { personal_bests: summarizeBestEfforts(best.data) },
+        weekly_load: { series: weeklyLoad.data || [] },
+      });
+      setAnalysisOpen(true);
+    } catch (err) {
+      showError(err?.message || 'No se pudieron recopilar las métricas');
+    } finally {
+      setPreparingAnalysis(false);
+    }
+  };
 
   // Per-sport weekly charts data
   const sportCharts = useMemo(() => {
@@ -1157,7 +1257,7 @@ const AthleteMetrics = () => {
 
         {/* Strava connect prompt (only for non-independent athletes) */}
         {!isIndependent && (
-          <div className="bg-ath-surface rounded-2xl p-8 sm:p-10 text-center shadow-sm border border-ath-border">
+          <div className="bg-ath-surface rounded-2xl border border-ath-border p-8 sm:p-10 text-center">
             <div className="w-16 h-16 bg-orange-100 dark:bg-orange-900/30 rounded-full flex items-center justify-center mx-auto mb-4">
               <FiActivity className="w-8 h-8 text-orange-500" />
             </div>
@@ -1225,6 +1325,18 @@ const AthleteMetrics = () => {
           <p className="text-sm sm:text-base text-ath-text-secondary">
             Análisis de rendimiento basado en Strava
           </p>
+          {!aiQuota.loading && (
+            <div className="mt-2 inline-flex items-center gap-1.5 text-xs font-semibold px-2.5 py-1 rounded-full bg-ath-accent-surface text-ath-accent">
+              <FiZap className="w-3 h-3" />
+              {aiQuota.source === 'coach' ? (
+                <span>Análisis IA cubiertos por tu coach</span>
+              ) : aiQuota.limit === -1 ? (
+                <span>Análisis IA ilimitados</span>
+              ) : (
+                <span>{aiQuota.remaining}/{aiQuota.limit} análisis IA este mes</span>
+              )}
+            </div>
+          )}
         </div>
 
         {/* Week Filter */}
@@ -1332,6 +1444,41 @@ const AthleteMetrics = () => {
             <p className="text-2xl sm:text-3xl font-bold mb-1">{stravaMetrics.totalElevation}</p>
             <p className="text-xs opacity-75">metros</p>
           </motion.div>
+        </div>
+      )}
+
+      {/* Compact AI analysis banner — placed here so the primary action is high in the page */}
+      {profile?.id && (
+        <div className="mt-6 bg-ath-surface rounded-2xl border border-ath-border p-4 flex items-center justify-between gap-4">
+          <div className="flex items-center gap-3 min-w-0">
+            <div className="w-10 h-10 rounded-xl bg-ath-accent-surface flex items-center justify-center shrink-0">
+              <FiZap className="w-5 h-5 text-ath-accent-text" />
+            </div>
+            <div className="min-w-0">
+              <p className="font-semibold text-ath-text-primary truncate">Análisis general con IA</p>
+              <p className="text-xs text-ath-text-muted truncate">
+                Resumen holístico de tu forma, carga y progreso
+              </p>
+            </div>
+          </div>
+          <button
+            type="button"
+            onClick={handleGenerateAnalysis}
+            disabled={preparingAnalysis || aiQuota.loading}
+            className="px-4 py-2 rounded-xl bg-ath-accent text-ath-on-accent text-sm font-semibold hover:bg-ath-accent-hover transition-colors disabled:opacity-60 shrink-0 inline-flex items-center gap-2"
+          >
+            {preparingAnalysis ? (
+              <>
+                <FiLoader className="w-4 h-4 animate-spin" />
+                <span className="hidden sm:inline">Preparando...</span>
+              </>
+            ) : (
+              <>
+                <FiZap className="w-4 h-4" />
+                <span>Generar</span>
+              </>
+            )}
+          </button>
         </div>
       )}
 
@@ -1719,7 +1866,7 @@ const AthleteMetrics = () => {
           initial={{ opacity: 0, y: 20 }}
           animate={{ opacity: 1, y: 0 }}
           transition={{ delay: 0.6 }}
-          className="bg-ath-surface rounded-xl p-4 sm:p-6 shadow-sm border border-ath-border"
+          className="bg-ath-surface rounded-2xl border border-ath-border p-4 sm:p-5"
         >
           <h3 className="text-base sm:text-lg font-bold text-ath-text-primary mb-4 flex items-center">
             <FiTrendingUp className="w-5 h-5 mr-2 text-orange-500" />
@@ -1742,7 +1889,7 @@ const AthleteMetrics = () => {
           initial={{ opacity: 0, y: 20 }}
           animate={{ opacity: 1, y: 0 }}
           transition={{ delay: 0.7 }}
-          className="bg-ath-surface rounded-xl p-4 sm:p-6 shadow-sm border border-ath-border"
+          className="bg-ath-surface rounded-2xl border border-ath-border p-4 sm:p-5"
         >
           <h3 className="text-base sm:text-lg font-bold text-ath-text-primary mb-4 flex items-center">
             <FiZap className="w-5 h-5 mr-2 text-blue-500" />
@@ -1844,7 +1991,7 @@ const AthleteMetrics = () => {
           initial={{ opacity: 0, y: 20 }}
           animate={{ opacity: 1, y: 0 }}
           transition={{ delay: 0.65 }}
-          className="bg-ath-surface rounded-xl p-4 sm:p-6 shadow-sm border border-ath-border mb-6 sm:mb-8"
+          className="bg-ath-surface rounded-2xl border border-ath-border p-4 sm:p-5 mb-6 sm:mb-8"
         >
           <h3 className="text-base sm:text-lg font-bold text-ath-text-primary mb-4 flex items-center">
             <FiNavigation className="w-5 h-5 mr-2 text-yellow-500" />
@@ -1939,7 +2086,7 @@ const AthleteMetrics = () => {
           initial={{ opacity: 0, y: 20 }}
           animate={{ opacity: 1, y: 0 }}
           transition={{ delay: 0.7 }}
-          className="bg-ath-surface rounded-xl p-4 sm:p-6 shadow-sm border border-ath-border mb-6 sm:mb-8"
+          className="bg-ath-surface rounded-2xl border border-ath-border p-4 sm:p-5 mb-6 sm:mb-8"
         >
           <h3 className="text-base sm:text-lg font-bold text-ath-text-primary mb-4 flex items-center">
             <FiActivity className="w-5 h-5 mr-2 text-cyan-500" />
@@ -2048,7 +2195,7 @@ const AthleteMetrics = () => {
           initial={{ opacity: 0, y: 20 }}
           animate={{ opacity: 1, y: 0 }}
           transition={{ delay: 0.75 }}
-          className="bg-ath-surface rounded-xl p-4 sm:p-6 shadow-sm border border-ath-border mb-6 sm:mb-8"
+          className="bg-ath-surface rounded-2xl border border-ath-border p-4 sm:p-5 mb-6 sm:mb-8"
         >
           <h3 className="text-base sm:text-lg font-bold text-ath-text-primary mb-4 flex items-center">
             <FiZap className="w-5 h-5 mr-2 text-indigo-500" />
@@ -2239,7 +2386,7 @@ const AthleteMetrics = () => {
           initial={{ opacity: 0, y: 20 }}
           animate={{ opacity: 1, y: 0 }}
           transition={{ delay: 0.8 }}
-          className="bg-ath-surface rounded-xl p-4 sm:p-6 shadow-sm border border-ath-border"
+          className="bg-ath-surface rounded-2xl border border-ath-border p-4 sm:p-5"
         >
           <h3 className="text-base sm:text-lg font-bold text-ath-text-primary mb-4 flex items-center">
             <FiActivity className="w-5 h-5 mr-2 text-orange-500" />
@@ -2273,6 +2420,89 @@ const AthleteMetrics = () => {
             </div>
           </div>
         </motion.div>
+      )}
+
+      {/* ─── Pillar A — Estado actual ─── */}
+      {profile?.id && (
+        <>
+          <h2 className="text-sm font-bold text-ath-text-muted uppercase tracking-wider mt-10 mb-4">
+            Estado actual
+          </h2>
+          <div className="grid grid-cols-1 lg:grid-cols-2 gap-5">
+            <VdotProgressionChart athleteId={profile.id} athleteContext={athleteContext} />
+            <Vo2maxCard athleteId={profile.id} />
+          </div>
+
+          {/* ─── Pillar B — Carga y ejecución ─── */}
+          <h2 className="text-sm font-bold text-ath-text-muted uppercase tracking-wider mt-10 mb-4">
+            Carga y ejecución
+          </h2>
+          <div className="grid grid-cols-1 lg:grid-cols-2 gap-5 mb-5">
+            <WeeklyHeatmapChart athleteId={profile.id} weeks={12} />
+            <SufferScoreChart
+              athleteId={profile.id}
+              athleteContext={athleteContext}
+              weeks={12}
+            />
+          </div>
+          <div className="grid grid-cols-1 lg:grid-cols-2 gap-5 mb-5">
+            <RestDaysCalendar athleteId={profile.id} weeks={8} />
+            <TimeInZoneChart athleteId={profile.id} athleteContext={athleteContext} />
+          </div>
+          <div className="grid grid-cols-1 lg:grid-cols-2 gap-5 mb-5">
+            <PaceZonesChart athleteId={profile.id} />
+            <IntensityDistributionChart athleteId={profile.id} />
+          </div>
+          <div className="grid grid-cols-1 lg:grid-cols-2 gap-5">
+            <CadenceHistogramChart athleteId={profile.id} />
+            <GapVsPaceChart activityId={selectedActivity} athleteContext={athleteContext} />
+          </div>
+
+          {/* ─── Pillar C — Rendimiento y detalle ─── */}
+          <h2 className="text-sm font-bold text-ath-text-muted uppercase tracking-wider mt-10 mb-4">
+            Rendimiento y detalle
+          </h2>
+          <div className="mb-5">
+            <BestEffortsChart
+              athleteId={profile.id}
+              athleteContext={athleteContext}
+            />
+          </div>
+          <div className="mb-5">
+            <ActivitySelector
+              athleteId={profile.id}
+              value={selectedActivity}
+              onChange={setSelectedActivity}
+            />
+          </div>
+          {selectedActivity && (
+            <>
+              <div className="grid grid-cols-1 lg:grid-cols-2 gap-5 mb-5">
+                <ElevationProfileChart activityId={selectedActivity} />
+                <SplitsComparisonChart activityId={selectedActivity} athleteContext={athleteContext} />
+              </div>
+              <div className="grid grid-cols-1 lg:grid-cols-2 gap-5 mb-5">
+                <LapsAnalysisChart activityId={selectedActivity} />
+                <div className="hidden lg:block" />
+              </div>
+            </>
+          )}
+          <div>
+            <ShoesWidget athleteId={profile.id} />
+          </div>
+        </>
+      )}
+
+      {analysisOpen && (
+        <AiAnalysisPanel
+          open={analysisOpen}
+          onClose={() => setAnalysisOpen(false)}
+          chartType="general"
+          data={analysisPayload || {}}
+          athleteContext={athleteContext}
+          title="Análisis general"
+          onSuccess={() => aiQuota.refetch()}
+        />
       )}
     </div>
   );

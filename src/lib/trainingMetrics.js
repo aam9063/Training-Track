@@ -456,6 +456,210 @@ export const formatTime = (totalSeconds) => {
 // Readiness Score (0-100)
 // ============================================================
 
+// ============================================================
+// VDOT Race helper (alias over calculateVdot with seconds input)
+// ============================================================
+
+/**
+ * VDOT from a race distance (m) and elapsed seconds.
+ * Thin wrapper to match the Daniels signature used by service consumers.
+ */
+export const vdotFromRace = (distanceM, timeSec) => {
+  if (!Number.isFinite(distanceM) || distanceM <= 0) return null;
+  if (!Number.isFinite(timeSec) || timeSec <= 0) return null;
+  return calculateVdot(distanceM, timeSec / 60);
+};
+
+// ============================================================
+// Reference Daniels VDOT Table (tiny subset, 1K/5K/10K/half/marathon)
+// ============================================================
+
+/**
+ * Sample Daniels VDOT reference points. Used as a quick sanity table;
+ * actual VDOT values are derived from calculateVdot() to be race-agnostic.
+ * Values in seconds (ELapsed time).
+ */
+export const DANIELS_VDOT_TABLE = {
+  // vdot: { '1K': sec, '5K': sec, '10K': sec, 'half': sec, 'marathon': sec }
+  30: { '1K': 315, '5K': 1860, '10K': 3840, half: 8452, marathon: 17434 },
+  40: { '1K': 248, '5K': 1412, '10K': 2914, half: 6444, marathon: 13304 },
+  50: { '1K': 207, '5K': 1138, '10K': 2354, half: 5210, marathon: 10762 },
+  60: { '1K': 179, '5K': 965, '10K': 1994, half: 4418, marathon: 9128 },
+  70: { '1K': 159, '5K': 838, '10K': 1731, half: 3843, marathon: 7942 },
+};
+
+// ============================================================
+// VO2max Formulas
+// ============================================================
+
+/**
+ * Uth-Sørensen VO2max estimation from max and resting HR.
+ * VO2max = 15 * (HRmax / HRrest)
+ */
+export const vo2maxUth = (maxHr, restHr) => {
+  const mx = Number(maxHr);
+  const rs = Number(restHr);
+  if (!Number.isFinite(mx) || !Number.isFinite(rs) || rs <= 0) return null;
+  return Math.round(15 * (mx / rs) * 10) / 10;
+};
+
+/**
+ * Fallback VO2max from VDOT (linear approximation).
+ * VO2max ≈ VDOT * 0.8 + 10.5
+ */
+export const vo2maxFromVdot = (vdot) => {
+  const v = Number(vdot);
+  if (!Number.isFinite(v) || v <= 0) return null;
+  return Math.round((v * 0.8 + 10.5) * 10) / 10;
+};
+
+// ============================================================
+// Cadence Bucketing (handles Strava's one-leg values)
+// ============================================================
+
+/**
+ * Bucket cadence samples into 150-160/160-170/170-180/180-190/190+ buckets.
+ * Strava reports per-leg cadence (< 110 spm range) — doubles if detected.
+ * @param {Array<{cadence:number, dt:number}>} samples — per-sample cadence with duration
+ * @returns {{buckets: Array, mean_spm: number, valid_samples: number}}
+ */
+export const bucketCadence = (samples) => {
+  const BUCKETS = [
+    { label: '150-160', min: 150, max: 160 },
+    { label: '160-170', min: 160, max: 170 },
+    { label: '170-180', min: 170, max: 180 },
+    { label: '180-190', min: 180, max: 190 },
+    { label: '190+', min: 190, max: 9999 },
+  ];
+  const seconds = BUCKETS.map(() => 0);
+  let sum = 0;
+  let cnt = 0;
+  let totalSec = 0;
+
+  (samples || []).forEach((s) => {
+    let c = Number(s.cadence);
+    const dt = Number(s.dt) > 0 ? Number(s.dt) : 1;
+    if (!Number.isFinite(c) || c <= 0) return;
+    // If value clearly one-legged (< 110), double it.
+    if (c < 110) c = c * 2;
+    sum += c * dt;
+    cnt += dt;
+    totalSec += dt;
+    for (let i = 0; i < BUCKETS.length; i += 1) {
+      if (c >= BUCKETS[i].min && c < BUCKETS[i].max) {
+        seconds[i] += dt;
+        break;
+      }
+    }
+  });
+
+  const buckets = BUCKETS.map((b, i) => ({
+    label: b.label,
+    seconds: seconds[i],
+    pct: totalSec > 0 ? Number(((seconds[i] / totalSec) * 100).toFixed(1)) : 0,
+  }));
+
+  return {
+    buckets,
+    mean_spm: cnt > 0 ? Math.round(sum / cnt) : 0,
+    valid_samples: cnt,
+  };
+};
+
+// ============================================================
+// Pace Zones (from threshold or VDOT fallback)
+// ============================================================
+
+const DEFAULT_PACE_ZONES_SEC = [
+  { zone: 'Z1', label: 'Suave', minSec: 390, maxSec: 9999 }, // > 6:30
+  { zone: 'Z2', label: 'Fácil', minSec: 330, maxSec: 390 },  // 5:30-6:30
+  { zone: 'Z3', label: 'Moderado', minSec: 300, maxSec: 330 }, // 5:00-5:30
+  { zone: 'Z4', label: 'Umbral', minSec: 270, maxSec: 300 }, // 4:30-5:00
+  { zone: 'Z5', label: 'Rápido', minSec: 0, maxSec: 270 }, // < 4:30
+];
+
+/**
+ * Derive pace zones from a threshold pace (sec/km).
+ * Zones: Z1 (>+45s), Z2 (+15..+45s), Z3 (-5..+15s), Z4 (-20..-5s), Z5 (< -20s)
+ */
+export const paceZonesFromThreshold = (thresholdSecPerKm) => {
+  const t = Number(thresholdSecPerKm);
+  if (!Number.isFinite(t) || t <= 0) return DEFAULT_PACE_ZONES_SEC;
+  return [
+    { zone: 'Z1', label: 'Suave', minSec: t + 45, maxSec: 9999 },
+    { zone: 'Z2', label: 'Fácil', minSec: t + 15, maxSec: t + 45 },
+    { zone: 'Z3', label: 'Moderado', minSec: t - 5, maxSec: t + 15 },
+    { zone: 'Z4', label: 'Umbral', minSec: t - 20, maxSec: t - 5 },
+    { zone: 'Z5', label: 'Rápido', minSec: 0, maxSec: t - 20 },
+  ];
+};
+
+/**
+ * Derive pace zones from VDOT (threshold ≈ Daniels T pace).
+ */
+export const paceZonesFromVdot = (vdot) => {
+  const paces = getTrainingPaces(vdot);
+  if (!paces || !paces.threshold) return DEFAULT_PACE_ZONES_SEC;
+  return paceZonesFromThreshold(paces.threshold);
+};
+
+// ============================================================
+// Coefficient of Variation (consistency)
+// ============================================================
+
+/**
+ * CV = stdev / mean. Returns 0 if mean is 0 or input invalid.
+ */
+export const coefficientOfVariation = (values) => {
+  const arr = (values || []).filter((v) => Number.isFinite(v) && v > 0);
+  if (arr.length < 2) return 0;
+  const mean = arr.reduce((a, b) => a + b, 0) / arr.length;
+  if (mean === 0) return 0;
+  const variance = arr.reduce((s, v) => s + (v - mean) ** 2, 0) / arr.length;
+  const stdev = Math.sqrt(variance);
+  return Math.round((stdev / mean) * 10000) / 10000;
+};
+
+/**
+ * Translate a CV value into a Spanish consistency label.
+ */
+export const consistencyLabel = (cv) => {
+  const v = Number(cv);
+  if (!Number.isFinite(v)) return 'Irregular';
+  if (v < 0.05) return 'Excelente';
+  if (v < 0.10) return 'Buena';
+  return 'Irregular';
+};
+
+// ============================================================
+// Stream Downsampling
+// ============================================================
+
+/**
+ * Downsample a numeric array to a target length via simple bucketed averaging.
+ * Default target lowered from 500 to 300 for typical viewport widths.
+ */
+export const downsampleStream = (arr, targetLen = 300) => {
+  if (!Array.isArray(arr) || arr.length <= targetLen) return arr || [];
+  const bucketSize = arr.length / targetLen;
+  const out = new Array(targetLen);
+  for (let i = 0; i < targetLen; i += 1) {
+    const start = Math.floor(i * bucketSize);
+    const end = Math.floor((i + 1) * bucketSize);
+    let sum = 0;
+    let cnt = 0;
+    for (let j = start; j < end; j += 1) {
+      const v = Number(arr[j]);
+      if (Number.isFinite(v)) {
+        sum += v;
+        cnt += 1;
+      }
+    }
+    out[i] = cnt > 0 ? sum / cnt : null;
+  }
+  return out;
+};
+
 /**
  * Calculate readiness score from wellness + training load data
  * @param {Object} wellness - Today's wellness log

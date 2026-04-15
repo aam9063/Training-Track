@@ -19,6 +19,8 @@ import {
   FiAward,
   FiWatch,
   FiCheckCircle,
+  FiFileText,
+  FiChevronRight,
 } from 'react-icons/fi';
 import useGamificationData from '../../hooks/useGamificationData';
 import { toLocalDateStr } from '../../lib/dateUtils';
@@ -484,6 +486,23 @@ const AthleteDashboard = () => {
           </section>
 
         </div>
+
+        {/* ACCESOS RÁPIDOS — mis análisis IA */}
+        <section>
+          <Link
+            to="/athlete/analysis-history"
+            className="flex items-center gap-3 bg-ath-surface rounded-2xl border border-ath-border p-4 hover:border-ath-accent transition-colors group"
+          >
+            <div className="w-11 h-11 rounded-xl bg-ath-accent-surface flex items-center justify-center shrink-0">
+              <FiFileText className="w-5 h-5 text-ath-accent-text" />
+            </div>
+            <div className="flex-1 min-w-0">
+              <p className="font-semibold text-ath-text-primary">Mis análisis IA</p>
+              <p className="text-xs text-ath-text-muted">Consulta tus informes guardados</p>
+            </div>
+            <FiChevronRight className="w-4 h-4 text-ath-text-muted group-hover:text-ath-accent transition-colors" />
+          </Link>
+        </section>
 
         {/* ACHIEVEMENTS — hidden until redesign with Strava-style records */}
         {false && isIndependent && achievements.length > 0 && (

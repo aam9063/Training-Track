@@ -18,7 +18,7 @@ import {
 } from 'react-icons/fi';
 
 const AthleteDashboardLayout = () => {
-  const { user, loading, profile, signOut, isIndependent } = useAuth();
+  const { user, loading, profile, profileLoaded, signOut, isIndependent } = useAuth();
   const { planLabel, isTrialing, isExempt } = useSubscription();
   const navigate = useNavigate();
   const [searchQuery, setSearchQuery] = useState('');
@@ -62,8 +62,10 @@ const AthleteDashboardLayout = () => {
     return <Navigate to="/login" replace />;
   }
 
-  const userRole = profile?.role || user?.user_metadata?.role || 'athlete';
-  if (userRole === 'coach') {
+  // Wait until the authoritative profile is loaded before deciding a redirect.
+  // Otherwise F5 / tab return (profile momentarily null) would bounce the user
+  // to the coach dashboard and lose the current athlete sub-route.
+  if (profileLoaded && profile?.role === 'coach') {
     return <Navigate to="/dashboard" replace />;
   }
 

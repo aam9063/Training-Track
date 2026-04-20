@@ -9,7 +9,7 @@ import { toLocalDateStr } from '../../lib/dateUtils';
 import { CHART_COLORS, CHART_TOOLTIP } from '../../lib/chartColors';
 import { showError } from '../../lib/toast';
 import InfoTooltip from '../common/InfoTooltip';
-import MetricAIAnalyzer from './MetricAIAnalyzer';
+import { MetricAIAnalyzer } from './MetricAIAnalyzer';
 
 // Status card styles for the TSB / ACWR state chips. Keys map to the `zone`
 // value returned by getTsbZone / getAcwrZone. Tailwind classes keep the

@@ -8,7 +8,7 @@ import { getTrainingPaces, generateHrZones, formatPace, DANIELS_ZONES } from '..
 import { showSuccess, showError } from '../../lib/toast';
 import { TRAINING_ZONE_BG_CLASSES } from '../../lib/chartColors';
 import InfoTooltip from '../common/InfoTooltip';
-import MetricAIAnalyzer from './MetricAIAnalyzer';
+import { MetricAIAnalyzer } from './MetricAIAnalyzer';
 
 export default function TrainingZonesCard({ bestEfforts, athleteId: propAthleteId, athleteContext, hrDistribution }) {
   const { user, profile } = useAuth();

@@ -4,6 +4,8 @@ import BarComparison from './charts/BarComparison';
 import DonutDistribution from './charts/DonutDistribution';
 import ProgressGauge from './charts/ProgressGauge';
 import ZoneBar from './charts/ZoneBar';
+import { tryRecoverReport } from '../../../lib/reportUtils';
+import { PRIORITY_CLASSES, DELTA_CLASSES } from '../../../lib/themeClasses';
 
 const CHART_COMPONENTS = {
   line_trend: LineTrend,
@@ -13,28 +15,19 @@ const CHART_COMPONENTS = {
   zone_bar: ZoneBar,
 };
 
-const PRIORITY_STYLES = {
+const PRIORITY_META = {
   high: {
-    wrapper:
-      'border-red-300/60 bg-red-50 dark:bg-red-900/20 dark:border-red-500/30',
-    label: 'text-red-700 dark:text-red-300',
-    badge: 'bg-red-100 text-red-700 dark:bg-red-900/40 dark:text-red-300',
+    ...PRIORITY_CLASSES.high,
     icon: FiAlertCircle,
     text: 'Alta prioridad',
   },
   medium: {
-    wrapper:
-      'border-amber-300/60 bg-amber-50 dark:bg-amber-900/20 dark:border-amber-500/30',
-    label: 'text-amber-700 dark:text-amber-300',
-    badge: 'bg-amber-100 text-amber-700 dark:bg-amber-900/40 dark:text-amber-300',
+    ...PRIORITY_CLASSES.medium,
     icon: FiInfo,
     text: 'Prioridad media',
   },
   low: {
-    wrapper:
-      'border-ath-border bg-ath-inset dark:bg-slate-900/40',
-    label: 'text-ath-text-primary',
-    badge: 'bg-ath-inset text-ath-text-secondary',
+    ...PRIORITY_CLASSES.low,
     icon: FiCheckCircle,
     text: 'Prioridad baja',
   },
@@ -70,14 +63,14 @@ function ListSection({ section }) {
 function KpiSection({ section }) {
   const hasDelta = typeof section.delta === 'number' && Number.isFinite(section.delta);
   const deltaValue = hasDelta ? section.delta : 0;
-  let deltaClass = 'text-ath-text-muted bg-ath-inset';
+  let deltaClass = DELTA_CLASSES.neutral;
   let DeltaIcon = FiMinus;
   if (hasDelta) {
     if (deltaValue > 0) {
-      deltaClass = 'text-emerald-700 bg-emerald-100 dark:bg-emerald-900/40 dark:text-emerald-300';
+      deltaClass = DELTA_CLASSES.positive;
       DeltaIcon = FiTrendingUp;
     } else if (deltaValue < 0) {
-      deltaClass = 'text-red-700 bg-red-100 dark:bg-red-900/40 dark:text-red-300';
+      deltaClass = DELTA_CLASSES.negative;
       DeltaIcon = FiTrendingDown;
     }
   }
@@ -108,7 +101,7 @@ function RecommendationSection({ section }) {
   const priority = ['high', 'medium', 'low'].includes(section.priority)
     ? section.priority
     : 'medium';
-  const styles = PRIORITY_STYLES[priority];
+  const styles = PRIORITY_META[priority];
   const Icon = styles.icon;
   return (
     <div className={`rounded-xl border p-3 flex gap-3 ${styles.wrapper}`}>
@@ -164,8 +157,9 @@ function SectionRenderer({ section }) {
   }
 }
 
-export default function ReportRenderer({ report }) {
-  if (!report || !Array.isArray(report.sections) || report.sections.length === 0) {
+export function ReportRenderer({ report }) {
+  const recovered = tryRecoverReport(report) ?? report;
+  if (!recovered || !Array.isArray(recovered.sections) || recovered.sections.length === 0) {
     return (
       <p className="text-sm text-ath-text-muted italic">
         Sin contenido para mostrar.
@@ -174,7 +168,7 @@ export default function ReportRenderer({ report }) {
   }
   return (
     <div className="space-y-4">
-      {report.sections.map((section, idx) => (
+      {recovered.sections.map((section, idx) => (
         <SectionRenderer
           key={`${section?.type ?? 'unknown'}-${idx}`}
           section={section}

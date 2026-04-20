@@ -2,7 +2,7 @@ import { useEffect, useMemo, useState } from 'react';
 import { Line } from 'react-chartjs-2';
 import { FiTrendingUp, FiLoader } from 'react-icons/fi';
 import { getBestEffortsEvolution } from '../../../services/metricsAnalyticsService';
-import MetricAIAnalyzer from '../MetricAIAnalyzer';
+import { MetricAIAnalyzer } from '../MetricAIAnalyzer';
 import DateRangeSelector from './DateRangeSelector';
 
 const DISTANCE_OPTIONS = [

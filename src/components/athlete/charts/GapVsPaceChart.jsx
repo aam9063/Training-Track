@@ -5,7 +5,7 @@ import { supabase } from '../../../lib/supabase';
 import { fetchStreamsForActivity } from '../../../services/stravaSyncService';
 import { getGapForActivity } from '../../../services/metricsAnalyticsService';
 import { downsampleStream } from '../../../lib/trainingMetrics';
-import MetricAIAnalyzer from '../MetricAIAnalyzer';
+import { MetricAIAnalyzer } from '../MetricAIAnalyzer';
 import InfoTooltip from '../../common/InfoTooltip';
 
 const formatPace = (sec) => {

@@ -3,7 +3,7 @@ import { Bar } from 'react-chartjs-2';
 import { FiHeart, FiLoader } from 'react-icons/fi';
 import { Link } from 'react-router-dom';
 import { getTimeInZoneAggregate } from '../../../services/metricsAnalyticsService';
-import MetricAIAnalyzer from '../MetricAIAnalyzer';
+import { MetricAIAnalyzer } from '../MetricAIAnalyzer';
 
 const ZONE_COLORS = {
   1: '#3b82f6',

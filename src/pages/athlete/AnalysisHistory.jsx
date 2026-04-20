@@ -17,8 +17,13 @@ import {
   getAnalysisById,
   deleteAnalysis,
 } from '../../services/metricAnalysisService';
-import AiAnalysisPanel from '../../components/athlete/AiAnalysisPanel';
+import { AiAnalysisPanel } from '../../components/athlete/AiAnalysisPanel';
 import { showError, showSuccess } from '../../lib/toast';
+import {
+  STATE_ICON_CLASSES,
+  DANGER_BUTTON_CLASSES,
+  PRIORITY_CLASSES,
+} from '../../lib/themeClasses';
 
 const PAGE_SIZE = 10;
 
@@ -76,8 +81,8 @@ function ConfirmDialog({ open, onCancel, onConfirm, loading }) {
         onClick={(e) => e.stopPropagation()}
       >
         <div className="flex flex-col items-center text-center gap-4">
-          <div className="w-14 h-14 rounded-full bg-red-100 dark:bg-red-900/30 flex items-center justify-center">
-            <FiAlertTriangle className="w-7 h-7 text-red-500" />
+          <div className={`w-14 h-14 rounded-full flex items-center justify-center ${STATE_ICON_CLASSES.error.bg}`}>
+            <FiAlertTriangle className={`w-7 h-7 ${STATE_ICON_CLASSES.error.fg}`} />
           </div>
           <h3 className="text-lg font-bold text-ath-text-primary">
             Eliminar informe
@@ -98,7 +103,7 @@ function ConfirmDialog({ open, onCancel, onConfirm, loading }) {
               type="button"
               onClick={onConfirm}
               disabled={loading}
-              className="inline-flex items-center gap-2 px-5 py-2 rounded-lg bg-red-500 text-white text-sm font-semibold hover:bg-red-600 transition-colors disabled:opacity-60"
+              className={`inline-flex items-center gap-2 px-5 py-2 rounded-lg text-sm font-semibold transition-colors disabled:opacity-60 ${DANGER_BUTTON_CLASSES}`}
             >
               {loading && <FiLoader className="w-4 h-4 animate-spin" />}
               Eliminar
@@ -242,7 +247,7 @@ export default function AnalysisHistory() {
           <FiLoader className="w-7 h-7 animate-spin text-ath-accent" />
         </div>
       ) : error ? (
-        <div className="rounded-2xl border border-red-300/60 bg-red-50 dark:bg-red-900/20 dark:border-red-500/30 p-4 text-sm text-red-700 dark:text-red-300">
+        <div className={`rounded-2xl border p-4 text-sm ${PRIORITY_CLASSES.high.wrapper} ${PRIORITY_CLASSES.high.label}`}>
           {error}
         </div>
       ) : reports.length === 0 ? (

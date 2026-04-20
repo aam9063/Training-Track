@@ -2,7 +2,7 @@ import { useEffect, useMemo, useState } from 'react';
 import { Bar } from 'react-chartjs-2';
 import { FiLoader, FiTrendingUp } from 'react-icons/fi';
 import { getWeeklyLoadSeries } from '../../../services/metricsAnalyticsService';
-import MetricAIAnalyzer from '../MetricAIAnalyzer';
+import { MetricAIAnalyzer } from '../MetricAIAnalyzer';
 import InfoTooltip from '../../common/InfoTooltip';
 
 export default function SufferScoreChart({ athleteId, athleteContext, weeks = 12 }) {

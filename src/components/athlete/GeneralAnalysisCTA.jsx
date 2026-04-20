@@ -9,7 +9,7 @@ import {
 } from '../../services/metricsAnalyticsService';
 import useAiAnalysisQuota from '../../hooks/useAiAnalysisQuota';
 import { showError } from '../../lib/toast';
-import AiAnalysisPanel from './AiAnalysisPanel';
+import { AiAnalysisPanel } from './AiAnalysisPanel';
 
 /**
  * Big CTA card that aggregates several metrics and opens a "general" AI analysis.
@@ -18,7 +18,7 @@ import AiAnalysisPanel from './AiAnalysisPanel';
  *  - athleteId: uuid
  *  - athleteContext: { nivel, objetivo, vam } | null
  */
-export default function GeneralAnalysisCTA({ athleteId, athleteContext }) {
+export function GeneralAnalysisCTA({ athleteId, athleteContext }) {
   const quota = useAiAnalysisQuota();
   const [preparing, setPreparing] = useState(false);
   const [payload, setPayload] = useState(null);

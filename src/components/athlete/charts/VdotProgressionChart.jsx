@@ -2,7 +2,7 @@ import { useEffect, useMemo, useState } from 'react';
 import { Line } from 'react-chartjs-2';
 import { FiLoader, FiTrendingUp } from 'react-icons/fi';
 import { getVdotProgression } from '../../../services/metricsAnalyticsService';
-import MetricAIAnalyzer from '../MetricAIAnalyzer';
+import { MetricAIAnalyzer } from '../MetricAIAnalyzer';
 import InfoTooltip from '../../common/InfoTooltip';
 
 const MONTHS_ES = ['ene', 'feb', 'mar', 'abr', 'may', 'jun', 'jul', 'ago', 'sep', 'oct', 'nov', 'dic'];

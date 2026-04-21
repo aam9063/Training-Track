@@ -103,21 +103,24 @@ export function tryRecoverReport(value) {
         };
       }
     }
-    // Also sanitize any text section that starts with a bare `{"` (raw JSON
-    // pasted as text) — try to parse it into sections.
-    if (
-      value.sections.length === 1 &&
-      first &&
-      first.type === 'text' &&
-      typeof first.content === 'string' &&
-      /^\s*\{\s*"/.test(first.content)
-    ) {
-      const balanced = extractBalancedJson(first.content) ?? first.content;
-      try {
-        const parsed = JSON.parse(balanced);
-        if (parsed && Array.isArray(parsed.sections)) return parsed;
-      } catch {
-        // ignore
+    // Scan every text section (any index) looking for raw JSON or fenced JSON
+    // that should be expanded into proper sections.
+    for (let i = 0; i < value.sections.length; i++) {
+      const s = value.sections[i];
+      if (
+        s &&
+        s.type === 'text' &&
+        typeof s.content === 'string' &&
+        /^\s*(```|\{\s*"|\[\s*\{)/.test(s.content)
+      ) {
+        const stripped = stripMarkdownFences(s.content);
+        const balanced = extractBalancedJson(stripped) ?? stripped;
+        try {
+          const parsed = JSON.parse(balanced);
+          if (parsed && Array.isArray(parsed.sections)) return parsed;
+        } catch {
+          // continue scanning the rest
+        }
       }
     }
   }

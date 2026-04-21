@@ -14,7 +14,7 @@ const formatDateShort = (iso) => {
   return `${d.getDate()} ${MONTHS_ES[d.getMonth()]}`;
 };
 
-export default function VdotProgressionChart({ athleteId, athleteContext }) {
+export default function VdotProgressionChart({ athleteId, athleteContext, hideAI = false }) {
   const [state, setState] = useState({ loading: true, series: [], error: null });
 
   useEffect(() => {
@@ -70,14 +70,16 @@ export default function VdotProgressionChart({ athleteId, athleteContext }) {
             <p className="text-[11px] text-ath-text-muted">Mejor VDOT por semana</p>
           </div>
         </div>
-        <MetricAIAnalyzer
-          chartType="vdot_progression"
-          data={aiData}
-          athleteContext={athleteContext}
-          compact
-          title="Análisis de progresión VDOT"
-          disabled={!hasData}
-        />
+        {!hideAI && (
+          <MetricAIAnalyzer
+            chartType="vdot_progression"
+            data={aiData}
+            athleteContext={athleteContext}
+            compact
+            title="Análisis de progresión VDOT"
+            disabled={!hasData}
+          />
+        )}
       </div>
 
       <div className="h-[280px]">

@@ -10,7 +10,7 @@ import { TRAINING_ZONE_BG_CLASSES } from '../../lib/chartColors';
 import InfoTooltip from '../common/InfoTooltip';
 import { MetricAIAnalyzer } from './MetricAIAnalyzer';
 
-export default function TrainingZonesCard({ bestEfforts, athleteId: propAthleteId, athleteContext, hrDistribution }) {
+export default function TrainingZonesCard({ bestEfforts, athleteId: propAthleteId, athleteContext, hrDistribution, hideAI = false }) {
   const { user, profile } = useAuth();
   const athleteId = propAthleteId || profile?.id || user?.id;
   // If viewing own profile, use local profile data; otherwise fetch from DB
@@ -242,14 +242,16 @@ export default function TrainingZonesCard({ bestEfforts, athleteId: propAthleteI
           <button onClick={() => setExpanded(!expanded)} className="text-gray-400 hover:text-gray-600 dark:hover:text-gray-300">
             {expanded ? <FiChevronUp className="w-4 h-4" /> : <FiChevronDown className="w-4 h-4" />}
           </button>
-          <MetricAIAnalyzer
-            chartType="training_zones"
-            data={aiData}
-            athleteContext={athleteContext}
-            compact
-            title="Análisis de Zonas de Entrenamiento"
-            disabled={!hasAiData}
-          />
+          {!hideAI && (
+            <MetricAIAnalyzer
+              chartType="training_zones"
+              data={aiData}
+              athleteContext={athleteContext}
+              compact
+              title="Análisis de Zonas de Entrenamiento"
+              disabled={!hasAiData}
+            />
+          )}
         </div>
       </div>
 

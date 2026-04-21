@@ -68,6 +68,22 @@ import { generateReportPDF } from '../../lib/reportPdfExport';
 import PMCChart from '../../components/athlete/PMCChart';
 import TrainingZonesCard from '../../components/athlete/TrainingZonesCard';
 import InfoTooltip from '../../components/common/InfoTooltip';
+import VdotProgressionChart from '../../components/athlete/charts/VdotProgressionChart';
+import Vo2maxCard from '../../components/athlete/charts/Vo2maxCard';
+import WeeklyHeatmapChart from '../../components/athlete/charts/WeeklyHeatmapChart';
+import SufferScoreChart from '../../components/athlete/charts/SufferScoreChart';
+import RestDaysCalendar from '../../components/athlete/charts/RestDaysCalendar';
+import TimeInZoneChart from '../../components/athlete/charts/TimeInZoneChart';
+import PaceZonesChart from '../../components/athlete/charts/PaceZonesChart';
+import IntensityDistributionChart from '../../components/athlete/charts/IntensityDistributionChart';
+import CadenceHistogramChart from '../../components/athlete/charts/CadenceHistogramChart';
+import BestEffortsChart from '../../components/athlete/charts/BestEffortsChart';
+import ShoesWidget from '../../components/athlete/charts/ShoesWidget';
+import ActivitySelector from '../../components/athlete/charts/ActivitySelector';
+import ElevationProfileChart from '../../components/athlete/charts/ElevationProfileChart';
+import SplitsComparisonChart from '../../components/athlete/charts/SplitsComparisonChart';
+import LapsAnalysisChart from '../../components/athlete/charts/LapsAnalysisChart';
+import GapVsPaceChart from '../../components/athlete/charts/GapVsPaceChart';
 // Calculate HR training zones using Karvonen formula
 const calculateHRZones = (maxHR, restingHR) => {
   const zones = [
@@ -98,6 +114,7 @@ const AthleteMetricsView = () => {
   const [selectedPeriod, setSelectedPeriod] = useState('4weeks'); // 4weeks, 8weeks, 12weeks
   const [generatingReport, setGeneratingReport] = useState(false);
   const [reportError, setReportError] = useState(null);
+  const [selectedActivity, setSelectedActivity] = useState(null);
 
   // Training load calculations (ACWR, weekly loads)
   const loadData = useMemo(() => {
@@ -921,6 +938,19 @@ const AthleteMetricsView = () => {
             </motion.div>
           )}
 
+          {/* ─── Pilar A — Estado actual ─── */}
+          {athleteId && (
+            <>
+              <h2 className="text-sm font-bold text-coach-text-muted uppercase tracking-wider mt-10 mb-4">
+                Estado actual
+              </h2>
+              <div className="grid grid-cols-1 lg:grid-cols-2 gap-5">
+                <VdotProgressionChart athleteId={athleteId} hideAI />
+                <Vo2maxCard athleteId={athleteId} />
+              </div>
+            </>
+          )}
+
           {/* Dashboard de Carga */}
           {activities.length > 0 && loadData && (
             <motion.div
@@ -1092,6 +1122,7 @@ const AthleteMetricsView = () => {
               activities={activities}
               athleteProfile={athlete?.athlete}
               athleteId={athleteId}
+              hideAI
             />
           )}
 
@@ -1104,6 +1135,7 @@ const AthleteMetricsView = () => {
                   : bestEfforts.map(e => ({ name: e.name, distance: e.distance, elapsed_time: e.time }))
               }
               athleteId={athleteId}
+              hideAI
             />
           )}
 
@@ -1413,6 +1445,31 @@ const AthleteMetricsView = () => {
             )}
           </div>
 
+          {/* ─── Pilar B — Carga y ejecución ─── */}
+          {athleteId && (
+            <>
+              <h2 className="text-sm font-bold text-coach-text-muted uppercase tracking-wider mt-10 mb-4">
+                Carga y ejecución
+              </h2>
+              <div className="grid grid-cols-1 lg:grid-cols-2 gap-5 mb-5">
+                <WeeklyHeatmapChart athleteId={athleteId} weeks={8} />
+                <SufferScoreChart athleteId={athleteId} weeks={12} hideAI />
+              </div>
+              <div className="grid grid-cols-1 lg:grid-cols-2 gap-5 mb-5">
+                <RestDaysCalendar athleteId={athleteId} weeks={8} />
+                <TimeInZoneChart athleteId={athleteId} hideAI readOnly />
+              </div>
+              <div className="grid grid-cols-1 lg:grid-cols-2 gap-5 mb-5">
+                <PaceZonesChart athleteId={athleteId} weeks={8} />
+                <IntensityDistributionChart athleteId={athleteId} weeks={8} />
+              </div>
+              <div className="grid grid-cols-1 lg:grid-cols-2 gap-5">
+                <CadenceHistogramChart athleteId={athleteId} weeks={8} />
+                <div className="hidden lg:block" />
+              </div>
+            </>
+          )}
+
           {/* ── Sport-Specific Sections ── */}
 
           {/* Cycling Section */}
@@ -1712,6 +1769,40 @@ const AthleteMetricsView = () => {
                 </div>
               </div>
             </motion.div>
+          )}
+
+          {/* ─── Pilar C — Rendimiento y detalle ─── */}
+          {athleteId && (
+            <>
+              <h2 className="text-sm font-bold text-coach-text-muted uppercase tracking-wider mt-10 mb-4">
+                Rendimiento y detalle
+              </h2>
+              <div className="mb-5">
+                <BestEffortsChart athleteId={athleteId} hideAI />
+              </div>
+              <div className="mb-5">
+                <ShoesWidget athleteId={athleteId} />
+              </div>
+              <div className="mb-5">
+                <ActivitySelector
+                  athleteId={athleteId}
+                  value={selectedActivity}
+                  onChange={setSelectedActivity}
+                />
+              </div>
+              {selectedActivity && (
+                <>
+                  <div className="grid grid-cols-1 lg:grid-cols-2 gap-5 mb-5">
+                    <ElevationProfileChart activityId={selectedActivity} />
+                    <SplitsComparisonChart activityId={selectedActivity} hideAI />
+                  </div>
+                  <div className="grid grid-cols-1 lg:grid-cols-2 gap-5 mb-5">
+                    <LapsAnalysisChart activityId={selectedActivity} />
+                    <GapVsPaceChart activityId={selectedActivity} hideAI />
+                  </div>
+                </>
+              )}
+            </>
           )}
 
           {/* Activity Type Distribution and Daily Heatmap */}

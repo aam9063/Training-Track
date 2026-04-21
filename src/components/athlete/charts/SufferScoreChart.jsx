@@ -5,7 +5,7 @@ import { getWeeklyLoadSeries } from '../../../services/metricsAnalyticsService';
 import { MetricAIAnalyzer } from '../MetricAIAnalyzer';
 import InfoTooltip from '../../common/InfoTooltip';
 
-export default function SufferScoreChart({ athleteId, athleteContext, weeks = 12 }) {
+export default function SufferScoreChart({ athleteId, athleteContext, weeks = 12, hideAI = false }) {
   const [state, setState] = useState({ loading: true, series: [], error: null });
 
   useEffect(() => {
@@ -58,14 +58,16 @@ export default function SufferScoreChart({ athleteId, athleteContext, weeks = 12
             <p className="text-[11px] text-ath-text-muted">Últimas {weeks} semanas</p>
           </div>
         </div>
-        <MetricAIAnalyzer
-          chartType="weekly_load"
-          data={aiData}
-          athleteContext={athleteContext}
-          compact
-          title="Análisis de Suffer Score semanal"
-          disabled={!hasData}
-        />
+        {!hideAI && (
+          <MetricAIAnalyzer
+            chartType="weekly_load"
+            data={aiData}
+            athleteContext={athleteContext}
+            compact
+            title="Análisis de Suffer Score semanal"
+            disabled={!hasData}
+          />
+        )}
       </div>
 
       <div className="h-[280px]">

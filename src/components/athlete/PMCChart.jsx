@@ -33,7 +33,7 @@ const PERIOD_OPTIONS = [
   { value: '1year', label: '1 año', days: 365 },
 ];
 
-export default function PMCChart({ activities, athleteProfile, athleteId: propAthleteId, athleteContext }) {
+export default function PMCChart({ activities, athleteProfile, athleteId: propAthleteId, athleteContext, hideAI = false }) {
   const { user, profile } = useAuth();
   const athleteId = propAthleteId || profile?.id || user?.id;
   const [loadData, setLoadData] = useState([]);
@@ -280,14 +280,16 @@ export default function PMCChart({ activities, athleteProfile, athleteId: propAt
               {recalculating ? 'Calculando...' : 'Recalcular'}
             </button>
           )}
-          <MetricAIAnalyzer
-            chartType="pmc_curve"
-            data={aiData}
-            athleteContext={athleteContext}
-            compact
-            title="Análisis de Curva de Rendimiento (PMC)"
-            disabled={!hasAiData}
-          />
+          {!hideAI && (
+            <MetricAIAnalyzer
+              chartType="pmc_curve"
+              data={aiData}
+              athleteContext={athleteContext}
+              compact
+              title="Análisis de Curva de Rendimiento (PMC)"
+              disabled={!hasAiData}
+            />
+          )}
         </div>
       </div>
 

@@ -3,6 +3,7 @@ import { Line } from 'react-chartjs-2';
 import { FiLoader, FiTrendingUp } from 'react-icons/fi';
 import { supabase } from '../../../lib/supabase';
 import { fetchStreamsForActivity } from '../../../services/stravaSyncService';
+import { filterStravaActivityId, isUuid } from '../../../lib/stravaIdUtils';
 import { getGapForActivity } from '../../../services/metricsAnalyticsService';
 import { downsampleStream } from '../../../lib/trainingMetrics';
 import { MetricAIAnalyzer } from '../MetricAIAnalyzer';
@@ -28,7 +29,7 @@ const avgFinite = (arr) => {
   return count > 0 ? sum / count : null;
 };
 
-export default function GapVsPaceChart({ activityId, athleteContext }) {
+export default function GapVsPaceChart({ activityId, athleteContext, hideAI = false }) {
   const [state, setState] = useState({ loading: false, data: null, error: null });
 
   useEffect(() => {
@@ -40,16 +41,18 @@ export default function GapVsPaceChart({ activityId, athleteContext }) {
       }
       setState({ loading: true, data: null, error: null });
 
-      const { data: act } = await supabase
-        .from('strava_activities')
-        .select('has_streams')
-        .eq('id', activityId)
-        .maybeSingle();
+      // Resolve the row by UUID or bigint so we never 400 on the eq filter.
+      const { data: act } = await filterStravaActivityId(
+        supabase.from('strava_activities').select('has_streams, id'),
+        activityId
+      ).maybeSingle();
 
       if (cancelled) return;
 
+      const streamsActivityId = act?.id || (isUuid(activityId) ? activityId : null);
+
       if (act && !act.has_streams) {
-        const { error: fetchErr } = await fetchStreamsForActivity(activityId);
+        const { error: fetchErr } = await fetchStreamsForActivity(streamsActivityId);
         if (cancelled) return;
         if (fetchErr) {
           setState({ loading: false, data: null, error: 'No se pudieron cargar los streams' });
@@ -57,7 +60,12 @@ export default function GapVsPaceChart({ activityId, athleteContext }) {
         }
       }
 
-      const { data, error } = await getGapForActivity(activityId);
+      if (!streamsActivityId) {
+        setState({ loading: false, data: null, error: 'Actividad no encontrada' });
+        return;
+      }
+
+      const { data, error } = await getGapForActivity(streamsActivityId);
       if (cancelled) return;
       if (error) {
         setState({ loading: false, data: null, error: error.message });
@@ -141,14 +149,16 @@ export default function GapVsPaceChart({ activityId, athleteContext }) {
             </p>
           </div>
         </div>
-        <MetricAIAnalyzer
-          chartType="gap_vs_pace"
-          data={aiData}
-          athleteContext={athleteContext}
-          compact
-          title="Análisis GAP vs Pace real"
-          disabled={!hasData}
-        />
+        {!hideAI && (
+          <MetricAIAnalyzer
+            chartType="gap_vs_pace"
+            data={aiData}
+            athleteContext={athleteContext}
+            compact
+            title="Análisis GAP vs Pace real"
+            disabled={!hasData}
+          />
+        )}
       </div>
 
       <div className="h-[280px]">

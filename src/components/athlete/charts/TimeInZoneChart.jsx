@@ -29,7 +29,7 @@ const secondsToLabel = (sec) => {
   return `${m}m`;
 };
 
-export default function TimeInZoneChart({ athleteId, athleteContext, weeks = 4 }) {
+export default function TimeInZoneChart({ athleteId, athleteContext, weeks = 4, hideAI = false, readOnly = false }) {
   const [state, setState] = useState({ loading: true, hasZones: false, zones: [], error: null });
 
   useEffect(() => {
@@ -88,14 +88,16 @@ export default function TimeInZoneChart({ athleteId, athleteContext, weeks = 4 }
             <p className="text-[11px] text-ath-text-muted">Últimas {weeks} semanas</p>
           </div>
         </div>
-        <MetricAIAnalyzer
-          chartType="time_in_zone"
-          data={aiData}
-          athleteContext={athleteContext}
-          compact
-          title="Análisis de tiempo en zonas"
-          disabled={!hasData}
-        />
+        {!hideAI && (
+          <MetricAIAnalyzer
+            chartType="time_in_zone"
+            data={aiData}
+            athleteContext={athleteContext}
+            compact
+            title="Análisis de tiempo en zonas"
+            disabled={!hasData}
+          />
+        )}
       </div>
 
       <div className="h-[280px]">
@@ -105,15 +107,23 @@ export default function TimeInZoneChart({ athleteId, athleteContext, weeks = 4 }
           </div>
         ) : !state.hasZones ? (
           <div className="flex flex-col items-center justify-center h-full text-center gap-3 px-4">
-            <p className="text-xs text-ath-text-muted max-w-xs">
-              Configura tus zonas de frecuencia cardíaca en Strava (o sincroniza tu cuenta) para desbloquear este análisis.
-            </p>
-            <Link
-              to="/athlete/profile#frecuencia-cardiaca"
-              className="inline-flex items-center gap-1.5 px-3 py-1.5 rounded-lg bg-ath-accent-surface text-ath-accent text-xs font-semibold hover:bg-ath-accent hover:text-ath-on-accent transition-colors"
-            >
-              Configurar zonas
-            </Link>
+            {readOnly ? (
+              <p className="text-xs text-ath-text-muted max-w-xs">
+                Este atleta todavía no tiene zonas de frecuencia cardíaca configuradas.
+              </p>
+            ) : (
+              <>
+                <p className="text-xs text-ath-text-muted max-w-xs">
+                  Configura tus zonas de frecuencia cardíaca en Strava (o sincroniza tu cuenta) para desbloquear este análisis.
+                </p>
+                <Link
+                  to="/athlete/profile#frecuencia-cardiaca"
+                  className="inline-flex items-center gap-1.5 px-3 py-1.5 rounded-lg bg-ath-accent-surface text-ath-accent text-xs font-semibold hover:bg-ath-accent hover:text-ath-on-accent transition-colors"
+                >
+                  Configurar zonas
+                </Link>
+              </>
+            )}
           </div>
         ) : !hasData ? (
           <div className="flex items-center justify-center h-full text-xs text-ath-text-muted text-center px-6">

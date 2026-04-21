@@ -12,10 +12,7 @@ import {
   FiTarget,
   FiActivity,
   FiHeart,
-  FiMapPin,
   FiTrendingUp,
-  FiFlag,
-  FiExternalLink,
   FiZap,
   FiCheck,
   FiCheckCircle,
@@ -38,8 +35,6 @@ import {
 } from '../../services/weeklyTrainingService';
 import useWeeklyTrainings from '../../hooks/useWeeklyTrainings';
 import {
-  formatDuration,
-  calculatePace,
   getActivityTypeLabel,
   formatStravaActivity,
 } from '../../services/stravaService';
@@ -49,7 +44,6 @@ import { showSuccess, showError } from '../../lib/toast';
 import { inferTrainingType } from '../../lib/dateUtils';
 import RPEModal from '../../components/athlete/RPEModal';
 import SessionCompletionModal from '../../components/athlete/SessionCompletionModal';
-import useMapbox from '../../hooks/useMapbox';
 import useAthleteTestData from '../../hooks/useAthleteTestData';
 import useStravaActivities from '../../hooks/useStravaActivities';
 import {
@@ -76,9 +70,9 @@ const Training = () => {
 
   const {
     stravaConnected, stravaActivities, loadingStrava,
-    selectedActivity, setSelectedActivity, visibleActivities,
+    visibleActivities,
     activitiesRPE, editRpeActivity, setEditRpeActivity,
-    loadActivityDetail, handleEditRPESave, showMoreActivities,
+    handleEditRPESave, showMoreActivities,
   } = useStravaActivities(profile?.id);
 
   // Gym files count (just for the badge on the entry card)
@@ -131,7 +125,6 @@ const Training = () => {
   const [athleteNotes, setAthleteNotes] = useState('');
   const [actualDuration, setActualDuration] = useState('');
   const [saving, setSaving] = useState(false);
-  const { mapContainerRef } = useMapbox(selectedActivity?.polyline, selectedActivity?.loading);
 
   const weekDays = getWeekDays(currentWeek);
 
@@ -908,7 +901,7 @@ const Training = () => {
                     key={activity.id}
                     initial={{ opacity: 0, y: 10 }}
                     animate={{ opacity: 1, y: 0 }}
-                    onClick={() => loadActivityDetail(activity)}
+                    onClick={() => navigate(`/athlete/activity/${activity.id}`)}
                     className="bg-ath-surface rounded-2xl border border-ath-border overflow-hidden cursor-pointer hover:shadow-md transition-all"
                   >
                     {/* Card header */}
@@ -992,216 +985,6 @@ const Training = () => {
           )}
         </>
       )}{/* end Recientes tab */}
-
-      {/* Strava Activity Detail Modal */}
-      <AnimatePresence>
-        {selectedActivity && (
-          <div className="fixed inset-0 z-50 flex items-center justify-center p-4 bg-black/60 overflow-y-auto">
-            <motion.div
-              initial={{ opacity: 0, scale: 0.95 }}
-              animate={{ opacity: 1, scale: 1 }}
-              exit={{ opacity: 0, scale: 0.95 }}
-              className="bg-ath-surface rounded-2xl shadow-2xl w-full max-w-5xl max-h-[90vh] overflow-hidden flex flex-col"
-            >
-              {/* Modal Header */}
-              <div className={`p-6 border-b border-ath-border ${
-                selectedActivity.type === 'Run' || selectedActivity.type === 'VirtualRun'
-                  ? 'bg-blue-50 dark:bg-blue-900/20'
-                  : selectedActivity.type === 'WeightTraining' || selectedActivity.type === 'Workout'
-                    ? 'bg-purple-50 dark:bg-purple-900/20'
-                    : selectedActivity.type === 'Yoga' || selectedActivity.type === 'Pilates'
-                      ? 'bg-green-50 dark:bg-green-900/20'
-                      : selectedActivity.type === 'Ride' || selectedActivity.type === 'VirtualRide'
-                        ? 'bg-orange-50 dark:bg-orange-900/20'
-                        : 'bg-slate-50 dark:bg-[#141414]'
-              }`}>
-                <div className="flex items-start justify-between">
-                  <div>
-                    <h2 className="text-xl font-bold text-ath-text-primary">{selectedActivity.name}</h2>
-                    <p className="text-ath-text-muted text-sm mt-1">
-                      {new Date(selectedActivity.date).toLocaleDateString('es-ES', {
-                        weekday: 'long', day: 'numeric', month: 'long', year: 'numeric',
-                      })} · {getActivityTypeLabel(selectedActivity.type)}
-                    </p>
-                  </div>
-                  <button onClick={() => setSelectedActivity(null)} className="p-2 hover:bg-ath-inset rounded-lg transition-colors">
-                    <FiX className="w-6 h-6 text-ath-text-muted" />
-                  </button>
-                </div>
-              </div>
-
-              {/* Modal Content */}
-              <div className="flex-1 overflow-y-auto p-6 scrollbar-hover">
-                {selectedActivity.loading ? (
-                  <div className="flex items-center justify-center py-12">
-                    <FiLoader className="w-8 h-8 animate-spin text-orange-500" />
-                    <span className="ml-3 text-gray-500">Cargando detalles...</span>
-                  </div>
-                ) : (
-                  <div className="space-y-6">
-                    {/* Main Stats */}
-                    <div className="grid grid-cols-2 sm:grid-cols-4 gap-4">
-                      <div className="bg-blue-50 dark:bg-blue-900/20 rounded-xl p-4 text-center">
-                        <p className="text-2xl font-bold text-blue-600 dark:text-blue-400">{selectedActivity.distanceKm}</p>
-                        <p className="text-xs text-blue-500">km</p>
-                      </div>
-                      <div className="bg-purple-50 dark:bg-purple-900/20 rounded-xl p-4 text-center">
-                        <p className="text-2xl font-bold text-purple-600 dark:text-purple-400">{selectedActivity.formattedTime}</p>
-                        <p className="text-xs text-purple-500">tiempo</p>
-                      </div>
-                      <div className="bg-green-50 dark:bg-green-900/20 rounded-xl p-4 text-center">
-                        <p className="text-2xl font-bold text-green-600 dark:text-green-400">{selectedActivity.pace}</p>
-                        <p className="text-xs text-green-500">ritmo medio</p>
-                      </div>
-                      <div className="bg-red-50 dark:bg-red-900/20 rounded-xl p-4 text-center">
-                        <p className="text-2xl font-bold text-red-600 dark:text-red-400">{selectedActivity.average_heartrate || '-'}</p>
-                        <p className="text-xs text-red-500">bpm medio</p>
-                      </div>
-                    </div>
-
-                    {/* Additional Stats */}
-                    <div className="grid grid-cols-3 sm:grid-cols-6 gap-3">
-                      <div className="bg-ath-inset rounded-lg p-3 text-center">
-                        <p className="font-semibold text-ath-text-primary">{selectedActivity.total_elevation_gain || 0}m</p>
-                        <p className="text-xs text-gray-500">desnivel+</p>
-                      </div>
-                      <div className="bg-ath-inset rounded-lg p-3 text-center">
-                        <p className="font-semibold text-ath-text-primary">{selectedActivity.max_heartrate || '-'}</p>
-                        <p className="text-xs text-gray-500">FC max</p>
-                      </div>
-                      <div className="bg-ath-inset rounded-lg p-3 text-center">
-                        <p className="font-semibold text-ath-text-primary">{selectedActivity.calories || '-'}</p>
-                        <p className="text-xs text-gray-500">kcal</p>
-                      </div>
-                      <div className="bg-ath-inset rounded-lg p-3 text-center">
-                        <p className="font-semibold text-ath-text-primary">{selectedActivity.suffer_score || '-'}</p>
-                        <p className="text-xs text-gray-500">esfuerzo</p>
-                      </div>
-                      <div className="bg-ath-inset rounded-lg p-3 text-center">
-                        <p className="font-semibold text-ath-text-primary">{selectedActivity.kudos_count || 0}</p>
-                        <p className="text-xs text-gray-500">kudos</p>
-                      </div>
-                      <div className="bg-ath-inset rounded-lg p-3 text-center">
-                        <p className="font-semibold text-ath-text-primary">{selectedActivity.achievement_count || 0}</p>
-                        <p className="text-xs text-gray-500">logros</p>
-                      </div>
-                    </div>
-
-                    {/* Map */}
-                    {selectedActivity.polyline && (
-                      <div className="bg-ath-inset rounded-xl p-4">
-                        <h3 className="font-semibold text-ath-text-primary mb-3 flex items-center">
-                          <FiMapPin className="w-4 h-4 mr-2 text-orange-500" />Recorrido
-                        </h3>
-                        <div ref={mapContainerRef} className="h-64 rounded-lg overflow-hidden" style={{ minHeight: '256px' }} />
-                      </div>
-                    )}
-
-                    {/* Laps */}
-                    {selectedActivity.laps && selectedActivity.laps.length > 0 && (
-                      <div>
-                        <h3 className="font-semibold text-ath-text-primary mb-3 flex items-center">
-                          <FiActivity className="w-4 h-4 mr-2 text-blue-500" />Vueltas ({selectedActivity.laps.length})
-                        </h3>
-                        <div className="overflow-x-auto">
-                          <table className="w-full text-sm">
-                            <thead>
-                              <tr className="bg-ath-inset">
-                                <th className="px-3 py-2 text-left text-ath-text-secondary">#</th>
-                                <th className="px-3 py-2 text-right text-ath-text-secondary">Distancia</th>
-                                <th className="px-3 py-2 text-right text-ath-text-secondary">Tiempo</th>
-                                <th className="px-3 py-2 text-right text-ath-text-secondary">Ritmo</th>
-                                <th className="px-3 py-2 text-right text-ath-text-secondary">FC</th>
-                                <th className="px-3 py-2 text-right text-ath-text-secondary">Cadencia</th>
-                              </tr>
-                            </thead>
-                            <tbody className="divide-y divide-ath-border">
-                              {selectedActivity.laps.map((lap, index) => (
-                                <tr key={lap.id || index} className="hover:bg-ath-inset">
-                                  <td className="px-3 py-2 font-medium text-ath-text-primary">{lap.name || `Vuelta ${index + 1}`}</td>
-                                  <td className="px-3 py-2 text-right text-ath-text-secondary">{(lap.distance / 1000).toFixed(2)} km</td>
-                                  <td className="px-3 py-2 text-right text-ath-text-secondary">{formatDuration(lap.moving_time)}</td>
-                                  <td className="px-3 py-2 text-right font-mono text-ath-text-primary">{calculatePace(lap.moving_time, lap.distance)}</td>
-                                  <td className="px-3 py-2 text-right text-red-600 dark:text-red-400">{lap.average_heartrate ? `${Math.round(lap.average_heartrate)}` : '-'}</td>
-                                  <td className="px-3 py-2 text-right text-ath-text-secondary">{lap.average_cadence ? `${Math.round(lap.average_cadence * 2)}` : '-'}</td>
-                                </tr>
-                              ))}
-                            </tbody>
-                          </table>
-                        </div>
-                      </div>
-                    )}
-
-                    {/* Splits per KM */}
-                    {selectedActivity.splits_metric && selectedActivity.splits_metric.length > 0 && (
-                      <div>
-                        <h3 className="font-semibold text-ath-text-primary mb-3 flex items-center">
-                          <FiTrendingUp className="w-4 h-4 mr-2 text-green-500" />Parciales por Kilómetro
-                        </h3>
-                        <div className="grid grid-cols-5 sm:grid-cols-10 gap-2">
-                          {selectedActivity.splits_metric.map((split, index) => {
-                            const pace = calculatePace(split.moving_time, split.distance);
-                            const isGoodPace = split.average_heartrate && split.average_heartrate < (selectedActivity.average_heartrate || 150);
-                            return (
-                              <div key={index} className={`p-2 rounded-lg text-center ${isGoodPace ? 'bg-green-50 dark:bg-green-900/20' : 'bg-ath-inset'}`}>
-                                <p className="text-xs text-ath-text-muted mb-1">km {index + 1}</p>
-                                <p className="font-mono text-sm font-bold text-ath-text-primary">{pace}</p>
-                                {split.average_heartrate && <p className="text-xs text-red-500 mt-1">{Math.round(split.average_heartrate)}</p>}
-                              </div>
-                            );
-                          })}
-                        </div>
-                      </div>
-                    )}
-
-                    {/* Segments */}
-                    {selectedActivity.segment_efforts && selectedActivity.segment_efforts.length > 0 && (
-                      <div>
-                        <h3 className="font-semibold text-ath-text-primary mb-2 flex items-center gap-2 text-sm">
-                          <span className="text-slate-500">≡</span> Segmentos ({selectedActivity.segment_efforts.length})
-                        </h3>
-                        <div className="space-y-1 max-h-64 overflow-y-auto">
-                          {selectedActivity.segment_efforts.slice(0, 10).map((effort) => {
-                            const distKm = ((effort.segment?.distance || effort.distance || 0) / 1000).toFixed(3);
-                            return (
-                              <div key={effort.id} className="flex items-center gap-3 px-3 py-2.5 bg-ath-inset rounded-xl hover:bg-ath-inset transition-colors">
-                                <div className="w-8 h-8 rounded-lg bg-orange-100 dark:bg-orange-900/30 flex items-center justify-center flex-shrink-0">
-                                  <FiFlag className="w-3.5 h-3.5 text-[#FC4C02]" />
-                                </div>
-                                <div className="flex-1 min-w-0">
-                                  <p className="text-sm font-medium text-ath-text-primary truncate">{effort.segment?.name || effort.name}</p>
-                                  <p className="text-xs text-ath-text-muted">{distKm} km</p>
-                                </div>
-                                <div className="text-right flex-shrink-0">
-                                  <p className="font-mono font-semibold text-[#FC4C02]">{formatDuration(effort.moving_time || effort.elapsed_time)}</p>
-                                  {effort.pr_rank === 1 && (
-                                    <span className="text-[10px] text-yellow-600 dark:text-yellow-400 font-bold">PR</span>
-                                  )}
-                                </div>
-                              </div>
-                            );
-                          })}
-                        </div>
-                      </div>
-                    )}
-
-                    {/* Strava Link */}
-                    <a
-                      href={`https://www.strava.com/activities/${selectedActivity.id}`}
-                      target="_blank"
-                      rel="noopener noreferrer"
-                      className="flex items-center justify-center gap-2 w-full py-3 bg-slate-900 hover:bg-slate-800 dark:bg-slate-700 dark:hover:bg-slate-600 text-white rounded-xl transition-colors font-medium text-sm"
-                    >
-                      <span>Ver en Strava</span>
-                      <FiExternalLink className="w-4 h-4" />
-                    </a>
-                  </div>
-                )}
-              </div>
-            </motion.div>
-          </div>
-        )}
-      </AnimatePresence>
 
       {/* Training Detail Modal */}
       <AnimatePresence>

@@ -1,5 +1,4 @@
 import { useCallback, useEffect, useRef, useState } from 'react';
-// eslint-disable-next-line no-unused-vars
 import { motion, AnimatePresence, useReducedMotion } from 'framer-motion';
 import {
   FiX,
@@ -13,7 +12,12 @@ import {
 } from 'react-icons/fi';
 import { Link } from 'react-router-dom';
 import { analyzeMetricChart } from '../../services/metricAnalysisService';
-import ReportRenderer from './reports/ReportRenderer';
+import {
+  STATUS_BADGE_CLASSES,
+  STATE_ICON_CLASSES,
+  OVERLAY_CLASSES,
+} from '../../lib/themeClasses';
+import { ReportRenderer } from './reports/ReportRenderer';
 
 const emptyState = () => ({
   loading: false,
@@ -49,7 +53,7 @@ const loadingState = () => ({
  *  - mode: 'live' | 'history'  (default 'live')
  *  - preloadedReport: object | null  (when set, no API call — used by history view)
  */
-export default function AiAnalysisPanel({
+export function AiAnalysisPanel({
   open,
   onClose,
   chartType,
@@ -198,8 +202,8 @@ export default function AiAnalysisPanel({
     if (state.errorCode === 'quota_exhausted') {
       return (
         <div className="flex flex-col items-center text-center py-10 px-4 gap-4">
-          <div className="w-14 h-14 rounded-full bg-amber-100 dark:bg-amber-900/30 flex items-center justify-center">
-            <FiLock className="w-7 h-7 text-amber-500" />
+          <div className={`w-14 h-14 rounded-full flex items-center justify-center ${STATE_ICON_CLASSES.warning.bg}`}>
+            <FiLock className={`w-7 h-7 ${STATE_ICON_CLASSES.warning.fg}`} />
           </div>
           <h3 className="text-lg font-bold text-ath-text-primary">
             Has alcanzado tu cuota mensual
@@ -230,8 +234,8 @@ export default function AiAnalysisPanel({
       }
       return (
         <div className="flex flex-col items-center text-center py-10 px-4 gap-4">
-          <div className="w-14 h-14 rounded-full bg-red-100 dark:bg-red-900/30 flex items-center justify-center">
-            <FiAlertTriangle className="w-7 h-7 text-red-500" />
+          <div className={`w-14 h-14 rounded-full flex items-center justify-center ${STATE_ICON_CLASSES.error.bg}`}>
+            <FiAlertTriangle className={`w-7 h-7 ${STATE_ICON_CLASSES.error.fg}`} />
           </div>
           <p className="text-sm text-ath-text-secondary max-w-sm">{msg}</p>
           <button
@@ -250,28 +254,28 @@ export default function AiAnalysisPanel({
       <div className="flex flex-col gap-4 py-2">
         <div className="flex items-center flex-wrap gap-2">
           {isHistory ? (
-            <span className="inline-flex items-center gap-1 text-xs font-semibold px-2 py-1 rounded-full bg-slate-100 dark:bg-slate-800 text-slate-700 dark:text-slate-300">
+            <span className={`inline-flex items-center gap-1 text-xs font-semibold px-2 py-1 rounded-full ${STATUS_BADGE_CLASSES.history}`}>
               <FiBookmark className="w-3 h-3" />
               Informe guardado
             </span>
           ) : state.cached ? (
-            <span className="inline-flex items-center gap-1 text-xs font-semibold px-2 py-1 rounded-full bg-blue-100 dark:bg-blue-900/40 text-blue-700 dark:text-blue-300">
+            <span className={`inline-flex items-center gap-1 text-xs font-semibold px-2 py-1 rounded-full ${STATUS_BADGE_CLASSES.cached}`}>
               <FiCheckCircle className="w-3 h-3" />
               Resultado en caché
             </span>
           ) : (
-            <span className="inline-flex items-center gap-1 text-xs font-semibold px-2 py-1 rounded-full bg-emerald-100 dark:bg-emerald-900/40 text-emerald-700 dark:text-emerald-300">
+            <span className={`inline-flex items-center gap-1 text-xs font-semibold px-2 py-1 rounded-full ${STATUS_BADGE_CLASSES.generated}`}>
               <FiZap className="w-3 h-3" />
               Generado ahora
             </span>
           )}
-          {!isHistory && state.remaining != null && state.remaining >= 0 && (
+          {!isHistory && state.remaining !== null && state.remaining !== undefined && state.remaining >= 0 && (
             <span className="text-xs text-ath-text-muted">
               {state.remaining} análisis restantes este mes
             </span>
           )}
           {!isHistory && state.remaining === -1 && (
-            <span className="text-xs text-emerald-600 dark:text-emerald-400">
+            <span className={`text-xs ${STATUS_BADGE_CLASSES.unlimited}`}>
               Análisis ilimitados
             </span>
           )}
@@ -305,7 +309,7 @@ export default function AiAnalysisPanel({
             initial={{ opacity: 0 }}
             animate={{ opacity: 1 }}
             exit={{ opacity: 0 }}
-            className="fixed top-[62px] bottom-[88px] left-0 right-0 lg:inset-0 z-40 bg-black/40 backdrop-blur-sm"
+            className={`fixed top-[62px] bottom-[88px] left-0 right-0 lg:inset-0 z-40 ${OVERLAY_CLASSES.backdrop}`}
             onClick={handleBackdropClick}
             aria-hidden="true"
           />
@@ -314,15 +318,15 @@ export default function AiAnalysisPanel({
             animate={panelMotion.animate}
             exit={panelMotion.exit}
             transition={panelMotion.transition}
-            className="fixed right-0 top-[62px] bottom-[88px] lg:top-0 lg:bottom-0 z-50 w-full max-w-md lg:max-w-xl flex flex-col bg-white dark:bg-slate-950 shadow-2xl"
+            className="fixed right-0 top-[62px] bottom-[88px] lg:top-0 lg:bottom-0 z-50 w-full max-w-md lg:max-w-xl flex flex-col bg-ath-surface shadow-2xl"
             role="dialog"
             aria-modal="true"
             aria-labelledby="ai-panel-title"
           >
-            <div className="flex items-center justify-between px-4 py-3 border-b border-gray-200 dark:border-slate-800">
+            <div className="flex items-center justify-between px-4 py-3 border-b border-ath-border">
               <div className="flex items-center gap-2.5 min-w-0">
                 <div className="w-8 h-8 rounded-lg bg-ath-accent flex items-center justify-center flex-shrink-0">
-                  <FiZap className="w-4 h-4 text-white" />
+                  <FiZap className="w-4 h-4 text-ath-on-accent" />
                 </div>
                 <div className="min-w-0">
                   <p className="text-[10px] uppercase tracking-widest text-ath-accent-text font-semibold leading-none">
@@ -330,7 +334,7 @@ export default function AiAnalysisPanel({
                   </p>
                   <p
                     id="ai-panel-title"
-                    className="text-sm text-gray-900 dark:text-white font-medium mt-0.5 truncate"
+                    className="text-sm text-ath-text-primary font-medium mt-0.5 truncate"
                   >
                     {title || 'Análisis con IA'}
                   </p>
@@ -341,7 +345,7 @@ export default function AiAnalysisPanel({
                 type="button"
                 onClick={onClose}
                 aria-label="Cerrar panel"
-                className="p-1.5 rounded-lg text-gray-400 hover:text-gray-700 dark:hover:text-white hover:bg-gray-100 dark:hover:bg-slate-800 transition-colors"
+                className="p-1.5 rounded-lg text-ath-text-muted hover:text-ath-text-primary hover:bg-ath-inset transition-colors"
               >
                 <FiX className="w-5 h-5" />
               </button>

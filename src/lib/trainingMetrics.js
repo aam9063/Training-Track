@@ -681,6 +681,148 @@ export const downsampleStream = (arr, targetLen = 300) => {
   return out;
 };
 
+// ============================================================
+// HR Zone Percentage Helpers
+// ============================================================
+
+/**
+ * Convert the `zones` array returned by `useHrZoneData` into a map
+ * `{ z1..z5 }` of integer percentages, using the total HR-activity count.
+ * Returns `null` if there are no HR activities so callers can render a
+ * placeholder.
+ *
+ * @param {{zones:Array<{count:number}>, totalHRActivities:number}} hrZoneData
+ * @returns {{z1:number,z2:number,z3:number,z4:number,z5:number}|null}
+ */
+export const calculateZonePercentages = (hrZoneData) => {
+  if (!hrZoneData || !hrZoneData.totalHRActivities) return null;
+  const total = hrZoneData.totalHRActivities;
+  const zones = hrZoneData.zones || [];
+  const pct = (i) => Math.round(((zones[i]?.count || 0) / total) * 100);
+  return {
+    z1: pct(0),
+    z2: pct(1),
+    z3: pct(2),
+    z4: pct(3),
+    z5: pct(4),
+  };
+};
+
+// ============================================================
+// Best Efforts formatting (UI-ready)
+// ============================================================
+
+const BEST_EFFORT_DIST_MAP = {
+  '5k': { label: '5 KM', dist: '5000m', meters: 5000 },
+  '10k': { label: '10 KM', dist: '10000m', meters: 10000 },
+  'half marathon': { label: 'MEDIA MARATÓN', dist: '21097m', meters: 21097 },
+  marathon: { label: 'MARATÓN', dist: '42195m', meters: 42195 },
+};
+
+const formatEffortTime = (secs) => {
+  if (!secs) return '–';
+  const h = Math.floor(secs / 3600);
+  const m = Math.floor((secs % 3600) / 60);
+  const s = secs % 60;
+  if (h > 0) {
+    return `${h}:${String(m).padStart(2, '0')}:${String(s).padStart(2, '0')}`;
+  }
+  return `${m}:${String(s).padStart(2, '0')}`;
+};
+
+const formatEffortPace = (secs, meters) => {
+  if (!secs || !meters) return '–';
+  const paceSecPerKm = secs / (meters / 1000);
+  const m = Math.floor(paceSecPerKm / 60);
+  const s = Math.round(paceSecPerKm % 60);
+  return `${m}:${String(s).padStart(2, '0')}`;
+};
+
+/**
+ * Build the 2x2 grid slots for the Best Efforts card on the metrics page.
+ * Returns one entry per standard distance (5K, 10K, Half, Marathon) with
+ * pre-formatted strings ready for the UI. If no effort is registered for a
+ * distance the slot carries `effort: null` so the view can render a
+ * placeholder.
+ *
+ * @param {Array} bestEfforts - Strava best efforts collection
+ * @returns {Array<{key:string,label:string,timeFormatted:string|null,paceFormatted:string|null,dateFormatted:string|null,effort:Object|null}>}
+ */
+export const formatBestEfforts = (bestEfforts) => {
+  const keys = ['5k', '10k', 'half marathon', 'marathon'];
+  return keys.map((key) => {
+    const meta = BEST_EFFORT_DIST_MAP[key];
+    const effort = (bestEfforts || []).find(
+      (e) => e.name?.toLowerCase() === key,
+    ) || null;
+    let dateFormatted = null;
+    if (effort?.start_date_local) {
+      try {
+        dateFormatted = new Date(effort.start_date_local).toLocaleDateString(
+          'es-ES',
+          { month: 'short', year: 'numeric' },
+        );
+      } catch {
+        dateFormatted = null;
+      }
+    }
+    return {
+      key,
+      label: meta.label,
+      dist: meta.dist,
+      effort,
+      timeFormatted: effort ? formatEffortTime(effort.elapsed_time) : null,
+      paceFormatted: effort
+        ? formatEffortPace(effort.elapsed_time, effort.distance)
+        : null,
+      dateFormatted,
+    };
+  });
+};
+
+// ============================================================
+// ACWR Alert Config (icon + message + severity key)
+// ============================================================
+
+/**
+ * Pick the severity bucket for an ACWR value. The returned `severity` key
+ * maps to `ACWR_ALERT_CLASSES` in `themeClasses.js` so the UI stays in sync
+ * with the design system.
+ *
+ * @param {number} acwr - Acute:Chronic Workload Ratio
+ * @returns {{severity:'low'|'optimal'|'high'|'danger',icon:string,message:string}}
+ */
+export const getAcwrAlertConfig = (acwr) => {
+  if (acwr < 0.8) {
+    return {
+      severity: 'low',
+      icon: '📉',
+      message:
+        'Tu carga actual está por debajo de lo habitual. Considera aumentar gradualmente el volumen.',
+    };
+  }
+  if (acwr <= 1.3) {
+    return {
+      severity: 'optimal',
+      icon: '✓',
+      message: 'Tu carga está en zona óptima. ¡Sigue así!',
+    };
+  }
+  if (acwr <= 1.5) {
+    return {
+      severity: 'high',
+      icon: '⚠',
+      message:
+        'Cuidado: tu carga está aumentando rápidamente. Controla el volumen esta semana.',
+    };
+  }
+  return {
+    severity: 'danger',
+    icon: '🚨',
+    message: 'Alerta: riesgo elevado de sobrecarga. Reduce la intensidad y descansa.',
+  };
+};
+
 /**
  * Calculate readiness score from wellness + training load data
  * @param {Object} wellness - Today's wellness log

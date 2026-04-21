@@ -2,7 +2,8 @@ import { useState } from 'react';
 import { FiZap, FiLock } from 'react-icons/fi';
 import { Link } from 'react-router-dom';
 import useAiAnalysisQuota from '../../hooks/useAiAnalysisQuota';
-import AiAnalysisPanel from './AiAnalysisPanel';
+import { AiAnalysisPanel } from './AiAnalysisPanel';
+import { STATE_ICON_CLASSES } from '../../lib/themeClasses';
 
 /**
  * Reusable AI analyzer trigger.
@@ -16,7 +17,7 @@ import AiAnalysisPanel from './AiAnalysisPanel';
  *  - title?: string (modal title)
  *  - disabled?: boolean (external gating, e.g. empty data)
  */
-export default function MetricAIAnalyzer({
+export function MetricAIAnalyzer({
   chartType,
   data,
   athleteContext,
@@ -92,8 +93,8 @@ export default function MetricAIAnalyzer({
             onClick={(e) => e.stopPropagation()}
           >
             <div className="flex flex-col items-center text-center gap-4">
-              <div className="w-14 h-14 rounded-full bg-amber-100 dark:bg-amber-900/30 flex items-center justify-center">
-                <FiLock className="w-7 h-7 text-amber-500" />
+              <div className={`w-14 h-14 rounded-full flex items-center justify-center ${STATE_ICON_CLASSES.warning.bg}`}>
+                <FiLock className={`w-7 h-7 ${STATE_ICON_CLASSES.warning.fg}`} />
               </div>
               <h3 className="text-lg font-bold text-ath-text-primary">
                 Cuota mensual agotada

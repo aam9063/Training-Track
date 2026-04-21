@@ -2,7 +2,7 @@ import { useEffect, useMemo, useState } from 'react';
 import { Line } from 'react-chartjs-2';
 import { FiTrendingUp, FiLoader } from 'react-icons/fi';
 import { getBestEffortsEvolution } from '../../../services/metricsAnalyticsService';
-import MetricAIAnalyzer from '../MetricAIAnalyzer';
+import { MetricAIAnalyzer } from '../MetricAIAnalyzer';
 import DateRangeSelector from './DateRangeSelector';
 
 const DISTANCE_OPTIONS = [
@@ -41,7 +41,7 @@ const formatDateFull = (iso) => {
   return d.toLocaleDateString('es-ES', { day: 'numeric', month: 'long', year: 'numeric' });
 };
 
-export default function BestEffortsChart({ athleteId, athleteContext, range: rangeProp }) {
+export default function BestEffortsChart({ athleteId, athleteContext, range: rangeProp, hideAI = false }) {
   const [rows, setRows] = useState([]);
   const [loading, setLoading] = useState(true);
   const [errorMsg, setErrorMsg] = useState(null);
@@ -149,14 +149,16 @@ export default function BestEffortsChart({ athleteId, athleteContext, range: ran
             Evolución de marcas
           </h3>
         </div>
-        <MetricAIAnalyzer
-          chartType="best_efforts"
-          data={aiData}
-          athleteContext={athleteContext}
-          compact
-          title="Análisis de evolución de marcas"
-          disabled={!hasData}
-        />
+        {!hideAI && (
+          <MetricAIAnalyzer
+            chartType="best_efforts"
+            data={aiData}
+            athleteContext={athleteContext}
+            compact
+            title="Análisis de evolución de marcas"
+            disabled={!hasData}
+          />
+        )}
       </div>
 
       {rangeProp === undefined && (

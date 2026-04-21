@@ -9,6 +9,7 @@ import {
   paceZonesFromThreshold,
   paceZonesFromVdot,
 } from '../lib/trainingMetrics';
+import { filterStravaActivityId } from '../lib/stravaIdUtils';
 
 /**
  * Analytics service for advanced metrics (deep views).
@@ -617,11 +618,11 @@ export const getGapForActivity = async (activityUuid) => {
 export const getSplitsForActivity = async (activityUuid) => {
   if (!activityUuid) return { data: null, error: { message: 'activityUuid requerido' } };
 
-  const { data, error } = await supabase
-    .from('strava_activities')
-    .select('splits_metric')
-    .eq('id', activityUuid)
-    .maybeSingle();
+  // Accept UUID or Strava bigint so the caller can use either id system.
+  const { data, error } = await filterStravaActivityId(
+    supabase.from('strava_activities').select('splits_metric'),
+    activityUuid
+  ).maybeSingle();
 
   if (error) return { data: null, error };
   if (!data?.splits_metric || !Array.isArray(data.splits_metric) || data.splits_metric.length === 0) {
@@ -650,11 +651,11 @@ export const getSplitsForActivity = async (activityUuid) => {
 export const getLapsForActivity = async (activityUuid) => {
   if (!activityUuid) return { data: null, error: { message: 'activityUuid requerido' } };
 
-  const { data, error } = await supabase
-    .from('strava_activities')
-    .select('laps')
-    .eq('id', activityUuid)
-    .maybeSingle();
+  // Accept UUID or Strava bigint so the caller can use either id system.
+  const { data, error } = await filterStravaActivityId(
+    supabase.from('strava_activities').select('laps'),
+    activityUuid
+  ).maybeSingle();
 
   if (error) return { data: null, error };
   if (!data?.laps || !Array.isArray(data.laps) || data.laps.length === 0) {

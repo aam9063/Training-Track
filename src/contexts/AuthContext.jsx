@@ -1,6 +1,7 @@
 import { createContext, useContext, useState, useEffect, useCallback, useMemo, useRef } from 'react';
 import { supabase } from '../lib/supabase';
 import { toLocalDateStr } from '../lib/dateUtils';
+import { sendEmail } from '../services/emailService';
 
 const AuthContext = createContext(undefined);
 
@@ -233,6 +234,56 @@ export function AuthProvider({ children }) {
       subscription.unsubscribe();
     };
   }, [fetchProfile]);
+
+  // Tracks welcome-email attempts for the current session to avoid re-sending
+  // if profile re-renders before the DB flag round-trips (or if the column
+  // does not yet exist in this environment).
+  const welcomeAttemptedRef = useRef(new Set());
+
+  // Send a welcome transactional email the first time a profile loads without
+  // `welcome_email_sent=true`. Failures are swallowed so auth flow is never
+  // blocked — the DB column may not yet exist in some environments.
+  useEffect(() => {
+    if (!profile || !profileLoaded) return;
+    if (!profile.id || !user?.email || !profile.role) return;
+    if (profile.welcome_email_sent) return;
+    if (welcomeAttemptedRef.current.has(profile.id)) return;
+    welcomeAttemptedRef.current.add(profile.id);
+
+    const template = profile.role === 'coach' ? 'welcome-coach' : 'welcome-athlete';
+    const loginUrl = profile.role === 'coach'
+      ? 'https://trainingtrack.es/dashboard'
+      : 'https://trainingtrack.es/athlete/dashboard';
+    const userName = profile.first_name || user.email.split('@')[0] || 'Usuario';
+
+    (async () => {
+      try {
+        const { error } = await sendEmail({
+          to: user.email,
+          template,
+          vars: { userName, loginUrl },
+        });
+        if (error) {
+          console.warn('[welcome-email] failed', error);
+          return;
+        }
+        // Mark as sent. Column may not exist yet — swallow that specific error.
+        try {
+          const { error: updError } = await supabase
+            .from('users')
+            .update({ welcome_email_sent: true })
+            .eq('id', profile.id);
+          if (updError) {
+            console.warn('[welcome-email] flag update failed (ok if column missing)', updError.message);
+          }
+        } catch (flagErr) {
+          console.warn('[welcome-email] flag update threw', flagErr);
+        }
+      } catch (err) {
+        console.warn('[welcome-email] unexpected error', err);
+      }
+    })();
+  }, [profile, profileLoaded, user?.email]);
 
   // Sign up with email
   const signUp = useCallback(async ({ email, password, role, firstName, lastName, coachEmail, coachId, isIndependent }) => {

@@ -1,0 +1,25 @@
+{
+  "name": "react-email-starter",
+  "version": "1.1.0",
+  "private": true,
+  "type": "module",
+  "scripts": {
+    "build": "email build",
+    "dev": "email dev",
+    "export:preview": "email export",
+    "export": "tsx scripts/export-templates.mjs"
+  },
+  "dependencies": {
+    "@react-email/components": "0.0.36",
+    "@react-email/render": "1.0.5",
+    "react": "19.2.4",
+    "react-dom": "19.2.4",
+    "react-email": "6.0.0"
+  },
+  "devDependencies": {
+    "@react-email/ui": "6.0.0",
+    "@types/react": "19.2.14",
+    "@types/react-dom": "19.2.3",
+    "tsx": "^4.21.0"
+  }
+}

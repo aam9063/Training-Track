@@ -4,6 +4,7 @@ import { FiLoader, FiMapPin } from 'react-icons/fi';
 import { supabase } from '../../../lib/supabase';
 import { fetchStreamsForActivity } from '../../../services/stravaSyncService';
 import { downsampleStream } from '../../../lib/trainingMetrics';
+import { filterStravaActivityId, isUuid } from '../../../lib/stravaIdUtils';
 import InfoTooltip from '../../common/InfoTooltip';
 
 const ZONE_COLORS = {
@@ -36,17 +37,21 @@ export default function ElevationProfileChart({ activityId }) {
       }
       setState({ loading: true, data: null, error: null });
 
-      // Check has_streams
-      const { data: act } = await supabase
-        .from('strava_activities')
-        .select('has_streams, athlete_id')
-        .eq('id', activityId)
-        .maybeSingle();
+      // Check has_streams — resolve the row by UUID (id) or bigint (strava_id)
+      // so callers that mistakenly pass the Strava bigint don't hit 400s.
+      const { data: act } = await filterStravaActivityId(
+        supabase.from('strava_activities').select('has_streams, athlete_id, id'),
+        activityId
+      ).maybeSingle();
 
       if (cancelled) return;
 
+      // `strava_activity_streams.activity_id` is UUID → always use the row's
+      // internal id (even if the caller handed us the Strava bigint).
+      const streamsActivityId = act?.id || (isUuid(activityId) ? activityId : null);
+
       if (act && !act.has_streams) {
-        const { error: fetchErr } = await fetchStreamsForActivity(activityId);
+        const { error: fetchErr } = await fetchStreamsForActivity(streamsActivityId);
         if (cancelled) return;
         if (fetchErr) {
           setState({
@@ -58,10 +63,15 @@ export default function ElevationProfileChart({ activityId }) {
         }
       }
 
+      if (!streamsActivityId) {
+        setState({ loading: false, data: null, error: 'Actividad no encontrada' });
+        return;
+      }
+
       const { data: stream, error: streamErr } = await supabase
         .from('strava_activity_streams')
         .select('altitude, distance, heartrate')
-        .eq('activity_id', activityId)
+        .eq('activity_id', streamsActivityId)
         .maybeSingle();
 
       if (cancelled) return;

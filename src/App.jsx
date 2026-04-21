@@ -31,6 +31,7 @@ const SelectPlan = lazy(() => import('./pages/SelectPlan'));
 const Dashboard = lazy(() => import('./pages/dashboard/Dashboard'));
 const Athletes = lazy(() => import('./pages/dashboard/Athletes'));
 const AthleteProfile = lazy(() => import('./pages/dashboard/AthleteProfile'));
+const CoachActivityDetailPage = lazy(() => import('./pages/dashboard/CoachActivityDetailPage'));
 const AthleteMetricsView = lazy(() => import('./pages/dashboard/AthleteMetricsView'));
 const Metrics = lazy(() => import('./pages/dashboard/Metrics'));
 const Calendar = lazy(() => import('./pages/dashboard/Calendar'));
@@ -57,6 +58,8 @@ const AthleteMessages = lazy(() => import('./pages/athlete/Messages'));
 const GymFiles = lazy(() => import('./pages/athlete/GymFiles'));
 const MyReports = lazy(() => import('./pages/athlete/MyReports'));
 const AnalysisHistory = lazy(() => import('./pages/athlete/AnalysisHistory'));
+const ActivityDetailPage = lazy(() => import('./pages/athlete/ActivityDetailPage'));
+const IndependentActivityDetailPage = lazy(() => import('./pages/athlete/IndependentActivityDetailPage'));
 
 // Independent athlete pages
 const MyPlan = lazy(() => import('./pages/athlete/MyPlan'));
@@ -135,6 +138,7 @@ function App() {
                   <Route path="athletes" element={<Athletes />} />
                   <Route path="athletes/:athleteId" element={<AthleteProfile />} />
                   <Route path="athletes/:athleteId/metrics" element={<AthleteMetricsView />} />
+                  <Route path="athletes/:athleteId/activity/:activityId" element={<CoachActivityDetailPage />} />
                   <Route path="planning" element={<Planning />} />
                   <Route path="metrics" element={<Metrics />} />
                   <Route path="calendar" element={<Calendar />} />
@@ -155,8 +159,10 @@ function App() {
                   <Route path="my-reports" element={<MyReports />} />
                   <Route path="analysis-history" element={<AnalysisHistory />} />
                   <Route path="profile" element={<Profile />} />
+                  <Route path="activity/:activityId" element={<ActivityDetailPage />} />
                   {/* Independent athlete routes */}
                   <Route path="my-plan" element={<IndependentRoute><MyPlan /></IndependentRoute>} />
+                  <Route path="my-plan/activity/:activityId" element={<IndependentRoute><IndependentActivityDetailPage /></IndependentRoute>} />
                   <Route path="competitions" element={<IndependentRoute><Competitions /></IndependentRoute>} />
                   <Route path="ai-assistant" element={<IndependentRoute><AIAssistant /></IndependentRoute>} />
                 </Route>

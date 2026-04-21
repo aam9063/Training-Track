@@ -359,6 +359,11 @@ export const getStravaAthleteStats = async (athleteId) => {
 export const formatStravaActivity = (activity) => {
   return {
     id: activity.id,
+    // Preserve the internal UUID (strava_activities.id) when the activity
+    // originates from our cache (mapRowToActivity). Queries on related
+    // tables like strava_activity_streams.activity_id need this UUID,
+    // NOT the bigint strava_id.
+    internal_id: activity.internal_id ?? null,
     name: activity.name,
     type: activity.type,
     sport_type: activity.sport_type,

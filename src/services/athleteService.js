@@ -726,6 +726,50 @@ export const getAthleteHrProfile = async (athleteId) => {
   }
 };
 
+/**
+ * Fetch Strava-synced HR zones for the athlete from `athlete_hr_zones`.
+ * Returns a normalised array `[{zone, min, max, color}]` sorted by zone,
+ * or `null` when no zones are configured.
+ * Colors come from TRAINING_ZONE_COLORS to stay in sync with the design
+ * system.
+ */
+export const getAthleteHrZones = async (athleteId) => {
+  if (!athleteId) return { data: null, error: new Error('No athleteId provided') };
+
+  try {
+    const { data, error } = await supabase
+      .from('athlete_hr_zones')
+      .select('zones')
+      .eq('athlete_id', athleteId)
+      .maybeSingle();
+
+    if (error) throw error;
+    if (!data?.zones || !Array.isArray(data.zones) || data.zones.length < 1) {
+      return { data: null, error: null };
+    }
+
+    // Lazy import to avoid a circular dep on chartColors if athleteService is
+    // consumed outside the app bundle (SSR/testing).
+    const { TRAINING_ZONE_COLORS } = await import('../lib/chartColors');
+
+    const normalised = data.zones
+      .map((z) => {
+        const zoneNum = Number(z.zone) || 0;
+        return {
+          zone: zoneNum,
+          min: Number(z.min) || 0,
+          max: Number(z.max) || 9999,
+          color: TRAINING_ZONE_COLORS[zoneNum - 1] || TRAINING_ZONE_COLORS[0],
+        };
+      })
+      .sort((a, b) => a.zone - b.zone);
+
+    return { data: normalised, error: null };
+  } catch (error) {
+    return { data: null, error };
+  }
+};
+
 // =============================================
 // LEGACY ALIASES (para compatibilidad)
 // =============================================

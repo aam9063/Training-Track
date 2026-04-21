@@ -29,6 +29,10 @@ const mapActivityToRow = (athleteId, activity) => ({
 
 const mapRowToActivity = (row) => ({
   id: row.strava_id,
+  // Internal UUID PK from `strava_activities.id`. Needed for queries on
+  // related tables (e.g. strava_activity_streams.activity_id is a UUID FK
+  // pointing to this value — NOT to strava_id).
+  internal_id: row.id,
   name: row.name,
   type: row.type,
   sport_type: row.sport_type,

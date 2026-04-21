@@ -10,6 +10,7 @@ import {
   getActivitiesWithoutDetails,
 } from './stravaCacheService';
 import { syncPersonalBests, updateAthleteVdot } from './trainingLoadService';
+import { isUuid } from '../lib/stravaIdUtils';
 
 /**
  * Incremental sync: fetch only activities newer than the latest cached one.
@@ -218,12 +219,16 @@ export const fetchActivityDetailById = async (activityDbId) => {
     return { data: null, error: { code: 'invalid_input', message: 'activityDbId requerido' } };
   }
 
-  // 1. Resolve the row (RLS ensures only the owner athlete can read it)
-  const { data: row, error: rowErr } = await supabase
+  // 1. Resolve the row (RLS ensures only the owner athlete can read it).
+  // Accept either the internal UUID or the Strava bigint — historically some
+  // callers passed `activity.id` (the bigint) which caused PostgREST 400s.
+  const baseQuery = supabase
     .from('strava_activities')
-    .select('id, strava_id, athlete_id')
-    .eq('id', activityDbId)
-    .maybeSingle();
+    .select('id, strava_id, athlete_id');
+  const resolverQuery = isUuid(activityDbId)
+    ? baseQuery.eq('id', activityDbId)
+    : baseQuery.eq('strava_id', activityDbId);
+  const { data: row, error: rowErr } = await resolverQuery.maybeSingle();
 
   if (rowErr) {
     return { data: null, error: { code: 'db_error', message: rowErr.message } };

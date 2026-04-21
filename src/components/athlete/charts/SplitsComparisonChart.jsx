@@ -3,7 +3,7 @@ import { Bar } from 'react-chartjs-2';
 import { FiLoader, FiMap, FiRefreshCw } from 'react-icons/fi';
 import { getSplitsForActivity } from '../../../services/metricsAnalyticsService';
 import { fetchActivityDetailById } from '../../../services/stravaSyncService';
-import MetricAIAnalyzer from '../MetricAIAnalyzer';
+import { MetricAIAnalyzer } from '../MetricAIAnalyzer';
 import InfoTooltip from '../../common/InfoTooltip';
 
 const formatPace = (sec) => {
@@ -13,7 +13,7 @@ const formatPace = (sec) => {
   return `${m}:${String(s).padStart(2, '0')}`;
 };
 
-export default function SplitsComparisonChart({ activityId, athleteContext }) {
+export default function SplitsComparisonChart({ activityId, athleteContext, hideAI = false }) {
   const [state, setState] = useState({ loading: false, splits: [], error: null });
   const [backfill, setBackfill] = useState({ running: false, error: null, attempted: false });
 
@@ -212,14 +212,16 @@ export default function SplitsComparisonChart({ activityId, athleteContext }) {
             <p className="text-[11px] text-ath-text-muted">Pace y FC por km</p>
           </div>
         </div>
-        <MetricAIAnalyzer
-          chartType="splits_comparison"
-          data={aiData}
-          athleteContext={athleteContext}
-          compact
-          title="Análisis de splits"
-          disabled={!hasData}
-        />
+        {!hideAI && (
+          <MetricAIAnalyzer
+            chartType="splits_comparison"
+            data={aiData}
+            athleteContext={athleteContext}
+            compact
+            title="Análisis de splits"
+            disabled={!hasData}
+          />
+        )}
       </div>
 
       <div className="h-[280px]">

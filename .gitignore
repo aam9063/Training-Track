@@ -29,6 +29,7 @@ dist-ssr
 *.sw?
 *.claude/*
 .atl/*
+docs/*
 
 .mcp.json
 .claude/*

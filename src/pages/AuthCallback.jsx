@@ -117,14 +117,23 @@ export default function AuthCallback() {
         const [firstName, ...lastParts] = fullName.split(' ');
         const lastName = lastParts.join(' ');
 
+        // The wizard keeps 'independent_athlete' as a UX-level role so the
+        // user can see the right plan options. At the DB level there are only
+        // two roles ('coach' | 'athlete') + the is_independent flag on users.
+        // Normalize here so every downstream write (auth metadata, public.users
+        // row, athletes upsert) is consistent.
+        const isIndependentAthlete = meta.role === 'independent_athlete';
+        const dbRole = isIndependentAthlete ? 'athlete' : meta.role;
+
         await supabase.auth.updateUser({
           data: {
-            role: meta.role,
+            role: dbRole,
             first_name: firstName || 'Usuario',
             last_name: lastName || '',
             coach_id: meta.coachId || null,
             coach_email: meta.coachEmail || null,
             auth_provider: 'google',
+            is_independent: isIndependentAthlete,
           },
         });
 
@@ -138,21 +147,28 @@ export default function AuthCallback() {
           const { error: updateError } = await supabase
             .from('users')
             .update({
-              role: meta.role,
+              role: dbRole,
               first_name: firstName || 'Usuario',
               last_name: lastName || '',
               auth_provider: 'google',
+              // Only write is_independent for athlete signups; for coaches the
+              // column stays at its default (false). This ensures independent
+              // athletes get access to /athlete/my-plan, /competitions and
+              // /ai-assistant (gated by IndependentRoute in App.jsx).
+              ...(dbRole === 'athlete' ? { is_independent: isIndependentAthlete } : {}),
             })
             .eq('id', sessionUser.id);
           if (updateError) throw updateError;
 
-          if (meta.role === 'athlete') {
+          if (dbRole === 'athlete') {
             const { error: athErr } = await supabase
               .from('athletes')
               .upsert({ id: sessionUser.id }, { onConflict: 'id', ignoreDuplicates: true });
             if (athErr) throw athErr;
 
-            if (meta.coachId) {
+            // Independent athletes have no coach, so skip the relationship
+            // upsert for them. Only coached athletes with a coachId link up.
+            if (!isIndependentAthlete && meta.coachId) {
               const { error: relErr } = await supabase
                 .from('coach_athlete_relationship')
                 .upsert({
@@ -163,7 +179,7 @@ export default function AuthCallback() {
                 }, { onConflict: 'coach_id,athlete_id', ignoreDuplicates: true });
               if (relErr) throw relErr;
             }
-          } else if (meta.role === 'coach') {
+          } else if (dbRole === 'coach') {
             const { error: coachErr } = await supabase
               .from('coaches')
               .upsert({ id: sessionUser.id }, { onConflict: 'id', ignoreDuplicates: true });

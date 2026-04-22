@@ -4,6 +4,7 @@ import { useAuth } from '../../contexts/AuthContext';
 import { uploadProfileImage, deleteProfileImage } from '../../services/storageService';
 import ImageCropModal from '../../components/common/ImageCropModal';
 import { SubscriptionSection } from '../../components/common/SubscriptionSection';
+import DeleteAccountModal from '../../components/common/DeleteAccountModal';
 import { motion } from 'framer-motion';
 import {
   FiMail,
@@ -17,6 +18,7 @@ import {
   FiCopy,
   FiCheck,
   FiHeart,
+  FiTrash2,
 } from 'react-icons/fi';
 
 const Profile = () => {
@@ -57,6 +59,7 @@ const Profile = () => {
   const [newDistance, setNewDistance] = useState('');
   const [loading, setLoading] = useState(false);
   const [copiedInvite, setCopiedInvite] = useState(false);
+  const [deleteModalOpen, setDeleteModalOpen] = useState(false);
 
   const handleCopyInviteLink = async () => {
     const url = `https://www.trainingtrack.es/register?invite=${profile?.id || user?.id}`;
@@ -260,13 +263,23 @@ const Profile = () => {
           Gestiona tu información personal
         </p>
         {!editing ? (
-          <button
-            onClick={() => setEditing(true)}
-            className="flex items-center space-x-2 px-4 py-2 bg-blue-600 hover:bg-blue-700 text-white rounded-lg transition-colors"
-          >
-            <FiEdit2 className="w-5 h-5" />
-            <span>Editar</span>
-          </button>
+          <div className="flex items-center gap-2 flex-wrap">
+            <button
+              onClick={() => setEditing(true)}
+              className="flex items-center space-x-2 px-4 py-2 bg-blue-600 hover:bg-blue-700 text-white rounded-lg transition-colors"
+            >
+              <FiEdit2 className="w-5 h-5" />
+              <span>Editar</span>
+            </button>
+            <button
+              type="button"
+              onClick={() => setDeleteModalOpen(true)}
+              className="inline-flex items-center gap-1.5 px-3 py-1.5 rounded-lg text-sm font-medium text-red-600 dark:text-red-400 hover:bg-red-50 dark:hover:bg-red-900/20 transition-colors"
+            >
+              <FiTrash2 className="w-4 h-4" />
+              Eliminar cuenta
+            </button>
+          </div>
         ) : (
           <div className="flex space-x-2">
             <button
@@ -667,6 +680,12 @@ const Profile = () => {
 
       {/* Subscription Management */}
       <SubscriptionSection />
+
+      {/* Delete account confirmation modal (triggered from header button) */}
+      <DeleteAccountModal
+        open={deleteModalOpen}
+        onClose={() => setDeleteModalOpen(false)}
+      />
 
       {/* Image Crop Modal */}
       {cropImage && (

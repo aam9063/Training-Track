@@ -228,6 +228,23 @@ export default function useRegisterForm() {
 
       if (error) throw error;
 
+      // Persist is_independent on public.users for the independent-athlete
+      // path. Without this write the `IndependentRoute` guard in App.jsx would
+      // reject access to /athlete/my-plan, /athlete/competitions and
+      // /athlete/ai-assistant. We only attempt it when we have an immediate
+      // session (otherwise RLS rejects anon writes); if verification is
+      // required, the DB trigger (see migration 20260422_*_independent_athlete_flag.sql)
+      // takes over and reads raw_user_meta_data.is_independent on first insert.
+      if (isIndependentAthlete && signUpData?.session && signUpData?.user?.id) {
+        const { error: flagErr } = await supabase
+          .from('users')
+          .update({ is_independent: true })
+          .eq('id', signUpData.user.id);
+        if (flagErr) {
+          console.warn('[register] is_independent flag update failed', flagErr.message);
+        }
+      }
+
       // Branch on whether signUp returned an immediate session:
       //   - Session present → email verification disabled → commit plan
       //     inline and navigate straight to the dashboard.

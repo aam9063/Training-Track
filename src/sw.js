@@ -6,16 +6,22 @@ import { ExpirationPlugin } from 'workbox-expiration';
 // Workbox precache — injected by vite-plugin-pwa
 precacheAndRoute(self.__WB_MANIFEST);
 
-// Runtime caching: Supabase API (network-first, 10s timeout)
+// Runtime caching: Supabase public storage assets (static images only).
+// We do NOT cache the REST / Storage / Functions API because responses depend
+// on Authorization headers and RLS policies per user; caching them would leak
+// data across users and break mutations (e.g. 403 on avatar uploads).
 registerRoute(
-  ({ url }) => url.hostname.endsWith('.supabase.co'),
+  ({ url, request }) =>
+    url.hostname.endsWith('.supabase.co') &&
+    url.pathname.startsWith('/storage/v1/object/public/') &&
+    request.method === 'GET',
   new NetworkFirst({
-    cacheName: 'supabase-cache',
+    cacheName: 'supabase-public-assets',
     networkTimeoutSeconds: 10,
     plugins: [
       new ExpirationPlugin({
         maxEntries: 50,
-        maxAgeSeconds: 60 * 60, // 1 hour
+        maxAgeSeconds: 60 * 60,
       }),
     ],
   })

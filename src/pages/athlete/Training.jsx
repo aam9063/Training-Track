@@ -578,14 +578,21 @@ const Training = () => {
                 const canComplete = hasTraining && !isRest && training?.status === 'planned' && isPastOrToday(training.date);
 
                 return (
-                  <motion.button
+                  <motion.div
                     key={index}
-                    type="button"
+                    role="button"
+                    tabIndex={0}
                     initial={{ opacity: 0 }}
                     animate={{ opacity: 1 }}
                     transition={{ delay: index * 0.03 }}
                     onClick={() => openDayDetail(training, index)}
-                    className={`w-full flex items-center gap-3 px-4 py-3.5 text-left transition-colors ${
+                    onKeyDown={(e) => {
+                      if (e.key === 'Enter' || e.key === ' ') {
+                        e.preventDefault();
+                        openDayDetail(training, index);
+                      }
+                    }}
+                    className={`w-full flex items-center gap-3 px-4 py-3.5 text-left transition-colors cursor-pointer focus:outline-none focus:ring-2 focus:ring-ath-accent focus:ring-inset ${
                       isToday
                         ? 'bg-blue-50/60 dark:bg-blue-900/10'
                         : hasTraining ? 'hover:bg-ath-inset' : ''
@@ -672,7 +679,10 @@ const Training = () => {
                       {canComplete && isIndependent && (
                         <button
                           type="button"
-                          onClick={(e) => openCompletionModal(e, training)}
+                          onClick={(e) => {
+                            e.stopPropagation();
+                            openCompletionModal(e, training);
+                          }}
                           aria-label="Marcar sesión como completada"
                           className="flex items-center gap-1 px-2 py-1 rounded-lg bg-green-50 dark:bg-green-900/20 text-green-600 dark:text-green-400 text-[11px] font-semibold border border-green-200 dark:border-green-800/40 hover:bg-green-100 dark:hover:bg-green-900/30 transition-colors"
                         >
@@ -685,7 +695,7 @@ const Training = () => {
                         <FiChevronRight className="w-4 h-4 text-ath-text-muted" />
                       )}
                     </div>
-                  </motion.button>
+                  </motion.div>
                 );
               })}
             </div>
@@ -822,7 +832,10 @@ const Training = () => {
                             {canComplete && isIndependent ? (
                               <button
                                 type="button"
-                                onClick={(e) => openCompletionModal(e, training)}
+                                onClick={(e) => {
+                                  e.stopPropagation();
+                                  openCompletionModal(e, training);
+                                }}
                                 aria-label="Marcar sesión como completada"
                                 className="inline-flex items-center gap-1.5 px-3 py-1.5 rounded-lg bg-ath-accent hover:bg-ath-accent-hover text-ath-on-accent text-xs font-semibold transition-colors"
                               >

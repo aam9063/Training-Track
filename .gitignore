@@ -38,4 +38,5 @@ supabase/*
 openspec/*
 
 AGENTS.md
+CLAUDE.md
 .gga

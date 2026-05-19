@@ -1,752 +1,388 @@
-import { jsPDF } from 'jspdf';
-import autoTable from 'jspdf-autotable';
+import React from 'react';
+import { pdf } from '@react-pdf/renderer';
+import { WeeklyPlanDocument } from './pdf/WeeklyPlanDocument';
+import { AIWeeklyReportDocument } from './pdf/AIWeeklyReportDocument';
+import { showError } from './toast';
 
-// ==================== Color Constants ====================
+// ==================== Shared helpers ====================
 
-const PACE_COLORS = {
-  RM:  [220, 38, 38],
-  R10: [239, 68, 68],
-  R9:  [248, 113, 113],
-  R8:  [249, 115, 22],
-  R7:  [251, 146, 60],
-  R6:  [234, 179, 8],
-  R5:  [250, 204, 21],
-  R4:  [163, 230, 53],
-  R3:  [132, 204, 22],
-  R2:  [74, 222, 128],
-  R1:  [34, 197, 94],
-  RR:  [5, 150, 105],
+const slugify = (str) =>
+  (str || '')
+    .toString()
+    .toLowerCase()
+    .normalize('NFD')
+    .replace(/[̀-ͯ]/g, '')
+    .replace(/[^a-z0-9]+/g, '-')
+    .replace(/^-+|-+$/g, '');
+
+const fmtFileDate = (date) => {
+  if (!date) return '';
+  const d = date instanceof Date ? date : new Date(date);
+  if (Number.isNaN(d.getTime())) return '';
+  const yyyy = d.getFullYear();
+  const mm = String(d.getMonth() + 1).padStart(2, '0');
+  const dd = String(d.getDate()).padStart(2, '0');
+  return `${yyyy}-${mm}-${dd}`;
 };
 
-const VAM_COLS = [
-  { label: 'FCmax',  color: [239, 68, 68] },
-  { label: 'VAM',    color: [168, 85, 247] },
-  { label: 'VO2max', color: [59, 130, 246] },
-  { label: 'MLSS',   color: [249, 115, 22] },
-  { label: 'VT2',    color: [234, 179, 8] },
-  { label: 'VT1',    color: [34, 197, 94] },
-];
-
-const PACE_ORDER = ['RM', 'R10', 'R9', 'R8', 'R7', 'R6', 'R5', 'R4', 'R3', 'R2', 'R1', 'RR'];
-
-const PCT_LABELS = {
-  RM: '100%', R10: '92%', R9: '90%', R8: '88%', R7: '86%', R6: '84%',
-  R5: '82%', R4: '78%', R3: '72%', R2: '62%', R1: '50%', RR: '42%',
+const triggerBlobDownload = (blob, fileName) => {
+  const url = URL.createObjectURL(blob);
+  const a = document.createElement('a');
+  a.href = url;
+  a.download = fileName;
+  document.body.appendChild(a);
+  a.click();
+  document.body.removeChild(a);
+  // small delay so the browser can pick the blob before revoke
+  setTimeout(() => URL.revokeObjectURL(url), 1000);
 };
 
-const DAYS_HEADER = ['LUNES', 'MARTES', 'MIERCOLES', 'JUEVES', 'VIERNES', 'SABADO', 'DOMINGO'];
+// ==================== Weekly plan mappers ====================
 
-// Layout constants (mm)
-const MARGIN = 5;
-const PAGE_W = 297;
-const RIGHT_X = 105; // Where VAM/Conconi tables start
-const RIGHT_W = PAGE_W - MARGIN - RIGHT_X; // 187mm available for right tables
+const DAY_LABELS = ['Lun', 'Mar', 'Mié', 'Jue', 'Vie', 'Sáb', 'Dom'];
 
-// ==================== Helpers ====================
-
-const getISOWeekNumber = (date) => {
-  const d = new Date(Date.UTC(date.getFullYear(), date.getMonth(), date.getDate()));
-  const dayNum = d.getUTCDay() || 7;
-  d.setUTCDate(d.getUTCDate() + 4 - dayNum);
-  const yearStart = new Date(Date.UTC(d.getUTCFullYear(), 0, 1));
-  return Math.ceil(((d - yearStart) / 86400000 + 1) / 7);
+const TYPE_LABEL_MAP = {
+  easy: 'Easy',
+  rodaje: 'Easy',
+  suave: 'Easy',
+  tempo: 'Tempo',
+  umbral: 'Tempo',
+  interval: 'Interval',
+  series: 'Interval',
+  vo2: 'Interval',
+  long: 'Long',
+  largo: 'Long',
+  tirada: 'Long',
+  recovery: 'Recovery',
+  rest: 'Recovery',
+  descanso: 'Recovery',
+  recuperacion: 'Recovery',
+  fuerza: 'Fuerza',
+  gym: 'Fuerza',
 };
 
-const fmtPace = (secs) => {
-  if (!secs || secs <= 0) return '-';
-  const min = Math.floor(secs / 60);
-  const sec = Math.round(secs % 60);
-  return `${min}'${String(sec).padStart(2, '0')}"`;
-};
-
-const fmtDuration = (totalSeconds) => {
-  if (!totalSeconds) return '-';
-  const h = Math.floor(totalSeconds / 3600);
-  const m = Math.floor((totalSeconds % 3600) / 60);
-  const s = totalSeconds % 60;
-  if (h > 0) return `${h}:${String(m).padStart(2, '0')}:${String(s).padStart(2, '0')}`;
-  return `${m}:${String(s).padStart(2, '0')}`;
-};
-
-const fmtRecovery = (secs) => {
-  if (!secs) return '';
-  const min = Math.floor(secs / 60);
-  const sec = secs % 60;
-  return sec > 0 ? `${min}'${String(sec).padStart(2, '0')}"` : `${min}'`;
-};
-
-// ==================== Draw: Colored Header Table ====================
-// Draws a table with colored header cells and data rows.
-// labelCol: optional first column with row labels (not colored)
-
-const drawTable = (doc, x, y, columns, rows, colWidth, rowHeight, labelCol) => {
-  const headerH = 5;
-  const labelW = labelCol ? 22 : 0;
-  const tableX = x + labelW;
-
-  // Header label cell (empty top-left corner)
-  if (labelCol) {
-    doc.setDrawColor(200, 200, 200);
-    doc.setLineWidth(0.15);
-    doc.rect(x, y, labelW, headerH);
+const normalizeType = (type) => {
+  if (!type) return '—';
+  const lower = String(type).toLowerCase().trim();
+  for (const [k, v] of Object.entries(TYPE_LABEL_MAP)) {
+    if (lower.includes(k)) return v;
   }
-
-  // Colored header cells
-  columns.forEach((col, i) => {
-    const cx = tableX + i * colWidth;
-    doc.setFillColor(...col.color);
-    doc.rect(cx, y, colWidth, headerH, 'F');
-    doc.setDrawColor(255, 255, 255);
-    doc.setLineWidth(0.3);
-    // White right border between header cells
-    if (i < columns.length - 1) {
-      doc.line(cx + colWidth, y, cx + colWidth, y + headerH);
-    }
-    doc.setFontSize(6);
-    doc.setFont('helvetica', 'bold');
-    doc.setTextColor(255, 255, 255);
-    doc.text(col.label, cx + colWidth / 2, y + 3.3, { align: 'center' });
-  });
-
-  // Outer header border
-  doc.setDrawColor(180, 180, 180);
-  doc.setLineWidth(0.2);
-  doc.rect(tableX, y, colWidth * columns.length, headerH);
-
-  // Data rows
-  rows.forEach((row, ri) => {
-    const ry = y + headerH + ri * rowHeight;
-    const isAlt = ri % 2 === 1;
-
-    // Row label
-    if (labelCol) {
-      if (isAlt) {
-        doc.setFillColor(240, 240, 240);
-        doc.rect(x, ry, labelW, rowHeight, 'F');
-      }
-      doc.setDrawColor(200, 200, 200);
-      doc.setLineWidth(0.15);
-      doc.rect(x, ry, labelW, rowHeight);
-      doc.setFontSize(5);
-      doc.setFont('helvetica', 'bold');
-      doc.setTextColor(60, 60, 60);
-      doc.text(labelCol[ri] || '', x + labelW - 1, ry + rowHeight / 2 + 1, { align: 'right' });
-    }
-
-    // Alt row background
-    if (isAlt) {
-      doc.setFillColor(245, 245, 245);
-      doc.rect(tableX, ry, colWidth * columns.length, rowHeight, 'F');
-    }
-
-    // Cell values
-    row.forEach((cellVal, ci) => {
-      const cx = tableX + ci * colWidth;
-      doc.setFontSize(5.5);
-      doc.setFont('helvetica', 'normal');
-      doc.setTextColor(40, 40, 40);
-      doc.text(String(cellVal || ''), cx + colWidth / 2, ry + rowHeight / 2 + 1, { align: 'center' });
-    });
-
-    // Row and cell borders
-    doc.setDrawColor(200, 200, 200);
-    doc.setLineWidth(0.15);
-    doc.rect(tableX, ry, colWidth * columns.length, rowHeight);
-    for (let ci = 1; ci < columns.length; ci++) {
-      doc.line(tableX + ci * colWidth, ry, tableX + ci * colWidth, ry + rowHeight);
-    }
-  });
+  return type.charAt(0).toUpperCase() + type.slice(1).toLowerCase();
 };
 
-// ==================== Section: Athlete Header (Left Block) ====================
-
-const drawAthleteHeader = (doc, athleteName, personalBests) => {
-  const x = MARGIN;
-  const y = MARGIN;
-  const blockW = RIGHT_X - MARGIN - 3; // 97mm
-
-  // Athlete name box
-  doc.setFillColor(55, 65, 81);
-  doc.rect(x, y, blockW, 10, 'F');
-  doc.setFontSize(13);
-  doc.setFont('helvetica', 'bold');
-  doc.setTextColor(255, 255, 255);
-  doc.text(athleteName || 'ATLETA', x + blockW / 2, y + 7, { align: 'center' });
-
-  // PRUEBAS header
-  let cy = y + 12;
-  doc.setFillColor(230, 230, 230);
-  doc.rect(x, cy, blockW, 4.5, 'F');
-  doc.setDrawColor(180, 180, 180);
-  doc.setLineWidth(0.2);
-  doc.rect(x, cy, blockW, 4.5);
-  doc.setFontSize(6.5);
-  doc.setFont('helvetica', 'bold');
-  doc.setTextColor(55, 65, 81);
-  doc.text('PRUEBAS', x + 2, cy + 3.2);
-  cy += 4.5;
-
-  // Race distances with PBs
-  const distances = ['3000m', '5K RUTA', '10K RUTA', '1/2 MARATON', 'MARATON'];
-  const distColW = blockW * 0.6;
-  const pbColW = blockW - distColW;
-
-  distances.forEach((dist) => {
-    const pb = personalBests?.find(
-      (p) => {
-        const pName = (p.distance_name || '').toUpperCase();
-        const dKey = dist.split(' ')[0];
-        return pName.includes(dKey) || pName === dist;
-      }
-    );
-    doc.setDrawColor(200, 200, 200);
-    doc.setLineWidth(0.15);
-    doc.rect(x, cy, distColW, 3.8);
-    doc.rect(x + distColW, cy, pbColW, 3.8);
-
-    doc.setFontSize(5.5);
-    doc.setFont('helvetica', 'normal');
-    doc.setTextColor(50, 50, 50);
-    doc.text(`  > ${dist}`, x + 1, cy + 2.7);
-
-    if (pb) {
-      doc.setFont('helvetica', 'bold');
-      doc.text(
-        pb.time_formatted || fmtDuration(pb.time_seconds),
-        x + distColW + pbColW / 2,
-        cy + 2.7,
-        { align: 'center' }
-      );
+/**
+ * Build the array of session rows from the trainings-by-day-index map produced
+ * by useWeeklyTrainings.
+ */
+const buildSessionsList = (trainings) => {
+  const out = [];
+  for (let i = 0; i < 7; i++) {
+    const t = trainings?.[i];
+    if (!t) continue;
+    if (t.type === 'rest') {
+      out.push({
+        day: DAY_LABELS[i],
+        type: 'Recovery',
+        title: t.title || 'Descanso',
+        distanceKm: null,
+        targetPace: null,
+        description: t.description || 'Descanso',
+      });
+      continue;
     }
-    cy += 3.8;
-  });
 
-  // MARCAS Y OBJETIVOS header
-  cy += 0.5;
-  doc.setFillColor(230, 230, 230);
-  doc.rect(x, cy, blockW, 4.5, 'F');
-  doc.setDrawColor(180, 180, 180);
-  doc.rect(x, cy, blockW, 4.5);
-  doc.setFontSize(6.5);
-  doc.setFont('helvetica', 'bold');
-  doc.setTextColor(55, 65, 81);
-  doc.text('MARCAS Y OBJETIVOS', x + 2, cy + 3.2);
-};
+    const distanceKm =
+      typeof t.totalDistanceMeters === 'number' && t.totalDistanceMeters > 0
+        ? t.totalDistanceMeters / 1000
+        : null;
 
-// ==================== Section: VAM Table ====================
+    // Build a target-pace string from unique paceCodes
+    const paceCodes = (t.exercises || [])
+      .map((ex) => ex.paceCode)
+      .filter(Boolean);
+    const uniquePaces = [...new Set(paceCodes)];
+    const targetPace = uniquePaces.length > 0 ? uniquePaces.join(' / ') : null;
 
-const drawVamTable = (doc, latestVam, latestConconiTest) => {
-  const x = RIGHT_X;
-  const y = MARGIN;
-  const colW = Math.floor(RIGHT_W / VAM_COLS.length); // ~31mm per column
-
-  const maxHr = latestConconiTest?.max_hr_reached;
-  const vamKmh = latestVam ? parseFloat(latestVam.vam_kmh) : null;
-  const paceSecsKm = latestVam?.pace_seconds_per_km;
-  const vo2max = vamKmh ? (vamKmh * 3.5).toFixed(1) : '-';
-  const mlssKmh = vamKmh ? (vamKmh * 0.88).toFixed(1) : '-';
-  const mlssPace = vamKmh ? Math.round(3600 / (vamKmh * 0.88)) : null;
-  const vt2Kmh = vamKmh ? (vamKmh * 0.875).toFixed(1) : '-';
-  const vt2Pace = vamKmh ? Math.round(3600 / (vamKmh * 0.875)) : null;
-  const vt1Kmh = vamKmh ? (vamKmh * 0.775).toFixed(1) : '-';
-  const vt1Pace = vamKmh ? Math.round(3600 / (vamKmh * 0.775)) : null;
-
-  const rows = [
-    [maxHr ? String(maxHr) : '-', vamKmh ? vamKmh.toFixed(1) : '-', vo2max, mlssKmh, vt2Kmh, vt1Kmh],
-    [maxHr ? 'ppm' : '', 'km/h', 'ml/kg/min', 'km/h', 'km/h', 'km/h'],
-    ['', paceSecsKm ? fmtPace(paceSecsKm) : '-', '', mlssPace ? fmtPace(mlssPace) : '-', vt2Pace ? fmtPace(vt2Pace) : '-', vt1Pace ? fmtPace(vt1Pace) : '-'],
-    ['', 'min/km', '', 'min/km', 'min/km', 'min/km'],
-  ];
-
-  drawTable(doc, x, y, VAM_COLS, rows, colW, 3.8);
-};
-
-// ==================== Section: Conconi Table ====================
-
-const drawConconiTable = (doc, athletePaces, latestConconiTest) => {
-  const y = 27;
-  const rowH = 3.8;
-
-  // Build column definitions
-  const sorted = PACE_ORDER
-    .map((code) => athletePaces?.find((p) => p.pace_code === code))
-    .filter(Boolean);
-
-  const columnsData = sorted.length > 0 ? sorted : null;
-  const columns = PACE_ORDER.map((code) => ({
-    label: code,
-    color: PACE_COLORS[code] || [150, 150, 150],
-  }));
-
-  // Calculate column width: available space minus label column (22mm)
-  const labelW = 22;
-  const colW = Math.floor((RIGHT_W - labelW) / columns.length); // ~13.7mm
-  const x = RIGHT_X;
-
-  // Recovery mapping
-  const seriesRecovery = {};
-  if (latestConconiTest?.conconi_test_series && columnsData) {
-    const series = [...latestConconiTest.conconi_test_series].sort((a, b) => a.series_number - b.series_number);
-    const totalSeries = series.length;
-    const totalPaces = columnsData.length;
-    columnsData.forEach((pace, i) => {
-      if (pace.pace_code === 'RR') return;
-      const seriesIdx = Math.round((i / (totalPaces - 1)) * (totalSeries - 1));
-      const s = series[Math.min(seriesIdx, totalSeries - 1)];
-      if (s?.recovery_time_seconds) seriesRecovery[pace.pace_code] = s.recovery_time_seconds;
+    out.push({
+      day: DAY_LABELS[i],
+      type: normalizeType(t.type),
+      title: t.title || 'Entrenamiento',
+      distanceKm,
+      targetPace,
+      description: t.description || t.title || null,
     });
   }
-
-  const rows = [
-    // Percentage
-    PACE_ORDER.map((code) => columnsData ? (PCT_LABELS[code] || '') : ''),
-    // Ritmo
-    PACE_ORDER.map((code) => {
-      const p = columnsData?.find((pp) => pp.pace_code === code);
-      return p ? fmtPace(p.pace_seconds_per_km) : '-';
-    }),
-    // Pulso
-    PACE_ORDER.map((code) => {
-      const p = columnsData?.find((pp) => pp.pace_code === code);
-      return p?.heart_rate_max ? String(p.heart_rate_max) : '';
-    }),
-    // Recovery
-    PACE_ORDER.map((code) => seriesRecovery[code] ? fmtRecovery(seriesRecovery[code]) : ''),
-  ];
-
-  const labelCol = ['', 'Ritmo/1.000m', 'Pulso', 'Recu. a 120p'];
-
-  drawTable(doc, x, y, columns, rows, colW, rowH, labelCol);
+  return out;
 };
 
-// ==================== Section: Weekly Training Grid ====================
-
-const buildWeekRow = (trainings, weekDays) => {
-  const weekNum = getISOWeekNumber(weekDays[0]);
-  const row = [String(weekNum)];
+const computeWeeklySummary = (trainings) => {
+  let totalKm = 0;
+  let totalSessions = 0;
+  let activeDays = 0;
+  const typeCounter = {};
 
   for (let i = 0; i < 7; i++) {
-    const training = trainings[i];
-    if (!training) {
-      row.push('');
-      continue;
+    const t = trainings?.[i];
+    if (!t) continue;
+    if (t.type === 'rest') continue;
+
+    totalSessions += 1;
+    activeDays += 1;
+    if (typeof t.totalDistanceMeters === 'number') {
+      totalKm += t.totalDistanceMeters / 1000;
     }
-    if (training.type === 'rest') {
-      row.push('DESCANSO');
-      continue;
-    }
-
-    const lines = [];
-
-    // Group exercises into a readable format
-    if (training.exercises?.length > 0) {
-      // First line: title if exists (with blank line separator)
-      if (training.title && training.title !== 'Entrenamiento') {
-        lines.push(training.title);
-        lines.push(''); // blank line separator
-      }
-
-      // Format each exercise: Name SetsxReps r:Rest
-      const exLines = [];
-      training.exercises.forEach((ex) => {
-        let desc = '';
-
-        if (ex.distance) {
-          // Running exercise: distance shorthand + pace code
-          const d = ex.distance >= 1000
-            ? `${ex.distance % 1000 === 0 ? (ex.distance / 1000) : (ex.distance / 1000).toFixed(1)}k`
-            : `${ex.distance}m`;
-          desc = d + (ex.paceCode || '');
-          if (ex.sets && ex.sets > 1) desc = `${ex.sets}x${desc}`;
-        } else {
-          // Gym/other exercise: Name first, then setsxreps
-          desc = ex.name || '';
-          if (ex.sets && ex.reps) {
-            desc += ` ${ex.sets}x${ex.reps}`;
-          } else if (ex.sets && ex.sets > 1) {
-            desc += ` ${ex.sets}x`;
-          }
-        }
-
-        // Rest suffix
-        if (ex.rest) {
-          const r = ex.rest >= 60 ? `${Math.floor(ex.rest / 60)}'` : `${ex.rest}"`;
-          desc += ` r:${r}`;
-        }
-
-        exLines.push(desc);
-      });
-
-      // Each exercise on its own line for readability
-      lines.push(...exLines);
-    } else if (training.description) {
-      // No exercises but has description (e.g. from the planning tool)
-      // Only show title if it adds info beyond the description
-      const titleIsPrefix = training.title && training.description.startsWith(training.title.replace('...', ''));
-      if (training.title && training.title !== 'Entrenamiento' && !titleIsPrefix) {
-        lines.push(training.title);
-        lines.push('');
-      }
-      lines.push(training.description);
-    }
-
-    // Total distance
-    if (training.totalDistance) {
-      lines.push(`Vol: ${training.totalDistance}`);
-    }
-
-    row.push(lines.join('\n'));
+    const norm = normalizeType(t.type);
+    typeCounter[norm] = (typeCounter[norm] || 0) + 1;
   }
 
-  // Volume column
-  const totalMeters = Object.values(trainings).reduce(
-    (sum, t) => sum + (t?.totalDistanceMeters || 0), 0
-  );
-  row.push(totalMeters > 0 ? `${(totalMeters / 1000).toFixed(1)}` : '-');
+  const dominantType =
+    Object.entries(typeCounter).sort((a, b) => b[1] - a[1])[0]?.[0] || '—';
 
-  return row;
+  return { totalKm, totalSessions, activeDays, dominantType };
 };
 
-const drawPaceIndicators = (doc, data, training) => {
-  if (!training?.exercises?.length) return;
-
-  const uniquePaces = [...new Set(
-    training.exercises.filter((ex) => ex.paceCode).map((ex) => ex.paceCode)
-  )];
-  if (uniquePaces.length === 0) return;
-
-  const cellX = data.cell.x;
-  const cellY = data.cell.y + data.cell.height - 4;
-  const maxW = data.cell.width - 2;
-  const iW = Math.min(7, (maxW - uniquePaces.length + 1) / uniquePaces.length);
-
-  uniquePaces.forEach((pace, idx) => {
-    const color = PACE_COLORS[pace] || [150, 150, 150];
-    const bx = cellX + 1 + idx * (iW + 0.5);
-    doc.setFillColor(...color);
-    doc.roundedRect(bx, cellY, iW, 3, 0.5, 0.5, 'F');
-    doc.setFontSize(4);
-    doc.setFont('helvetica', 'bold');
-    doc.setTextColor(255, 255, 255);
-    doc.text(pace, bx + iW / 2, cellY + 2.2, { align: 'center' });
-  });
+const collectCoachNotes = (trainings) => {
+  const notes = [];
+  for (let i = 0; i < 7; i++) {
+    const t = trainings?.[i];
+    if (!t || !t.notes) continue;
+    notes.push(`${DAY_LABELS[i]}: ${t.notes}`);
+  }
+  return notes.join('\n');
 };
 
-// ==================== Main Export ====================
+// ==================== Main exports ====================
 
-export const generateWeeklyPDF = ({
+/**
+ * Generate the weekly training plan PDF.
+ * Async because @react-pdf/renderer's pdf().toBlob() returns a Promise.
+ *
+ * Signature preserved from the original jsPDF version:
+ * { athleteName, personalBests, athletePaces, latestVam, latestConconiTest, trainings, weekDays }
+ *
+ * personalBests is currently ignored by the weekly plan PDF.
+ * athletePaces / latestVam / latestConconiTest are forwarded to the document
+ * so they can be rendered alongside the weekly summary.
+ */
+export const generateWeeklyPDF = async ({
   athleteName,
-  personalBests,
+  trainings,
+  weekDays,
+  coachName,
+  coachNotes: coachNotesProp,
   athletePaces,
   latestVam,
   latestConconiTest,
-  trainings,
-  weekDays,
-}) => {
-  const doc = new jsPDF({
-    orientation: 'landscape',
-    unit: 'mm',
-    format: 'a4',
-  });
+  // legacy (ignored): personalBests
+} = {}) => {
+  try {
+    if (!Array.isArray(weekDays) || weekDays.length === 0) {
+      showError('No hay datos de la semana para exportar');
+      return;
+    }
 
-  // --- Header: left block (athlete info) ---
-  drawAthleteHeader(doc, athleteName, personalBests);
+    const weekStart = weekDays[0] instanceof Date ? weekDays[0] : new Date(weekDays[0]);
+    const weekEnd =
+      weekDays[6] instanceof Date ? weekDays[6] : new Date(weekDays[weekDays.length - 1]);
 
-  // --- Header: right block (VAM + Conconi) ---
-  drawVamTable(doc, latestVam, latestConconiTest);
-  drawConconiTable(doc, athletePaces, latestConconiTest);
+    const sessions = buildSessionsList(trainings || {});
+    const { totalKm, totalSessions, activeDays, dominantType } = computeWeeklySummary(
+      trainings || {}
+    );
+    const coachNotes = coachNotesProp || collectCoachNotes(trainings || {});
 
-  // --- Week label ---
-  const weekStart = weekDays[0].toLocaleDateString('es-ES', { day: 'numeric', month: 'short' });
-  const weekEnd = weekDays[6].toLocaleDateString('es-ES', { day: 'numeric', month: 'short', year: 'numeric' });
-  doc.setFontSize(6.5);
-  doc.setFont('helvetica', 'normal');
-  doc.setTextColor(80, 80, 80);
-  doc.text(`Semana: ${weekStart} - ${weekEnd}`, MARGIN, 52);
+    const docProps = {
+      athleteName: (athleteName || 'Atleta').trim(),
+      coachName: coachName || '',
+      weekStart,
+      weekEnd,
+      sessions,
+      totalKm,
+      totalSessions,
+      activeDays,
+      dominantType,
+      coachNotes,
+      athletePaces: athletePaces || null,
+      latestVam: latestVam || null,
+      latestConconiTest: latestConconiTest || null,
+    };
+    const docElement = React.createElement(WeeklyPlanDocument, docProps);
 
-  // --- Weekly grid ---
-  const gridStartY = 54;
-  const weekRow = buildWeekRow(trainings, weekDays);
+    const blob = await pdf(docElement).toBlob();
 
-  autoTable(doc, {
-    startY: gridStartY,
-    head: [['Sem', ...DAYS_HEADER, 'Vol.']],
-    body: [weekRow],
-    theme: 'grid',
-    tableWidth: PAGE_W - 2 * MARGIN,
-    margin: { left: MARGIN, right: MARGIN },
-    styles: {
-      fontSize: 5.5,
-      cellPadding: { top: 1.5, right: 1, bottom: 5, left: 1 },
-      lineColor: [200, 200, 200],
-      lineWidth: 0.2,
-      overflow: 'linebreak',
-      font: 'helvetica',
-      valign: 'top',
-      textColor: [30, 30, 30],
-    },
-    headStyles: {
-      fillColor: [55, 65, 81],
-      textColor: [255, 255, 255],
-      fontStyle: 'bold',
-      fontSize: 6.5,
-      halign: 'center',
-      cellPadding: 1.5,
-      minCellHeight: 6,
-    },
-    columnStyles: {
-      0: { cellWidth: 12, halign: 'center', valign: 'middle', fontStyle: 'bold', fontSize: 10 },
-      1: { cellWidth: 35.5 },
-      2: { cellWidth: 35.5 },
-      3: { cellWidth: 35.5 },
-      4: { cellWidth: 35.5 },
-      5: { cellWidth: 35.5 },
-      6: { cellWidth: 35.5 },
-      7: { cellWidth: 35.5 },
-      8: { cellWidth: 22, halign: 'center', valign: 'middle', fontStyle: 'bold', fontSize: 8 },
-    },
-    didDrawCell: (data) => {
-      if (data.section === 'body' && data.column.index >= 1 && data.column.index <= 7) {
-        drawPaceIndicators(doc, data, trainings[data.column.index - 1]);
-      }
-    },
-  });
-
-  // --- Footer ---
-  doc.setFontSize(6);
-  doc.setFont('helvetica', 'normal');
-  doc.setTextColor(150, 150, 150);
-  doc.text(
-    `Generado el ${new Date().toLocaleDateString('es-ES')} | Training Track`,
-    PAGE_W / 2,
-    207,
-    { align: 'center' }
-  );
-
-  // --- Save ---
-  const fileName = `plan-${(athleteName || 'entrenamiento').toLowerCase().replace(/\s+/g, '-')}-sem${getISOWeekNumber(weekDays[0])}.pdf`;
-  doc.save(fileName);
+    const namePart = slugify(athleteName) || 'atleta';
+    const fileName = `plan-semanal-${namePart}-${fmtFileDate(weekStart)}.pdf`;
+    triggerBlobDownload(blob, fileName);
+  } catch (err) {
+    console.error('[generateWeeklyPDF] Error:', err);
+    showError('Error al generar el PDF del plan semanal');
+  }
 };
 
-// ==================== AI Report PDF Export ====================
+// ==================== AI Report ====================
 
-const ALERT_LEVEL_LABELS = { critical: 'Crítico', attention: 'Atención', ok: 'En forma' };
-const ALERT_LEVEL_COLORS = {
-  critical: [220, 38, 38],
-  attention: [217, 119, 6],
-  ok: [22, 163, 74],
-};
+const stripHtml = (s) =>
+  typeof s === 'string'
+    ? s
+        .replace(/<[^>]+>/g, ' ')
+        .replace(/\s+/g, ' ')
+        .trim()
+    : '';
 
-const addSectionTitle = (doc, text, y, icon = '') => {
-  doc.setFontSize(7);
-  doc.setFont('helvetica', 'bold');
-  doc.setTextColor(100, 116, 139);
-  doc.text((icon ? icon + '  ' : '') + text.toUpperCase(), 14, y);
-  doc.setDrawColor(226, 232, 240);
-  doc.setLineWidth(0.3);
-  doc.line(14, y + 1, 196, y + 1);
-  return y + 5;
-};
-
-export const generateAIReportPDF = ({ report, athleteName }) => {
-  const doc = new jsPDF({ orientation: 'portrait', unit: 'mm', format: 'a4' });
-  const ai = report.ai_analysis || {};
-  const alertas = ai.alertas || [];
-  const recomendaciones = ai.recomendaciones || [];
+/**
+ * Map the legacy report shape (ai_analysis with resumen/alertas/recomendaciones/comparativa)
+ * to the new AIWeeklyReportDocument props.
+ */
+const mapReportToDocProps = ({ report, athleteName }) => {
+  const ai = report?.ai_analysis || {};
+  const alertas = Array.isArray(ai.alertas) ? ai.alertas : [];
+  const recomendaciones = Array.isArray(ai.recomendaciones) ? ai.recomendaciones : [];
   const comparativa = ai.comparativa || {};
-  const level = report.alert_level || 'ok';
-  const levelColor = ALERT_LEVEL_COLORS[level] || ALERT_LEVEL_COLORS.ok;
-  const levelLabel = ALERT_LEVEL_LABELS[level] || 'En forma';
 
-  const fmtDate = (d) => d ? new Date(d + 'T00:00:00').toLocaleDateString('es-ES', { day: 'numeric', month: 'short', year: 'numeric' }) : '';
+  const weekStart = report?.week_start
+    ? new Date(`${report.week_start}T00:00:00`)
+    : new Date();
+  const weekEnd = report?.week_end ? new Date(`${report.week_end}T00:00:00`) : new Date();
 
-  const pageW = 210;
-  const margin = 14;
-  const contentW = pageW - margin * 2;
-  let y = 14;
+  const totalKm = Number(comparativa.km_ejecutado ?? report?.actual_km ?? 0) || 0;
+  const totalSessions = Number(comparativa.sesiones_ejecutadas ?? report?.sessions_done ?? 0) || 0;
+  const avgHr = report?.avg_hr ?? null;
+  const sufferScore = report?.suffer_score ?? null;
+  const acwr = report?.acwr ?? null;
 
-  // ── Header bar ──
-  doc.setFillColor(15, 23, 42);
-  doc.rect(0, 0, pageW, 22, 'F');
+  const kpis = {
+    totalKm,
+    totalSessions,
+    avgPace: report?.avg_pace || (report?.avg_rpe ? `RPE ${report.avg_rpe}/10` : '—'),
+    avgHr,
+    sufferScore,
+    acwr,
+  };
 
-  doc.setFontSize(14);
-  doc.setFont('helvetica', 'bold');
-  doc.setTextColor(255, 255, 255);
-  doc.text('Informe IA Semanal', margin, 10);
+  // Weekly load: prefer history if provided, else 1-bar fallback with current week
+  const weeklyLoad = Array.isArray(report?.weekly_load_history) && report.weekly_load_history.length > 0
+    ? report.weekly_load_history.map((w) => ({
+        week: w.label || w.week || '',
+        km: Number(w.km ?? w.value ?? 0),
+      }))
+    : totalKm > 0
+    ? [{ week: 'Esta sem.', km: totalKm }]
+    : [];
 
-  doc.setFontSize(8);
-  doc.setFont('helvetica', 'normal');
-  doc.setTextColor(148, 163, 184);
-  doc.text(`${athleteName || 'Atleta'}  ·  ${fmtDate(report.week_start)} – ${fmtDate(report.week_end)}`, margin, 17);
+  // HR zone distribution
+  const hrZoneDistribution = Array.isArray(report?.hr_zone_distribution)
+    ? report.hr_zone_distribution.map((z) => ({
+        label: z.label || z.zone || '',
+        value: Number(z.value ?? z.percent ?? z.minutes ?? 0),
+      }))
+    : [];
 
-  // Alert badge
-  doc.setFillColor(...levelColor);
-  doc.roundedRect(pageW - margin - 28, 5, 28, 10, 2, 2, 'F');
-  doc.setFontSize(8);
-  doc.setFont('helvetica', 'bold');
-  doc.setTextColor(255, 255, 255);
-  doc.text(levelLabel, pageW - margin - 14, 11.5, { align: 'center' });
+  const vdotProgression = Array.isArray(report?.vdot_progression)
+    ? report.vdot_progression.map((v) => ({
+        week: v.week || v.label || '',
+        vdot: Number(v.vdot ?? v.value ?? 0),
+      }))
+    : undefined;
 
-  y = 30;
+  // Build report sections from ai.resumen, alertas, recomendaciones, plus any pre-built sections
+  const reportSections = [];
 
-  // ── Stats row ──
-  const statCols = [
-    { label: 'Km realizados', value: `${report.actual_km ?? '—'} km` },
-    { label: 'Sesiones', value: `${report.sessions_done ?? '—'}/${report.sessions_planned ?? '—'}` },
-    { label: 'RPE medio', value: report.avg_rpe ? `${report.avg_rpe}/10` : '—' },
-    { label: 'ACWR', value: report.acwr ? report.acwr.toFixed(2) : '—' },
-  ];
-  const colW = contentW / statCols.length;
-
-  doc.setFillColor(248, 250, 252);
-  doc.setDrawColor(226, 232, 240);
-  doc.setLineWidth(0.3);
-  doc.rect(margin, y, contentW, 16, 'FD');
-
-  statCols.forEach((s, i) => {
-    const cx = margin + i * colW + colW / 2;
-    doc.setFontSize(12);
-    doc.setFont('helvetica', 'bold');
-    doc.setTextColor(15, 23, 42);
-    doc.text(s.value, cx, y + 8, { align: 'center' });
-    doc.setFontSize(7);
-    doc.setFont('helvetica', 'normal');
-    doc.setTextColor(100, 116, 139);
-    doc.text(s.label, cx, y + 13, { align: 'center' });
-    if (i < statCols.length - 1) {
-      doc.setDrawColor(226, 232, 240);
-      doc.line(margin + (i + 1) * colW, y + 2, margin + (i + 1) * colW, y + 14);
-    }
-  });
-
-  y += 22;
-
-  // ── AI Summary ──
-  if (ai.resumen) {
-    y = addSectionTitle(doc, 'Hermes · IA', y);
-    doc.setFillColor(15, 23, 42);
-    doc.roundedRect(margin, y, contentW, 6, 1.5, 1.5, 'F'); // placeholder, will resize
-    // Measure text height
-    doc.setFontSize(8.5);
-    doc.setFont('helvetica', 'normal');
-    const lines = doc.splitTextToSize(ai.resumen, contentW - 8);
-    const boxH = lines.length * 4.5 + 6;
-    doc.setFillColor(15, 23, 42);
-    doc.roundedRect(margin, y, contentW, boxH, 2, 2, 'F');
-    doc.setTextColor(226, 232, 240);
-    doc.text(lines, margin + 4, y + 6);
-    y += boxH + 6;
-  }
-
-  // ── Alertas ──
-  const ALERT_BG = { critical: [255, 241, 241], attention: [255, 247, 235], ok: [240, 253, 244] };
-
-  if (alertas.length > 0) {
-    y = addSectionTitle(doc, 'Alertas', y);
-    alertas.forEach((a) => {
-      const lvl = a.nivel || 'ok';
-      const c = ALERT_LEVEL_COLORS[lvl] || ALERT_LEVEL_COLORS.ok;
-      const bg = ALERT_BG[lvl] || ALERT_BG.ok;
-      const descLines = doc.splitTextToSize(a.descripcion || '', contentW - 14);
-      const boxH = descLines.length * 4 + 10;
-
-      // White-ish background
-      doc.setFillColor(...bg);
-      doc.setDrawColor(226, 232, 240);
-      doc.setLineWidth(0.3);
-      doc.roundedRect(margin, y, contentW, boxH, 2, 2, 'FD');
-      // Left accent bar
-      doc.setFillColor(...c);
-      doc.rect(margin, y, 2.5, boxH, 'F');
-
-      doc.setFontSize(8.5);
-      doc.setFont('helvetica', 'bold');
-      doc.setTextColor(...c);
-      doc.text(a.tipo || '', margin + 6, y + 6);
-
-      doc.setFontSize(7.5);
-      doc.setFont('helvetica', 'normal');
-      doc.setTextColor(51, 65, 85);
-      doc.text(descLines, margin + 6, y + 11);
-
-      y += boxH + 3;
+  if (Array.isArray(ai.sections) && ai.sections.length > 0) {
+    ai.sections.forEach((s) => {
+      reportSections.push({
+        type: s.type,
+        content: s.content,
+        items: s.items,
+        label: s.label,
+        value: s.value,
+        delta: s.delta,
+        priority: s.priority,
+      });
     });
-    y += 2;
-  }
-
-  // ── Comparativa ──
-  const kmExec = comparativa.km_ejecutado ?? report.actual_km ?? 0;
-  const kmPlan = comparativa.km_planificado ?? report.planned_km ?? 0;
-  const sessExec = comparativa.sesiones_ejecutadas ?? report.sessions_done ?? 0;
-  const sessPlan = comparativa.sesiones_planificadas ?? report.sessions_planned ?? 0;
-
-  y = addSectionTitle(doc, 'Ejecutado vs Planificado', y);
-  [
-    { label: 'Kilómetros', exec: kmExec, plan: kmPlan, unit: ' km' },
-    { label: 'Sesiones', exec: sessExec, plan: sessPlan, unit: '' },
-  ].forEach(({ label, exec, plan, unit }) => {
-    const pct = plan > 0 ? Math.min(100, Math.round((exec / plan) * 100)) : 0;
-    const barColor = pct > 100 ? [217, 119, 6] : [22, 163, 74];
-
-    doc.setFontSize(8);
-    doc.setFont('helvetica', 'normal');
-    doc.setTextColor(71, 85, 105);
-    doc.text(label, margin, y + 3);
-    doc.setFont('helvetica', 'bold');
-    doc.setTextColor(15, 23, 42);
-    doc.text(`${exec}${unit} / ${plan}${unit}`, margin + contentW, y + 3, { align: 'right' });
-
-    // Bar background
-    doc.setFillColor(241, 245, 249);
-    doc.roundedRect(margin, y + 5, contentW, 4, 1, 1, 'F');
-    // Bar fill
-    if (pct > 0) {
-      doc.setFillColor(...barColor);
-      doc.roundedRect(margin, y + 5, contentW * (pct / 100), 4, 1, 1, 'F');
+  } else {
+    if (alertas.length > 0) {
+      reportSections.push({ type: 'heading', content: 'Alertas' });
+      alertas.forEach((a) => {
+        const tipo = a.tipo ? `${a.tipo}: ` : '';
+        const desc = stripHtml(a.descripcion || '');
+        const priority = a.nivel === 'critical' ? 'high' : a.nivel === 'attention' ? 'medium' : 'low';
+        reportSections.push({
+          type: 'recommendation',
+          content: `${tipo}${desc}`,
+          priority,
+        });
+      });
     }
-    y += 14;
-  });
-  y += 2;
 
-  // ── Recomendaciones ──
-  if (recomendaciones.length > 0) {
-    y = addSectionTitle(doc, 'Recomendaciones', y);
-    recomendaciones.forEach((r, i) => {
-      const lines = doc.splitTextToSize(r, contentW - 12);
-      const boxH = lines.length * 4.5 + 6;
+    const kmExec = comparativa.km_ejecutado ?? report?.actual_km ?? null;
+    const kmPlan = comparativa.km_planificado ?? report?.planned_km ?? null;
+    const sessExec = comparativa.sesiones_ejecutadas ?? report?.sessions_done ?? null;
+    const sessPlan = comparativa.sesiones_planificadas ?? report?.sessions_planned ?? null;
 
-      doc.setFillColor(240, 253, 244);
-      doc.setDrawColor(187, 247, 208);
-      doc.setLineWidth(0.3);
-      doc.roundedRect(margin, y, contentW, boxH, 2, 2, 'FD');
+    if (kmPlan != null || sessPlan != null) {
+      reportSections.push({ type: 'heading', content: 'Ejecutado vs planificado' });
+      if (kmPlan != null) {
+        reportSections.push({
+          type: 'kpi',
+          label: 'Kilómetros',
+          value: `${kmExec ?? 0} / ${kmPlan ?? 0} km`,
+        });
+      }
+      if (sessPlan != null) {
+        reportSections.push({
+          type: 'kpi',
+          label: 'Sesiones',
+          value: `${sessExec ?? 0} / ${sessPlan ?? 0}`,
+        });
+      }
+    }
 
-      doc.setFillColor(22, 163, 74);
-      doc.circle(margin + 5, y + boxH / 2, 3, 'F');
-      doc.setFontSize(7);
-      doc.setFont('helvetica', 'bold');
-      doc.setTextColor(255, 255, 255);
-      doc.text(String(i + 1), margin + 5, y + boxH / 2 + 1, { align: 'center' });
-
-      doc.setFontSize(8);
-      doc.setFont('helvetica', 'normal');
-      doc.setTextColor(15, 23, 42);
-      doc.text(lines, margin + 12, y + 6);
-
-      y += boxH + 3;
-    });
+    if (recomendaciones.length > 0) {
+      reportSections.push({ type: 'heading', content: 'Recomendaciones' });
+      reportSections.push({
+        type: 'list',
+        items: recomendaciones.map((r) => stripHtml(r)),
+      });
+    }
   }
 
-  // ── Footer ──
-  doc.setFontSize(6);
-  doc.setFont('helvetica', 'normal');
-  doc.setTextColor(148, 163, 184);
-  doc.text(
-    `Generado el ${new Date().toLocaleDateString('es-ES')} | Training Track`,
-    pageW / 2,
-    290,
-    { align: 'center' }
-  );
+  return {
+    athleteName: (athleteName || 'Atleta').trim(),
+    weekStart,
+    weekEnd,
+    executiveSummary: stripHtml(ai.resumen || ''),
+    kpis,
+    weeklyLoad,
+    hrZoneDistribution,
+    vdotProgression,
+    reportSections,
+    generatedDate: new Date(),
+  };
+};
 
-  const fileName = `informe-ia-${fmtDate(report.week_start).replace(/ /g, '-')}.pdf`;
-  doc.save(fileName);
+/**
+ * Generate the AI weekly report PDF.
+ * Async because @react-pdf/renderer's pdf().toBlob() returns a Promise.
+ *
+ * Signature preserved: { report, athleteName }.
+ */
+export const generateAIReportPDF = async ({ report, athleteName } = {}) => {
+  try {
+    if (!report) {
+      showError('No hay informe para exportar');
+      return;
+    }
+
+    const docProps = mapReportToDocProps({ report, athleteName });
+    const docElement = React.createElement(AIWeeklyReportDocument, docProps);
+
+    const blob = await pdf(docElement).toBlob();
+
+    const datePart = fmtFileDate(docProps.weekStart) || 'sin-fecha';
+    const fileName = `informe-ia-${datePart}.pdf`;
+    triggerBlobDownload(blob, fileName);
+  } catch (err) {
+    console.error('[generateAIReportPDF] Error:', err);
+    showError('Error al generar el PDF del informe IA');
+  }
 };

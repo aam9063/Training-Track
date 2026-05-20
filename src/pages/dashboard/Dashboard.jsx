@@ -18,6 +18,7 @@ import {
   FiZap,
   FiStar,
   FiTrash2,
+  FiBookOpen,
 } from 'react-icons/fi';
 import CreateCompetitionModal from '../../components/dashboard/CreateCompetitionModal';
 import { toLocalDateStr } from '../../lib/dateUtils';
@@ -505,7 +506,7 @@ const Dashboard = () => {
         {/* IA CARD — mobile: full width */}
         <Link
           to="/dashboard/ai-reports"
-          className="lg:hidden rounded-2xl p-4 flex gap-3 items-start relative overflow-hidden mb-5 active:opacity-80 transition-opacity bg-slate-900 border border-slate-700"
+          className="lg:hidden rounded-2xl p-4 flex gap-3 items-start relative overflow-hidden mb-3 active:opacity-80 transition-opacity bg-slate-900 border border-slate-700"
         >
           <div className="absolute -top-[30px] -right-[30px] w-[100px] h-[100px] pointer-events-none" style={{ background: 'radial-gradient(circle, rgba(26,107,255,0.35), transparent 70%)' }} />
           <div className="w-9 h-9 rounded-xl flex items-center justify-center flex-shrink-0 bg-coach-accent">
@@ -515,6 +516,22 @@ const Dashboard = () => {
             <p className="text-[10px] font-bold tracking-widest uppercase mb-1 text-coach-accent">Hermes · IA</p>
             <p className="text-sm font-semibold text-white leading-snug">Análisis de carga disponible. Consulta el informe de esta semana.</p>
             <p className="text-xs mt-1 text-slate-400">Ver informe completo →</p>
+          </div>
+        </Link>
+
+        {/* LIBRARY CARD — mobile: full width */}
+        <Link
+          to="/dashboard/library"
+          className="lg:hidden rounded-2xl p-4 flex gap-3 items-start relative overflow-hidden mb-5 active:opacity-80 transition-opacity bg-slate-900 border border-slate-700"
+        >
+          <div className="absolute -top-[30px] -right-[30px] w-[100px] h-[100px] pointer-events-none" style={{ background: 'radial-gradient(circle, rgba(14,165,233,0.35), transparent 70%)' }} />
+          <div className="w-9 h-9 rounded-xl flex items-center justify-center flex-shrink-0 bg-sky-600">
+            <FiBookOpen className="w-4 h-4 text-white" />
+          </div>
+          <div>
+            <p className="text-[10px] font-bold tracking-widest uppercase mb-1 text-sky-400">Biblioteca</p>
+            <p className="text-sm font-semibold text-white leading-snug">Explora los ejercicios disponibles y crea tus propios custom.</p>
+            <p className="text-xs mt-1 text-slate-400">Carrera y gym →</p>
           </div>
         </Link>
 
@@ -537,6 +554,22 @@ const Dashboard = () => {
                 <p className="text-[10px] font-bold tracking-widest uppercase mb-1 text-coach-accent">Hermes · IA</p>
                 <p className="text-sm font-semibold text-white leading-snug">Análisis de carga disponible. Consulta el informe de esta semana.</p>
                 <p className="text-xs mt-1 text-slate-400">Ver informe completo →</p>
+              </div>
+            </Link>
+
+            {/* LIBRARY CARD desktop */}
+            <Link
+              to="/dashboard/library"
+              className="hidden lg:flex rounded-2xl p-4 gap-3 items-start relative overflow-hidden hover:opacity-90 transition-opacity bg-slate-900 border border-slate-700"
+            >
+              <div className="absolute -top-[30px] -right-[30px] w-[100px] h-[100px] pointer-events-none" style={{ background: 'radial-gradient(circle, rgba(14,165,233,0.35), transparent 70%)' }} />
+              <div className="w-9 h-9 rounded-xl flex items-center justify-center flex-shrink-0 bg-sky-600">
+                <FiBookOpen className="w-4 h-4 text-white" />
+              </div>
+              <div>
+                <p className="text-[10px] font-bold tracking-widest uppercase mb-1 text-sky-400">Biblioteca</p>
+                <p className="text-sm font-semibold text-white leading-snug">Explora los ejercicios disponibles y crea tus propios custom.</p>
+                <p className="text-xs mt-1 text-slate-400">Carrera y gym →</p>
               </div>
             </Link>
 

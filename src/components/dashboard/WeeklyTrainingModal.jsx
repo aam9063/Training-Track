@@ -9,7 +9,10 @@ import {
   FiChevronRight,
   FiSave,
   FiLoader,
+  FiSearch,
+  FiBookOpen,
 } from 'react-icons/fi';
+import ExerciseLibrary from '../library/ExerciseLibrary';
 import {
   getRunningExercises,
   getGymExercises,
@@ -43,6 +46,7 @@ const WeeklyTrainingModal = ({
   const [saving, setSaving] = useState(false);
   const [existingWeekData, setExistingWeekData] = useState(null);
   const [activeDay, setActiveDay] = useState(0);
+  const [libraryPicker, setLibraryPicker] = useState({ open: false, kind: 'running', dayIndex: 0 });
 
   // Initialize empty week
   function initializeEmptyWeek() {
@@ -217,6 +221,25 @@ const WeeklyTrainingModal = ({
   const removeExercise = (dayIndex, exerciseIndex) => {
     const newDays = [...days];
     newDays[dayIndex].exercises.splice(exerciseIndex, 1);
+    setDays(newDays);
+  };
+
+  // Añade un ejercicio del banco con los defaults del propio ejercicio
+  const addExerciseFromLibrary = (dayIndex, kind, ex) => {
+    const newDays = [...days];
+    newDays[dayIndex].exercises.push({
+      type: kind,
+      exerciseId: ex.id,
+      exerciseName: ex.name,
+      sets: ex.default_sets ?? 1,
+      reps: ex.default_reps ?? 1,
+      distance: ex.distance_meters ?? null,
+      durationSeconds: ex.duration_seconds ?? null,
+      paceCode: '',
+      paceDescription: ex.pace_description || '',
+      restSeconds: ex.default_rest_seconds ?? 60,
+      notes: '',
+    });
     setDays(newDays);
   };
 
@@ -418,6 +441,7 @@ const WeeklyTrainingModal = ({
                   gymExercisesFlat={gymExercises}
                   runningCategories={RUNNING_CATEGORIES}
                   gymCategories={GYM_CATEGORIES}
+                  onOpenLibrary={(kind) => setLibraryPicker({ open: true, kind, dayIndex: activeDay })}
                 />
               </div>
             </>
@@ -473,14 +497,64 @@ const WeeklyTrainingModal = ({
     </div>
   );
 
+  // Overlay con la biblioteca completa — comun a ambos modos
+  const libraryOverlay = (
+    <AnimatePresence>
+      {libraryPicker.open && (
+        <motion.div
+          initial={{ opacity: 0 }}
+          animate={{ opacity: 1 }}
+          exit={{ opacity: 0 }}
+          className="fixed inset-0 z-[60] flex items-center justify-center p-2 sm:p-4 bg-black/60 backdrop-blur-sm"
+          onClick={() => setLibraryPicker((s) => ({ ...s, open: false }))}
+        >
+          <motion.div
+            initial={{ y: 20, scale: 0.98 }}
+            animate={{ y: 0, scale: 1 }}
+            exit={{ y: 20, scale: 0.98 }}
+            transition={{ duration: 0.15 }}
+            onClick={(e) => e.stopPropagation()}
+            className="bg-white dark:bg-coach-base rounded-2xl shadow-xl w-full max-w-6xl max-h-[92vh] overflow-hidden flex flex-col"
+          >
+            <div className="flex items-center justify-between px-5 py-3 border-b border-slate-200 dark:border-white/10 flex-shrink-0">
+              <h3 className="text-base font-semibold text-slate-900 dark:text-slate-100">
+                Explorar biblioteca · {libraryPicker.kind === 'gym' ? 'Gym' : 'Carrera'}
+              </h3>
+              <button
+                onClick={() => setLibraryPicker((s) => ({ ...s, open: false }))}
+                className="p-1.5 rounded-lg text-slate-400 hover:text-slate-600 dark:hover:text-slate-200 hover:bg-slate-100 dark:hover:bg-white/5"
+              >
+                <FiX className="w-5 h-5" />
+              </button>
+            </div>
+            <div className="overflow-y-auto p-4 sm:p-5">
+              <ExerciseLibrary
+                mode="coach"
+                coachId={coachId}
+                onPickExercise={(kind, ex) => {
+                  addExerciseFromLibrary(libraryPicker.dayIndex, kind, ex);
+                  setLibraryPicker((s) => ({ ...s, open: false }));
+                  showSuccess(`Añadido: ${ex.name}`);
+                }}
+              />
+            </div>
+          </motion.div>
+        </motion.div>
+      )}
+    </AnimatePresence>
+  );
+
   // Embedded mode: render without overlay wrapper (used inside TrainingPlanningWizard)
   if (embedded) {
     return (
-      <div className="flex flex-col h-full">
-        {headerContent}
-        {bodyContent}
-        {footerContent}
-      </div>
+      <>
+        <div className="flex flex-col h-full">
+          {headerContent}
+          {bodyContent}
+          {footerContent}
+        </div>
+        {libraryOverlay}
+      </>
     );
   }
 
@@ -497,6 +571,7 @@ const WeeklyTrainingModal = ({
         {bodyContent}
         {footerContent}
       </motion.div>
+      {libraryOverlay}
     </div>
   );
 };
@@ -516,12 +591,15 @@ const DayEditor = ({
   gymExercisesFlat,
   runningCategories,
   gymCategories,
+  onOpenLibrary,
 }) => {
   const [gymMultiSelectOpen, setGymMultiSelectOpen] = useState(false);
   const [selectedGymExercises, setSelectedGymExercises] = useState([]);
   const [gymDefaultSets, setGymDefaultSets] = useState(3);
   const [gymDefaultReps, setGymDefaultReps] = useState(10);
   const [gymDefaultRest, setGymDefaultRest] = useState(60);
+  const [gymSearch, setGymSearch] = useState('');
+  const [runningSearch, setRunningSearch] = useState({});
 
   // Get already selected gym exercise IDs for this day
   const existingGymExerciseIds = day.exercises
@@ -546,8 +624,27 @@ const DayEditor = ({
     });
 
     setSelectedGymExercises([]);
+    setGymSearch('');
     setGymMultiSelectOpen(false);
   };
+
+  // Filtra el grid de gym por nombre/tags/body_region (case-insensitive)
+  const filteredGymExercises = (() => {
+    const q = gymSearch.trim().toLowerCase();
+    if (!q) return gymExercises;
+    const out = {};
+    for (const [category, list] of Object.entries(gymExercises)) {
+      const filtered = (list || []).filter((ex) => {
+        if (ex.name?.toLowerCase().includes(q)) return true;
+        if (ex.description?.toLowerCase().includes(q)) return true;
+        if ((ex.tags || []).some((t) => t.toLowerCase().includes(q))) return true;
+        if ((ex.body_region || []).some((b) => b.toLowerCase().includes(q))) return true;
+        return false;
+      });
+      if (filtered.length > 0) out[category] = filtered;
+    }
+    return out;
+  })();
 
   return (
     <div className="space-y-6">
@@ -657,6 +754,18 @@ const DayEditor = ({
                     <span>Añadir Ejercicios</span>
                   </button>
                 )}
+                {day.type !== 'rest' && onOpenLibrary && (
+                  <button
+                    onClick={() =>
+                      onOpenLibrary(day.type === 'gym' ? 'gym' : 'running')
+                    }
+                    className="px-3 py-1 text-sm bg-sky-100 dark:bg-sky-900/30 text-sky-600 dark:text-sky-400 rounded-lg hover:bg-sky-200 dark:hover:bg-sky-900/50 transition-colors flex items-center space-x-1"
+                    title="Buscar en la biblioteca completa con filtros"
+                  >
+                    <FiBookOpen className="w-4 h-4" />
+                    <span>Explorar biblioteca</span>
+                  </button>
+                )}
               </div>
             </div>
 
@@ -669,7 +778,7 @@ const DayEditor = ({
                   exit={{ opacity: 0, height: 0 }}
                   className="mb-4 p-4 bg-purple-50 dark:bg-purple-900/20 rounded-lg border border-purple-200 dark:border-purple-800"
                 >
-                  <div className="flex items-center justify-between mb-4">
+                  <div className="flex items-center justify-between mb-3">
                     <h4 className="font-medium text-purple-700 dark:text-purple-300">
                       Seleccionar Ejercicios de Gimnasio
                     </h4>
@@ -677,11 +786,24 @@ const DayEditor = ({
                       onClick={() => {
                         setGymMultiSelectOpen(false);
                         setSelectedGymExercises([]);
+                        setGymSearch('');
                       }}
                       className="p-1 text-purple-500 hover:bg-purple-200 dark:hover:bg-purple-800 rounded"
                     >
                       <FiX className="w-4 h-4" />
                     </button>
+                  </div>
+
+                  {/* Buscador */}
+                  <div className="relative mb-3">
+                    <FiSearch className="absolute left-3 top-1/2 -translate-y-1/2 w-4 h-4 text-purple-400" />
+                    <input
+                      type="text"
+                      value={gymSearch}
+                      onChange={(e) => setGymSearch(e.target.value)}
+                      placeholder="Buscar por nombre, tag o zona del cuerpo…"
+                      className="w-full pl-10 pr-3 py-2 text-sm border border-purple-300 dark:border-purple-600 rounded-lg bg-white dark:bg-coach-elevated text-gray-900 dark:text-white placeholder-purple-400"
+                    />
                   </div>
 
                   {/* Default values for all selected exercises */}
@@ -729,7 +851,12 @@ const DayEditor = ({
 
                   {/* Exercise Categories with checkboxes */}
                   <div className="max-h-64 overflow-y-auto space-y-4">
-                    {Object.entries(gymExercises).map(([category, exercises]) => (
+                    {Object.keys(filteredGymExercises).length === 0 && (
+                      <div className="text-sm text-purple-500 dark:text-purple-400 py-2 text-center">
+                        Sin ejercicios para "{gymSearch}".
+                      </div>
+                    )}
+                    {Object.entries(filteredGymExercises).map(([category, exercises]) => (
                       <div key={category}>
                         <h5 className="text-xs font-semibold text-purple-600 dark:text-purple-400 uppercase tracking-wider mb-2">
                           {gymCategories[category] || category}
@@ -830,34 +957,64 @@ const DayEditor = ({
                             {exercise.exerciseName || gymExercisesFlat?.find(e => e.id === exercise.exerciseId)?.name || 'Ejercicio'}
                           </div>
                         ) : (
-                          <select
-                            value={exercise.exerciseId}
-                            onChange={(e) =>
-                              updateExercise(
-                                dayIndex,
-                                exIndex,
-                                'exerciseId',
-                                e.target.value
-                              )
-                            }
-                            className="w-full px-3 py-2 text-sm border border-gray-300 dark:border-coach-border rounded-lg bg-white dark:bg-coach-elevated text-gray-900 dark:text-white"
-                          >
-                            <option value="">Seleccionar ejercicio...</option>
-                            {Object.entries(runningExercises).map(
-                              ([category, exercises]) => (
-                                <optgroup
-                                  key={category}
-                                  label={runningCategories[category] || category}
+                          (() => {
+                            const q = (runningSearch[exIndex] || '').trim().toLowerCase();
+                            const filteredRunning = q
+                              ? Object.entries(runningExercises).reduce((acc, [cat, list]) => {
+                                  const f = (list || []).filter((ex) =>
+                                    ex.name?.toLowerCase().includes(q) ||
+                                    ex.description?.toLowerCase().includes(q) ||
+                                    (ex.tags || []).some((t) => t.toLowerCase().includes(q))
+                                  );
+                                  if (f.length) acc[cat] = f;
+                                  return acc;
+                                }, {})
+                              : runningExercises;
+                            return (
+                              <div className="space-y-1.5">
+                                <div className="relative">
+                                  <FiSearch className="absolute left-2.5 top-1/2 -translate-y-1/2 w-3.5 h-3.5 text-gray-400" />
+                                  <input
+                                    type="text"
+                                    value={runningSearch[exIndex] || ''}
+                                    onChange={(e) =>
+                                      setRunningSearch((s) => ({ ...s, [exIndex]: e.target.value }))
+                                    }
+                                    placeholder="Buscar…"
+                                    className="w-full pl-8 pr-2 py-1.5 text-xs border border-gray-300 dark:border-coach-border rounded-lg bg-white dark:bg-coach-elevated text-gray-900 dark:text-white placeholder-gray-400"
+                                  />
+                                </div>
+                                <select
+                                  value={exercise.exerciseId}
+                                  onChange={(e) =>
+                                    updateExercise(
+                                      dayIndex,
+                                      exIndex,
+                                      'exerciseId',
+                                      e.target.value
+                                    )
+                                  }
+                                  className="w-full px-3 py-2 text-sm border border-gray-300 dark:border-coach-border rounded-lg bg-white dark:bg-coach-elevated text-gray-900 dark:text-white"
                                 >
-                                  {exercises.map((ex) => (
-                                    <option key={ex.id} value={ex.id}>
-                                      {ex.name}
-                                    </option>
-                                  ))}
-                                </optgroup>
-                              )
-                            )}
-                          </select>
+                                  <option value="">Seleccionar ejercicio...</option>
+                                  {Object.entries(filteredRunning).map(
+                                    ([category, exercises]) => (
+                                      <optgroup
+                                        key={category}
+                                        label={runningCategories[category] || category}
+                                      >
+                                        {exercises.map((ex) => (
+                                          <option key={ex.id} value={ex.id}>
+                                            {ex.name}
+                                          </option>
+                                        ))}
+                                      </optgroup>
+                                    )
+                                  )}
+                                </select>
+                              </div>
+                            );
+                          })()
                         )}
                       </div>
 

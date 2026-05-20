@@ -213,12 +213,16 @@ const CoachMessages = () => {
     setSending(true);
     setNewMessageText('');
     try {
-      const { error } = await sendMessage(
+      const { data, error } = await sendMessage(
         profile.id,
         selectedConversation.otherUser.id,
         content
       );
       if (error) throw error;
+      // Optimistic insert: realtime no entrega el evento al sender, asi que insertamos manualmente
+      if (data) {
+        setMessages(prev => (prev.some(m => m.id === data.id) ? prev : [...prev, data]));
+      }
     } catch {
       showError('Error al enviar el mensaje');
       setNewMessageText(content);

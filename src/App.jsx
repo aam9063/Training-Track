@@ -39,6 +39,7 @@ const Profile = lazy(() => import('./pages/dashboard/Profile'));
 const CoachMessages = lazy(() => import('./pages/dashboard/Messages'));
 const Planning = lazy(() => import('./pages/dashboard/Planning'));
 const AIReports = lazy(() => import('./pages/dashboard/AIReports'));
+const Library = lazy(() => import('./pages/dashboard/Library'));
 
 // Admin pages
 const AdminLayout = lazy(() => import('./layouts/AdminLayout'));
@@ -56,6 +57,7 @@ const AthleteMetrics = lazy(() => import('./pages/athlete/Metrics'));
 const Devices = lazy(() => import('./pages/athlete/Devices'));
 const AthleteMessages = lazy(() => import('./pages/athlete/Messages'));
 const GymFiles = lazy(() => import('./pages/athlete/GymFiles'));
+const AthleteLibrary = lazy(() => import('./pages/athlete/AthleteLibrary'));
 const MyReports = lazy(() => import('./pages/athlete/MyReports'));
 const AnalysisHistory = lazy(() => import('./pages/athlete/AnalysisHistory'));
 const ActivityDetailPage = lazy(() => import('./pages/athlete/ActivityDetailPage'));
@@ -140,6 +142,7 @@ function App() {
                   <Route path="athletes/:athleteId/metrics" element={<AthleteMetricsView />} />
                   <Route path="athletes/:athleteId/activity/:activityId" element={<CoachActivityDetailPage />} />
                   <Route path="planning" element={<Planning />} />
+                  <Route path="library" element={<Library />} />
                   <Route path="metrics" element={<Metrics />} />
                   <Route path="calendar" element={<Calendar />} />
                   <Route path="profile" element={<Profile />} />
@@ -156,6 +159,7 @@ function App() {
                   <Route path="devices" element={<Devices />} />
                   <Route path="messages" element={<AthleteMessages />} />
                   <Route path="gym-files" element={<GymFiles />} />
+                  <Route path="library" element={<AthleteLibrary />} />
                   <Route path="my-reports" element={<MyReports />} />
                   <Route path="analysis-history" element={<AnalysisHistory />} />
                   <Route path="profile" element={<Profile />} />

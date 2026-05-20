@@ -76,7 +76,7 @@ const AthleteDashboardLayout = () => {
       <AthleteMobileHeader />
 
       {/* Desktop floating topbar — separate floating elements */}
-      <div className="hidden lg:flex items-center justify-between fixed top-3 left-[88px] right-3 z-20 pointer-events-none">
+      <div className="hidden lg:flex items-center justify-between fixed top-3 left-[88px] right-3 z-30 pointer-events-none">
         {/* Search — center floating pill */}
         <div className="flex-1 flex justify-center pointer-events-none">
           <div ref={searchRef} className="relative w-full max-w-sm pointer-events-auto">

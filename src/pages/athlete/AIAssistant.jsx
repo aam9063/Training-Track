@@ -199,7 +199,7 @@ export default function AIAssistant() {
           <>
             <AnimatePresence initial={false}>
               {messages.map((msg, i) => (
-                <MessageBubble key={msg.id || msg.created_at || i} message={msg} />
+                <MessageBubble key={msg.id ?? `${msg.created_at ?? 'msg'}-${i}`} message={msg} />
               ))}
             </AnimatePresence>
 

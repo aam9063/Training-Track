@@ -9,6 +9,7 @@ import {
   FiZap,
   FiMessageSquare,
   FiClipboard,
+  FiBookOpen,
   FiSun,
   FiMoon,
 } from 'react-icons/fi';
@@ -22,6 +23,7 @@ const Sidebar = () => {
     { path: '/dashboard', icon: FiHome, label: 'Inicio' },
     { path: '/dashboard/athletes', icon: FiUsers, label: 'Mis Atletas' },
     { path: '/dashboard/planning', icon: FiClipboard, label: 'Planificación' },
+    { path: '/dashboard/library', icon: FiBookOpen, label: 'Biblioteca' },
     { path: '/dashboard/ai-reports', icon: FiZap, label: 'Informes IA' },
     { path: '/dashboard/metrics', icon: FiBarChart2, label: 'Equipo' },
     { path: '/dashboard/calendar', icon: FiCalendar, label: 'Calendario' },

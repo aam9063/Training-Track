@@ -21,6 +21,7 @@ import {
   FiCheckCircle,
   FiFileText,
   FiChevronRight,
+  FiBookOpen,
 } from 'react-icons/fi';
 import useGamificationData from '../../hooks/useGamificationData';
 import { toLocalDateStr } from '../../lib/dateUtils';
@@ -276,6 +277,25 @@ const AthleteDashboard = () => {
                 Pregunta a tu entrenador virtual
               </p>
               <p className="text-xs text-slate-400 mt-1">Consejo personalizado →</p>
+            </div>
+          </Link>
+        )}
+
+        {/* INDEPENDENT ATHLETE: Library quick access card */}
+        {isIndependent && (
+          <Link to="/athlete/library" className="relative bg-slate-900 rounded-2xl p-4 overflow-hidden flex gap-3 hover:bg-slate-800 transition-colors">
+            <div className="absolute inset-0 pointer-events-none">
+              <div className="absolute -top-8 -right-8 w-40 h-40 rounded-full opacity-20 bg-[radial-gradient(circle,_#0ea5e9,_transparent)]" />
+            </div>
+            <div className="w-9 h-9 rounded-xl bg-sky-600 flex items-center justify-center flex-shrink-0 z-10">
+              <FiBookOpen className="w-4 h-4 text-white" />
+            </div>
+            <div className="z-10 min-w-0">
+              <p className="text-[10px] uppercase tracking-widest text-sky-400 font-semibold">Biblioteca</p>
+              <p className="text-sm text-white font-semibold mt-0.5 leading-snug">
+                Explora los ejercicios disponibles
+              </p>
+              <p className="text-xs text-slate-400 mt-1">Carrera y gym →</p>
             </div>
           </Link>
         )}

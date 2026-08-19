@@ -1,4 +1,5 @@
 import React from 'react';
+import * as Sentry from '@sentry/react';
 import { pdf } from '@react-pdf/renderer';
 import { WeeklyPlanDocument } from './pdf/WeeklyPlanDocument';
 import { AIWeeklyReportDocument } from './pdf/AIWeeklyReportDocument';
@@ -215,7 +216,8 @@ export const generateWeeklyPDF = async ({
     triggerBlobDownload(blob, fileName);
   } catch (err) {
     console.error('[generateWeeklyPDF] Error:', err);
-    showError('Error al generar el PDF del plan semanal');
+    Sentry.captureException(err, { extra: { fn: 'generateWeeklyPDF' } });
+    showError(`Error al generar el PDF del plan semanal: ${err?.message || err}`);
   }
 };
 
@@ -383,6 +385,7 @@ export const generateAIReportPDF = async ({ report, athleteName } = {}) => {
     triggerBlobDownload(blob, fileName);
   } catch (err) {
     console.error('[generateAIReportPDF] Error:', err);
-    showError('Error al generar el PDF del informe IA');
+    Sentry.captureException(err, { extra: { fn: 'generateAIReportPDF' } });
+    showError(`Error al generar el PDF del informe IA: ${err?.message || err}`);
   }
 };

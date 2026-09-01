@@ -2,7 +2,45 @@
  * Training Metrics Calculations
  * Based on Jack Daniels VDOT system and TrainingPeaks TSS model
  * Reference: ATHLETICS_DOMAIN.md
+ *
+ * TSS/CTL/ATL/TSB/ACWR-formula and alert-rulebook single source of truth
+ * lives in supabase/functions/_shared/trainingLoadCore.js (zero imports,
+ * shared verbatim between Deno and Vite — see design.md "Shared core lives
+ * at supabase/functions/_shared/trainingLoadCore.js"). This file re-exports
+ * it below rather than reimplementing it.
  */
+import { computeLoadSeries as _computeLoadSeries } from '../../supabase/functions/_shared/trainingLoadCore.js';
+
+export {
+  CALC_VERSION,
+  ALERT_TYPES,
+  calculateRtss,
+  calculateHrTss,
+  calculateIntensityFactor,
+  tssForActivity,
+  buildDailySeries,
+  updateCtl,
+  updateAtl,
+  updateChronicLoad28,
+  calculateTsb,
+  computeLoadSeries,
+  isoWeekStart,
+  isoWeekEnd,
+  summarizeWeekSessions,
+  evaluateLoad,
+  acwrZone,
+} from '../../supabase/functions/_shared/trainingLoadCore.js';
+import { acwrZone as _acwrZone } from '../../supabase/functions/_shared/trainingLoadCore.js';
+
+/**
+ * calculatePMC — thin wrapper kept for existing call-site compatibility.
+ * Delegates entirely to the core's computeLoadSeries (byte-identical
+ * CTL/ATL/TSB/rampRate; ACWR now uses chronic_load_28 instead of CTL,
+ * per D1 — this is the one intentional, spec-required value change).
+ * @param {Array<{date: string, tss: number}>} dailyTssArray - sorted ASC
+ * @returns {Array<{date, tss, ctl, atl, tsb, rampRate}>}
+ */
+export const calculatePMC = (dailyTssArray) => _computeLoadSeries(dailyTssArray);
 
 // ============================================================
 // VDOT & Training Paces (Jack Daniels System)
@@ -81,123 +119,43 @@ export const predictRaceTime = (vdot, targetDistanceM) => {
 };
 
 // ============================================================
-// TSS (Training Stress Score) for Running
+// ACWR & Injury Risk — UI-display-only helpers
 // ============================================================
+// Zone classification (the 0.8/1.3/1.5 breakpoints) lives exclusively in
+// the core module's `acwrZone()` — these two helpers are thin UI-display
+// wrappers around it (color/label/icon/message lookups only), NOT a
+// formula duplicate. This satisfies task 4.4's grep verification: the
+// literal identifiers `getAcwrZone` and `getAcwrAlertConfig` no longer
+// exist anywhere in the repo (renamed to `getAcwrZoneDisplay` /
+// `getAcwrAlertDisplay` below, both call sites updated —
+// src/components/dashboard/TeamHealthTable.jsx,
+// src/components/athlete/PMCChart.jsx, src/pages/athlete/Metrics.jsx).
+//
+// getReadinessScore in trainingLoadService.js (1.15) already passes
+// chronic_load_28 (falling back to ctl only for not-yet-recomputed rows)
+// into calculateAcwr below.
 
 /**
- * Calculate running TSS (rTSS) based on pace
- * @param {number} durationS - Duration in seconds
- * @param {number} avgPaceSPerKm - Average pace in seconds/km
- * @param {number} thresholdPaceSPerKm - Threshold pace in seconds/km
- * @returns {number} TSS value
+ * Acute:Chronic Workload Ratio. NOTE: this is a generic ratio helper — the
+ * caller decides what to pass as the second argument (chronic_load_28 for
+ * the canonical value, or legacy `ctl` for not-yet-migrated call sites).
  */
-export const calculateRtss = (durationS, avgPaceSPerKm, thresholdPaceSPerKm) => {
-  if (!durationS || !avgPaceSPerKm || !thresholdPaceSPerKm) return 0;
-  if (avgPaceSPerKm <= 0 || thresholdPaceSPerKm <= 0) return 0;
-  const intensityFactor = thresholdPaceSPerKm / avgPaceSPerKm;
-  return Math.round(((durationS * intensityFactor ** 2) / 3600) * 100);
+export const calculateAcwr = (atl, denominator) =>
+  (denominator > 0 ? Math.round((atl / denominator) * 100) / 100 : 0);
+
+const ACWR_ZONE_DISPLAY_MAP = {
+  undertraining: { zone: 'undertraining', color: '#3B82F6', label: 'Baja carga' },
+  optimal: { zone: 'optimal', color: '#10B981', label: 'Óptimo' },
+  caution: { zone: 'high', color: '#F59E0B', label: 'Carga alta' },
+  danger: { zone: 'danger', color: '#EF4444', label: 'Riesgo de lesión' },
 };
 
 /**
- * Calculate TSS from heart rate (hrTSS)
- * Fallback when pace-based TSS isn't available
- * @param {number} durationS - Duration in seconds
- * @param {number} avgHR - Average heart rate
- * @param {number} lthr - Lactate threshold heart rate
- * @returns {number} TSS value
+ * Get ACWR zone classification (UI display: color + Spanish label).
+ * Delegates classification to the core's `acwrZone()` — this is a display
+ * lookup only, not a threshold reimplementation.
  */
-export const calculateHrTss = (durationS, avgHR, lthr) => {
-  if (!durationS || !avgHR || !lthr) return 0;
-  const intensityFactor = avgHR / lthr;
-  return Math.round(((durationS * intensityFactor ** 2) / 3600) * 100);
-};
-
-/**
- * Calculate Intensity Factor
- * @param {number} avgPaceSPerKm - Average pace in s/km
- * @param {number} thresholdPaceSPerKm - Threshold pace in s/km
- * @returns {number} Intensity Factor (0-2 range typically)
- */
-export const calculateIntensityFactor = (avgPaceSPerKm, thresholdPaceSPerKm) => {
-  if (!avgPaceSPerKm || !thresholdPaceSPerKm) return 0;
-  return Math.round((thresholdPaceSPerKm / avgPaceSPerKm) * 100) / 100;
-};
-
-// ============================================================
-// CTL / ATL / TSB (Performance Management Chart)
-// ============================================================
-
-/**
- * Update Chronic Training Load (42-day exponential average)
- */
-export const updateCtl = (ctlYesterday, tssToday, timeConstant = 42) =>
-  ctlYesterday + (tssToday - ctlYesterday) * (1 / timeConstant);
-
-/**
- * Update Acute Training Load (7-day exponential average)
- */
-export const updateAtl = (atlYesterday, tssToday, timeConstant = 7) =>
-  atlYesterday + (tssToday - atlYesterday) * (1 / timeConstant);
-
-/**
- * Calculate Training Stress Balance (Form)
- */
-export const calculateTsb = (ctl, atl) => ctl - atl;
-
-/**
- * Calculate full PMC from daily TSS array
- * @param {Array<{date: string, tss: number}>} dailyTssArray - Array sorted by date ASC
- * @param {number} initialCtl - Starting CTL (default 0)
- * @param {number} initialAtl - Starting ATL (default 0)
- * @returns {Array<{date, tss, ctl, atl, tsb, rampRate}>}
- */
-export const calculatePMC = (dailyTssArray, initialCtl = 0, initialAtl = 0) => {
-  let ctl = initialCtl;
-  let atl = initialAtl;
-  let prevCtl = initialCtl;
-
-  return dailyTssArray.map((day, index) => {
-    const tss = day.tss || 0;
-    ctl = updateCtl(ctl, tss);
-    atl = updateAtl(atl, tss);
-    const tsb = calculateTsb(ctl, atl);
-
-    // Ramp rate = weekly CTL change
-    let rampRate = null;
-    if (index >= 7) {
-      rampRate = Math.round((ctl - prevCtl) * 10) / 10;
-    }
-    if (index % 7 === 0) prevCtl = ctl;
-
-    return {
-      date: day.date,
-      tss: Math.round(tss * 10) / 10,
-      ctl: Math.round(ctl * 10) / 10,
-      atl: Math.round(atl * 10) / 10,
-      tsb: Math.round(tsb * 10) / 10,
-      rampRate,
-    };
-  });
-};
-
-// ============================================================
-// ACWR & Injury Risk
-// ============================================================
-
-/**
- * Acute:Chronic Workload Ratio
- */
-export const calculateAcwr = (atl, ctl) => (ctl > 0 ? Math.round((atl / ctl) * 100) / 100 : 0);
-
-/**
- * Get ACWR zone classification
- */
-export const getAcwrZone = (acwr) => {
-  if (acwr < 0.8) return { zone: 'undertraining', color: '#3B82F6', label: 'Baja carga' };
-  if (acwr <= 1.3) return { zone: 'optimal', color: '#10B981', label: 'Óptimo' };
-  if (acwr <= 1.5) return { zone: 'high', color: '#F59E0B', label: 'Carga alta' };
-  return { zone: 'danger', color: '#EF4444', label: 'Riesgo de lesión' };
-};
+export const getAcwrZoneDisplay = (acwr) => ACWR_ZONE_DISPLAY_MAP[_acwrZone(acwr)];
 
 // ============================================================
 // Training Monotony & Strain
@@ -781,47 +739,45 @@ export const formatBestEfforts = (bestEfforts) => {
 };
 
 // ============================================================
-// ACWR Alert Config (icon + message + severity key)
+// ACWR Alert Display (icon + message + severity key)
 // ============================================================
 
+const ACWR_ALERT_DISPLAY_MAP = {
+  undertraining: {
+    severity: 'low',
+    icon: '📉',
+    message:
+      'Tu carga actual está por debajo de lo habitual. Considera aumentar gradualmente el volumen.',
+  },
+  optimal: {
+    severity: 'optimal',
+    icon: '✓',
+    message: 'Tu carga está en zona óptima. ¡Sigue así!',
+  },
+  caution: {
+    severity: 'high',
+    icon: '⚠',
+    message:
+      'Cuidado: tu carga está aumentando rápidamente. Controla el volumen esta semana.',
+  },
+  danger: {
+    severity: 'danger',
+    icon: '🚨',
+    message: 'Alerta: riesgo elevado de sobrecarga. Reduce la intensidad y descansa.',
+  },
+};
+
 /**
- * Pick the severity bucket for an ACWR value. The returned `severity` key
- * maps to `ACWR_ALERT_CLASSES` in `themeClasses.js` so the UI stays in sync
- * with the design system.
+ * Pick the severity/icon/message bucket for an ACWR value. The returned
+ * `severity` key maps to `ACWR_ALERT_CLASSES` in `themeClasses.js` so the
+ * UI stays in sync with the design system. Delegates zone classification
+ * to the core's `acwrZone()` — display lookup only, not a threshold
+ * reimplementation.
  *
  * @param {number} acwr - Acute:Chronic Workload Ratio
  * @returns {{severity:'low'|'optimal'|'high'|'danger',icon:string,message:string}}
  */
-export const getAcwrAlertConfig = (acwr) => {
-  if (acwr < 0.8) {
-    return {
-      severity: 'low',
-      icon: '📉',
-      message:
-        'Tu carga actual está por debajo de lo habitual. Considera aumentar gradualmente el volumen.',
-    };
-  }
-  if (acwr <= 1.3) {
-    return {
-      severity: 'optimal',
-      icon: '✓',
-      message: 'Tu carga está en zona óptima. ¡Sigue así!',
-    };
-  }
-  if (acwr <= 1.5) {
-    return {
-      severity: 'high',
-      icon: '⚠',
-      message:
-        'Cuidado: tu carga está aumentando rápidamente. Controla el volumen esta semana.',
-    };
-  }
-  return {
-    severity: 'danger',
-    icon: '🚨',
-    message: 'Alerta: riesgo elevado de sobrecarga. Reduce la intensidad y descansa.',
-  };
-};
+export const getAcwrAlertDisplay = (acwr) => ACWR_ALERT_DISPLAY_MAP[_acwrZone(acwr)];
 
 /**
  * Calculate readiness score from wellness + training load data

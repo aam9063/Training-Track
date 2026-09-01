@@ -62,6 +62,7 @@ import VAMTestModal from '../../components/dashboard/VAMTestModal';
 import AthleteAIChat from '../../components/dashboard/AthleteAIChat';
 import { generateAIPlanWithCallbacks } from '../../services/aiPlanService';
 import AIPlanReviewModal from '../../components/dashboard/AIPlanReviewModal';
+import AthleteLoadAlerts from '../../components/dashboard/AthleteLoadAlerts';
 
 // Extracted utilities and hook
 import {
@@ -345,6 +346,11 @@ const AthleteProfile = () => {
             <FiMessageCircle className="w-5 h-5 text-gray-600 dark:text-gray-400 group-hover:text-blue-600" />
           </button>
         </div>
+      </div>
+
+      {/* Training load alerts (acwr_zone / tsb_critical / low_completion / high_rpe) */}
+      <div className="mb-4 lg:mb-6">
+        <AthleteLoadAlerts athleteId={athleteId} />
       </div>
 
       {/* Test Cards: Conconi + VAM side by side */}

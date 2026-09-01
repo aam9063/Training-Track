@@ -47,7 +47,7 @@ export const getTeamHealthSnapshot = async (coachId) => {
       // Latest PMC row per athlete — get last 2 days to have the most recent
       supabase
         .from('daily_training_load')
-        .select('athlete_id, date, ctl, atl, tsb')
+        .select('athlete_id, date, ctl, atl, tsb, chronic_load_28')
         .in('athlete_id', athleteIds)
         .order('date', { ascending: false })
         .limit(athleteIds.length * 2),
@@ -95,7 +95,12 @@ export const getTeamHealthSnapshot = async (coachId) => {
       const ctl = load?.ctl ?? null;
       const atl = load?.atl ?? null;
       const tsb = load?.tsb != null ? Math.round(load.tsb) : null;
-      const acwr = ctl != null && atl != null ? calculateAcwr(atl, ctl) : null;
+      // ACWR denominator: chronic_load_28 (canonical 28-day chronic window)
+      // once recomputed by the agent, falling back to the legacy ctl
+      // (42-day) denominator for rows not yet recomputed — same pattern as
+      // trainingLoadService.js's getReadinessScore.
+      const acwrDenominator = load?.chronic_load_28 ?? ctl ?? null;
+      const acwr = acwrDenominator != null && atl != null ? calculateAcwr(atl, acwrDenominator) : null;
 
       return {
         id,

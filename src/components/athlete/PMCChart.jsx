@@ -4,7 +4,7 @@ import { Line } from 'react-chartjs-2';
 import { FiTrendingUp, FiLoader, FiInfo } from 'react-icons/fi';
 import { useAuth } from '../../contexts/AuthContext';
 import { getDailyTrainingLoad, recalculateTrainingLoad, getCurrentPMCStatus } from '../../services/trainingLoadService';
-import { getTsbZone, getAcwrZone, calculateAcwr } from '../../lib/trainingMetrics';
+import { getTsbZone, getAcwrZoneDisplay, calculateAcwr } from '../../lib/trainingMetrics';
 import { toLocalDateStr } from '../../lib/dateUtils';
 import { CHART_COLORS, CHART_TOOLTIP } from '../../lib/chartColors';
 import { showError } from '../../lib/toast';
@@ -12,7 +12,7 @@ import InfoTooltip from '../common/InfoTooltip';
 import { MetricAIAnalyzer } from './MetricAIAnalyzer';
 
 // Status card styles for the TSB / ACWR state chips. Keys map to the `zone`
-// value returned by getTsbZone / getAcwrZone. Tailwind classes keep the
+// value returned by getTsbZone / getAcwrZoneDisplay. Tailwind classes keep the
 // markup free of inline colour styles.
 const STATE_CARD_CLASSES = {
   race_ready: 'bg-emerald-50 text-emerald-700 dark:bg-emerald-900/20 dark:text-emerald-400',
@@ -206,8 +206,13 @@ export default function PMCChart({ activities, athleteProfile, athleteId: propAt
   };
 
   const tsbZone = currentStatus ? getTsbZone(currentStatus.tsb) : null;
-  const acwr = currentStatus ? calculateAcwr(currentStatus.atl, currentStatus.ctl) : null;
-  const acwrZone = acwr ? getAcwrZone(acwr) : null;
+  // ACWR denominator: chronic_load_28 (canonical 28-day chronic window) once
+  // recomputed by the agent, falling back to the legacy ctl (42-day)
+  // denominator for rows not yet recomputed — same pattern as
+  // trainingLoadService.js's getReadinessScore.
+  const acwrDenominator = currentStatus?.chronic_load_28 ?? currentStatus?.ctl ?? null;
+  const acwr = currentStatus ? calculateAcwr(currentStatus.atl, acwrDenominator) : null;
+  const acwrZone = acwr ? getAcwrZoneDisplay(acwr) : null;
 
   // AI payload: aggregate CTL/ATL/TSB + ACWR + CTL trend (last 4 weeks vs previous 4) + total TSS
   const aiData = useMemo(() => {

@@ -7,7 +7,8 @@
     "dev": "vite",
     "build": "vite build",
     "lint": "eslint .",
-    "preview": "vite preview"
+    "preview": "vite preview",
+    "test:core": "node --test \"supabase/functions/_shared/**/*.test.js\" \"supabase/functions/training-load-monitor/**/*.test.js\""
   },
   "dependencies": {
     "@dnd-kit/core": "^6.3.1",

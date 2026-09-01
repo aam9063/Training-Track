@@ -1,0 +1,9 @@
+change: stripe-subscriptions
+status: tasks-complete
+artifacts:
+  explore: explore.md
+  proposal: proposal.md
+  spec: spec.md
+  design: design.md
+  tasks: tasks.md
+next: apply

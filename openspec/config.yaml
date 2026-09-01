@@ -1,0 +1,43 @@
+# openspec/config.yaml
+schema: spec-driven
+
+context: |
+  Tech stack: React 19 + Vite 7 + Supabase (auth, DB, storage, edge functions)
+  UI: Tailwind CSS 3, Framer Motion, Chart.js/Recharts, Leaflet/Mapbox GL
+  Forms: React Hook Form + Zod validation
+  Routing: React Router v7, lazy-loaded page components
+  PWA: vite-plugin-pwa with injectManifest strategy (Workbox SW)
+  Linting: ESLint 9 flat config (react-hooks + react-refresh)
+  Architecture: Services layer (src/services/), custom hooks (src/hooks/), pages split by role (coach/athlete)
+  Language: Spanish (es-ES) UI throughout
+  Deployment: Vercel (trainingtrack.es), Supabase project lusirdkixfliydimemre
+  Testing: No test framework configured
+
+rules:
+  proposal:
+    - Include rollback plan for risky changes
+    - Identify affected modules/packages
+    - Consider RLS policy implications for any DB changes
+  specs:
+    - Use Given/When/Then format for scenarios
+    - Use RFC 2119 keywords (MUST, SHALL, SHOULD, MAY)
+    - All UI text in Spanish (es-ES)
+  design:
+    - Include sequence diagrams for complex flows
+    - Document architecture decisions with rationale
+    - Specify Supabase migration SQL (up + down) for DB changes
+  tasks:
+    - Group tasks by phase (infrastructure, implementation, testing)
+    - Use hierarchical numbering (1.1, 1.2, etc.)
+    - Keep tasks small enough to complete in one session
+  apply:
+    - Follow existing code patterns and conventions
+    - Load relevant coding skills for the project stack
+    - Use toLocalDateStr() for date formatting, never toISOString().split('T')[0]
+    - Tailwind only, no inline styles
+  verify:
+    - Run lint (eslint) and build (vite build) checks
+    - Compare implementation against every spec scenario
+    - Verify RLS policies work for both coach and athlete roles
+  archive:
+    - Warn before merging destructive deltas (large removals)

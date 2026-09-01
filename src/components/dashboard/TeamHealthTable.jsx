@@ -5,7 +5,7 @@ import {
   FiRefreshCw, FiAlertTriangle, FiUser, FiChevronDown,
   FiChevronUp, FiActivity, FiLoader,
 } from 'react-icons/fi';
-import { getAcwrZone } from '../../lib/trainingMetrics';
+import { getAcwrZoneDisplay } from '../../lib/trainingMetrics';
 
 // ─── Constants ───────────────────────────────────────────────────────────────
 
@@ -112,7 +112,7 @@ const InjuryPicker = ({ athleteId, current, onUpdate, disabled }) => {
 
 const AcwrPill = ({ acwr }) => {
   if (acwr === null) return <span className="text-xs text-gray-400">—</span>;
-  const zone = getAcwrZone(acwr);
+  const zone = getAcwrZoneDisplay(acwr);
   const colorMap = {
     undertraining: 'bg-blue-100 text-blue-700 dark:bg-blue-900/30 dark:text-blue-300',
     optimal:       'bg-green-100 text-green-700 dark:bg-green-900/30 dark:text-green-300',

@@ -1,0 +1,1197 @@
+{
+  "_meta": {
+    "table": "gym_exercises_bank",
+    "upsert_key": "slug",
+    "scope": "global (coach_id IS NULL, is_custom=false)",
+    "fields": [
+      "slug", "name", "category", "description", "level",
+      "tags", "body_region", "common_errors", "instructions",
+      "muscle_groups", "equipment", "video_url", "image_url",
+      "default_sets", "default_reps", "default_rest_seconds"
+    ],
+    "level_values": ["principiante", "intermedio", "avanzado", "todos"],
+    "category_enum": [
+      "max_strength", "general_strength", "explosive_strength",
+      "core", "mobility", "plyometrics", "injury_prevention"
+    ],
+    "video_url_note": "Inicialmente solo se rellena en algunos; URL de YouTube. Se ampliara progresivamente."
+  },
+  "exercises": [
+    {
+      "slug": "cargada",
+      "name": "Cargada",
+      "category": "max_strength",
+      "description": "Levantamiento olímpico. Llevar la barra del suelo a los hombros en un solo movimiento. Trabaja potencia global.",
+      "level": "avanzado",
+      "tags": ["potencia", "fuerza-maxima", "olympic-lift"],
+      "body_region": ["piernas", "espalda", "hombros", "core"],
+      "muscle_groups": ["legs", "back", "shoulders"],
+      "equipment": ["barbell"],
+      "common_errors": ["Curvar la espalda baja", "Rodillas hacia adentro", "Brazos primero"],
+      "instructions": [
+        "Pies a la anchura de caderas, barra cerca de las espinillas",
+        "Agarre prono ligeramente más ancho que hombros",
+        "Espalda neutra, pecho arriba",
+        "Tirón explosivo extendiendo caderas y rodillas",
+        "Recibir la barra en posición de front squat"
+      ],
+      "default_sets": 4,
+      "default_reps": 3,
+      "default_rest_seconds": 180
+    },
+    {
+      "slug": "jerck",
+      "name": "Jerk",
+      "category": "max_strength",
+      "description": "Segundo movimiento del clean and jerk. Llevar la barra de hombros a por encima de la cabeza con impulso de piernas.",
+      "level": "avanzado",
+      "tags": ["potencia", "fuerza-maxima", "olympic-lift"],
+      "body_region": ["piernas", "hombros", "core"],
+      "muscle_groups": ["legs", "shoulders", "core"],
+      "equipment": ["barbell"],
+      "common_errors": ["No bloquear codos arriba", "Caer hacia adelante en el split"],
+      "instructions": [
+        "Posición inicial: barra apoyada en clavículas",
+        "Dip rápido con piernas",
+        "Impulso explosivo hacia arriba",
+        "Recibir la barra con brazos extendidos en split o squat"
+      ],
+      "default_sets": 4,
+      "default_reps": 3,
+      "default_rest_seconds": 180
+    },
+    {
+      "slug": "pecho-press-banca",
+      "name": "Press de banca",
+      "category": "max_strength",
+      "description": "Ejercicio fundamental de fuerza para el tren superior.",
+      "level": "intermedio",
+      "tags": ["fuerza-maxima", "tren-superior"],
+      "body_region": ["pecho", "hombros", "brazos"],
+      "muscle_groups": ["chest", "shoulders", "arms"],
+      "equipment": ["barbell", "bench"],
+      "common_errors": ["Arquear excesivamente la espalda baja", "Rebotar la barra en el pecho", "Codos abiertos 90º"],
+      "instructions": [
+        "Tumbado boca arriba, pies firmes en el suelo",
+        "Agarre algo más ancho que los hombros",
+        "Bajar barra controlado al pecho",
+        "Empujar de forma explosiva"
+      ],
+      "default_sets": 4,
+      "default_reps": 6,
+      "default_rest_seconds": 180
+    },
+    {
+      "slug": "puntillas-1-pierna-2",
+      "name": "Puntillas a una pierna",
+      "category": "max_strength",
+      "description": "Elevaciones de gemelo unilaterales con carga. Fuerza específica de tobillo.",
+      "level": "intermedio",
+      "tags": ["fuerza", "tren-inferior", "tobillo"],
+      "body_region": ["gemelos", "tobillos"],
+      "muscle_groups": ["calves"],
+      "equipment": ["bodyweight", "dumbbells"],
+      "common_errors": ["Rango incompleto", "No bloquear arriba"],
+      "instructions": [
+        "De pie sobre un escalón con una sola pierna",
+        "Bajar el talón por debajo del nivel del escalón",
+        "Subir explosivo a puntillas",
+        "Pausa breve arriba"
+      ],
+      "default_sets": 4,
+      "default_reps": 12,
+      "default_rest_seconds": 90
+    },
+    {
+      "slug": "puntillas-2-piernas-3-saltos-a-cajon-60-cm",
+      "name": "Puntillas 2 piernas + 3 saltos a cajón 60 cm",
+      "category": "max_strength",
+      "description": "Combinación de puntillas con saltos pliométricos. Mejora potencia reactiva.",
+      "level": "avanzado",
+      "tags": ["potencia", "pliometria", "fuerza"],
+      "body_region": ["piernas", "gemelos"],
+      "muscle_groups": ["calves", "legs"],
+      "equipment": ["barbell", "box"],
+      "common_errors": ["Aterrizajes ruidosos en los saltos", "No descansar entre series"],
+      "instructions": [
+        "Serie de puntillas con barra",
+        "Sin pausa, 3 saltos a cajón de 60 cm",
+        "Recuperación completa entre series"
+      ],
+      "default_sets": 4,
+      "default_reps": 8,
+      "default_rest_seconds": 180
+    },
+    {
+      "slug": "sentadilla-90",
+      "name": "Sentadilla 90º",
+      "category": "max_strength",
+      "description": "Sentadilla con barra hasta paralelo. Ejercicio rey de fuerza de tren inferior.",
+      "level": "intermedio",
+      "tags": ["fuerza-maxima", "tren-inferior"],
+      "body_region": ["piernas", "gluteos", "core"],
+      "muscle_groups": ["legs", "core"],
+      "equipment": ["barbell", "rack"],
+      "common_errors": ["Rodillas hacia adentro", "Inclinar tronco en exceso", "Talones levantados"],
+      "instructions": [
+        "Barra apoyada en trapecio alto",
+        "Pies a la anchura de hombros, puntas ligeramente afuera",
+        "Bajar hasta que el muslo esté paralelo al suelo",
+        "Subir manteniendo el pecho arriba"
+      ],
+      "default_sets": 4,
+      "default_reps": 6,
+      "default_rest_seconds": 180
+    },
+    {
+      "slug": "subida-al-cajon-bajo-rapido",
+      "name": "Subida al cajón bajo rápido",
+      "category": "max_strength",
+      "description": "Subida explosiva a cajón bajo con mancuernas. Potencia unilateral.",
+      "level": "intermedio",
+      "tags": ["potencia", "fuerza", "unilateral"],
+      "body_region": ["piernas", "gluteos"],
+      "muscle_groups": ["legs", "glutes"],
+      "equipment": ["box", "dumbbells"],
+      "common_errors": ["Impulsarse con la pierna trasera", "Aterrizar mal al bajar"],
+      "instructions": [
+        "Cajón bajo (20-30 cm) delante",
+        "Mancuernas a los lados",
+        "Subir rápido apoyando todo el pie",
+        "Bajar controlado"
+      ],
+      "default_sets": 4,
+      "default_reps": 8,
+      "default_rest_seconds": 120
+    },
+    {
+      "slug": "traccion-alta",
+      "name": "Tracción alta",
+      "category": "max_strength",
+      "description": "Tirón alto. Fase de tracción del clean. Trabaja potencia y técnica.",
+      "level": "avanzado",
+      "tags": ["potencia", "olympic-lift"],
+      "body_region": ["espalda", "hombros", "core"],
+      "muscle_groups": ["back", "shoulders", "core"],
+      "equipment": ["barbell"],
+      "common_errors": ["Tirar solo con brazos", "No usar caderas"],
+      "instructions": [
+        "Posición inicial como en cargada",
+        "Tirón explosivo extendiendo caderas",
+        "Codos altos por encima de la barra",
+        "No completar la recepción"
+      ],
+      "default_sets": 4,
+      "default_reps": 4,
+      "default_rest_seconds": 180
+    },
+
+    {
+      "slug": "abdominales-altos",
+      "name": "Abdominales altos",
+      "category": "general_strength",
+      "description": "Crunch clásico para parte alta del recto abdominal.",
+      "level": "principiante",
+      "tags": ["core", "abdominales"],
+      "body_region": ["core"],
+      "muscle_groups": ["core"],
+      "equipment": ["bodyweight"],
+      "common_errors": ["Tirar del cuello con las manos", "Subir el tronco entero"],
+      "instructions": [
+        "Tumbado boca arriba, rodillas flexionadas",
+        "Manos detrás de la cabeza sin tirar",
+        "Elevar solo escápulas del suelo",
+        "Bajar controlado"
+      ],
+      "default_sets": 3,
+      "default_reps": 20,
+      "default_rest_seconds": 45
+    },
+    {
+      "slug": "abdominales-altos-y-bajos",
+      "name": "Abdominales altos y bajos",
+      "category": "general_strength",
+      "description": "Combinación de crunch superior con elevación de piernas. Trabajo del recto completo.",
+      "level": "intermedio",
+      "tags": ["core", "abdominales"],
+      "body_region": ["core"],
+      "muscle_groups": ["core"],
+      "equipment": ["bodyweight"],
+      "common_errors": ["No coordinar movimiento", "Elevar piernas demasiado rectas si hay molestia lumbar"],
+      "instructions": [
+        "Tumbado boca arriba",
+        "Subir tronco y piernas simultáneamente",
+        "Tocar rodillas con los codos"
+      ],
+      "default_sets": 3,
+      "default_reps": 15,
+      "default_rest_seconds": 45
+    },
+    {
+      "slug": "abdominales-bajos",
+      "name": "Abdominales bajos",
+      "category": "general_strength",
+      "description": "Elevación de piernas para parte inferior del recto abdominal.",
+      "level": "principiante",
+      "tags": ["core", "abdominales"],
+      "body_region": ["core"],
+      "muscle_groups": ["core"],
+      "equipment": ["bodyweight"],
+      "common_errors": ["Arquear la zona lumbar", "Usar impulso"],
+      "instructions": [
+        "Tumbado boca arriba, manos pegadas al suelo",
+        "Elevar piernas controladamente hasta 90º",
+        "Bajar sin tocar el suelo"
+      ],
+      "default_sets": 3,
+      "default_reps": 15,
+      "default_rest_seconds": 45
+    },
+    {
+      "slug": "abdominales-laterales",
+      "name": "Abdominales laterales",
+      "category": "general_strength",
+      "description": "Oblicuos. Tronco lateral con rotación o flexión.",
+      "level": "principiante",
+      "tags": ["core", "oblicuos"],
+      "body_region": ["core"],
+      "muscle_groups": ["core"],
+      "equipment": ["bodyweight"],
+      "common_errors": ["Mover el cuello", "Rotación incompleta"],
+      "instructions": [
+        "Tumbado de lado o decúbito supino",
+        "Flexionar tronco lateralmente o llevar codo a rodilla opuesta",
+        "Mantener control"
+      ],
+      "default_sets": 3,
+      "default_reps": 15,
+      "default_rest_seconds": 45
+    },
+    {
+      "slug": "abdominales-oblicuos",
+      "name": "Abdominales oblicuos",
+      "category": "general_strength",
+      "description": "Crunch con rotación para trabajar oblicuos.",
+      "level": "principiante",
+      "tags": ["core", "oblicuos"],
+      "body_region": ["core"],
+      "muscle_groups": ["core"],
+      "equipment": ["bodyweight"],
+      "common_errors": ["Tirar del cuello", "Rotar la cadera"],
+      "instructions": [
+        "Tumbado boca arriba, rodillas flexionadas",
+        "Llevar codo a rodilla opuesta rotando solo el tronco"
+      ],
+      "default_sets": 3,
+      "default_reps": 15,
+      "default_rest_seconds": 45
+    },
+    {
+      "slug": "abductores-maquina-pendular-polea",
+      "name": "Abductores en máquina / polea",
+      "category": "general_strength",
+      "description": "Aislamiento de abductores. Prevención de lesión de cadera.",
+      "level": "principiante",
+      "tags": ["prevencion", "fuerza", "tren-inferior"],
+      "body_region": ["piernas", "gluteos"],
+      "muscle_groups": ["legs", "glutes"],
+      "equipment": ["machine"],
+      "common_errors": ["Usar inercia", "Rango muy corto"],
+      "instructions": [
+        "Sentado o de pie en la máquina",
+        "Abrir la pierna controladamente",
+        "Pausa en el rango máximo",
+        "Volver lento"
+      ],
+      "default_sets": 3,
+      "default_reps": 15,
+      "default_rest_seconds": 60
+    },
+    {
+      "slug": "abrir-cadera-cerrar-cadera",
+      "name": "Abrir cadera + cerrar cadera",
+      "category": "general_strength",
+      "description": "Movimiento combinado de abducción y aducción de cadera. Fortalecimiento integral.",
+      "level": "principiante",
+      "tags": ["prevencion", "fuerza", "movilidad", "tren-inferior"],
+      "body_region": ["caderas", "gluteos"],
+      "muscle_groups": ["legs", "glutes"],
+      "equipment": ["cable", "machine"],
+      "common_errors": ["Acelerar el movimiento", "Inclinar tronco"],
+      "instructions": [
+        "Atar polea baja al tobillo",
+        "Abrir cadera lateralmente con control",
+        "Cerrar cruzando la línea media"
+      ],
+      "default_sets": 3,
+      "default_reps": 12,
+      "default_rest_seconds": 60
+    },
+    {
+      "slug": "biceps-antebrazo",
+      "name": "Bíceps + antebrazo",
+      "category": "general_strength",
+      "description": "Trabajo combinado de bíceps y antebrazo. Curl + reverse curl.",
+      "level": "principiante",
+      "tags": ["fuerza", "tren-superior", "brazos"],
+      "body_region": ["brazos"],
+      "muscle_groups": ["arms"],
+      "equipment": ["dumbbells", "barbell"],
+      "common_errors": ["Usar inercia", "Mover codos"],
+      "instructions": [
+        "De pie, mancuernas en cada mano",
+        "Curl convencional",
+        "Sin descanso, reverse curl (palmas hacia abajo)"
+      ],
+      "default_sets": 3,
+      "default_reps": 12,
+      "default_rest_seconds": 60
+    },
+    {
+      "slug": "cuadriceps",
+      "name": "Cuádriceps en máquina",
+      "category": "general_strength",
+      "description": "Extensión de cuádriceps en máquina. Aislamiento.",
+      "level": "principiante",
+      "tags": ["fuerza", "tren-inferior"],
+      "body_region": ["piernas"],
+      "muscle_groups": ["legs"],
+      "equipment": ["machine"],
+      "common_errors": ["Usar inercia", "Subir y bajar demasiado rápido"],
+      "instructions": [
+        "Sentado en la máquina con respaldo apoyado",
+        "Extender las piernas controladamente",
+        "Pausa arriba",
+        "Bajar lento"
+      ],
+      "default_sets": 3,
+      "default_reps": 12,
+      "default_rest_seconds": 60
+    },
+    {
+      "slug": "cuello-cuello-lateral-cuello-arriba",
+      "name": "Cuello + cuello lateral + cuello arriba",
+      "category": "general_strength",
+      "description": "Trabajo del trapecio y musculatura cervical. Rutina de prevención.",
+      "level": "principiante",
+      "tags": ["prevencion", "tren-superior"],
+      "body_region": ["cuello", "trapecio"],
+      "muscle_groups": ["shoulders"],
+      "equipment": ["bodyweight"],
+      "common_errors": ["Tensar mandíbula", "Mover el cuello bruscamente"],
+      "instructions": [
+        "Movimientos suaves de flexión, lateralización y extensión",
+        "Resistencia con la mano",
+        "Controlado, sin tirones"
+      ],
+      "default_sets": 2,
+      "default_reps": 10,
+      "default_rest_seconds": 45
+    },
+    {
+      "slug": "dominada",
+      "name": "Dominada",
+      "category": "general_strength",
+      "description": "Ejercicio compuesto de tirón vertical. Trabaja dorsales y brazos.",
+      "level": "intermedio",
+      "tags": ["fuerza", "tren-superior"],
+      "body_region": ["espalda", "brazos"],
+      "muscle_groups": ["back", "arms"],
+      "equipment": ["pullup-bar"],
+      "common_errors": ["Balancearse para subir", "No completar el rango"],
+      "instructions": [
+        "Agarre prono, ligeramente más ancho que hombros",
+        "Subir hasta que la barbilla supere la barra",
+        "Bajar controlado sin extender del todo"
+      ],
+      "default_sets": 4,
+      "default_reps": 8,
+      "default_rest_seconds": 120
+    },
+    {
+      "slug": "gluteos-1-pierna-hip-trust",
+      "name": "Hip thrust a 1 pierna",
+      "category": "general_strength",
+      "description": "Extensión de cadera unilateral. Fuerza específica de glúteo para corredores.",
+      "level": "intermedio",
+      "tags": ["fuerza", "tren-inferior", "gluteos", "unilateral"],
+      "body_region": ["gluteos", "piernas"],
+      "muscle_groups": ["glutes", "legs"],
+      "equipment": ["bench", "bodyweight"],
+      "common_errors": ["Arquear lumbar", "Rotar la cadera"],
+      "instructions": [
+        "Espalda apoyada en banco, pie de apoyo plano",
+        "La otra pierna estirada o flexionada en el aire",
+        "Empujar cadera arriba apretando glúteo",
+        "Pausa arriba"
+      ],
+      "default_sets": 4,
+      "default_reps": 10,
+      "default_rest_seconds": 90
+    },
+    {
+      "slug": "hombros-delante-atras",
+      "name": "Hombros delante + atrás",
+      "category": "general_strength",
+      "description": "Elevaciones frontales y laterales de hombro. Fortalecimiento global.",
+      "level": "principiante",
+      "tags": ["fuerza", "tren-superior", "hombros"],
+      "body_region": ["hombros"],
+      "muscle_groups": ["shoulders"],
+      "equipment": ["dumbbells"],
+      "common_errors": ["Usar inercia del tronco", "Subir por encima del hombro"],
+      "instructions": [
+        "De pie, mancuernas a los lados",
+        "Elevación frontal controlada hasta altura del hombro",
+        "Sin descanso, elevación lateral"
+      ],
+      "default_sets": 3,
+      "default_reps": 12,
+      "default_rest_seconds": 60
+    },
+    {
+      "slug": "isquiotibiales",
+      "name": "Isquiotibiales en máquina",
+      "category": "general_strength",
+      "description": "Curl de isquiotibiales en máquina. Aislamiento.",
+      "level": "principiante",
+      "tags": ["fuerza", "tren-inferior", "prevencion"],
+      "body_region": ["piernas"],
+      "muscle_groups": ["legs"],
+      "equipment": ["machine"],
+      "common_errors": ["Levantar caderas del banco", "Usar inercia"],
+      "instructions": [
+        "Tumbado boca abajo en la máquina",
+        "Flexionar piernas llevando talones hacia los glúteos",
+        "Pausa arriba",
+        "Bajar controlado"
+      ],
+      "default_sets": 3,
+      "default_reps": 12,
+      "default_rest_seconds": 60
+    },
+    {
+      "slug": "lumbares-altos",
+      "name": "Lumbares altos",
+      "category": "general_strength",
+      "description": "Extensión de espalda parte alta. Fortalecimiento de erectores.",
+      "level": "principiante",
+      "tags": ["fuerza", "core", "espalda"],
+      "body_region": ["espalda", "core"],
+      "muscle_groups": ["back", "core"],
+      "equipment": ["bodyweight"],
+      "common_errors": ["Hiperextensión", "Levantar piernas con impulso"],
+      "instructions": [
+        "Tumbado boca abajo",
+        "Manos detrás de la cabeza o en la nuca",
+        "Elevar tronco controlado",
+        "Bajar lento"
+      ],
+      "default_sets": 3,
+      "default_reps": 15,
+      "default_rest_seconds": 45
+    },
+    {
+      "slug": "lumbares-bajos",
+      "name": "Lumbares bajos",
+      "category": "general_strength",
+      "description": "Extensión de espalda parte baja. Fortalecimiento de erectores lumbares.",
+      "level": "principiante",
+      "tags": ["fuerza", "core", "espalda"],
+      "body_region": ["espalda", "core"],
+      "muscle_groups": ["back", "core"],
+      "equipment": ["bodyweight"],
+      "common_errors": ["Hiperextensión", "No controlar el movimiento"],
+      "instructions": [
+        "Tumbado boca abajo",
+        "Elevar piernas con tronco fijo",
+        "Pausa arriba"
+      ],
+      "default_sets": 3,
+      "default_reps": 15,
+      "default_rest_seconds": 45
+    },
+    {
+      "slug": "puntillas-2-piernas",
+      "name": "Puntillas a 2 piernas",
+      "category": "general_strength",
+      "description": "Elevaciones de gemelo bilaterales. Fortalecimiento de tobillo.",
+      "level": "principiante",
+      "tags": ["fuerza", "tren-inferior", "tobillo"],
+      "body_region": ["gemelos", "tobillos"],
+      "muscle_groups": ["calves"],
+      "equipment": ["bodyweight"],
+      "common_errors": ["Rango incompleto", "No mantener el equilibrio"],
+      "instructions": [
+        "De pie en un escalón con los talones colgando",
+        "Subir a puntillas rango máximo",
+        "Bajar talón por debajo del nivel"
+      ],
+      "default_sets": 3,
+      "default_reps": 15,
+      "default_rest_seconds": 60
+    },
+    {
+      "slug": "recogida-psoas-traccion-maquina-pendular-polea",
+      "name": "Recogida + psoas + tracción en polea",
+      "category": "general_strength",
+      "description": "Movimiento combinado de recogida y tracción para activación del psoas.",
+      "level": "intermedio",
+      "tags": ["fuerza", "movilidad", "psoas", "tren-inferior"],
+      "body_region": ["caderas", "core"],
+      "muscle_groups": ["core", "legs"],
+      "equipment": ["cable", "machine"],
+      "common_errors": ["Usar inercia", "Inclinar tronco"],
+      "instructions": [
+        "Polea baja atada al tobillo",
+        "Llevar rodilla al pecho controladamente",
+        "Pausa arriba",
+        "Bajar lento"
+      ],
+      "default_sets": 3,
+      "default_reps": 12,
+      "default_rest_seconds": 60
+    },
+    {
+      "slug": "tiron",
+      "name": "Tirón",
+      "category": "general_strength",
+      "description": "Tracción en polea o máquina. Trabajo de espalda y brazos.",
+      "level": "intermedio",
+      "tags": ["fuerza", "tren-superior", "espalda"],
+      "body_region": ["espalda", "brazos"],
+      "muscle_groups": ["back", "arms"],
+      "equipment": ["cable", "machine"],
+      "common_errors": ["Inclinar tronco hacia atrás", "Tirar solo con brazos"],
+      "instructions": [
+        "Sentado, agarre prono",
+        "Tirar de la barra hacia el pecho",
+        "Apretar escápulas",
+        "Volver controlado"
+      ],
+      "default_sets": 4,
+      "default_reps": 10,
+      "default_rest_seconds": 90
+    },
+    {
+      "slug": "triceps",
+      "name": "Tríceps en polea",
+      "category": "general_strength",
+      "description": "Extensión de tríceps en polea alta. Aislamiento.",
+      "level": "principiante",
+      "tags": ["fuerza", "tren-superior", "brazos"],
+      "body_region": ["brazos"],
+      "muscle_groups": ["arms"],
+      "equipment": ["cable"],
+      "common_errors": ["Mover codos", "Usar el peso del cuerpo"],
+      "instructions": [
+        "De pie frente a la polea alta",
+        "Codos pegados al cuerpo",
+        "Extender brazos hacia abajo",
+        "Volver controlado"
+      ],
+      "default_sets": 3,
+      "default_reps": 12,
+      "default_rest_seconds": 60
+    },
+
+    {
+      "slug": "1-de-triple-simultaneos",
+      "name": "1º de triple - simultáneos",
+      "category": "explosive_strength",
+      "description": "Primer salto de la serie de triple salto. Ambas piernas simultáneamente.",
+      "level": "avanzado",
+      "tags": ["pliometria", "potencia"],
+      "body_region": ["piernas", "core"],
+      "muscle_groups": ["legs", "core"],
+      "equipment": ["bodyweight"],
+      "common_errors": ["No usar brazos para impulso", "Aterrizar con rodillas rectas"],
+      "instructions": [
+        "Posición de salida con pies juntos",
+        "Salto explosivo extendiendo caderas",
+        "Recibir con rodillas semi-flexionadas"
+      ],
+      "default_sets": 4,
+      "default_reps": 6,
+      "default_rest_seconds": 120
+    },
+    {
+      "slug": "2-de-triple-alternos",
+      "name": "2º de triple - alternos",
+      "category": "explosive_strength",
+      "description": "Salto con piernas alternas. Variante del triple salto.",
+      "level": "avanzado",
+      "tags": ["pliometria", "potencia", "unilateral"],
+      "body_region": ["piernas"],
+      "muscle_groups": ["legs"],
+      "equipment": ["bodyweight"],
+      "common_errors": ["Saltos cortos por falta de extensión", "Mal control en el aterrizaje"],
+      "instructions": [
+        "Saltos hacia delante alternando pierna de impulso",
+        "Brazos coordinados",
+        "Aterrizaje con rodilla flexionada"
+      ],
+      "default_sets": 4,
+      "default_reps": 6,
+      "default_rest_seconds": 120
+    },
+    {
+      "slug": "heidi",
+      "name": "Heidis",
+      "category": "explosive_strength",
+      "description": "Saltos verticales explosivos llevando rodillas al pecho.",
+      "level": "intermedio",
+      "tags": ["pliometria", "potencia"],
+      "body_region": ["piernas", "core"],
+      "muscle_groups": ["legs", "core"],
+      "equipment": ["bodyweight"],
+      "common_errors": ["Inclinar tronco al saltar", "Aterrizajes ruidosos"],
+      "instructions": [
+        "De pie, salto vertical máximo llevando rodillas al pecho",
+        "Recibir con piernas semi-flexionadas"
+      ],
+      "default_sets": 4,
+      "default_reps": 8,
+      "default_rest_seconds": 90
+    },
+    {
+      "slug": "ranas",
+      "name": "Ranas",
+      "category": "explosive_strength",
+      "description": "Saltos en cuclillas. Fuerza explosiva de tren inferior.",
+      "level": "intermedio",
+      "tags": ["pliometria", "potencia"],
+      "body_region": ["piernas", "gluteos"],
+      "muscle_groups": ["legs", "glutes"],
+      "equipment": ["bodyweight"],
+      "common_errors": ["No bajar lo suficiente", "Aterrizar con rodillas hacia adentro"],
+      "instructions": [
+        "Posición de cuclillas",
+        "Salto explosivo hacia delante o vertical",
+        "Recibir en cuclillas"
+      ],
+      "default_sets": 4,
+      "default_reps": 8,
+      "default_rest_seconds": 90
+    },
+    {
+      "slug": "saltillo-a-1-pierna",
+      "name": "Saltillo a 1 pierna",
+      "category": "explosive_strength",
+      "description": "Saltos unilaterales. Trabaja fuerza reactiva.",
+      "level": "intermedio",
+      "tags": ["pliometria", "unilateral", "potencia"],
+      "body_region": ["piernas"],
+      "muscle_groups": ["legs"],
+      "equipment": ["bodyweight"],
+      "common_errors": ["Rodilla colapsa hacia adentro", "Sin control en el aterrizaje"],
+      "instructions": [
+        "Apoyado en una sola pierna",
+        "Saltos sucesivos cortos y rápidos",
+        "Mantener tronco firme"
+      ],
+      "default_sets": 4,
+      "default_reps": 10,
+      "default_rest_seconds": 90
+    },
+    {
+      "slug": "saltillos-a-2-piernas",
+      "name": "Saltillos a 2 piernas",
+      "category": "explosive_strength",
+      "description": "Saltos bilaterales cortos y rápidos. Fuerza reactiva.",
+      "level": "principiante",
+      "tags": ["pliometria", "potencia"],
+      "body_region": ["piernas", "gemelos"],
+      "muscle_groups": ["legs", "calves"],
+      "equipment": ["bodyweight"],
+      "common_errors": ["Contacto largo con el suelo", "Aterrizaje pesado"],
+      "instructions": [
+        "Pies juntos",
+        "Saltos cortos y rápidos",
+        "Contacto mínimo con el suelo"
+      ],
+      "default_sets": 4,
+      "default_reps": 15,
+      "default_rest_seconds": 60
+    },
+    {
+      "slug": "viejitas",
+      "name": "Viejitas",
+      "category": "explosive_strength",
+      "description": "Skipping bajo + saltos cortos. Coordinación y potencia.",
+      "level": "intermedio",
+      "tags": ["pliometria", "tecnica"],
+      "body_region": ["piernas", "core"],
+      "muscle_groups": ["legs", "core"],
+      "equipment": ["bodyweight"],
+      "common_errors": ["Falta de cadencia", "Postura encorvada"],
+      "instructions": [
+        "Carrera con elevación de rodilla baja",
+        "Salto corto en cada paso",
+        "Cadencia rápida"
+      ],
+      "default_sets": 3,
+      "default_reps": 20,
+      "default_rest_seconds": 60
+    },
+    {
+      "slug": "zancada-derecha-izquierda",
+      "name": "Zancada (derecha / izquierda)",
+      "category": "explosive_strength",
+      "description": "Lunge explosivo alternando piernas.",
+      "level": "intermedio",
+      "tags": ["pliometria", "potencia", "unilateral"],
+      "body_region": ["piernas", "gluteos"],
+      "muscle_groups": ["legs", "glutes"],
+      "equipment": ["bodyweight"],
+      "common_errors": ["Rodilla pasa la punta del pie en exceso", "Tronco inclinado adelante"],
+      "instructions": [
+        "Lunge con pierna delantera",
+        "Salto explosivo cambiando de pierna en el aire",
+        "Aterrizar en lunge con la otra pierna"
+      ],
+      "default_sets": 4,
+      "default_reps": 10,
+      "default_rest_seconds": 90
+    },
+
+    {
+      "_section": "CORE (nuevo) — Placeholders editables",
+      "slug": "plancha-frontal",
+      "name": "Plancha frontal",
+      "category": "core",
+      "description": "Plancha isométrica con codos apoyados. Trabaja el core en estabilización.",
+      "level": "principiante",
+      "tags": ["core", "estabilidad"],
+      "body_region": ["core"],
+      "muscle_groups": ["core"],
+      "equipment": ["bodyweight"],
+      "common_errors": ["Bajar la cadera", "Encoger los hombros"],
+      "instructions": [
+        "Apoyo en codos y puntas de pies",
+        "Cuerpo formando línea recta",
+        "Apretar glúteo y abdomen"
+      ],
+      "default_sets": 3,
+      "default_reps": 1,
+      "default_rest_seconds": 60
+    },
+    {
+      "slug": "plancha-lateral",
+      "name": "Plancha lateral",
+      "category": "core",
+      "description": "Plancha isométrica sobre un codo. Trabaja oblicuos y cadera lateral.",
+      "level": "principiante",
+      "tags": ["core", "oblicuos", "estabilidad"],
+      "body_region": ["core", "caderas"],
+      "muscle_groups": ["core"],
+      "equipment": ["bodyweight"],
+      "common_errors": ["Caer la cadera", "Hombro encogido"],
+      "instructions": [
+        "Apoyo en un codo y costado del pie",
+        "Cuerpo en línea recta lateral",
+        "Mantener cadera elevada"
+      ],
+      "default_sets": 3,
+      "default_reps": 1,
+      "default_rest_seconds": 60
+    },
+    {
+      "slug": "dead-bug",
+      "name": "Dead bug",
+      "category": "core",
+      "description": "Ejercicio de estabilización del core con brazos y piernas opuestos.",
+      "level": "principiante",
+      "tags": ["core", "estabilidad", "prevencion"],
+      "body_region": ["core"],
+      "muscle_groups": ["core"],
+      "equipment": ["bodyweight"],
+      "common_errors": ["Arquear lumbar", "Mover demasiado rápido"],
+      "instructions": [
+        "Tumbado boca arriba, brazos arriba y rodillas flexionadas",
+        "Bajar brazo y pierna opuesta simultáneamente",
+        "Lumbar pegada al suelo en todo momento"
+      ],
+      "default_sets": 3,
+      "default_reps": 10,
+      "default_rest_seconds": 45
+    },
+    {
+      "slug": "bird-dog",
+      "name": "Bird dog",
+      "category": "core",
+      "description": "Cuadrupedia con brazo y pierna opuestos extendidos. Estabilización del core y cadena posterior.",
+      "level": "principiante",
+      "tags": ["core", "estabilidad", "prevencion"],
+      "body_region": ["core", "espalda"],
+      "muscle_groups": ["core", "back"],
+      "equipment": ["bodyweight"],
+      "common_errors": ["Rotar la cadera al extender la pierna", "Curvar la espalda"],
+      "instructions": [
+        "Posición de cuadrupedia, manos bajo hombros y rodillas bajo caderas",
+        "Extender brazo derecho y pierna izquierda al mismo tiempo",
+        "Pausa, volver y cambiar"
+      ],
+      "default_sets": 3,
+      "default_reps": 10,
+      "default_rest_seconds": 45
+    },
+    {
+      "slug": "hollow-hold",
+      "name": "Hollow hold",
+      "category": "core",
+      "description": "Mantener el cuerpo en forma de cuna. Activación isométrica de todo el recto abdominal.",
+      "level": "intermedio",
+      "tags": ["core", "estabilidad"],
+      "body_region": ["core"],
+      "muscle_groups": ["core"],
+      "equipment": ["bodyweight"],
+      "common_errors": ["Despegar la lumbar del suelo", "Subir piernas demasiado alto"],
+      "instructions": [
+        "Tumbado boca arriba",
+        "Elevar piernas y hombros del suelo",
+        "Brazos estirados por encima de la cabeza",
+        "Mantener lumbar pegada al suelo"
+      ],
+      "default_sets": 3,
+      "default_reps": 1,
+      "default_rest_seconds": 60
+    },
+    {
+      "slug": "pallof-press",
+      "name": "Pallof press",
+      "category": "core",
+      "description": "Anti-rotación en polea. Ejercicio funcional de core profundo.",
+      "level": "intermedio",
+      "tags": ["core", "estabilidad", "anti-rotacion"],
+      "body_region": ["core"],
+      "muscle_groups": ["core"],
+      "equipment": ["cable"],
+      "common_errors": ["Rotar el tronco", "Doblar codos"],
+      "instructions": [
+        "De pie de lado a la polea",
+        "Coger asa con ambas manos delante del pecho",
+        "Extender brazos sin rotar el tronco",
+        "Volver controlado"
+      ],
+      "default_sets": 3,
+      "default_reps": 10,
+      "default_rest_seconds": 60
+    },
+
+    {
+      "_section": "MOBILITY (nuevo) — Placeholders editables",
+      "slug": "world-greatest-stretch",
+      "name": "World's greatest stretch",
+      "category": "mobility",
+      "description": "Estiramiento dinámico completo. Cadera, columna torácica, hombros.",
+      "level": "todos",
+      "tags": ["movilidad", "calentamiento"],
+      "body_region": ["caderas", "columna", "hombros"],
+      "muscle_groups": ["legs", "back", "shoulders"],
+      "equipment": ["bodyweight"],
+      "common_errors": ["No completar la rotación torácica", "Postura encorvada"],
+      "instructions": [
+        "Lunge profundo con pierna delantera",
+        "Apoyar codo del mismo lado en el suelo",
+        "Rotar el tronco abriendo el brazo hacia el techo",
+        "Volver y cambiar"
+      ],
+      "default_sets": 2,
+      "default_reps": 6,
+      "default_rest_seconds": 30
+    },
+    {
+      "slug": "90-90-hip-stretch",
+      "name": "90/90 hip stretch",
+      "category": "mobility",
+      "description": "Estiramiento de movilidad de cadera en rotación interna y externa.",
+      "level": "todos",
+      "tags": ["movilidad", "caderas"],
+      "body_region": ["caderas"],
+      "muscle_groups": ["legs"],
+      "equipment": ["bodyweight"],
+      "common_errors": ["Inclinar tronco", "No mantener glúteo en el suelo"],
+      "instructions": [
+        "Sentado con una pierna delante y otra detrás, ambas en 90º",
+        "Inclinar tronco sobre pierna delantera",
+        "Cambiar de lado"
+      ],
+      "default_sets": 2,
+      "default_reps": 5,
+      "default_rest_seconds": 30
+    },
+    {
+      "slug": "couch-stretch",
+      "name": "Couch stretch",
+      "category": "mobility",
+      "description": "Estiramiento de cuádriceps y flexores de cadera. Clave para corredores.",
+      "level": "todos",
+      "tags": ["movilidad", "cuadriceps", "psoas"],
+      "body_region": ["piernas", "caderas"],
+      "muscle_groups": ["legs"],
+      "equipment": ["bodyweight"],
+      "common_errors": ["Arquear lumbar", "No apretar glúteo"],
+      "instructions": [
+        "Rodilla apoyada contra una pared, pie hacia arriba",
+        "Pierna delantera en lunge",
+        "Activar glúteo y core"
+      ],
+      "default_sets": 2,
+      "default_reps": 1,
+      "default_rest_seconds": 30
+    },
+    {
+      "slug": "thoracic-rotation",
+      "name": "Rotación torácica",
+      "category": "mobility",
+      "description": "Movilidad de columna torácica. Buena para postura de carrera.",
+      "level": "todos",
+      "tags": ["movilidad", "columna"],
+      "body_region": ["columna"],
+      "muscle_groups": ["back"],
+      "equipment": ["bodyweight"],
+      "common_errors": ["Rotar solo a nivel lumbar", "No fijar caderas"],
+      "instructions": [
+        "Cuadrupedia",
+        "Una mano detrás de la cabeza",
+        "Rotar codo hacia el techo abriendo tórax",
+        "Volver y cambiar"
+      ],
+      "default_sets": 2,
+      "default_reps": 10,
+      "default_rest_seconds": 30
+    },
+    {
+      "slug": "ankle-dorsiflexion",
+      "name": "Movilidad de tobillo en dorsiflexión",
+      "category": "mobility",
+      "description": "Movilidad de tobillo contra la pared. Fundamental para técnica de carrera.",
+      "level": "todos",
+      "tags": ["movilidad", "tobillo", "prevencion"],
+      "body_region": ["tobillos"],
+      "muscle_groups": ["legs"],
+      "equipment": ["bodyweight"],
+      "common_errors": ["Despegar talón del suelo", "Rotar rodilla hacia adentro"],
+      "instructions": [
+        "De pie frente a la pared",
+        "Apoyar rodilla en la pared con pie a 5-10 cm",
+        "Buscar contacto sin levantar el talón"
+      ],
+      "default_sets": 2,
+      "default_reps": 10,
+      "default_rest_seconds": 30
+    },
+
+    {
+      "_section": "PLYOMETRICS (nuevo) — Placeholders editables",
+      "slug": "box-jump",
+      "name": "Box jump",
+      "category": "plyometrics",
+      "description": "Salto a cajón. Potencia explosiva.",
+      "level": "intermedio",
+      "tags": ["pliometria", "potencia"],
+      "body_region": ["piernas", "gluteos"],
+      "muscle_groups": ["legs", "glutes"],
+      "equipment": ["box"],
+      "common_errors": ["Aterrizar con rodillas rectas", "Subir al cajón con extensión incompleta"],
+      "instructions": [
+        "Cajón de altura adecuada delante",
+        "Flexión rápida + salto explosivo",
+        "Recibir en posición de cuclillas sobre el cajón",
+        "Bajar caminando, no saltando"
+      ],
+      "default_sets": 4,
+      "default_reps": 5,
+      "default_rest_seconds": 90
+    },
+    {
+      "slug": "broad-jump",
+      "name": "Broad jump",
+      "category": "plyometrics",
+      "description": "Salto horizontal de longitud. Potencia horizontal.",
+      "level": "intermedio",
+      "tags": ["pliometria", "potencia"],
+      "body_region": ["piernas", "gluteos", "core"],
+      "muscle_groups": ["legs", "glutes", "core"],
+      "equipment": ["bodyweight"],
+      "common_errors": ["No usar brazos", "Aterrizar con rodillas rectas"],
+      "instructions": [
+        "Posición inicial con pies a la anchura de hombros",
+        "Brazos atrás y salto explosivo hacia delante",
+        "Aterrizar con rodillas semi-flexionadas"
+      ],
+      "default_sets": 4,
+      "default_reps": 5,
+      "default_rest_seconds": 90
+    },
+    {
+      "slug": "depth-jump",
+      "name": "Depth jump",
+      "category": "plyometrics",
+      "description": "Salto desde un cajón con rebote inmediato. Fuerza reactiva avanzada.",
+      "level": "avanzado",
+      "tags": ["pliometria", "potencia", "reactivo"],
+      "body_region": ["piernas"],
+      "muscle_groups": ["legs"],
+      "equipment": ["box"],
+      "common_errors": ["Contacto largo con el suelo", "Saltar desde demasiada altura"],
+      "instructions": [
+        "Cajón de 30-50 cm",
+        "Dejarse caer (no saltar)",
+        "Al tocar el suelo, rebote vertical máximo inmediato",
+        "Contacto mínimo con el suelo"
+      ],
+      "default_sets": 4,
+      "default_reps": 5,
+      "default_rest_seconds": 120
+    },
+    {
+      "slug": "single-leg-hop",
+      "name": "Single leg hop",
+      "category": "plyometrics",
+      "description": "Saltos horizontales unilaterales. Fuerza específica de carrera.",
+      "level": "intermedio",
+      "tags": ["pliometria", "unilateral", "potencia"],
+      "body_region": ["piernas"],
+      "muscle_groups": ["legs"],
+      "equipment": ["bodyweight"],
+      "common_errors": ["Rodilla colapsa hacia adentro", "Aterrizajes ruidosos"],
+      "instructions": [
+        "Apoyado en una sola pierna",
+        "Saltos hacia delante seguidos",
+        "Mantener tronco firme"
+      ],
+      "default_sets": 4,
+      "default_reps": 6,
+      "default_rest_seconds": 90
+    },
+
+    {
+      "_section": "INJURY PREVENTION (nuevo) — Placeholders editables",
+      "slug": "calf-raise-eccentric",
+      "name": "Elevación de gemelo excéntrica",
+      "category": "injury_prevention",
+      "description": "Subida bilateral y bajada lenta unilateral. Prevención de tendinopatía aquílea.",
+      "level": "todos",
+      "tags": ["prevencion", "aquiles", "gemelos"],
+      "body_region": ["gemelos", "tobillos"],
+      "muscle_groups": ["calves"],
+      "equipment": ["bodyweight"],
+      "common_errors": ["Bajada demasiado rápida", "Rango incompleto"],
+      "instructions": [
+        "Subir a puntillas con ambos pies",
+        "Bajar solo con una pierna en 3-5 segundos",
+        "Rango completo hasta debajo del nivel del escalón"
+      ],
+      "default_sets": 3,
+      "default_reps": 12,
+      "default_rest_seconds": 60
+    },
+    {
+      "slug": "nordic-curl",
+      "name": "Nordic curl",
+      "category": "injury_prevention",
+      "description": "Excéntrico de isquiotibiales. Pieza clave de prevención de roturas musculares.",
+      "level": "avanzado",
+      "tags": ["prevencion", "isquiotibiales", "excentrico"],
+      "body_region": ["piernas"],
+      "muscle_groups": ["legs"],
+      "equipment": ["bodyweight"],
+      "common_errors": ["No controlar la bajada", "Flexionar la cadera"],
+      "instructions": [
+        "Rodillas apoyadas en colchoneta, talones fijados",
+        "Bajar el tronco controladamente hacia delante",
+        "Aguantar lo máximo posible",
+        "Volver impulsándose con las manos si es necesario"
+      ],
+      "default_sets": 3,
+      "default_reps": 6,
+      "default_rest_seconds": 90
+    },
+    {
+      "slug": "single-leg-rdl",
+      "name": "Peso muerto rumano a 1 pierna",
+      "category": "injury_prevention",
+      "description": "Excéntrico de isquiotibiales unilateral con trabajo de estabilidad.",
+      "level": "intermedio",
+      "tags": ["prevencion", "isquiotibiales", "estabilidad", "unilateral"],
+      "body_region": ["piernas", "gluteos", "core"],
+      "muscle_groups": ["legs", "glutes"],
+      "equipment": ["dumbbells", "bodyweight"],
+      "common_errors": ["Rotar la cadera", "Curvar la espalda"],
+      "instructions": [
+        "Apoyado en una pierna, ligera flexión de rodilla",
+        "Inclinar tronco hacia delante extendiendo la otra pierna atrás",
+        "Espalda neutra, cadera cuadrada",
+        "Volver controlado"
+      ],
+      "default_sets": 3,
+      "default_reps": 10,
+      "default_rest_seconds": 60
+    },
+    {
+      "slug": "clamshell",
+      "name": "Clamshell",
+      "category": "injury_prevention",
+      "description": "Activación de glúteo medio. Prevención de lesión de banda iliotibial y rodilla.",
+      "level": "principiante",
+      "tags": ["prevencion", "gluteo-medio", "cadera"],
+      "body_region": ["gluteos", "caderas"],
+      "muscle_groups": ["glutes"],
+      "equipment": ["bodyweight"],
+      "common_errors": ["Rotar la cadera atrás", "Despegar los pies"],
+      "instructions": [
+        "Tumbado de lado, rodillas flexionadas 90º",
+        "Mantener pies juntos",
+        "Abrir la rodilla de arriba sin rotar cadera",
+        "Volver controlado"
+      ],
+      "default_sets": 3,
+      "default_reps": 15,
+      "default_rest_seconds": 45
+    },
+    {
+      "slug": "monster-walk",
+      "name": "Monster walk con banda",
+      "category": "injury_prevention",
+      "description": "Pasos laterales y frontales con banda elástica. Activación de glúteo medio.",
+      "level": "principiante",
+      "tags": ["prevencion", "gluteo-medio"],
+      "body_region": ["gluteos", "caderas"],
+      "muscle_groups": ["glutes"],
+      "equipment": ["band"],
+      "common_errors": ["Pasos pequeños", "Rodillas hacia adentro"],
+      "instructions": [
+        "Banda alrededor de tobillos o por encima de rodillas",
+        "Semi-cuclillas",
+        "Pasos laterales manteniendo tensión",
+        "Cambiar de dirección"
+      ],
+      "default_sets": 3,
+      "default_reps": 12,
+      "default_rest_seconds": 45
+    },
+    {
+      "slug": "tibialis-raise",
+      "name": "Elevación de tibial anterior",
+      "category": "injury_prevention",
+      "description": "Flexión dorsal de tobillo contra resistencia. Prevención de shin splints.",
+      "level": "principiante",
+      "tags": ["prevencion", "shin-splints", "tibial"],
+      "body_region": ["tobillos"],
+      "muscle_groups": ["legs"],
+      "equipment": ["bodyweight"],
+      "common_errors": ["Mover la rodilla", "Rango corto"],
+      "instructions": [
+        "Sentado con piernas estiradas",
+        "Llevar punta del pie hacia la rodilla",
+        "Pausa arriba",
+        "Bajar lento"
+      ],
+      "default_sets": 3,
+      "default_reps": 15,
+      "default_rest_seconds": 45
+    }
+  ]
+}

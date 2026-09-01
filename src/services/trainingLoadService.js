@@ -166,12 +166,12 @@ export const recalculateTrainingLoad = async (athleteId, activities, athleteProf
 };
 
 /**
- * Get current PMC status (latest CTL, ATL, TSB)
+ * Get current PMC status (latest CTL, ATL, TSB, chronic_load_28)
  */
 export const getCurrentPMCStatus = async (athleteId) => {
   const { data, error } = await supabase
     .from('daily_training_load')
-    .select('date, ctl, atl, tsb, tss, ramp_rate')
+    .select('date, ctl, atl, tsb, tss, ramp_rate, chronic_load_28')
     .eq('athlete_id', athleteId)
     .order('date', { ascending: false })
     .limit(1);
@@ -493,7 +493,14 @@ export const getReadinessScore = async (athleteId) => {
   ]);
 
   const tsb = pmcStatus?.tsb ?? null;
-  const acwr = pmcStatus ? calculateAcwr(pmcStatus.atl, pmcStatus.ctl) : null;
+  // ACWR denominator: chronic_load_28 (D1's canonical 28-day chronic window)
+  // once the row has been recomputed by the agent (Phase 3) or a backfill;
+  // falls back to the legacy `ctl` (42-day) denominator for rows that
+  // haven't been recomputed yet, so this stays non-null during the
+  // transition instead of dropping to 0 the moment chronic_load_28 is
+  // still unpopulated (migration 1.9 adds it as nullable).
+  const acwrDenominator = pmcStatus?.chronic_load_28 ?? pmcStatus?.ctl ?? null;
+  const acwr = pmcStatus ? calculateAcwr(pmcStatus.atl, acwrDenominator) : null;
 
   const score = calculateReadinessScore(wellness, tsb, acwr);
 

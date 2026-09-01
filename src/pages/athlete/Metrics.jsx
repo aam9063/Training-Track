@@ -75,7 +75,7 @@ import { showError } from '../../lib/toast';
 import {
   calculateZonePercentages,
   formatBestEfforts,
-  getAcwrAlertConfig,
+  getAcwrAlertDisplay,
 } from '../../lib/trainingMetrics';
 import {
   STAT_CARD_GRADIENTS,
@@ -832,7 +832,7 @@ const AthleteMetrics = () => {
 
           {/* Alert banner */}
           {(() => {
-            const cfg = getAcwrAlertConfig(loadData.acwr);
+            const cfg = getAcwrAlertDisplay(loadData.acwr);
             const palette = ACWR_ALERT_CLASSES[cfg.severity];
             return (
               <div className={`flex items-center gap-2 px-3 py-2 rounded-xl text-sm font-medium ${palette.bg} ${palette.text} mb-4`}>

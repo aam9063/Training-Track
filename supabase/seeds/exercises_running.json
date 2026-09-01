@@ -1,0 +1,1329 @@
+{
+  "_meta": {
+    "table": "running_exercises_bank",
+    "upsert_key": "slug",
+    "scope": "global (coach_id IS NULL, is_custom=false)",
+    "fields": [
+      "slug", "name", "category", "description", "level",
+      "tags", "body_region", "common_errors", "kpi",
+      "distance_meters", "duration_seconds",
+      "default_sets", "default_reps", "default_rest_seconds",
+      "pace_description"
+    ],
+    "level_values": ["principiante", "intermedio", "avanzado", "todos"],
+    "category_enum": [
+      "series_short", "series_medium", "series_long",
+      "warmup_run", "easy_run", "long_run", "tempo_run",
+      "fartlek_time", "fartlek_distance", "hill_repeats",
+      "recovery_run", "race", "test", "technical_drill", "progressive_run"
+    ]
+  },
+  "exercises": [
+    {
+      "slug": "series-de-80m",
+      "name": "Series de 80m",
+      "category": "series_short",
+      "description": "Repeticiones cortas a ritmo de 200m liso. Foco en aceleración y técnica de carrera.",
+      "level": "avanzado",
+      "tags": ["velocidad", "potencia", "neuromuscular"],
+      "body_region": ["piernas", "core"],
+      "common_errors": ["Salir demasiado rápido en la primera serie", "Recuperación insuficiente entre series", "Bajar la cadera"],
+      "kpi": {"rpe": 9, "recovery_seconds": 120},
+      "distance_meters": 80,
+      "default_sets": 8,
+      "default_rest_seconds": 120,
+      "pace_description": "Ritmo de 200m liso"
+    },
+    {
+      "slug": "series-de-100m",
+      "name": "Series de 100m",
+      "category": "series_short",
+      "description": "Series cortas a ritmo de 400m. Trabaja velocidad pura y reclutamiento muscular.",
+      "level": "avanzado",
+      "tags": ["velocidad", "potencia", "neuromuscular"],
+      "body_region": ["piernas", "core"],
+      "common_errors": ["Tensar hombros y brazos", "Aterrizar con talón", "Última serie más lenta que la primera"],
+      "kpi": {"rpe": 9, "recovery_seconds": 120},
+      "distance_meters": 100,
+      "default_sets": 8,
+      "default_rest_seconds": 120,
+      "pace_description": "Ritmo de 400m"
+    },
+    {
+      "slug": "series-de-120m",
+      "name": "Series de 120m",
+      "category": "series_short",
+      "description": "Series de transición entre velocidad pura y resistencia anaeróbica.",
+      "level": "avanzado",
+      "tags": ["velocidad", "potencia"],
+      "body_region": ["piernas", "core"],
+      "common_errors": ["No mantener la postura en la fase final", "Cadencia baja"],
+      "kpi": {"rpe": 9, "recovery_seconds": 150},
+      "distance_meters": 120,
+      "default_sets": 8,
+      "default_rest_seconds": 150,
+      "pace_description": "Ritmo de 400m-600m"
+    },
+    {
+      "slug": "series-de-150m",
+      "name": "Series de 150m",
+      "category": "series_short",
+      "description": "Series rápidas para mejorar potencia aeróbica y económica.",
+      "level": "avanzado",
+      "tags": ["velocidad", "vo2max"],
+      "body_region": ["piernas", "core"],
+      "common_errors": ["Negativos por fatiga", "Brazos cruzando la línea media"],
+      "kpi": {"rpe": 9, "recovery_seconds": 150},
+      "distance_meters": 150,
+      "default_sets": 6,
+      "default_rest_seconds": 150,
+      "pace_description": "Ritmo de 800m"
+    },
+    {
+      "slug": "series-de-200m",
+      "name": "Series de 200m",
+      "category": "series_medium",
+      "description": "Series clásicas para mejorar VO2max y económica.",
+      "level": "intermedio",
+      "tags": ["vo2max", "velocidad", "neuromuscular"],
+      "body_region": ["piernas", "core"],
+      "common_errors": ["Salir demasiado rápido", "Acortar la zancada al final"],
+      "kpi": {"rpe": 8, "recovery_seconds": 90},
+      "distance_meters": 200,
+      "default_sets": 10,
+      "default_rest_seconds": 90,
+      "pace_description": "Ritmo de 1500m a 3000m"
+    },
+    {
+      "slug": "series-de-300m",
+      "name": "Series de 300m",
+      "category": "series_medium",
+      "description": "Series para mejorar potencia aeróbica y tolerancia al lactato.",
+      "level": "intermedio",
+      "tags": ["vo2max", "lactato"],
+      "body_region": ["piernas"],
+      "common_errors": ["Recuperación incompleta", "Falta de control de ritmo"],
+      "kpi": {"rpe": 8, "recovery_seconds": 90},
+      "distance_meters": 300,
+      "default_sets": 8,
+      "default_rest_seconds": 90,
+      "pace_description": "Ritmo de 3000m"
+    },
+    {
+      "slug": "series-de-400m",
+      "name": "Series de 400m",
+      "category": "series_medium",
+      "description": "Distancia clásica para VO2max. Una vuelta a la pista.",
+      "level": "intermedio",
+      "tags": ["vo2max", "lactato"],
+      "body_region": ["piernas"],
+      "common_errors": ["Pasar primero rápido y segundo lento", "Tensión en cara y cuello"],
+      "kpi": {"rpe": 8, "recovery_seconds": 90},
+      "distance_meters": 400,
+      "default_sets": 8,
+      "default_rest_seconds": 90,
+      "pace_description": "Ritmo de 3000m a 5000m"
+    },
+    {
+      "slug": "series-de-500m",
+      "name": "Series de 500m",
+      "category": "series_medium",
+      "description": "Series para mejorar capacidad aeróbica máxima.",
+      "level": "intermedio",
+      "tags": ["vo2max", "umbral"],
+      "body_region": ["piernas"],
+      "common_errors": ["Variación de ritmo entre vueltas", "Caída de cadencia"],
+      "kpi": {"rpe": 8, "recovery_seconds": 120},
+      "distance_meters": 500,
+      "default_sets": 6,
+      "default_rest_seconds": 120,
+      "pace_description": "Ritmo de 5000m"
+    },
+    {
+      "slug": "series-de-600m",
+      "name": "Series de 600m",
+      "category": "series_medium",
+      "description": "Series largas-medias para resistencia a la velocidad.",
+      "level": "intermedio",
+      "tags": ["vo2max", "umbral", "lactato"],
+      "body_region": ["piernas"],
+      "common_errors": ["Sobreestimar el ritmo", "Aflojar en la última serie"],
+      "kpi": {"rpe": 8, "recovery_seconds": 120},
+      "distance_meters": 600,
+      "default_sets": 6,
+      "default_rest_seconds": 120,
+      "pace_description": "Ritmo de 5000m"
+    },
+    {
+      "slug": "series-de-800m",
+      "name": "Series de 800m",
+      "category": "series_medium",
+      "description": "Pieza clave en entrenamientos para 10K y media maratón.",
+      "level": "intermedio",
+      "tags": ["vo2max", "umbral"],
+      "body_region": ["piernas"],
+      "common_errors": ["Recuperación demasiado corta", "Variación de ritmo entre repeticiones"],
+      "kpi": {"rpe": 8, "recovery_seconds": 180},
+      "distance_meters": 800,
+      "default_sets": 5,
+      "default_rest_seconds": 180,
+      "pace_description": "Ritmo de 5000m a 10K"
+    },
+    {
+      "slug": "series-de-1000m",
+      "name": "Series de 1000m",
+      "category": "series_medium",
+      "description": "Series largas a ritmo objetivo de 10K. Excelentes para umbral aeróbico.",
+      "level": "intermedio",
+      "tags": ["umbral", "vo2max"],
+      "body_region": ["piernas"],
+      "common_errors": ["Salir demasiado rápido", "Falta de constancia en el ritmo"],
+      "kpi": {"rpe": 8, "recovery_seconds": 180},
+      "distance_meters": 1000,
+      "default_sets": 5,
+      "default_rest_seconds": 180,
+      "pace_description": "Ritmo de 10K"
+    },
+    {
+      "slug": "series-de-1500m",
+      "name": "Series de 1500m",
+      "category": "series_long",
+      "description": "Series largas a ritmo de umbral. Específicas para distancias 10K-HM.",
+      "level": "avanzado",
+      "tags": ["umbral", "resistencia"],
+      "body_region": ["piernas"],
+      "common_errors": ["Recuperación demasiado corta", "Caída de ritmo en la última"],
+      "kpi": {"rpe": 7, "recovery_seconds": 180},
+      "distance_meters": 1500,
+      "default_sets": 4,
+      "default_rest_seconds": 180,
+      "pace_description": "Ritmo de 10K a HM"
+    },
+    {
+      "slug": "series-de-2000m",
+      "name": "Series de 2000m",
+      "category": "series_long",
+      "description": "Series largas para umbral anaeróbico. Pieza típica de plan de HM.",
+      "level": "avanzado",
+      "tags": ["umbral", "resistencia"],
+      "body_region": ["piernas"],
+      "common_errors": ["Variación de ritmo entre series", "Salirse del ritmo objetivo"],
+      "kpi": {"rpe": 7, "recovery_seconds": 180},
+      "distance_meters": 2000,
+      "default_sets": 4,
+      "default_rest_seconds": 180,
+      "pace_description": "Ritmo de HM"
+    },
+    {
+      "slug": "series-de-3000m",
+      "name": "Series de 3000m",
+      "category": "series_long",
+      "description": "Series largas a ritmo de HM. Foco en resistencia al umbral.",
+      "level": "avanzado",
+      "tags": ["umbral", "resistencia"],
+      "body_region": ["piernas"],
+      "common_errors": ["Empezar demasiado fuerte", "No respetar la recuperación"],
+      "kpi": {"rpe": 7, "recovery_seconds": 240},
+      "distance_meters": 3000,
+      "default_sets": 3,
+      "default_rest_seconds": 240,
+      "pace_description": "Ritmo de HM"
+    },
+    {
+      "slug": "series-de-4000m",
+      "name": "Series de 4000m",
+      "category": "series_long",
+      "description": "Series muy largas para resistencia al umbral. Específicas para maratón.",
+      "level": "avanzado",
+      "tags": ["umbral", "resistencia", "maraton"],
+      "body_region": ["piernas"],
+      "common_errors": ["Mal control de ritmo", "Caída de cadencia en la última"],
+      "kpi": {"rpe": 7, "recovery_seconds": 240},
+      "distance_meters": 4000,
+      "default_sets": 3,
+      "default_rest_seconds": 240,
+      "pace_description": "Ritmo de HM a maratón"
+    },
+    {
+      "slug": "series-de-5000m",
+      "name": "Series de 5000m",
+      "category": "series_long",
+      "description": "Series largas a ritmo de maratón. Pieza típica en periodización específica.",
+      "level": "avanzado",
+      "tags": ["umbral", "resistencia", "maraton"],
+      "body_region": ["piernas"],
+      "common_errors": ["Salir demasiado rápido", "Mal manejo de la hidratación"],
+      "kpi": {"rpe": 6, "recovery_seconds": 300},
+      "distance_meters": 5000,
+      "default_sets": 3,
+      "default_rest_seconds": 300,
+      "pace_description": "Ritmo de maratón"
+    },
+    {
+      "slug": "rodaje-de-calentamiento-3km",
+      "name": "Rodaje de calentamiento 3km",
+      "category": "warmup_run",
+      "description": "Calentamiento previo a series, fartlek o competición.",
+      "level": "todos",
+      "tags": ["calentamiento", "aerobico"],
+      "body_region": ["piernas"],
+      "common_errors": ["Saltarse el calentamiento", "Calentar demasiado rápido"],
+      "kpi": {"rpe": 4},
+      "distance_meters": 3000,
+      "pace_description": "Ritmo suave, conversacional"
+    },
+    {
+      "slug": "rodaje-de-calentamiento-4km",
+      "name": "Rodaje de calentamiento 4km",
+      "category": "warmup_run",
+      "description": "Calentamiento más largo para sesiones de alta calidad.",
+      "level": "todos",
+      "tags": ["calentamiento", "aerobico"],
+      "body_region": ["piernas"],
+      "common_errors": ["Calentar demasiado rápido", "Saltarse los progresivos finales"],
+      "kpi": {"rpe": 4},
+      "distance_meters": 4000,
+      "pace_description": "Ritmo suave, conversacional"
+    },
+    {
+      "slug": "rodaje-de-calentamiento-5km",
+      "name": "Rodaje de calentamiento 5km",
+      "category": "warmup_run",
+      "description": "Calentamiento prolongado para sesiones muy exigentes o competición.",
+      "level": "todos",
+      "tags": ["calentamiento", "aerobico"],
+      "body_region": ["piernas"],
+      "common_errors": ["No incluir progresivos al final", "Fatigarse antes de la sesión principal"],
+      "kpi": {"rpe": 4},
+      "distance_meters": 5000,
+      "pace_description": "Ritmo suave, conversacional"
+    },
+    {
+      "slug": "rodaje-4km",
+      "name": "Rodaje 4km",
+      "category": "easy_run",
+      "description": "Rodaje corto a ritmo cómodo. Recuperación o introducción.",
+      "level": "principiante",
+      "tags": ["aerobico", "recuperacion"],
+      "body_region": ["piernas"],
+      "common_errors": ["Ir demasiado rápido", "No mantener cadencia"],
+      "kpi": {"rpe": 3},
+      "distance_meters": 4000,
+      "pace_description": "Ritmo conversacional"
+    },
+    {
+      "slug": "rodaje-5km",
+      "name": "Rodaje 5km",
+      "category": "easy_run",
+      "description": "Rodaje suave. Base aeróbica.",
+      "level": "principiante",
+      "tags": ["aerobico", "base"],
+      "body_region": ["piernas"],
+      "common_errors": ["Confundir suave con lento", "FC demasiado alta"],
+      "kpi": {"rpe": 3},
+      "distance_meters": 5000,
+      "pace_description": "Ritmo conversacional"
+    },
+    {
+      "slug": "rodaje-6km",
+      "name": "Rodaje 6km",
+      "category": "easy_run",
+      "description": "Rodaje base aeróbico.",
+      "level": "principiante",
+      "tags": ["aerobico", "base"],
+      "body_region": ["piernas"],
+      "common_errors": ["Subir el ritmo en bajadas sin control"],
+      "kpi": {"rpe": 4},
+      "distance_meters": 6000,
+      "pace_description": "Ritmo conversacional"
+    },
+    {
+      "slug": "rodaje-7km",
+      "name": "Rodaje 7km",
+      "category": "easy_run",
+      "description": "Rodaje suave de transición.",
+      "level": "intermedio",
+      "tags": ["aerobico", "base"],
+      "body_region": ["piernas"],
+      "common_errors": ["No controlar la FC", "Acelerar sin necesidad"],
+      "kpi": {"rpe": 4},
+      "distance_meters": 7000,
+      "pace_description": "Ritmo conversacional"
+    },
+    {
+      "slug": "rodaje-8km",
+      "name": "Rodaje 8km",
+      "category": "easy_run",
+      "description": "Rodaje aeróbico medio.",
+      "level": "intermedio",
+      "tags": ["aerobico", "base"],
+      "body_region": ["piernas"],
+      "common_errors": ["Ir más rápido de lo necesario"],
+      "kpi": {"rpe": 4},
+      "distance_meters": 8000,
+      "pace_description": "Ritmo conversacional"
+    },
+    {
+      "slug": "rodaje-9km",
+      "name": "Rodaje 9km",
+      "category": "easy_run",
+      "description": "Rodaje aeróbico medio-largo.",
+      "level": "intermedio",
+      "tags": ["aerobico", "base"],
+      "body_region": ["piernas"],
+      "common_errors": ["No hidratar en sesiones de más de 60 min"],
+      "kpi": {"rpe": 4},
+      "distance_meters": 9000,
+      "pace_description": "Ritmo conversacional"
+    },
+    {
+      "slug": "rodaje-10km",
+      "name": "Rodaje 10km",
+      "category": "easy_run",
+      "description": "Rodaje base aeróbico largo. Acumulación de volumen.",
+      "level": "intermedio",
+      "tags": ["aerobico", "base", "resistencia"],
+      "body_region": ["piernas", "core"],
+      "common_errors": ["No reponer carbohidratos", "Acelerar en la segunda mitad sin control"],
+      "kpi": {"rpe": 4},
+      "distance_meters": 10000,
+      "pace_description": "Ritmo conversacional"
+    },
+    {
+      "slug": "tirada-larga-12km",
+      "name": "Tirada larga 12km",
+      "category": "long_run",
+      "description": "Tirada larga base para corredores en construcción de 10K-HM.",
+      "level": "intermedio",
+      "tags": ["resistencia", "aerobico", "volumen"],
+      "body_region": ["piernas", "core"],
+      "common_errors": ["Empezar demasiado rápido", "No hidratar a partir de 60 min"],
+      "kpi": {"rpe": 4},
+      "distance_meters": 12000,
+      "pace_description": "Ritmo de rodaje, ligero"
+    },
+    {
+      "slug": "tirada-larga-14km",
+      "name": "Tirada larga 14km",
+      "category": "long_run",
+      "description": "Tirada larga de construcción de fondo.",
+      "level": "intermedio",
+      "tags": ["resistencia", "aerobico", "volumen"],
+      "body_region": ["piernas", "core"],
+      "common_errors": ["No reponer carbohidratos", "Acelerar sin necesidad"],
+      "kpi": {"rpe": 5},
+      "distance_meters": 14000,
+      "pace_description": "Ritmo de rodaje, ligero"
+    },
+    {
+      "slug": "tirada-larga-16km",
+      "name": "Tirada larga 16km",
+      "category": "long_run",
+      "description": "Tirada larga clave para corredores de HM y maratón.",
+      "level": "intermedio",
+      "tags": ["resistencia", "aerobico", "volumen"],
+      "body_region": ["piernas", "core"],
+      "common_errors": ["Hidratación insuficiente", "Falta de gel/comida"],
+      "kpi": {"rpe": 5},
+      "distance_meters": 16000,
+      "pace_description": "Ritmo de rodaje"
+    },
+    {
+      "slug": "tirada-larga-18km",
+      "name": "Tirada larga 18km",
+      "category": "long_run",
+      "description": "Tirada larga específica para HM y construcción de maratón.",
+      "level": "avanzado",
+      "tags": ["resistencia", "aerobico", "volumen", "maraton"],
+      "body_region": ["piernas", "core"],
+      "common_errors": ["Subir el ritmo en la segunda mitad sin control", "Mala estrategia nutricional"],
+      "kpi": {"rpe": 5},
+      "distance_meters": 18000,
+      "pace_description": "Ritmo de rodaje"
+    },
+    {
+      "slug": "tirada-larga-20km",
+      "name": "Tirada larga 20km",
+      "category": "long_run",
+      "description": "Distancia clave para preparación de HM y maratón.",
+      "level": "avanzado",
+      "tags": ["resistencia", "volumen", "maraton"],
+      "body_region": ["piernas", "core"],
+      "common_errors": ["No respetar el ritmo objetivo", "Saltarse el avituallamiento"],
+      "kpi": {"rpe": 5},
+      "distance_meters": 20000,
+      "pace_description": "Ritmo de rodaje, controlado"
+    },
+    {
+      "slug": "tirada-larga-22km",
+      "name": "Tirada larga 22km",
+      "category": "long_run",
+      "description": "Tirada larga de transición HM-maratón.",
+      "level": "avanzado",
+      "tags": ["resistencia", "volumen", "maraton"],
+      "body_region": ["piernas", "core"],
+      "common_errors": ["Empezar demasiado rápido", "Mala distribución de carbohidratos"],
+      "kpi": {"rpe": 5},
+      "distance_meters": 22000,
+      "pace_description": "Ritmo de rodaje, controlado"
+    },
+    {
+      "slug": "tirada-larga-24km",
+      "name": "Tirada larga 24km",
+      "category": "long_run",
+      "description": "Tirada larga específica para preparación de maratón.",
+      "level": "avanzado",
+      "tags": ["resistencia", "volumen", "maraton"],
+      "body_region": ["piernas", "core"],
+      "common_errors": ["Sub-hidratación", "Cadencia baja por fatiga"],
+      "kpi": {"rpe": 5},
+      "distance_meters": 24000,
+      "pace_description": "Ritmo de rodaje, controlado"
+    },
+    {
+      "slug": "tirada-larga-26km",
+      "name": "Tirada larga 26km",
+      "category": "long_run",
+      "description": "Tirada larga avanzada para preparación de maratón.",
+      "level": "avanzado",
+      "tags": ["resistencia", "volumen", "maraton"],
+      "body_region": ["piernas", "core"],
+      "common_errors": ["Falta de avituallamiento", "Acelerar al final sin control"],
+      "kpi": {"rpe": 5},
+      "distance_meters": 26000,
+      "pace_description": "Ritmo de rodaje, controlado"
+    },
+    {
+      "slug": "tirada-larga-28km",
+      "name": "Tirada larga 28km",
+      "category": "long_run",
+      "description": "Tirada larga para preparación específica de maratón.",
+      "level": "avanzado",
+      "tags": ["resistencia", "volumen", "maraton"],
+      "body_region": ["piernas", "core"],
+      "common_errors": ["No respetar la estrategia de hidratación", "Mal control de FC"],
+      "kpi": {"rpe": 6},
+      "distance_meters": 28000,
+      "pace_description": "Ritmo de rodaje, controlado"
+    },
+    {
+      "slug": "tirada-larga-30km",
+      "name": "Tirada larga 30km",
+      "category": "long_run",
+      "description": "Distancia clave en preparación de maratón. Simula la fatiga del km 30+.",
+      "level": "avanzado",
+      "tags": ["resistencia", "volumen", "maraton"],
+      "body_region": ["piernas", "core"],
+      "common_errors": ["Empezar demasiado rápido", "Bonk por falta de carbohidratos"],
+      "kpi": {"rpe": 6},
+      "distance_meters": 30000,
+      "pace_description": "Ritmo de rodaje, controlado, o progresivo final"
+    },
+    {
+      "slug": "tirada-larga-32km",
+      "name": "Tirada larga 32km",
+      "category": "long_run",
+      "description": "Última tirada larga típica antes de la descarga pre-maratón.",
+      "level": "avanzado",
+      "tags": ["resistencia", "volumen", "maraton"],
+      "body_region": ["piernas", "core"],
+      "common_errors": ["Hacerla demasiado cerca del día de la carrera", "Falta de descanso posterior"],
+      "kpi": {"rpe": 6},
+      "distance_meters": 32000,
+      "pace_description": "Ritmo de rodaje, controlado, final a ritmo objetivo de maratón"
+    },
+    {
+      "slug": "fartlek-20-minutos",
+      "name": "Fartlek 20' (1' rápido + 1' trote)",
+      "category": "fartlek_time",
+      "description": "20 min alternando 1' al 80-90% con 1' de trote suave. Total: 10 cambios. Ideal para iniciación al fartlek.",
+      "level": "principiante",
+      "tags": ["aerobico", "umbral", "introduccion"],
+      "body_region": ["piernas"],
+      "common_errors": ["Salir demasiado rápido en los primeros cambios", "No respetar el trote suave entre cambios"],
+      "kpi": {
+        "rpe": 6,
+        "blocks": [
+          {"repeat": 10, "segments": [
+            {"duration_seconds": 60, "effort_pct": 85, "label": "rápido"},
+            {"duration_seconds": 60, "effort_pct": 55, "label": "trote suave"}
+          ]}
+        ]
+      },
+      "duration_seconds": 1200,
+      "pace_description": "1' al 80-90% + 1' trote suave × 10"
+    },
+    {
+      "slug": "fartlek-30-minutos",
+      "name": "Fartlek 30' (2' rápido + 1' trote)",
+      "category": "fartlek_time",
+      "description": "30 min alternando 2' al 80-85% con 1' de trote suave. Total: 10 cambios. Trabaja umbral con recuperación breve.",
+      "level": "intermedio",
+      "tags": ["aerobico", "umbral"],
+      "body_region": ["piernas"],
+      "common_errors": ["Hacer todos los cambios igual de rápido", "Recuperaciones demasiado lentas"],
+      "kpi": {
+        "rpe": 7,
+        "blocks": [
+          {"repeat": 10, "segments": [
+            {"duration_seconds": 120, "effort_pct": 82, "label": "ritmo umbral"},
+            {"duration_seconds": 60, "effort_pct": 55, "label": "trote suave"}
+          ]}
+        ]
+      },
+      "duration_seconds": 1800,
+      "pace_description": "2' al 80-85% + 1' trote × 10"
+    },
+    {
+      "slug": "fartlek-30-explosivo",
+      "name": "Fartlek 30' explosivo (45\"/30\"/15\")",
+      "category": "fartlek_time",
+      "description": "30 min con cambios escalonados muy explosivos: 45\" al 60% + 30\" al 70% + 15\" al 90%. Trabajo de velocidad + umbral en el mismo bloque.",
+      "level": "avanzado",
+      "tags": ["velocidad", "vo2max", "explosivo"],
+      "body_region": ["piernas"],
+      "common_errors": ["Empezar el 15\" final sin estar recuperado", "Bajar cadencia en el 15\" rápido"],
+      "kpi": {
+        "rpe": 8,
+        "blocks": [
+          {"repeat": 20, "segments": [
+            {"duration_seconds": 45, "effort_pct": 60, "label": "suave"},
+            {"duration_seconds": 30, "effort_pct": 70, "label": "medio"},
+            {"duration_seconds": 15, "effort_pct": 90, "label": "explosivo"}
+          ]}
+        ]
+      },
+      "duration_seconds": 1800,
+      "pace_description": "45\" 60% + 30\" 70% + 15\" 90% × 20"
+    },
+    {
+      "slug": "fartlek-40-minutos",
+      "name": "Fartlek 40' (3' rápido + 2' trote)",
+      "category": "fartlek_time",
+      "description": "40 min alternando 3' al 80% con 2' de trote suave. Total: 8 cambios. Bloques largos para resistencia al umbral.",
+      "level": "intermedio",
+      "tags": ["aerobico", "umbral", "resistencia"],
+      "body_region": ["piernas"],
+      "common_errors": ["Caída de ritmo en los últimos cambios", "Mala distribución del esfuerzo"],
+      "kpi": {
+        "rpe": 7,
+        "blocks": [
+          {"repeat": 8, "segments": [
+            {"duration_seconds": 180, "effort_pct": 80, "label": "ritmo umbral"},
+            {"duration_seconds": 120, "effort_pct": 55, "label": "trote suave"}
+          ]}
+        ]
+      },
+      "duration_seconds": 2400,
+      "pace_description": "3' al 80% + 2' trote × 8"
+    },
+    {
+      "slug": "fartlek-40-piramide",
+      "name": "Fartlek 40' pirámide (1'/2'/3'/2'/1')",
+      "category": "fartlek_time",
+      "description": "Fartlek piramidal: 1'-2'-3'-2'-1' al 85% con misma recuperación entre cambios (trote suave). 2 series. Sube y baja la duración para variar estímulo.",
+      "level": "avanzado",
+      "tags": ["umbral", "vo2max", "piramide"],
+      "body_region": ["piernas"],
+      "common_errors": ["Mismo ritmo en el de 1' y el de 3' (deberían ser distintos)", "Recuperación insuficiente entre series"],
+      "kpi": {
+        "rpe": 8,
+        "blocks": [
+          {"repeat": 2, "segments": [
+            {"duration_seconds": 60, "effort_pct": 90, "label": "1' fuerte"},
+            {"duration_seconds": 60, "effort_pct": 55, "label": "trote"},
+            {"duration_seconds": 120, "effort_pct": 85, "label": "2'"},
+            {"duration_seconds": 120, "effort_pct": 55, "label": "trote"},
+            {"duration_seconds": 180, "effort_pct": 80, "label": "3'"},
+            {"duration_seconds": 180, "effort_pct": 55, "label": "trote"},
+            {"duration_seconds": 120, "effort_pct": 85, "label": "2'"},
+            {"duration_seconds": 120, "effort_pct": 55, "label": "trote"},
+            {"duration_seconds": 60, "effort_pct": 90, "label": "1' fuerte"},
+            {"duration_seconds": 120, "effort_pct": 55, "label": "trote larga"}
+          ]}
+        ]
+      },
+      "duration_seconds": 2400,
+      "pace_description": "Pirámide 1-2-3-2-1' con trote intermedio, ×2"
+    },
+    {
+      "slug": "fartlek-50-minutos",
+      "name": "Fartlek 50' (4' rápido + 2' trote)",
+      "category": "fartlek_time",
+      "description": "50 min con bloques largos: 4' al 78-80% (ritmo HM) + 2' trote. Total: 8 cambios. Excelente para resistencia al umbral.",
+      "level": "avanzado",
+      "tags": ["umbral", "resistencia"],
+      "body_region": ["piernas"],
+      "common_errors": ["Pérdida de técnica en los últimos bloques", "Recuperación insuficiente entre cambios"],
+      "kpi": {
+        "rpe": 7,
+        "blocks": [
+          {"repeat": 8, "segments": [
+            {"duration_seconds": 240, "effort_pct": 78, "label": "ritmo HM"},
+            {"duration_seconds": 120, "effort_pct": 55, "label": "trote suave"}
+          ]}
+        ]
+      },
+      "duration_seconds": 2880,
+      "pace_description": "4' al 78-80% + 2' trote × 8"
+    },
+    {
+      "slug": "fartlek-60-minutos",
+      "name": "Fartlek 60' (5' rápido + 3' trote)",
+      "category": "fartlek_time",
+      "description": "60 min con bloques muy largos: 5' a ritmo HM + 3' trote. Total: ~7-8 cambios. Específico para maratón.",
+      "level": "avanzado",
+      "tags": ["umbral", "resistencia", "maraton"],
+      "body_region": ["piernas"],
+      "common_errors": ["No reponer carbohidratos durante la sesión", "Caída de cadencia en los últimos bloques"],
+      "kpi": {
+        "rpe": 7,
+        "blocks": [
+          {"repeat": 7, "segments": [
+            {"duration_seconds": 300, "effort_pct": 78, "label": "ritmo HM"},
+            {"duration_seconds": 180, "effort_pct": 55, "label": "trote suave"}
+          ]}
+        ]
+      },
+      "duration_seconds": 3600,
+      "pace_description": "5' a ritmo HM + 3' trote × 7"
+    },
+    {
+      "slug": "fartlek-5km",
+      "name": "Fartlek 5km (2' rápido + 1' lento)",
+      "category": "fartlek_distance",
+      "description": "5km alternando 2' al 80% con 1' lento durante todo el recorrido. Carrera continua con cambios constantes.",
+      "level": "intermedio",
+      "tags": ["aerobico", "umbral"],
+      "body_region": ["piernas"],
+      "common_errors": ["Hacer todos los cambios iguales", "Falta de control del ritmo medio"],
+      "kpi": {
+        "rpe": 7,
+        "blocks": [
+          {"repeat": null, "segments": [
+            {"duration_seconds": 120, "effort_pct": 80, "label": "rápido"},
+            {"duration_seconds": 60, "effort_pct": 55, "label": "lento"}
+          ], "until": "completar 5km"}
+        ]
+      },
+      "distance_meters": 5000,
+      "pace_description": "2' rápido + 1' lento, repetir hasta 5km"
+    },
+    {
+      "slug": "fartlek-6km",
+      "name": "Fartlek 6km (2' rápido + 2' lento)",
+      "category": "fartlek_distance",
+      "description": "6km con bloques de 2' rápido al 80% y 2' lento. Recuperación equilibrada entre cambios.",
+      "level": "intermedio",
+      "tags": ["aerobico", "umbral"],
+      "body_region": ["piernas"],
+      "common_errors": ["Cambios demasiado bruscos", "Aprovechar bajadas sin control"],
+      "kpi": {
+        "rpe": 7,
+        "blocks": [
+          {"repeat": null, "segments": [
+            {"duration_seconds": 120, "effort_pct": 80, "label": "rápido"},
+            {"duration_seconds": 120, "effort_pct": 55, "label": "lento"}
+          ], "until": "completar 6km"}
+        ]
+      },
+      "distance_meters": 6000,
+      "pace_description": "2' rápido + 2' lento, repetir hasta 6km"
+    },
+    {
+      "slug": "fartlek-8km",
+      "name": "Fartlek 8km (3' rápido + 2' lento)",
+      "category": "fartlek_distance",
+      "description": "8km con bloques de 3' al 78-80% + 2' lento. Bloques más largos para resistencia al umbral.",
+      "level": "avanzado",
+      "tags": ["umbral", "resistencia"],
+      "body_region": ["piernas"],
+      "common_errors": ["Aflojar demasiado en los lentos", "Variación de cadencia"],
+      "kpi": {
+        "rpe": 7,
+        "blocks": [
+          {"repeat": null, "segments": [
+            {"duration_seconds": 180, "effort_pct": 78, "label": "ritmo umbral"},
+            {"duration_seconds": 120, "effort_pct": 55, "label": "lento"}
+          ], "until": "completar 8km"}
+        ]
+      },
+      "distance_meters": 8000,
+      "pace_description": "3' rápido + 2' lento, repetir hasta 8km"
+    },
+    {
+      "slug": "fartlek-10km",
+      "name": "Fartlek 10km (4' rápido + 2' lento)",
+      "category": "fartlek_distance",
+      "description": "10km con bloques largos: 4' al 78% (ritmo HM) + 2' lento. Específico para HM-maratón.",
+      "level": "avanzado",
+      "tags": ["umbral", "resistencia", "maraton"],
+      "body_region": ["piernas"],
+      "common_errors": ["Falta de avituallamiento", "Mal manejo de los ritmos"],
+      "kpi": {
+        "rpe": 7,
+        "blocks": [
+          {"repeat": null, "segments": [
+            {"duration_seconds": 240, "effort_pct": 78, "label": "ritmo HM"},
+            {"duration_seconds": 120, "effort_pct": 55, "label": "lento"}
+          ], "until": "completar 10km"}
+        ]
+      },
+      "distance_meters": 10000,
+      "pace_description": "4' a ritmo HM + 2' lento, repetir hasta 10km"
+    },
+    {
+      "slug": "fartlek-10km-explosivo",
+      "name": "Fartlek 10km explosivo (1' fuerte + 30\" rec)",
+      "category": "fartlek_distance",
+      "description": "10km en formato fartlek corto y explosivo: 1' al 88-90% + 30\" trote suave. Trabaja cambio de ritmo continuo con poca recuperación.",
+      "level": "avanzado",
+      "tags": ["vo2max", "explosivo", "potencia"],
+      "body_region": ["piernas"],
+      "common_errors": ["Salir demasiado fuerte y caer en el km 6+", "No mantener trote en los 30\" (caminar)"],
+      "kpi": {
+        "rpe": 8,
+        "blocks": [
+          {"repeat": null, "segments": [
+            {"duration_seconds": 60, "effort_pct": 88, "label": "fuerte"},
+            {"duration_seconds": 30, "effort_pct": 55, "label": "trote corto"}
+          ], "until": "completar 10km"}
+        ]
+      },
+      "distance_meters": 10000,
+      "pace_description": "1' al 88-90% + 30\" trote, repetir hasta 10km"
+    },
+    {
+      "_section": "RITMOS (pace_blocks) — bloques alternados de ritmo. Editables.",
+      "slug": "ritmos-2-1-2-1-km",
+      "name": "Ritmos 2km/1km/2km/1km",
+      "category": "pace_blocks",
+      "description": "Bloques alternados: 2km al 60% + 1km al 80% + 2km al 60% + 1km al 80%. Total 6km. Trabajo de cambio de ritmo controlado.",
+      "level": "intermedio",
+      "tags": ["umbral", "aerobico", "ritmos"],
+      "body_region": ["piernas"],
+      "common_errors": ["No respetar el 60% en los bloques lentos (ir demasiado rápido)", "Caer en el segundo km al 80%"],
+      "kpi": {
+        "rpe": 7,
+        "blocks": [
+          {"distance_meters": 2000, "effort_pct": 60, "label": "suave"},
+          {"distance_meters": 1000, "effort_pct": 80, "label": "ritmo HM"},
+          {"distance_meters": 2000, "effort_pct": 60, "label": "suave"},
+          {"distance_meters": 1000, "effort_pct": 80, "label": "ritmo HM"}
+        ]
+      },
+      "distance_meters": 6000,
+      "pace_description": "2km 60% + 1km 80% + 2km 60% + 1km 80%"
+    },
+    {
+      "slug": "ritmos-4-3-2-1-km",
+      "name": "Ritmos piramidales 4-3-2-1km",
+      "category": "pace_blocks",
+      "description": "Pirámide descendente: 4km al 70% + 3km al 75% + 2km al 80% + 1km al 85%. Sube el ritmo según baja la distancia. Total 10km.",
+      "level": "avanzado",
+      "tags": ["umbral", "resistencia", "ritmos", "piramide"],
+      "body_region": ["piernas"],
+      "common_errors": ["Empezar el primer bloque demasiado rápido", "No tener fuerza para el km final al 85%"],
+      "kpi": {
+        "rpe": 8,
+        "blocks": [
+          {"distance_meters": 4000, "effort_pct": 70, "label": "ritmo maratón"},
+          {"distance_meters": 3000, "effort_pct": 75, "label": "ritmo HM+"},
+          {"distance_meters": 2000, "effort_pct": 80, "label": "ritmo HM"},
+          {"distance_meters": 1000, "effort_pct": 85, "label": "ritmo 10K"}
+        ]
+      },
+      "distance_meters": 10000,
+      "pace_description": "4km 70% + 3km 75% + 2km 80% + 1km 85%"
+    },
+    {
+      "slug": "ritmos-1000-500-x4",
+      "name": "Ritmos 1000m/500m ×4",
+      "category": "pace_blocks",
+      "description": "Bloques cortos repetidos: 1000m al 75% + 500m al 85%, repetir 4 veces. Total 6km. Trabaja cambio de marcha frecuente.",
+      "level": "intermedio",
+      "tags": ["umbral", "vo2max", "ritmos"],
+      "body_region": ["piernas"],
+      "common_errors": ["Saltarse el 75% en los bloques largos", "No mantener el 85% en el último 500m"],
+      "kpi": {
+        "rpe": 8,
+        "blocks": [
+          {"repeat": 4, "segments": [
+            {"distance_meters": 1000, "effort_pct": 75, "label": "ritmo HM+"},
+            {"distance_meters": 500, "effort_pct": 85, "label": "ritmo 10K"}
+          ]}
+        ]
+      },
+      "distance_meters": 6000,
+      "pace_description": "(1km 75% + 500m 85%) × 4"
+    },
+    {
+      "slug": "ritmos-3-2-1-2-3-km",
+      "name": "Ritmos pirámide 3-2-1-2-3km",
+      "category": "pace_blocks",
+      "description": "Pirámide simétrica: 3km al 70% + 2km al 80% + 1km al 90% + 2km al 80% + 3km al 70%. Subir y bajar ritmo. Total 11km.",
+      "level": "avanzado",
+      "tags": ["umbral", "vo2max", "ritmos", "piramide"],
+      "body_region": ["piernas"],
+      "common_errors": ["Empezar demasiado fuerte el primer 3km", "No mantener el ritmo en los bloques de vuelta"],
+      "kpi": {
+        "rpe": 8,
+        "blocks": [
+          {"distance_meters": 3000, "effort_pct": 70, "label": "ritmo maratón"},
+          {"distance_meters": 2000, "effort_pct": 80, "label": "ritmo HM"},
+          {"distance_meters": 1000, "effort_pct": 90, "label": "ritmo 5K"},
+          {"distance_meters": 2000, "effort_pct": 80, "label": "ritmo HM"},
+          {"distance_meters": 3000, "effort_pct": 70, "label": "ritmo maratón"}
+        ]
+      },
+      "distance_meters": 11000,
+      "pace_description": "3km 70% + 2km 80% + 1km 90% + 2km 80% + 3km 70%"
+    },
+    {
+      "slug": "ritmos-500-1000-500-1000-x3",
+      "name": "Ritmos 500m/1000m alternados ×3",
+      "category": "pace_blocks",
+      "description": "Bloques alternados: 500m al 85% + 1000m al 70%, repetir 3 veces. Total 4.5km. Pieza corta para introducir cambios.",
+      "level": "intermedio",
+      "tags": ["umbral", "ritmos"],
+      "body_region": ["piernas"],
+      "common_errors": ["Hacer el 1000m demasiado rápido (debería ser recuperación activa)", "Empezar fuerte el primer 500m sin estar caliente"],
+      "kpi": {
+        "rpe": 7,
+        "blocks": [
+          {"repeat": 3, "segments": [
+            {"distance_meters": 500, "effort_pct": 85, "label": "ritmo 10K"},
+            {"distance_meters": 1000, "effort_pct": 70, "label": "recuperación activa"}
+          ]}
+        ]
+      },
+      "distance_meters": 4500,
+      "pace_description": "(500m 85% + 1km 70%) × 3"
+    },
+    {
+      "slug": "ritmos-3-1-x3",
+      "name": "Ritmos 3km/1km ×3",
+      "category": "pace_blocks",
+      "description": "Bloques largos: 3km al 75% + 1km al 85%, repetir 3 veces. Total 12km. Excelente para maratón.",
+      "level": "avanzado",
+      "tags": ["umbral", "resistencia", "ritmos", "maraton"],
+      "body_region": ["piernas"],
+      "common_errors": ["Bajar el ritmo en el último bloque", "No respetar la recuperación entre series"],
+      "kpi": {
+        "rpe": 8,
+        "blocks": [
+          {"repeat": 3, "segments": [
+            {"distance_meters": 3000, "effort_pct": 75, "label": "ritmo HM+"},
+            {"distance_meters": 1000, "effort_pct": 85, "label": "ritmo 10K"}
+          ]}
+        ]
+      },
+      "distance_meters": 12000,
+      "pace_description": "(3km 75% + 1km 85%) × 3"
+    },
+    {
+      "slug": "ritmos-2-2-2-2-km",
+      "name": "Ritmos 2km × 4 alternados",
+      "category": "pace_blocks",
+      "description": "Bloques iguales alternando ritmo: 2km al 70% + 2km al 82% + 2km al 70% + 2km al 82%. Total 8km. Equilibrio entre volumen y calidad.",
+      "level": "intermedio",
+      "tags": ["umbral", "resistencia", "ritmos"],
+      "body_region": ["piernas"],
+      "common_errors": ["Salirse del 70% en los bloques suaves", "Caer en el último 2km al 82%"],
+      "kpi": {
+        "rpe": 7,
+        "blocks": [
+          {"distance_meters": 2000, "effort_pct": 70, "label": "ritmo maratón"},
+          {"distance_meters": 2000, "effort_pct": 82, "label": "ritmo HM"},
+          {"distance_meters": 2000, "effort_pct": 70, "label": "ritmo maratón"},
+          {"distance_meters": 2000, "effort_pct": 82, "label": "ritmo HM"}
+        ]
+      },
+      "distance_meters": 8000,
+      "pace_description": "2km 70% + 2km 82% + 2km 70% + 2km 82%"
+    },
+
+    {
+      "slug": "cuestas-100m",
+      "name": "Cuestas 100m",
+      "category": "hill_repeats",
+      "description": "Repeticiones cortas en cuesta. Mejora potencia y técnica.",
+      "level": "intermedio",
+      "tags": ["potencia", "fuerza", "neuromuscular"],
+      "body_region": ["piernas", "core", "gluteos"],
+      "common_errors": ["Postura encorvada", "Pasos largos en vez de cortos y rápidos", "Bajar la cuesta demasiado rápido"],
+      "kpi": {"rpe": 9, "recovery_seconds": 90, "gradient_pct": [6, 10]},
+      "distance_meters": 100,
+      "default_sets": 8,
+      "default_rest_seconds": 90,
+      "pace_description": "Esfuerzo intenso, recuperación bajando"
+    },
+    {
+      "slug": "cuestas-150m",
+      "name": "Cuestas 150m",
+      "category": "hill_repeats",
+      "description": "Cuestas medias-cortas. Mejora potencia y resistencia anaeróbica.",
+      "level": "intermedio",
+      "tags": ["potencia", "fuerza"],
+      "body_region": ["piernas", "core", "gluteos"],
+      "common_errors": ["No usar los brazos", "Pasos demasiado largos"],
+      "kpi": {"rpe": 9, "recovery_seconds": 120, "gradient_pct": [6, 10]},
+      "distance_meters": 150,
+      "default_sets": 8,
+      "default_rest_seconds": 120,
+      "pace_description": "Esfuerzo intenso"
+    },
+    {
+      "slug": "cuestas-200m",
+      "name": "Cuestas 200m",
+      "category": "hill_repeats",
+      "description": "Cuestas medias. Buen estímulo para potencia y fuerza específica.",
+      "level": "intermedio",
+      "tags": ["potencia", "fuerza", "vo2max"],
+      "body_region": ["piernas", "core", "gluteos"],
+      "common_errors": ["Empezar muy rápido", "Inclinarse hacia adelante en exceso"],
+      "kpi": {"rpe": 9, "recovery_seconds": 150, "gradient_pct": [5, 8]},
+      "distance_meters": 200,
+      "default_sets": 6,
+      "default_rest_seconds": 150,
+      "pace_description": "Esfuerzo intenso"
+    },
+    {
+      "slug": "cuestas-300m",
+      "name": "Cuestas 300m",
+      "category": "hill_repeats",
+      "description": "Cuestas largas. Trabajo de fuerza específica y resistencia.",
+      "level": "avanzado",
+      "tags": ["fuerza", "potencia", "vo2max"],
+      "body_region": ["piernas", "core", "gluteos"],
+      "common_errors": ["Mal control del ritmo", "Bajar la cuesta demasiado rápido"],
+      "kpi": {"rpe": 9, "recovery_seconds": 180, "gradient_pct": [4, 7]},
+      "distance_meters": 300,
+      "default_sets": 5,
+      "default_rest_seconds": 180,
+      "pace_description": "Esfuerzo intenso, controlado"
+    },
+    {
+      "slug": "cuestas-400m",
+      "name": "Cuestas 400m",
+      "category": "hill_repeats",
+      "description": "Cuestas muy largas. Resistencia específica y fuerza.",
+      "level": "avanzado",
+      "tags": ["fuerza", "vo2max", "resistencia"],
+      "body_region": ["piernas", "core", "gluteos"],
+      "common_errors": ["Pérdida de técnica en la última serie", "Falta de control de ritmo"],
+      "kpi": {"rpe": 9, "recovery_seconds": 180, "gradient_pct": [4, 7]},
+      "distance_meters": 400,
+      "default_sets": 4,
+      "default_rest_seconds": 180,
+      "pace_description": "Esfuerzo intenso, controlado"
+    },
+    {
+      "slug": "cuestas-500m",
+      "name": "Cuestas 500m",
+      "category": "hill_repeats",
+      "description": "Cuestas largas. Resistencia específica al umbral combinada con fuerza.",
+      "level": "avanzado",
+      "tags": ["fuerza", "umbral", "resistencia"],
+      "body_region": ["piernas", "core", "gluteos"],
+      "common_errors": ["Empezar demasiado rápido las primeras series", "Pérdida de cadencia en los últimos metros"],
+      "kpi": {"rpe": 9, "recovery_seconds": 240, "gradient_pct": [4, 6]},
+      "distance_meters": 500,
+      "default_sets": 4,
+      "default_rest_seconds": 240,
+      "pace_description": "Esfuerzo intenso, controlado, ritmo de 5K"
+    },
+    {
+      "slug": "cuestas-600m",
+      "name": "Cuestas 600m",
+      "category": "hill_repeats",
+      "description": "Cuestas largas para resistencia específica. Pieza típica en preparación de cross y trail.",
+      "level": "avanzado",
+      "tags": ["fuerza", "umbral", "resistencia", "trail"],
+      "body_region": ["piernas", "core", "gluteos"],
+      "common_errors": ["Saltarse el control de ritmo", "Bajar demasiado rápido entre series"],
+      "kpi": {"rpe": 9, "recovery_seconds": 240, "gradient_pct": [3, 6]},
+      "distance_meters": 600,
+      "default_sets": 4,
+      "default_rest_seconds": 240,
+      "pace_description": "Esfuerzo intenso, controlado, ritmo de 10K"
+    },
+    {
+      "slug": "cuestas-700m",
+      "name": "Cuestas 700m",
+      "category": "hill_repeats",
+      "description": "Cuestas muy largas. Trabajo combinado de fuerza específica y resistencia al umbral.",
+      "level": "avanzado",
+      "tags": ["fuerza", "umbral", "resistencia", "trail"],
+      "body_region": ["piernas", "core", "gluteos"],
+      "common_errors": ["Falta de avituallamiento entre series", "Pérdida de postura por fatiga"],
+      "kpi": {"rpe": 9, "recovery_seconds": 300, "gradient_pct": [3, 5]},
+      "distance_meters": 700,
+      "default_sets": 3,
+      "default_rest_seconds": 300,
+      "pace_description": "Esfuerzo intenso, controlado, ritmo de 10K"
+    },
+    {
+      "slug": "cuestas-800m",
+      "name": "Cuestas 800m",
+      "category": "hill_repeats",
+      "description": "Cuestas muy largas. Pieza clave para preparación de trail y carreras de montaña. Trabaja umbral y resistencia a la fatiga.",
+      "level": "avanzado",
+      "tags": ["fuerza", "umbral", "resistencia", "trail", "maraton"],
+      "body_region": ["piernas", "core", "gluteos"],
+      "common_errors": ["Empezar demasiado fuerte la primera serie", "No hidratar en sesiones de más de 45 min", "Bajar la cuesta sin control"],
+      "kpi": {"rpe": 9, "recovery_seconds": 300, "gradient_pct": [3, 5]},
+      "distance_meters": 800,
+      "default_sets": 3,
+      "default_rest_seconds": 300,
+      "pace_description": "Esfuerzo intenso, controlado, ritmo de HM"
+    },
+
+    {
+      "_section": "TECHNICAL DRILLS (B4) — nuevos ejercicios. Placeholders editables.",
+      "slug": "skipping-bajo",
+      "name": "Skipping bajo",
+      "category": "technical_drill",
+      "description": "Drill de técnica. Elevar la rodilla hasta aproximadamente 45º manteniendo cadencia rápida y postura erguida.",
+      "level": "todos",
+      "tags": ["tecnica", "cadencia", "calentamiento"],
+      "body_region": ["piernas", "core"],
+      "common_errors": ["Inclinar el tronco", "Aterrizar con talón", "Bajar la cadera"],
+      "kpi": {"cadence_spm": [180, 200], "duration_seconds": 20},
+      "distance_meters": 20,
+      "default_sets": 3,
+      "default_rest_seconds": 60,
+      "pace_description": "Ejecución técnica, no velocidad"
+    },
+    {
+      "slug": "skipping-alto",
+      "name": "Skipping alto",
+      "category": "technical_drill",
+      "description": "Drill de técnica. Elevar la rodilla por encima de la cadera, brazos coordinados.",
+      "level": "todos",
+      "tags": ["tecnica", "cadencia", "potencia"],
+      "body_region": ["piernas", "core", "gluteos"],
+      "common_errors": ["Echar el cuerpo atrás", "Brazos cruzando línea media"],
+      "kpi": {"cadence_spm": [170, 190], "duration_seconds": 20},
+      "distance_meters": 20,
+      "default_sets": 3,
+      "default_rest_seconds": 60,
+      "pace_description": "Ejecución técnica"
+    },
+    {
+      "slug": "talones-al-gluteo",
+      "name": "Talones al glúteo",
+      "category": "technical_drill",
+      "description": "Drill de técnica. Llevar el talón al glúteo con cadencia rápida.",
+      "level": "todos",
+      "tags": ["tecnica", "movilidad", "calentamiento"],
+      "body_region": ["piernas"],
+      "common_errors": ["Inclinar tronco hacia delante", "No completar el rango"],
+      "kpi": {"cadence_spm": [180, 200], "duration_seconds": 20},
+      "distance_meters": 20,
+      "default_sets": 3,
+      "default_rest_seconds": 60,
+      "pace_description": "Ejecución técnica"
+    },
+    {
+      "slug": "a-march",
+      "name": "A-March",
+      "category": "technical_drill",
+      "description": "Marcha exagerada con elevación de rodilla y dorsiflexión activa del tobillo. Trabaja postura y técnica.",
+      "level": "todos",
+      "tags": ["tecnica", "postura", "calentamiento"],
+      "body_region": ["piernas", "core"],
+      "common_errors": ["No fijar el tobillo en dorsiflexión", "Mover los brazos descoordinados"],
+      "kpi": {"duration_seconds": 30},
+      "distance_meters": 20,
+      "default_sets": 2,
+      "default_rest_seconds": 45,
+      "pace_description": "Ejecución técnica, lento y controlado"
+    },
+    {
+      "slug": "a-skip",
+      "name": "A-Skip",
+      "category": "technical_drill",
+      "description": "Variante saltada del A-March. Elevación de rodilla coordinada con brazos.",
+      "level": "todos",
+      "tags": ["tecnica", "cadencia", "potencia"],
+      "body_region": ["piernas", "core"],
+      "common_errors": ["No coordinar brazos", "Cadencia demasiado lenta"],
+      "kpi": {"cadence_spm": [170, 190], "duration_seconds": 20},
+      "distance_meters": 20,
+      "default_sets": 3,
+      "default_rest_seconds": 60,
+      "pace_description": "Ejecución técnica"
+    },
+    {
+      "slug": "b-skip",
+      "name": "B-Skip",
+      "category": "technical_drill",
+      "description": "Variante avanzada del A-Skip con extensión de la pierna hacia delante.",
+      "level": "intermedio",
+      "tags": ["tecnica", "cadencia"],
+      "body_region": ["piernas", "core"],
+      "common_errors": ["No extender la pierna del todo", "Pérdida de postura"],
+      "kpi": {"duration_seconds": 20},
+      "distance_meters": 20,
+      "default_sets": 3,
+      "default_rest_seconds": 60,
+      "pace_description": "Ejecución técnica"
+    },
+    {
+      "slug": "carioca",
+      "name": "Carioca",
+      "category": "technical_drill",
+      "description": "Drill lateral cruzando piernas. Movilidad de cadera y coordinación.",
+      "level": "todos",
+      "tags": ["tecnica", "movilidad", "coordinacion"],
+      "body_region": ["piernas", "core"],
+      "common_errors": ["No rotar caderas", "Mirar el suelo"],
+      "kpi": {"duration_seconds": 20},
+      "distance_meters": 20,
+      "default_sets": 2,
+      "default_rest_seconds": 45,
+      "pace_description": "Ejecución técnica lateral"
+    },
+    {
+      "slug": "zancada-lateral-runners",
+      "name": "Zancada lateral",
+      "category": "technical_drill",
+      "description": "Pasos laterales largos. Activación de abductores y aductores.",
+      "level": "todos",
+      "tags": ["tecnica", "movilidad", "calentamiento"],
+      "body_region": ["piernas", "gluteos"],
+      "common_errors": ["Pasos demasiado cortos", "No mantener postura"],
+      "kpi": {"duration_seconds": 20},
+      "distance_meters": 20,
+      "default_sets": 2,
+      "default_rest_seconds": 45,
+      "pace_description": "Ejecución técnica lateral"
+    },
+    {
+      "slug": "progresivos-100m",
+      "name": "Progresivos 100m",
+      "category": "technical_drill",
+      "description": "Acelerar de forma progresiva durante 100m. Cierre típico de calentamiento.",
+      "level": "todos",
+      "tags": ["tecnica", "calentamiento", "velocidad"],
+      "body_region": ["piernas"],
+      "common_errors": ["Tensar al llegar al máximo", "Empezar demasiado rápido"],
+      "kpi": {"duration_seconds": 18},
+      "distance_meters": 100,
+      "default_sets": 4,
+      "default_rest_seconds": 90,
+      "pace_description": "Progresar desde suave hasta el 90%"
+    },
+    {
+      "slug": "high-knees",
+      "name": "High knees",
+      "category": "technical_drill",
+      "description": "Carrera en el sitio o en desplazamiento llevando rodillas a altura de cadera.",
+      "level": "todos",
+      "tags": ["tecnica", "cadencia", "calentamiento"],
+      "body_region": ["piernas", "core"],
+      "common_errors": ["Inclinar tronco atrás", "Bajar la cadera"],
+      "kpi": {"duration_seconds": 20, "cadence_spm": [180, 200]},
+      "default_sets": 3,
+      "default_rest_seconds": 45,
+      "pace_description": "Ejecución técnica"
+    },
+    {
+      "slug": "butt-kicks",
+      "name": "Butt kicks",
+      "category": "technical_drill",
+      "description": "Carrera técnica llevando el talón hacia el glúteo. Activación de isquiotibiales.",
+      "level": "todos",
+      "tags": ["tecnica", "calentamiento", "movilidad"],
+      "body_region": ["piernas"],
+      "common_errors": ["Inclinar tronco", "Rango incompleto"],
+      "kpi": {"duration_seconds": 20},
+      "default_sets": 3,
+      "default_rest_seconds": 45,
+      "pace_description": "Ejecución técnica"
+    },
+    {
+      "slug": "bounding",
+      "name": "Bounding",
+      "category": "technical_drill",
+      "description": "Saltos largos exagerando la zancada. Mejora potencia y elasticidad.",
+      "level": "intermedio",
+      "tags": ["potencia", "pliometria", "tecnica"],
+      "body_region": ["piernas", "gluteos", "core"],
+      "common_errors": ["Falta de extensión completa", "Aterrizajes bruscos"],
+      "kpi": {"duration_seconds": 20},
+      "distance_meters": 30,
+      "default_sets": 4,
+      "default_rest_seconds": 90,
+      "pace_description": "Esfuerzo explosivo"
+    },
+    {
+      "slug": "strides-pickups",
+      "name": "Pick-ups / Strides 100m",
+      "category": "technical_drill",
+      "description": "Aceleraciones cortas controladas. Mejora reclutamiento neuromuscular sin fatiga acumulada.",
+      "level": "todos",
+      "tags": ["tecnica", "velocidad", "neuromuscular"],
+      "body_region": ["piernas"],
+      "common_errors": ["Tensar al llegar al ritmo objetivo", "No recuperar bien entre repeticiones"],
+      "kpi": {"duration_seconds": 18, "rpe": 8},
+      "distance_meters": 100,
+      "default_sets": 6,
+      "default_rest_seconds": 90,
+      "pace_description": "Ritmo de 1500m, relajado"
+    },
+    {
+      "slug": "tempo-run-20min",
+      "name": "Tempo 20 minutos",
+      "category": "tempo_run",
+      "description": "Ritmo continuo a umbral durante 20 minutos. Pieza clásica del entrenamiento de umbral.",
+      "level": "intermedio",
+      "tags": ["umbral", "resistencia"],
+      "body_region": ["piernas"],
+      "common_errors": ["Salir demasiado rápido", "No respetar el ritmo de umbral"],
+      "kpi": {"rpe": 7},
+      "duration_seconds": 1200,
+      "pace_description": "Ritmo de HM"
+    },
+    {
+      "slug": "recovery-run-30min",
+      "name": "Rodaje recuperación 30 min",
+      "category": "recovery_run",
+      "description": "Rodaje muy suave para recuperación activa entre sesiones duras.",
+      "level": "todos",
+      "tags": ["recuperacion", "aerobico"],
+      "body_region": ["piernas"],
+      "common_errors": ["Ir más rápido de lo necesario", "Hacer recovery cuando se necesita descanso completo"],
+      "kpi": {"rpe": 2},
+      "duration_seconds": 1800,
+      "pace_description": "Muy suave, FC < 70% máxima"
+    },
+    {
+      "slug": "progressive-run-10km",
+      "name": "Rodaje progresivo 10km",
+      "category": "progressive_run",
+      "description": "Rodaje que sube de ritmo cada 2-3 km. Termina a ritmo de umbral.",
+      "level": "intermedio",
+      "tags": ["aerobico", "umbral", "progresivo"],
+      "body_region": ["piernas"],
+      "common_errors": ["Subir el ritmo demasiado pronto", "No respetar la progresión"],
+      "kpi": {"rpe": 6},
+      "distance_meters": 10000,
+      "pace_description": "Empezar suave, terminar a HM"
+    },
+    {
+      "slug": "test-cooper-12min",
+      "name": "Test Cooper (12 min)",
+      "category": "test",
+      "description": "Test de máxima distancia recorrida en 12 minutos. Estima VO2max.",
+      "level": "intermedio",
+      "tags": ["test", "vo2max"],
+      "body_region": ["piernas"],
+      "common_errors": ["Salir demasiado rápido", "No estar bien calentado"],
+      "kpi": {"rpe": 10},
+      "duration_seconds": 720,
+      "pace_description": "Ritmo máximo sostenible 12 min"
+    }
+  ]
+}

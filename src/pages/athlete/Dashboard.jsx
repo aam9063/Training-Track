@@ -32,6 +32,7 @@ import useAthleteProfile from '../../hooks/useAthleteProfile';
 import OnboardingWizard from '../../components/athlete/OnboardingWizard';
 import CompetitionCountdown from '../../components/athlete/CompetitionCountdown';
 import useAthleteDashboardData from '../../hooks/useAthleteDashboardData';
+import TrainingLoadAlertFeed from '../../components/shared/TrainingLoadAlertFeed';
 
 // ---------------------------------------------------------------------------
 // Sub-componentes
@@ -169,6 +170,11 @@ const AthleteDashboard = () => {
             iconColor="text-ath-accent-text"
           />
         </div>
+
+        {/* Training load alerts (acwr_zone / tsb_critical / low_completion / high_rpe) */}
+        {profile?.id && (
+          <TrainingLoadAlertFeed athleteId={profile.id} emptyMessage="Sin alertas activas de carga" />
+        )}
 
         {/* INDEPENDENT ATHLETE: weekly progress + RPE summary + plan CTA */}
         {isIndependent && (

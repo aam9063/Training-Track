@@ -302,9 +302,14 @@ async function processAthlete(supabase: SupabaseAdmin, athleteId: string, today:
         metrics: decision.finding.metrics,
         messageEs: decision.finding.messageEs,
       });
-      alertCount += 1;
+      if (result) alertCount += 1;
 
-      if (result && decision.deliver) {
+      // Use the RPC's own atomic result (computed under FOR UPDATE at write
+      // time), not `decision.deliver` — that was planned from a plain SELECT
+      // in fetchOpenEpisodes() taken BEFORE this write, so it can be stale
+      // under a concurrent invocation (webhook + cron sweep racing on the
+      // same athlete). `result.is_new`/`result.escalated` are race-safe.
+      if (result && (result.is_new || result.escalated)) {
         await deliverPush(supabase, recipientId, alertType, decision.finding.messageEs);
       }
     }

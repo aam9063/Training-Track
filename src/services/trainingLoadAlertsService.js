@@ -62,9 +62,10 @@ export const markRead = async (alertId) => {
  * @param {string} alertId
  */
 export const dismiss = async (alertId) => {
+  const nowIso = new Date().toISOString();
   const { data, error } = await supabase
     .from('training_load_alerts')
-    .update({ dismissed_at: new Date().toISOString() })
+    .update({ dismissed_at: nowIso, status: 'resolved', resolved_at: nowIso })
     .eq('id', alertId)
     .is('dismissed_at', null)
     .select()

@@ -356,7 +356,7 @@ const MESSAGES_ES = {
   tsb_critical:
     'Tu forma (TSB) está muy baja. Riesgo de sobreentrenamiento — prioriza el descanso.',
   low_completion:
-    'Baja adherencia al plan esta semana. Revisa las sesiones pendientes.',
+    'Baja completitud del plan esta semana. Revisa las sesiones pendientes.',
   high_rpe:
     'El esfuerzo percibido (RPE) medio esta semana es muy alto. Vigila señales de fatiga excesiva.',
 };

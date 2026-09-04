@@ -12,6 +12,7 @@ import { calculateAcwr } from '../lib/trainingMetrics';
  *   acwr, ctl, atl, tsb,               // from latest daily_training_load row
  *   lastSessionDate, lastSessionTitle,  // from training_sessions
  *   lastSessionStatus,
+ *   engagementTone, silenceDays,        // from athlete_engagement_alerts (open only)
  * }
  */
 export const getTeamHealthSnapshot = async (coachId) => {
@@ -31,7 +32,7 @@ export const getTeamHealthSnapshot = async (coachId) => {
     const athleteIds = rels.map(r => r.athlete_id);
 
     // 2. Parallel batch queries
-    const [usersRes, athletesRes, loadRes, sessionsRes] = await Promise.all([
+    const [usersRes, athletesRes, loadRes, sessionsRes, engagementRes] = await Promise.all([
       // Basic user info
       supabase
         .from('users')
@@ -61,6 +62,15 @@ export const getTeamHealthSnapshot = async (coachId) => {
         .in('status', ['completed', 'skipped', 'pending'])
         .order('scheduled_date', { ascending: false })
         .limit(athleteIds.length * 5),
+
+      // Open engagement/churn-risk alerts (Agent 2) — at most one open row
+      // per athlete (partial unique dedup index on (athlete_id, alert_type)
+      // WHERE status='open', and there's only one alert_type).
+      supabase
+        .from('athlete_engagement_alerts')
+        .select('athlete_id, severity, silence_days')
+        .in('athlete_id', athleteIds)
+        .eq('status', 'open'),
     ]);
 
     // 3. Build latest load map (first occurrence = most recent per athlete)
@@ -85,12 +95,19 @@ export const getTeamHealthSnapshot = async (coachId) => {
       injuryMap[a.id] = { status: a.injury_status || 'ok', notes: a.injury_notes || '' };
     }
 
+    // 5b. Build engagement alert map (severity: 'warning' | 'danger')
+    const engagementMap = {};
+    for (const e of (engagementRes.data || [])) {
+      engagementMap[e.athlete_id] = { tone: e.severity, silenceDays: e.silence_days };
+    }
+
     // 6. Assemble result
     const data = athleteIds.map(id => {
       const user = usersRes.data?.find(u => u.id === id) || {};
       const load = latestLoadMap[id] || null;
       const session = lastSessionMap[id] || null;
       const injury = injuryMap[id] || { status: 'ok', notes: '' };
+      const engagement = engagementMap[id] || null;
 
       const ctl = load?.ctl ?? null;
       const atl = load?.atl ?? null;
@@ -117,6 +134,8 @@ export const getTeamHealthSnapshot = async (coachId) => {
         lastSessionDate: session?.scheduled_date || null,
         lastSessionTitle: session?.title || null,
         lastSessionStatus: session?.status || null,
+        engagementTone: engagement?.tone || null,
+        silenceDays: engagement?.silenceDays ?? null,
       };
     });
 

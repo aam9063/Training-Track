@@ -27,6 +27,14 @@ const formatDate = (d) => {
 // ─── Report card (list) ───────────────────────────────────────────────────────
 
 function ReportCard({ report, onClick }) {
+  // communication-agent D10 (Phase 8): this page calls the
+  // get_weekly_ai_reports RPC, not the base table or a view. The RPC's
+  // ai_analysis column is already masked server-side (CASE on
+  // auth.uid() = coach_id, inside the function's own SQL) — report.ai_analysis
+  // is always the correct value for whoever is asking, with zero app-layer
+  // branching needed. Phase 6's `ai_analysis_athlete_safe || ai_analysis`
+  // fallback lived here because the app was the only enforcement point; D9/
+  // D10 moved that enforcement server-side, so the fallback is gone.
   const ai = report.ai_analysis || {};
   const level = report.alert_level || 'ok';
   const cfg = ALERT_CONFIG[level] || ALERT_CONFIG.ok;
@@ -62,6 +70,9 @@ function ReportCard({ report, onClick }) {
 // ─── Report detail ────────────────────────────────────────────────────────────
 
 function ReportDetail({ report, onBack, athleteName }) {
+  // communication-agent D10 (Phase 8): see ReportCard's matching comment —
+  // report.ai_analysis is already masked by the get_weekly_ai_reports RPC
+  // this page calls.
   const ai = report.ai_analysis || {};
   const alertas = ai.alertas || [];
   const recomendaciones = ai.recomendaciones || [];
@@ -208,11 +219,20 @@ export default function MyReports() {
     const athleteId = profile?.id || user?.id;
     if (!athleteId) return;
 
+    // communication-agent D10 (Phase 8): call the get_weekly_ai_reports RPC,
+    // not the (now-removed) weekly_ai_reports_for_role view — see migration
+    // 20260903140000. The view relied on FORCE ROW LEVEL SECURITY
+    // overriding the view owner's BYPASSRLS attribute, which this project's
+    // `postgres` role does not honor (rolbypassrls=true, confirmed live) —
+    // it silently returned every row to every caller regardless of who was
+    // asking. The RPC's row-filter is an explicit WHERE clause inside the
+    // function body. ai_analysis/summary already resolve to the
+    // athlete-safe value for this athlete's own read; no
+    // ai_analysis_athlete_safe column is exposed by the RPC at all (nothing
+    // to select, nothing to fall back to here).
     supabase
-      .from('weekly_ai_reports')
+      .rpc('get_weekly_ai_reports', { p_athlete_id: athleteId, p_status: 'completed' })
       .select('id, week_start, week_end, alert_level, sessions_done, sessions_planned, actual_km, planned_km, avg_rpe, acwr, tsb, summary, ai_analysis, status')
-      .eq('athlete_id', athleteId)
-      .eq('status', 'completed')
       .order('week_start', { ascending: false })
       .then(({ data }) => {
         setReports(data || []);

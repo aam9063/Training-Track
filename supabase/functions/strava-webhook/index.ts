@@ -198,6 +198,42 @@ function triggerLoadRecalc(athleteId: string) {
   }
 }
 
+// Trigger a reactive resolve of any open engagement-silence alert after a
+// live Strava activity — fire-and-forget, direct .rpc() call rather than an
+// HTTP hop to a new engagement-monitor mode: same semantics, one fewer
+// network failure mode (adherence-detection-agent design.md, "Reactive
+// resolve via AFTER triggers, not a client-callable RPC"). The `.catch` is
+// pre-attached BEFORE `waitUntil`, mirroring triggerLoadRecalc's shape
+// exactly, so a failure or timeout here cannot tear down the isolate or
+// affect this function's already-sent HTTP response to Strava.
+//
+// Deliberately called ONLY from processNewActivity (live events) — NOT
+// from processActivityUpdate or processActivityDelete. The deep-ingestion
+// backfill bulk-inserts HISTORICAL activities via those paths, and
+// resolving an open alert from months-old data would be a correctness
+// bug, not just wasted work (engagement-agent-runtime: "Reactive Resolve
+// Triggers" — Strava webhook triggers resolve on new-activity ingestion).
+function triggerEngagementResolve(supabase: SupabaseAdmin, athleteId: string) {
+  const task = supabase
+    .rpc("resolve_engagement_alerts", { p_athlete_id: athleteId })
+    .then(() => {
+      logEvent("strava.engagement_resolve.background_dispatched", { athlete_id: athleteId });
+    })
+    .catch((err) => {
+      logEvent("strava.engagement_resolve.background_dispatch_failed", {
+        athlete_id: athleteId,
+        error: String(err),
+      });
+    });
+
+  try {
+    // @ts-ignore EdgeRuntime.waitUntil is available in Supabase Edge Functions
+    EdgeRuntime.waitUntil(task);
+  } catch {
+    // Fall-through: promise still runs in background
+  }
+}
+
 // Locate athlete via devices table by Strava owner_id
 async function resolveAthleteByOwnerId(
   supabase: SupabaseAdmin,
@@ -274,6 +310,10 @@ async function processNewActivity(objectId: number, ownerId: number) {
 
   // Kick off training-load recompute in background (non-blocking)
   triggerLoadRecalc(athleteId);
+
+  // Resolve any open engagement-silence alert — a live activity IS a
+  // signal of life. Live-event-only: never called for update/delete.
+  triggerEngagementResolve(supabase, athleteId);
 
   // Match to planned training session
   const trainingType = mapStravaType(activity.type as string);

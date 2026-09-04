@@ -123,3 +123,40 @@ export function planReconciliation(findings, openEpisodesByType, todayLocalStr) 
   }
   return plan;
 }
+
+/**
+ * Reactive handoff gate (training-load-agent-runtime delta: "Reactive
+ * Handoff to Planning Agent on ACWR Danger"). Pure decision only —
+ * `index.ts` performs the actual fire-and-forget call when this returns
+ * true; a `false` here must never delay or affect this function's own
+ * alert creation/delivery.
+ *
+ * MUST gate on `finding.metrics.zone === 'danger'`, NEVER
+ * `finding.severity` — `training_load_alerts.severity` is
+ * CHECK-constrained to 'warning'/'critical' only
+ * (`supabase/migrations/20260819142000_training_load_alerts.sql`); there is
+ * no 'danger' severity value anywhere in the schema. `evaluateLoad()` in
+ * `trainingLoadCore.js` carries the ACWR zone
+ * ('danger'/'caution'/'optimal'/'undertraining') in `finding.metrics.zone`
+ * only. Same bug class already found and fixed in
+ * `planAdjustmentCore.js`'s `resolveFinding()` — see design.md's
+ * "Zone vs Severity" correction note.
+ *
+ * Reuses the exact `result.is_new || result.escalated` race-safe gate the
+ * push-delivery decision already uses (the upsert RPC's own atomic result,
+ * computed under `FOR UPDATE` at write time — not the pre-write
+ * `decision.deliver`, which can be stale under a concurrent invocation). A
+ * same-severity refresh of an already-open danger episode must NOT re-fire
+ * the reactive call.
+ *
+ * @param {string} alertType
+ * @param {{severity?:string, metrics?:{zone?:string}}|null} finding
+ * @param {{alert_id?:string, is_new?:boolean, escalated?:boolean}|null} result
+ * @returns {boolean}
+ */
+export function shouldTriggerReactivePlanning(alertType, finding, result) {
+  if (alertType !== 'acwr_zone') return false;
+  if (!finding || finding.metrics?.zone !== 'danger') return false;
+  if (!result) return false;
+  return !!(result.is_new || result.escalated);
+}

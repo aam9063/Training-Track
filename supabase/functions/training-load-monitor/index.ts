@@ -10,7 +10,7 @@ import {
   summarizeWeekSessions,
   evaluateLoad,
 } from "../_shared/trainingLoadCore.js";
-import { isAuthorized, resolveRecipientId, planReconciliation } from "./logic.js";
+import { isAuthorized, resolveRecipientId, planReconciliation, shouldTriggerReactivePlanning } from "./logic.js";
 
 /**
  * training-load-monitor
@@ -29,6 +29,15 @@ import { isAuthorized, resolveRecipientId, planReconciliation } from "./logic.js
  *   - scheduled: the `training-load-daily-sweep` pg_cron job (migration 6)
  *
  * See: openspec/changes/training-load-monitoring-agent/design.md
+ *
+ * Also fires a fire-and-forget reactive handoff to `planning-agent` when an
+ * `acwr_zone` alert reaches zone danger (`finding.metrics.zone === 'danger'`,
+ * NEVER `finding.severity` — see `shouldTriggerReactivePlanning`'s doc
+ * comment in `./logic.js`) and the upsert delivered a new/escalated event.
+ * That call MUST NOT delay or fail this function's own alert creation or
+ * delivery, and MUST NOT itself write to `training_sessions`.
+ * See: openspec/changes/continuous-planning-agent/design.md
+ *      ("training-load-monitor outbound call site")
  */
 
 const RECOMPUTE_WINDOW_DAYS = 189; // reads [today-189d, today]
@@ -245,6 +254,46 @@ async function deliverPush(supabase: SupabaseAdmin, recipientId: string, alertTy
   }
 }
 
+// Fire-and-forget reactive handoff to planning-agent on an acwr_zone alert
+// at zone danger (training-load-agent-runtime delta: "Reactive Handoff to
+// Planning Agent on ACWR Danger"). Mirrors chainNextSweepPage's shape
+// verbatim: `.then/.catch` pre-attached before EdgeRuntime.waitUntil, so a
+// failure here can never fail or delay this function's own alert creation
+// or delivery — the daily sweep picks the athlete up regardless. Zero
+// awaits on the alerting path, and this call never writes training_sessions
+// itself; it only asks planning-agent to evaluate the athlete.
+function triggerPlanningAgent(athleteId: string, alertId: string | null) {
+  const supabaseUrl = Deno.env.get("SUPABASE_URL")!;
+  const cronSecret = Deno.env.get("CRON_SECRET") || "";
+  const serviceRoleKey = Deno.env.get("SUPABASE_SERVICE_ROLE_KEY") || "";
+
+  const task = fetch(`${supabaseUrl}/functions/v1/planning-agent`, {
+    method: "POST",
+    headers: {
+      "Content-Type": "application/json",
+      Authorization: `Bearer ${cronSecret || serviceRoleKey}`,
+    },
+    body: JSON.stringify({ mode: "reactive", athlete_id: athleteId, alert_id: alertId }),
+  })
+    .then(() => {
+      logEvent("training_load_monitor.planning_agent_triggered", { athlete_id: athleteId, alert_id: alertId });
+    })
+    .catch((err) => {
+      logEvent("training_load_monitor.planning_agent_trigger_failed", {
+        athlete_id: athleteId,
+        alert_id: alertId,
+        error: String(err),
+      });
+    });
+
+  try {
+    // @ts-ignore EdgeRuntime.waitUntil is available in Supabase Edge Functions
+    EdgeRuntime.waitUntil(task);
+  } catch {
+    // Fall-through: promise still runs in background
+  }
+}
+
 async function processAthlete(supabase: SupabaseAdmin, athleteId: string, today: string) {
   const from = addDaysISO(today, -RECOMPUTE_WINDOW_DAYS);
 
@@ -311,6 +360,13 @@ async function processAthlete(supabase: SupabaseAdmin, athleteId: string, today:
       // same athlete). `result.is_new`/`result.escalated` are race-safe.
       if (result && (result.is_new || result.escalated)) {
         await deliverPush(supabase, recipientId, alertType, decision.finding.messageEs);
+      }
+
+      // Reactive handoff to planning-agent: acwr_zone at zone danger only,
+      // same race-safe is_new/escalated gate as the push decision above.
+      // Fire-and-forget — zero awaits, never blocks/fails this loop.
+      if (shouldTriggerReactivePlanning(alertType, decision.finding, result)) {
+        triggerPlanningAgent(athleteId, result?.alert_id ?? null);
       }
     }
   }

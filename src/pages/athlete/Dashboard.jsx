@@ -171,9 +171,15 @@ const AthleteDashboard = () => {
           />
         </div>
 
-        {/* Training load alerts (acwr_zone / tsb_critical / low_completion / high_rpe) */}
+        {/* Merged alert feed: training-load signals (acwr_zone / tsb_critical /
+            low_completion / high_rpe) + engagement/churn-risk silence
+            (engagement_silence, coach-supervised athletes only — RLS has no
+            self-select policy on athlete_engagement_alerts, so this
+            component's own query naturally returns nothing from that source
+            for the athlete viewing their own dashboard here; no role
+            branching needed) */}
         {profile?.id && (
-          <TrainingLoadAlertFeed athleteId={profile.id} emptyMessage="Sin alertas activas de carga" />
+          <TrainingLoadAlertFeed athleteId={profile.id} />
         )}
 
         {/* INDEPENDENT ATHLETE: weekly progress + RPE summary + plan CTA */}

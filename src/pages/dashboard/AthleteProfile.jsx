@@ -24,6 +24,7 @@ import {
   FiUser,
   FiFileText,
   FiChevronDown,
+  FiCpu,
 } from 'react-icons/fi';
 import { Line } from 'react-chartjs-2';
 import {
@@ -348,9 +349,12 @@ const AthleteProfile = () => {
         </div>
       </div>
 
-      {/* Training load alerts (acwr_zone / tsb_critical / low_completion / high_rpe) */}
+      {/* Merged alert feed: training-load signals (acwr_zone / tsb_critical /
+          low_completion / high_rpe) + engagement/churn-risk silence
+          (engagement_silence) — one source-agnostic feed, see
+          alertFeedService.js */}
       <div className="mb-4 lg:mb-6">
-        <AthleteLoadAlerts athleteId={athleteId} />
+        <AthleteLoadAlerts athleteId={athleteId} athleteName={athleteName} />
       </div>
 
       {/* Test Cards: Conconi + VAM side by side */}
@@ -661,9 +665,20 @@ const AthleteProfile = () => {
                               <span className="ml-1 text-[10px] text-gray-400 dark:text-gray-500">Omitido</span>
                             )}
                           </div>
-                          <p className="text-xs font-medium text-gray-500 dark:text-gray-400">
-                            {getTypeLabel(training.type)}
-                          </p>
+                          <div className="flex items-center gap-1.5 flex-wrap">
+                            <p className="text-xs font-medium text-gray-500 dark:text-gray-400">
+                              {getTypeLabel(training.type)}
+                            </p>
+                            {training.adjustedByAgent && (
+                              <span
+                                title="Ajustado automáticamente por el agente de planificación"
+                                className="inline-flex items-center gap-0.5 px-1 py-0.5 rounded text-[9px] font-semibold bg-violet-100 text-violet-700 dark:bg-violet-900/30 dark:text-violet-300"
+                              >
+                                <FiCpu className="w-2.5 h-2.5" />
+                                IA
+                              </span>
+                            )}
+                          </div>
                           <p className="text-sm font-semibold text-gray-900 dark:text-white line-clamp-2">
                             {training.title}
                           </p>
@@ -723,6 +738,15 @@ const AthleteProfile = () => {
                               )}
                               {training.status === 'skipped' && (
                                 <span className="text-[10px] text-gray-400 dark:text-gray-500 flex-shrink-0">Omitido</span>
+                              )}
+                              {training.adjustedByAgent && (
+                                <span
+                                  title="Ajustado automáticamente por el agente de planificación"
+                                  className="inline-flex items-center gap-0.5 px-1 py-0.5 rounded text-[9px] font-semibold bg-violet-100 text-violet-700 dark:bg-violet-900/30 dark:text-violet-300 flex-shrink-0"
+                                >
+                                  <FiCpu className="w-2.5 h-2.5" />
+                                  IA
+                                </span>
                               )}
                             </div>
                             <p className="text-xs text-gray-500 dark:text-gray-400 mt-0.5">

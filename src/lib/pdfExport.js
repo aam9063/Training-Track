@@ -236,6 +236,15 @@ const stripHtml = (s) =>
  * to the new AIWeeklyReportDocument props.
  */
 const mapReportToDocProps = ({ report, athleteName }) => {
+  // communication-agent D10 (Phase 8): generateAIReportPDF's only call site
+  // (confirmed by grep — see design.md) is the athlete's own "Descargar
+  // PDF" button in src/pages/athlete/MyReports.jsx, which now calls the
+  // get_weekly_ai_reports RPC. Whatever the caller's query already resolved
+  // for `ai_analysis` is already correctly masked server-side — no
+  // app-layer fallback needed here. If a future coach-facing caller of
+  // generateAIReportPDF is added, it must pass a `report` whose
+  // `ai_analysis` already carries the coach-facing (wide) value from its
+  // own query — this function trusts whatever it is given.
   const ai = report?.ai_analysis || {};
   const alertas = Array.isArray(ai.alertas) ? ai.alertas : [];
   const recomendaciones = Array.isArray(ai.recomendaciones) ? ai.recomendaciones : [];

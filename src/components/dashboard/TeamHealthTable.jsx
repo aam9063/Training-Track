@@ -38,7 +38,20 @@ const daysSince = (dateStr) => {
   return Math.floor((Date.now() - new Date(dateStr + 'T12:00:00').getTime()) / 86_400_000);
 };
 
-const LastSessionBadge = ({ date, status }) => {
+const LastSessionBadge = ({ date, status, silenceDays, tone }) => {
+  // Engagement/churn-risk silence (Agent 2) takes priority over the raw
+  // last-session date when it crosses the warning threshold — amber ≥10d,
+  // red ≥21d (matching SILENCE_WARNING_DAYS/SILENCE_DANGER_DAYS).
+  if (silenceDays != null && silenceDays >= 10) {
+    const isDanger = silenceDays >= 21 || tone === 'danger';
+    const color = isDanger ? 'text-red-600 dark:text-red-400' : 'text-amber-600 dark:text-amber-400';
+    return (
+      <span className={`text-xs font-semibold ${color}`} title={isDanger ? 'Riesgo de abandono' : 'Inactividad'}>
+        {silenceDays}d sin señal
+      </span>
+    );
+  }
+
   const days = daysSince(date);
   if (days === null) return <span className="text-xs text-gray-400">—</span>;
 
@@ -307,7 +320,12 @@ export default function TeamHealthTable({ athletes, loading, updatingId, onUpdat
                     {athlete.firstName} {athlete.lastName}
                   </p>
                   <div className="flex items-center gap-1.5 mt-0.5">
-                    <LastSessionBadge date={athlete.lastSessionDate} status={athlete.lastSessionStatus} />
+                    <LastSessionBadge
+                      date={athlete.lastSessionDate}
+                      status={athlete.lastSessionStatus}
+                      silenceDays={athlete.silenceDays}
+                      tone={athlete.engagementTone}
+                    />
                     {athlete.lastSessionTitle && (
                       <span className="text-[10px] text-gray-400 truncate max-w-[100px]">· {athlete.lastSessionTitle}</span>
                     )}
@@ -457,7 +475,12 @@ export default function TeamHealthTable({ athletes, loading, updatingId, onUpdat
                   {/* Last session */}
                   <td className="py-3 px-3">
                     <div className="flex flex-col gap-0.5">
-                      <LastSessionBadge date={athlete.lastSessionDate} status={athlete.lastSessionStatus} />
+                      <LastSessionBadge
+                        date={athlete.lastSessionDate}
+                        status={athlete.lastSessionStatus}
+                        silenceDays={athlete.silenceDays}
+                        tone={athlete.engagementTone}
+                      />
                       {athlete.lastSessionTitle && (
                         <span className="text-[11px] text-gray-400 truncate max-w-[140px]">
                           {athlete.lastSessionTitle}

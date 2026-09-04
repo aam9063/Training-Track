@@ -1,0 +1,61 @@
+-- =========================================================================
+-- Migration: pg_cron_engagement_sweep (UP)
+-- Declares the daily engagement-silence sweep as a versioned pg_cron job.
+--
+-- pg_cron / pg_net are already installed and active (Agent 1, migration
+-- 20260819146000_pg_cron_schedules.sql). `cron_secret` / `project_url` are
+-- already seeded in Supabase Vault by that same migration's manual setup
+-- step — this migration does NOT call vault.create_secret, it only reads
+-- the existing secrets and fails loudly if they are missing.
+--
+-- Scheduled 04:45 UTC daily — 30 minutes after Agent 1's
+-- training-load-daily-sweep (04:15 UTC), avoiding contention on the same
+-- minute while keeping both agents' data fresh well before typical coach
+-- login hours.
+-- See: openspec/changes/adherence-detection-agent/design.md
+--      (Migration Plan #5, Data Flow)
+-- =========================================================================
+
+BEGIN;
+
+DO $$
+DECLARE
+  v_cron_secret text;
+  v_project_url text;
+BEGIN
+  SELECT decrypted_secret INTO v_cron_secret
+  FROM vault.decrypted_secrets WHERE name = 'cron_secret';
+
+  SELECT decrypted_secret INTO v_project_url
+  FROM vault.decrypted_secrets WHERE name = 'project_url';
+
+  IF v_cron_secret IS NULL OR v_project_url IS NULL THEN
+    RAISE EXCEPTION 'cron_secret / project_url not found in Vault — expected already seeded by migration 20260819146000_pg_cron_schedules.sql''s manual setup step';
+  END IF;
+
+  IF EXISTS (SELECT 1 FROM cron.job WHERE jobname = 'engagement-daily-sweep') THEN
+    PERFORM cron.unschedule('engagement-daily-sweep');
+  END IF;
+
+  PERFORM cron.schedule(
+    'engagement-daily-sweep',
+    '45 4 * * *',
+    format(
+      $sql$
+      SELECT net.http_post(
+        url := %L,
+        headers := jsonb_build_object(
+          'Content-Type', 'application/json',
+          'Authorization', 'Bearer ' || %L
+        ),
+        body := jsonb_build_object('mode', 'sweep', 'limit', 200, 'offset', 0)
+      );
+      $sql$,
+      v_project_url || '/functions/v1/engagement-monitor',
+      v_cron_secret
+    )
+  );
+END;
+$$;
+
+COMMIT;

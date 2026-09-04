@@ -58,6 +58,12 @@ const useAthleteProfileData = (athleteId) => {
           exercises,
           status: session.status,
           rpe_score: session.rpe_score,
+          // Agent 3 provenance — `training_sessions.adjusted_by_agent`
+          // already comes through getAthleteWeeklyTraining's `select('*')`
+          // (the migration is additive on the same table, no service query
+          // change needed), just wasn't carried into this narrower
+          // per-day view-model until now.
+          adjustedByAgent: session.adjusted_by_agent === true,
         };
       });
     }

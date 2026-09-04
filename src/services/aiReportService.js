@@ -498,8 +498,19 @@ export const deleteReport = async (reportId) => {
  * Returns reports ordered by: alert_level severity first, then week_start desc.
  */
 export const getCoachWeeklyReports = async (coachId, weekStart = null) => {
+  // communication-agent D10 (Phase 8): call the get_weekly_ai_reports RPC,
+  // not the (now-removed) weekly_ai_reports_for_role view — see migration
+  // 20260903140000. The view relied on FORCE ROW LEVEL SECURITY overriding
+  // the view owner's BYPASSRLS attribute, which this project's `postgres`
+  // role does not honor (rolbypassrls=true, confirmed live) — it silently
+  // returned every row to every caller. The RPC's row-filter is an explicit
+  // WHERE clause inside the function body, correct regardless of the
+  // definer's BYPASSRLS status. For the report's own coach (this caller),
+  // ai_analysis/summary resolve to the same wide, coach-facing value the
+  // base table always returned — nothing changes for this caller's own
+  // data; it changes what any OTHER caller can see.
   let query = supabase
-    .from('weekly_ai_reports')
+    .rpc('get_weekly_ai_reports', { p_coach_id: coachId, p_week_start: weekStart })
     .select(`
       id, coach_id, athlete_id, week_start, week_end,
       alert_level, summary, ai_analysis,
@@ -507,12 +518,9 @@ export const getCoachWeeklyReports = async (coachId, weekStart = null) => {
       planned_km, actual_km, acwr, tsb,
       status, error_message, created_at
     `)
-    .eq('coach_id', coachId)
     .order('week_start', { ascending: false });
 
-  if (weekStart) {
-    query = query.eq('week_start', weekStart);
-  } else {
+  if (!weekStart) {
     query = query.limit(50);
   }
 
@@ -544,10 +552,14 @@ export const getCoachWeeklyReports = async (coachId, weekStart = null) => {
  * Get distinct weeks that have reports for a coach.
  */
 export const getCoachReportWeeks = async (coachId) => {
+  // communication-agent D10 (Phase 8): same RPC switch as
+  // getCoachWeeklyReports — weekly_ai_reports itself no longer grants
+  // SELECT to `authenticated` at all, regardless of which columns are
+  // requested, and the masking view that used to stand in for it has been
+  // dropped (it was broken — see get_weekly_ai_reports's migration header).
   const { data, error } = await supabase
-    .from('weekly_ai_reports')
+    .rpc('get_weekly_ai_reports', { p_coach_id: coachId })
     .select('week_start, week_end')
-    .eq('coach_id', coachId)
     .order('week_start', { ascending: false });
 
   if (error) throw error;

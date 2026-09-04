@@ -105,6 +105,7 @@ export const deletePlan = async (planId) => {
         await supabase
           .from('training_sessions')
           .delete()
+          .eq('plan_id', planId)
           .eq('athlete_id', assignment.athlete_id)
           .eq('status', 'planned')
           .gte('scheduled_date', today);

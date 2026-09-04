@@ -101,12 +101,12 @@ Extract one pure calculation core, make it the only producer of `daily_training_
 
 ## Success Criteria
 
-- [ ] Exactly one implementation of TSS/CTL/ATL/TSB/ACWR exists in the codebase; zero inline duplicates remain in `weekly-ai-reports` or `trainingMetrics.js`
-- [ ] Exactly one alert rulebook exists (the three current ones are gone)
-- [ ] `daily_training_load` is fully described by a versioned migration with RLS covering coach, self, and `service_role`
-- [ ] A new Strava activity updates that day's load row without any human opening the PMC chart
-- [ ] An athlete with no recent sync still gets their row refreshed by the daily sweep
-- [ ] An ACWR breach produces exactly one alert, visible to the coach for supervised athletes and to the athlete for independent ones, with no repeat alert for the same ongoing condition
-- [ ] Backfill completes with zero alerts emitted from historical rows
-- [ ] `training_sessions` is never written by this change (verifiable by grep)
-- [ ] The core metrics module has no import from Supabase, React, or any UI code
+- [x] Exactly one implementation of TSS/CTL/ATL/TSB/ACWR exists in the codebase; zero inline duplicates remain in `weekly-ai-reports` or `trainingMetrics.js`
+- [x] Exactly one alert rulebook exists (the three current ones are gone)
+- [x] `daily_training_load` is fully described by a versioned migration with RLS covering coach, self, and `service_role`
+- [x] A new Strava activity updates that day's load row without any human opening the PMC chart
+- [x] An athlete with no recent sync still gets their row refreshed by the daily sweep
+- [x] An ACWR breach produces exactly one alert, visible to the coach for supervised athletes and to the athlete for independent ones, with no repeat alert for the same ongoing condition
+- [x] Backfill completes with zero alerts emitted from historical rows
+- [x] `training_sessions` is never written by this change (verifiable by grep)
+- [x] The core metrics module has no import from Supabase, React, or any UI code

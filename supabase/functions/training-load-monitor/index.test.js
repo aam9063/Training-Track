@@ -9,6 +9,7 @@ import {
   daysBetween,
   reconcileFinding,
   planReconciliation,
+  shouldTriggerReactivePlanning,
 } from './logic.js';
 import { ALERT_TYPES, evaluateLoad } from '../_shared/trainingLoadCore.js';
 
@@ -223,6 +224,54 @@ describe('planReconciliation — concurrent alert types do not collide', () => {
 });
 
 // ============================================================
+// shouldTriggerReactivePlanning — reactive handoff to planning-agent
+// (continuous-planning-agent Phase 4 / training-load-agent-runtime delta:
+// "Reactive Handoff to Planning Agent on ACWR Danger")
+// ============================================================
+
+describe('shouldTriggerReactivePlanning', () => {
+  const dangerFinding = { severity: 'critical', metrics: { acwr: 1.6, zone: 'danger' } };
+  const cautionFinding = { severity: 'warning', metrics: { acwr: 1.4, zone: 'caution' } };
+  const newResult = { alert_id: 'a1', is_new: true, escalated: false };
+  const escalatedResult = { alert_id: 'a1', is_new: false, escalated: true };
+  const refreshResult = { alert_id: 'a1', is_new: false, escalated: false };
+
+  test('(a) acwr_zone at zone danger + new delivery triggers the call', () => {
+    assert.equal(shouldTriggerReactivePlanning('acwr_zone', dangerFinding, newResult), true);
+  });
+
+  test('(a) acwr_zone at zone danger + escalated delivery triggers the call', () => {
+    assert.equal(shouldTriggerReactivePlanning('acwr_zone', dangerFinding, escalatedResult), true);
+  });
+
+  test('(b) acwr_zone at zone caution does NOT trigger the call, even when new/escalated', () => {
+    assert.equal(shouldTriggerReactivePlanning('acwr_zone', cautionFinding, newResult), false);
+    assert.equal(shouldTriggerReactivePlanning('acwr_zone', cautionFinding, escalatedResult), false);
+  });
+
+  test('(c) a non-acwr_zone finding does NOT trigger the call, even at zone danger', () => {
+    const tsbFinding = { severity: 'critical', metrics: { tsb: -35 } };
+    assert.equal(shouldTriggerReactivePlanning('tsb_critical', tsbFinding, newResult), false);
+    assert.equal(shouldTriggerReactivePlanning('low_completion', dangerFinding, newResult), false);
+    assert.equal(shouldTriggerReactivePlanning('high_rpe', dangerFinding, newResult), false);
+  });
+
+  test('(d) acwr_zone at zone danger but neither new nor escalated (duplicate/refresh) does NOT trigger the call', () => {
+    assert.equal(shouldTriggerReactivePlanning('acwr_zone', dangerFinding, refreshResult), false);
+  });
+
+  test('never gates on finding.severity === "danger" — that value never exists in the schema', () => {
+    const bogusFinding = { severity: 'danger', metrics: { zone: 'caution' } };
+    assert.equal(shouldTriggerReactivePlanning('acwr_zone', bogusFinding, newResult), false);
+  });
+
+  test('no finding, no result, or no upsert result -> false, never throws', () => {
+    assert.equal(shouldTriggerReactivePlanning('acwr_zone', null, newResult), false);
+    assert.equal(shouldTriggerReactivePlanning('acwr_zone', dangerFinding, null), false);
+  });
+});
+
+// ============================================================
 // Static shape checks on index.ts (grep-based, per task 3.7)
 // ============================================================
 
@@ -273,5 +322,17 @@ describe('training-load-monitor/index.ts — scope boundary (static checks)', ()
     assert.ok(INDEX_SOURCE.includes('CRON_SECRET'));
     assert.ok(INDEX_SOURCE.includes('SUPABASE_SERVICE_ROLE_KEY'));
     assert.ok(INDEX_SOURCE.includes('isAuthorized'));
+  });
+
+  test('reactive planning-agent handoff is gated by shouldTriggerReactivePlanning and fire-and-forget via EdgeRuntime.waitUntil', () => {
+    assert.ok(INDEX_SOURCE.includes('shouldTriggerReactivePlanning'));
+    assert.ok(INDEX_SOURCE.includes('triggerPlanningAgent'));
+    assert.ok(INDEX_SOURCE.includes("mode: \"reactive\""));
+    assert.ok(INDEX_SOURCE.includes('/functions/v1/planning-agent'));
+    assert.ok(INDEX_SOURCE.includes('EdgeRuntime.waitUntil'));
+  });
+
+  test('the reactive handoff call site never awaits triggerPlanningAgent (fire-and-forget)', () => {
+    assert.ok(!INDEX_SOURCE.includes('await triggerPlanningAgent'));
   });
 });
